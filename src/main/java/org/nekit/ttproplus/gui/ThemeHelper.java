@@ -13,17 +13,22 @@ public class ThemeHelper {
 
     public static void applyTheme(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String theme = prefs.getString(THEME_PREF_KEY, "auto");
+        String theme = prefs.getString(THEME_PREF_KEY, "dark");
+        int targetMode;
         switch (theme) {
             case "white":
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                targetMode = AppCompatDelegate.MODE_NIGHT_NO;
+                break;
+            case "auto":
+                targetMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
                 break;
             case "dark":
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                break;
             default:
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                targetMode = AppCompatDelegate.MODE_NIGHT_YES;
                 break;
+        }
+        if (AppCompatDelegate.getDefaultNightMode() != targetMode) {
+            AppCompatDelegate.setDefaultNightMode(targetMode);
         }
     }
 }

@@ -1,200 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-    
-    <PreferenceCategory
-        android:key="tts_def"
-        android:title="@string/pref_cat_tts">
-        
-    <ListPreference
-        android:key="pref_speech_engine"
-        android:summary="@string/pref_summary_speech_engine"
-        android:title="@string/pref_title_speech_engine" />
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="pref_a11y_volume"
-        android:summary="@string/pref_summary_a11y_volume"
-        android:title="@string/pref_title_a11y_volume" />
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="pref_use_announcements"
-        android:summary="@string/pref_summary_use_announcements"
-        android:title="@string/pref_title_use_announcements" />
-
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference android:title="@string/pref_master_tts_toggle" android:key="pref_master_tts_toggle" />
+    <PreferenceCategory android:title="@string/pref_cat_tts" android:key="tts_def">
+        <ListPreference android:title="@string/pref_title_speech_engine" android:key="pref_speech_engine" android:summary="@string/pref_summary_speech_engine" />
+        <ListPreference android:entries="@array/pref_tts_language_behavior_entries" android:title="@string/pref_tts_language_behavior_title" android:key="pref_tts_language_behavior" android:summary="@string/pref_tts_language_behavior_summary" android:defaultValue="follow_app" android:entryValues="@array/pref_tts_language_behavior_values" />
+        <CheckBoxPreference android:title="@string/pref_title_a11y_volume" android:key="pref_a11y_volume" android:summary="@string/pref_summary_a11y_volume" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_use_announcements" android:key="pref_use_announcements" android:summary="@string/pref_summary_use_announcements" android:defaultValue="false" />
     </PreferenceCategory>
-
-    <PreferenceCategory
-        android:key="tts_events_def"
-        android:title="@string/pref_cat_tts_events">
-        
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="server_login_checkbox"
-        android:summary="@string/pref_summary_server_login"
-        android:title="@string/pref_title_server_login" />
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="server_logout_checkbox"
-        android:summary="@string/pref_summary_server_logout"
-        android:title="@string/pref_title_server_logout" />
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="channel_join_checkbox"
-        android:summary="@string/pref_summary_channel_join"
-        android:title="@string/pref_title_channel_join" />
-    
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="channel_leave_checkbox"
-        android:summary="@string/pref_summary_channel_leave"
-        android:title="@string/pref_title_channel_leave" />
-
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="private_message_checkbox"
-        android:summary="@string/pref_summary_private_message"
-        android:title="@string/pref_title_private_message" />
-    
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="channel_message_checkbox"
-        android:summary="@string/pref_summary_channel_message"
-        android:title="@string/pref_title_channel_message" />
-    
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="channel_message_sent_checkbox"
-        android:summary="@string/pref_summary_channel_message_sent"
-        android:title="@string/pref_title_channel_message_sent" />
-    
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="broadcast_message_checkbox"
-        android:summary="@string/pref_summary_broadcast_message"
-        android:title="@string/pref_title_broadcast_message" />
-    
+    <PreferenceCategory android:title="@string/pref_cat_tts_events" android:key="tts_events_def">
+        <CheckBoxPreference android:title="@string/pref_title_server_login" android:key="server_login_checkbox" android:summary="@string/pref_summary_server_login" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_server_logout" android:key="server_logout_checkbox" android:summary="@string/pref_summary_server_logout" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_tts_myself_join" android:key="pref_tts_myself_join" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_tts_myself_leave" android:key="pref_tts_myself_leave" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_channel_join" android:key="channel_join_checkbox" android:summary="@string/pref_summary_channel_join" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_channel_leave" android:key="channel_leave_checkbox" android:summary="@string/pref_summary_channel_leave" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/all_users_channel_movement_title" android:key="all_users_channel_movement_checkbox" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_private_message" android:key="private_message_checkbox" android:summary="@string/pref_summary_private_message" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/private_message_sent_title" android:key="private_message_sent_checkbox" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_channel_message" android:key="channel_message_checkbox" android:summary="@string/pref_summary_channel_message" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_channel_message_sent" android:key="channel_message_sent_checkbox" android:summary="@string/pref_summary_channel_message_sent" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_broadcast_message" android:key="broadcast_message_checkbox" android:summary="@string/pref_summary_broadcast_message" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_tts_typing" android:key="pref_tts_typing" android:defaultValue="true" />
     </PreferenceCategory>
-
-    <PreferenceCategory
-        android:key="tts_events_transmission"
-        android:title="@string/pref_cat_tts_transmission">
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="transmit_channel_msg_checkbox"
-            android:summary="@string/pref_summary_transmit_channel_msg"
-            android:title="@string/pref_title_transmit_channel_msg" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="transmit_voice_checkbox"
-            android:summary="@string/pref_summary_transmit_voice"
-            android:title="@string/pref_title_transmit_voice" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="transmit_vid_checkbox"
-            android:summary="@string/pref_summary_transmit_vid"
-            android:title="@string/pref_title_transmit_vid" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="transmit_desk_checkbox"
-            android:summary="@string/pref_summary_transmit_desk"
-            android:title="@string/pref_title_transmit_desk" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="transmit_media_checkbox"
-            android:summary="@string/pref_summary_transmit_media"
-            android:title="@string/pref_title_transmit_media" />
+    <PreferenceCategory android:title="@string/pref_cat_tts_transmission" android:key="tts_events_transmission">
+        <CheckBoxPreference android:title="@string/pref_tts_transmission_control_title" android:key="pref_tts_transmission_control" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_transmit_channel_msg" android:key="transmit_channel_msg_checkbox" android:summary="@string/pref_summary_transmit_channel_msg" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_transmit_voice" android:key="transmit_voice_checkbox" android:summary="@string/pref_summary_transmit_voice" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_transmit_vid" android:key="transmit_vid_checkbox" android:summary="@string/pref_summary_transmit_vid" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_transmit_desk" android:key="transmit_desk_checkbox" android:summary="@string/pref_summary_transmit_desk" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_transmit_media" android:key="transmit_media_checkbox" android:summary="@string/pref_summary_transmit_media" android:defaultValue="false" />
     </PreferenceCategory>
-
-    <PreferenceCategory
-        android:key="tts_events_subscription"
-        android:title="@string/pref_cat_tts_subscription">
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_user_msg_checkbox"
-            android:summary="@string/pref_summary_subscription_user_msg"
-            android:title="@string/pref_title_subscription_user_msg" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_channel_msg_checkbox"
-            android:summary="@string/pref_summary_subscription_channel_msg"
-            android:title="@string/pref_title_subscription_channel_msg" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_broadcast_msg_checkbox"
-            android:summary="@string/pref_summary_subscription_broadcast_msg"
-            android:title="@string/pref_title_subscription_broadcast_msg" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_voice_checkbox"
-            android:summary="@string/pref_summary_subscription_voice"
-            android:title="@string/pref_title_subscription_voice" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_vid_checkbox"
-            android:summary="@string/pref_summary_subscription_vid"
-            android:title="@string/pref_title_subscription_vid" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_desk_checkbox"
-            android:summary="@string/pref_summary_subscription_desk"
-            android:title="@string/pref_title_subscription_desk" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_media_checkbox"
-            android:summary="@string/pref_summary_subscription_media"
-            android:title="@string/pref_title_subscription_media" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_intercept_user_msg_checkbox"
-            android:summary="@string/pref_summary_subscription_intercept_user_msg"
-            android:title="@string/pref_title_subscription_intercept_user_msg" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_intercept_channel_msg_checkbox"
-            android:summary="@string/pref_summary_subscription_intercept_channel_msg"
-            android:title="@string/pref_title_subscription_intercept_channel_msg" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_intercept_voice_checkbox"
-            android:summary="@string/pref_summary_subscription_intercept_voice"
-            android:title="@string/pref_title_subscription_intercept_voice" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_intercept_vid_checkbox"
-            android:summary="@string/pref_summary_subscription_intercept_vid"
-            android:title="@string/pref_title_subscription_intercept_vid" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_intercept_desk_checkbox"
-            android:summary="@string/pref_summary_subscription_intercept_desk"
-            android:title="@string/pref_title_subscription_intercept_desk" />
-
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="subscription_intercept_media_checkbox"
-            android:summary="@string/pref_summary_subscription_intercept_media"
-            android:title="@string/pref_title_subscription_intercept_media" />
-
+    <PreferenceCategory android:title="@string/pref_cat_tts_subscription" android:key="tts_events_subscription">
+        <CheckBoxPreference android:title="@string/pref_title_subscription_user_msg" android:key="subscription_user_msg_checkbox" android:summary="@string/pref_summary_subscription_user_msg" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_channel_msg" android:key="subscription_channel_msg_checkbox" android:summary="@string/pref_summary_subscription_channel_msg" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_broadcast_msg" android:key="subscription_broadcast_msg_checkbox" android:summary="@string/pref_summary_subscription_broadcast_msg" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_voice" android:key="subscription_voice_checkbox" android:summary="@string/pref_summary_subscription_voice" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_vid" android:key="subscription_vid_checkbox" android:summary="@string/pref_summary_subscription_vid" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_desk" android:key="subscription_desk_checkbox" android:summary="@string/pref_summary_subscription_desk" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_media" android:key="subscription_media_checkbox" android:summary="@string/pref_summary_subscription_media" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_intercept_user_msg" android:key="subscription_intercept_user_msg_checkbox" android:summary="@string/pref_summary_subscription_intercept_user_msg" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_intercept_channel_msg" android:key="subscription_intercept_channel_msg_checkbox" android:summary="@string/pref_summary_subscription_intercept_channel_msg" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_intercept_voice" android:key="subscription_intercept_voice_checkbox" android:summary="@string/pref_summary_subscription_intercept_voice" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_intercept_vid" android:key="subscription_intercept_vid_checkbox" android:summary="@string/pref_summary_subscription_intercept_vid" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_intercept_desk" android:key="subscription_intercept_desk_checkbox" android:summary="@string/pref_summary_subscription_intercept_desk" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_subscription_intercept_media" android:key="subscription_intercept_media_checkbox" android:summary="@string/pref_summary_subscription_intercept_media" android:defaultValue="false" />
     </PreferenceCategory>
-
 </PreferenceScreen>

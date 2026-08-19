@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <PreferenceCategory
-        android:key="display_indicators"
-        android:title="@string/pref_category_display_indicators">
-
-        <CheckBoxPreference
-            android:key="display_show_mic_activity"
-            android:title="@string/pref_title_display_show_mic_activity"
-            android:summary="@string/pref_summary_display_show_mic_activity"
-            android:defaultValue="false" />
-
-        <CheckBoxPreference
-            android:key="display_show_ping_no_server"
-            android:title="@string/pref_title_display_show_ping_no_server"
-            android:summary="@string/pref_summary_display_show_ping_no_server"
-            android:defaultValue="false" />
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ListPreference
+        android:entries="@array/theme_entries"
+        android:title="@string/pref_title_theme"
+        android:key="theme_preference"
+        android:summary="@string/pref_summary_theme"
+        android:defaultValue="dark"
+        android:entryValues="@array/theme_values" />
+    <PreferenceCategory android:title="@string/pref_category_display_indicators" android:key="display_indicators">
+        <CheckBoxPreference android:title="@string/pref_title_display_show_mic_activity" android:key="display_show_mic_activity" android:summary="@string/pref_summary_display_show_mic_activity" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_display_show_ping_no_server" android:key="display_show_ping_no_server" android:summary="@string/pref_summary_display_show_ping_no_server" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_display_show_root_users" android:key="display_show_root_users" android:summary="@string/pref_summary_display_show_root_users" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_display_show_root_server_back_btn" android:key="display_show_root_server_back_btn" android:summary="@string/pref_summary_display_show_root_server_back_btn" android:defaultValue="false" />
     </PreferenceCategory>
-
+    <PreferenceCategory android:title="@string/pref_category_display_quick_actions" android:key="display_quick_actions">
+        <CheckBoxPreference android:title="@string/pref_title_display_show_user_quick_actions" android:key="display_show_user_quick_actions" android:summary="@string/pref_summary_display_show_user_quick_actions" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_display_quick_kick_srv" android:key="display_quick_kick_srv" android:dependency="display_show_user_quick_actions" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_display_quick_ban_srv" android:key="display_quick_ban_srv" android:dependency="display_show_user_quick_actions" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_display_quick_kick_chan" android:key="display_quick_kick_chan" android:dependency="display_show_user_quick_actions" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_display_quick_ban_chan" android:key="display_quick_ban_chan" android:dependency="display_show_user_quick_actions" android:defaultValue="true" />
+    </PreferenceCategory>
 </PreferenceScreen>

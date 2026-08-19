@@ -1,58 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".gui.SimpleChatActivity">
-
-    <ListView
-        android:id="@+id/simple_chat_listview"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:divider="@null"
-        android:dividerHeight="0dp"
-        android:padding="4dp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/dividerColor" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:background="@color/surfaceColor">
-
-        <EditText
-            android:id="@+id/simple_chat_edittext"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:inputType="textCapSentences"
-            android:singleLine="true"
-            android:hint="@string/editmsg"
-            android:importantForAutofill="no"
-            android:background="@drawable/edit_text_background"
-            android:padding="8dp">
-
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ListView android:id="@+id/simple_chat_listview" android:padding="4dp" android:layout_width="match_parent" android:layout_height="0dp" android:divider="@null" android:dividerHeight="0dp" android:layout_weight="1.0" />
+    <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" />
+    <LinearLayout android:orientation="horizontal" android:background="@color/surfaceColor" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <EditText android:id="@+id/simple_chat_edittext" android:background="@drawable/edit_text_background" android:padding="8dp" android:layout_width="0dp" android:layout_height="wrap_content" android:hint="@string/editmsg" android:singleLine="true" android:layout_weight="1.0" android:inputType="textCapSentences">
             <requestFocus />
         </EditText>
-
-        <Button
-            android:id="@+id/simple_chat_sendbtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:textSize="14sp"
-            android:text="@string/button_send" />
+        <Button android:textSize="14sp" android:id="@+id/simple_chat_sendbtn" android:paddingTop="8dp" android:paddingBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/button_send" android:paddingStart="20dp" android:paddingEnd="20dp" android:layout_marginStart="8dp" />
     </LinearLayout>
-
 </LinearLayout>

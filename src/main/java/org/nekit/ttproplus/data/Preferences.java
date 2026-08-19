@@ -36,7 +36,8 @@ public class Preferences {
             PREF_GENERAL_BEARWARE_USERNAME = "bearware_username",
             PREF_GENERAL_BEARWARE_TOKEN = "bearware_token",
             PREF_GENERAL_GENDER = "gender_checkbox",
-            PREF_GENERAL_CLIENTNAME = "clientname_text";
+            PREF_GENERAL_CLIENTNAME = "clientname_text",
+            PREF_GENERAL_DEFAULT_FILE_MANAGER = "default_file_manager";
     public static final String
             PREF_SOUNDSYSTEM_MEDIAFILE_VOLUME = "mediafilevolume_seekbar",
             PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL = "voice_activation_level",
@@ -67,22 +68,30 @@ public class Preferences {
             PREF_BG_MGMT_SHOW_VOICE = "bg_mgmt_show_voice",
             PREF_BG_MGMT_SHOW_MUTE = "bg_mgmt_show_mute",
             PREF_BG_MGMT_SHOW_PING = "bg_mgmt_show_ping",
-            PREF_BG_MGMT_SHOW_CHAT = "bg_mgmt_show_chat";
+            PREF_BG_MGMT_SHOW_CHAT = "bg_mgmt_show_chat",
+            PREF_BG_MGMT_SHOW_CHANNELS = "bg_mgmt_show_channels",
+            PREF_BG_MGMT_SHOW_SERVERS = "bg_mgmt_show_servers",
+            PREF_BG_MGMT_DISPLAY_TYPE = "bg_mgmt_display_type",
+            PREF_BG_MGMT_CLOSE_ON_APP_OPEN = "bg_mgmt_close_on_app_open";
 
     public static final String
             PREF_RECORDING_FORMAT = "recording_format",
             PREF_RECORDING_MP3_BITRATE = "recording_mp3_bitrate",
             PREF_RECORDING_PATH = "recording_path",
             PREF_RECORDING_SHOW_DIALOG = "recording_show_dialog_after",
+            PREF_RECORDING_SHOW_TOAST = "recording_show_toast_notifications",
             PREF_RECORDING_AUTO = "auto_record_conversations";
 
     public static final String
-            PREF_BG_MGMT_SHOW_CHANNELS = "bg_mgmt_show_channels",
-            PREF_BG_MGMT_CLOSE_ON_APP_OPEN = "bg_mgmt_close_on_app_open";
-
-    public static final String
             PREF_DISPLAY_SHOW_MIC_ACTIVITY = "display_show_mic_activity",
-            PREF_DISPLAY_SHOW_PING_NO_SERVER = "display_show_ping_no_server";
+            PREF_DISPLAY_SHOW_PING_NO_SERVER = "display_show_ping_no_server",
+            PREF_DISPLAY_SHOW_ROOT_USERS = "display_show_root_users",
+            PREF_DISPLAY_SHOW_ROOT_SERVER_BACK_BTN = "display_show_root_server_back_btn",
+            PREF_DISPLAY_SHOW_USER_QUICK_ACTIONS = "display_show_user_quick_actions",
+            PREF_DISPLAY_QUICK_KICK_SRV = "display_quick_kick_srv",
+            PREF_DISPLAY_QUICK_BAN_SRV = "display_quick_ban_srv",
+            PREF_DISPLAY_QUICK_KICK_CHAN = "display_quick_kick_chan",
+            PREF_DISPLAY_QUICK_BAN_CHAN = "display_quick_ban_chan";
 
     public static final String PREF_WELCOME_SHOWN = "welcome_shown";
 }

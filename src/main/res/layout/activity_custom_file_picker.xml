@@ -1,113 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <!-- Header bar -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp">
-
-        <ImageButton
-            android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_revert"
-            android:tint="@android:color/white"
-            android:contentDescription="@string/cd_back" />
-
-        <TextView
-            android:id="@+id/picker_title"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_toEndOf="@id/btn_back"
-            android:layout_toStartOf="@id/btn_search_tt"
-            android:gravity="center_vertical"
-            android:paddingStart="8dp"
-            android:text="@string/custom_picker_title"
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btn_search_tt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:text="@string/btn_search_tt_files"
-            android:textColor="?attr/colorPrimary"
-            android:backgroundTint="@android:color/white"
-            android:textSize="12sp"
-            android:contentDescription="@string/btn_search_tt_files_desc" />
+<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <RelativeLayout android:background="?colorPrimary" android:layout_width="match_parent" android:layout_height="?android:actionBarSize" android:paddingStart="8dp" android:paddingEnd="8dp">
+        <ImageButton android:id="@+id/btn_back" android:background="?selectableItemBackgroundBorderless" android:layout_width="40dp" android:layout_height="40dp" android:src="@android:drawable/ic_menu_revert" android:tint="@android:color/white" android:layout_centerVertical="true" android:contentDescription="@string/cd_back" android:layout_alignParentStart="true" />
+        <TextView android:textSize="18sp" android:textStyle="bold" android:textColor="@android:color/white" android:gravity="center_vertical" android:id="@+id/picker_title" android:layout_width="wrap_content" android:layout_height="match_parent" android:text="@string/custom_picker_title" android:paddingStart="8dp" android:layout_toStartOf="@id/btn_search_tt" android:layout_toEndOf="@id/btn_back" />
+        <Button android:textSize="12sp" android:textColor="?colorPrimary" android:id="@+id/btn_search_tt" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/btn_search_tt_files" android:layout_centerVertical="true" android:contentDescription="@string/btn_search_tt_files_desc" android:layout_alignParentEnd="true" android:backgroundTint="@android:color/white" />
     </RelativeLayout>
-
-    <!-- Path indicator -->
-    <TextView
-        android:id="@+id/txt_current_path"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:background="#1F000000"
-        android:textColor="@color/textSecondary"
-        android:textSize="14sp"
-        android:singleLine="true"
-        android:ellipsize="start" />
-
-    <!-- Search filter (shown after search) -->
-    <EditText
-        android:id="@+id/search_edit_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/hint_filter_results"
-        android:padding="12dp"
-        android:background="#0A000000"
-        android:textSize="14sp"
-        android:inputType="text"
-        android:visibility="gone"
-        android:drawableStart="@android:drawable/ic_menu_search"
-        android:drawablePadding="8dp" />
-
-    <!-- Search status -->
-    <TextView
-        android:id="@+id/txt_search_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:background="#1F000000"
-        android:textColor="@color/textSecondary"
-        android:textSize="13sp"
-        android:visibility="gone" />
-
-    <!-- Search progress -->
-    <ProgressBar
-        android:id="@+id/search_progress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:indeterminate="true"
-        android:visibility="gone" />
-
-    <!-- File list -->
-    <ListView
-        android:id="@+id/file_list_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:divider="@color/dividerColor"
-        android:dividerHeight="1dp" />
-
-    <Button
-        android:id="@+id/btn_select_folder"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_select_this_folder"
-        android:visibility="gone" />
+    <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:ellipsize="start" android:id="@+id/txt_current_path" android:background="#1f000000" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" />
+    <EditText android:textSize="14sp" android:id="@+id/search_edit_text" android:background="#0a000000" android:padding="12dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/hint_filter_results" android:drawablePadding="8dp" android:inputType="text" android:drawableStart="@android:drawable/ic_menu_search" />
+    <TextView android:textSize="13sp" android:textColor="@color/textSecondary" android:id="@+id/txt_search_status" android:background="#1f000000" android:padding="8dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <ProgressBar android:id="@+id/search_progress" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:indeterminate="true" style="?android:progressBarStyleHorizontal" />
+    <ListView android:id="@+id/file_list_view" android:layout_width="match_parent" android:layout_height="0dp" android:divider="@color/dividerColor" android:dividerHeight="1dp" android:layout_weight="1.0" />
+    <Button android:id="@+id/btn_select_folder" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/btn_select_this_folder" />
 </LinearLayout>

@@ -1,0 +1,75 @@
+name: Android Build & Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build APKs
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: TeamTalkProPlus-APK
+          path: |
+            build/outputs/apk/debug/*.apk
+            build/outputs/apk/**/*.apk
+          if-no-files-found: warn
+
+      - name: Archive Source Code
+        run: |
+          git archive --format=zip --output=TeamTalkProPlus-5.24-source.zip HEAD
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.24' }}
+          name: "TeamTalk Pro Plus v5.24"
+          body: |
+            ### TeamTalk Pro Plus v5.24
+
+            #### Список изменений:
+            - Исправление ошибок версии 5.24
+            - Исправлено переключение звуковых тем и кэширование звуков
+            - Исправлено зависание при смене темы оформления на сервере
+            - Исправлено отображение текста при переключении тем без перезапуска
+            - Добавлен flastik в список разработчиков
+          draft: false
+          prerelease: false
+          files: |
+            build/outputs/apk/debug/*.apk
+            TeamTalkProPlus-5.24-source.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

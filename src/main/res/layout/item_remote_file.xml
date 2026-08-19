@@ -1,67 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="10dp"
-    android:background="?android:attr/selectableItemBackground">
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:layout_toStartOf="@+id/buttons_container"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/filename"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:textSize="15sp" />
-
-        <TextView
-            android:id="@+id/fileinfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:textSize="13sp"
-            android:textColor="@color/textSecondary" />
+<RelativeLayout android:orientation="horizontal" android:background="?android:selectableItemBackground" android:padding="10dp" android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_toStartOf="@id/buttons_container" android:layout_alignParentStart="true">
+        <TextView android:textSize="15sp" android:id="@+id/filename" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
+        <TextView android:textSize="13sp" android:textColor="@color/textSecondary" android:id="@+id/fileinfo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/buttons_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/download_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/button_download"
-            android:focusable="false"
-            android:clickable="true"
-            android:minHeight="0dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/remove_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/button_remove"
-            android:focusable="false"
-            android:clickable="true"
-            android:minHeight="0dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:textSize="13sp"
-            android:layout_marginStart="4dp" />
+    <LinearLayout android:orientation="horizontal" android:id="@+id/buttons_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
+        <Button android:textSize="13sp" android:id="@+id/download_btn" android:paddingTop="4dp" android:paddingBottom="4dp" android:focusable="false" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/button_download" />
+        <Button android:textSize="13sp" android:id="@+id/remove_btn" android:paddingTop="4dp" android:paddingBottom="4dp" android:focusable="false" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/button_remove" android:layout_marginStart="4dp" />
     </LinearLayout>
-
 </RelativeLayout>

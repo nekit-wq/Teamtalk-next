@@ -63,34 +63,26 @@ public class TeamTalkConnection implements ServiceConnection {
 
     @Override
     public void onServiceDisconnected(ComponentName arg0) {
-        ttlistener.onServiceDisconnected(ttservice);
+        if (ttservice != null) {
+            ttlistener.onServiceDisconnected(ttservice);
+            String s = "TeamTalk instance 0x" +
+                Integer.toHexString(ttservice.getTTInstance().hashCode() & 0xFFFFFFFF) +
+                " disconnected";
+            Log.i(TAG, s);
+        }
         setBound(false);
-        
-        String s = "TeamTalk instance 0x" +
-            Integer.toHexString(ttservice.getTTInstance().hashCode() & 0xFFFFFFFF) +
-            " disconnected";
-        Log.i(TAG, s);
-
         synchronized (waitService) {
             ttservice = null;
         }
     }
 
     public TeamTalkService getService() {
-        synchronized (waitService) {
-            if (ttservice == null) {
-                try {
-                    waitService.wait();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
         return ttservice;
     }
 
     public TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
     boolean bound = false;

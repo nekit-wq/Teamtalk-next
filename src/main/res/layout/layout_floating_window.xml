@@ -1,68 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/floating_root"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:padding="6dp"
-    android:background="@drawable/floating_window_bg">
-
-    <ImageView
-        android:id="@+id/drag_handle"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginEnd="6dp"
-        android:src="@drawable/teamtalk_blue"
-        android:contentDescription="@string/desc_drag_handle" />
-
-    <ImageButton
-        android:id="@+id/btn_voice"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginEnd="6dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/microphone"
-        android:scaleType="centerInside"
-        android:contentDescription="@string/desc_btn_voice" />
-
-    <ImageButton
-        android:id="@+id/btn_mute"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginEnd="6dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/speaker_blue"
-        android:scaleType="centerInside"
-        android:contentDescription="@string/desc_btn_mute" />
-
-    <ImageButton
-        android:id="@+id/btn_chat"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginEnd="6dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/message"
-        android:scaleType="centerInside"
-        android:contentDescription="@string/desc_btn_chat" />
-
-    <ImageButton
-        android:id="@+id/btn_channels"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginEnd="6dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/channel_orange"
-        android:scaleType="centerInside"
-        android:contentDescription="@string/desc_btn_channels" />
-
-    <TextView
-        android:id="@+id/txt_ping"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:textColor="@android:color/white"
-        android:textSize="12sp"
-        android:text="--" />
+<LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/floating_root" android:background="@drawable/floating_window_bg" android:padding="6dp" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="@string/desc_floating_window" android:importantForAccessibility="yes"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@+id/drag_handle" android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/teamtalk_blue" android:contentDescription="@string/desc_drag_handle" android:layout_marginEnd="6dp" />
+    <ImageButton android:id="@+id/btn_voice" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/microphone" android:scaleType="centerInside" android:contentDescription="@string/desc_btn_voice" android:layout_marginEnd="6dp" />
+    <ImageButton android:id="@+id/btn_mute" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/speaker_blue" android:scaleType="centerInside" android:contentDescription="@string/desc_btn_mute" android:layout_marginEnd="6dp" />
+    <ImageButton android:id="@+id/btn_chat" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/message" android:scaleType="centerInside" android:contentDescription="@string/desc_btn_chat" android:layout_marginEnd="6dp" />
+    <ImageButton android:id="@+id/btn_channels" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/channel_orange" android:scaleType="centerInside" android:contentDescription="@string/desc_btn_channels" android:layout_marginEnd="6dp" />
+    <ImageButton android:id="@+id/btn_servers" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/teamtalk_orange" android:scaleType="centerInside" android:contentDescription="@string/desc_btn_servers" android:layout_marginEnd="6dp" />
+    <TextView android:textSize="12sp" android:textColor="@android:color/white" android:id="@+id/txt_ping" android:focusable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:importantForAccessibility="yes" android:paddingStart="4dp" android:paddingEnd="4dp" />
 </LinearLayout>

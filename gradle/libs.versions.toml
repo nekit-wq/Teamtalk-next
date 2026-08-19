@@ -14,8 +14,10 @@ junit = "4.13.2"
 testCore = "1.7.0"
 testRunner = "1.7.0"
 testRules = "1.7.0"
+jump3r = "1.0.5"
 
 [libraries]
+jump3r = { group = "de.sciss", name = "jump3r", version.ref = "jump3r" }
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }

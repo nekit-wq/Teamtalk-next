@@ -1,9 +1,7 @@
 package org.nekit.ttproplus.gui;
-import org.nekit.ttproplus.R;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,109 +16,107 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import androidx.appcompat.app.AppCompatActivity;
+import dk.bearware.MediaFileInfo;
+import dk.bearware.MediaFilePlayback;
+import dk.bearware.TeamTalkBase;
+import dk.bearware.VideoCodec;
+import dk.bearware.events.ClientEventListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
-import dk.bearware.AudioFormat;
-import dk.bearware.ClientEvent;
-import dk.bearware.Codec;
-import dk.bearware.MediaFileInfo;
-import dk.bearware.MediaFilePlayback;
-import dk.bearware.MediaFileStatus;
-import dk.bearware.TeamTalkBase;
-import dk.bearware.VideoCodec;
-import dk.bearware.VideoFormat;
+import java.util.ArrayList;
+import java.util.List;
+import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
 import org.nekit.ttproplus.data.Permissions;
 
-public class StreamMediaActivity
-extends AppCompatActivity implements TeamTalkConnectionListener {
-
-    public static final String TAG = "bearware";
+public class StreamMediaActivity extends AppCompatActivity implements TeamTalkConnectionListener {
     public static final int REQUEST_STREAM_MEDIA = 1;
-    private EditText file_path;
+    public static final String TAG = "bearware";
     private static final String lastMedia = "last_media_file";
-    TeamTalkConnection mConnection;
-    private Button btnSelectFile, btnStream, btnPlayPause, btnStop;
-    private TextView txtMediaInfo, txtPosition, txtDuration;
-    private SeekBar seekBar;
+    private Button btnPlayPause;
+    private Button btnSelectFile;
+    private Button btnStop;
+    private Button btnStream;
+    private EditText file_path;
     private boolean isStreaming;
+    private ClientEventListener.OnLocalMediaFileListener localMediaFileListener;
     private int localPlaybackId;
+    TeamTalkConnection mConnection;
     private MediaFileInfo mMediaFileInfo;
     private MediaFilePlayback mPlayback;
-    private boolean seekBarTouching;
-    private Handler handler = new Handler();
     private Runnable progressUpdater;
-    private dk.bearware.events.ClientEventListener.OnStreamMediaFileListener streamMediaFileListener;
-    private dk.bearware.events.ClientEventListener.OnLocalMediaFileListener localMediaFileListener;
-    private java.util.List<Uri> playlistUris = new java.util.ArrayList<>();
+    private SeekBar seekBar;
+    private boolean seekBarTouching;
+    private ClientEventListener.OnStreamMediaFileListener streamMediaFileListener;
+    private TextView txtDuration;
+    private TextView txtMediaInfo;
+    private TextView txtPosition;
+    private Handler handler = new Handler();
+    private List<Uri> playlistUris = new ArrayList();
     private int playlistIndex = 0;
 
     TeamTalkService getService() {
-        return mConnection.getService();
+        return this.mConnection != null ? this.mConnection.getService() : null;
     }
 
     TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+        @Override
+    public void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
-        mConnection = new TeamTalkConnection(this);
+        this.mConnection = new TeamTalkConnection(this);
         setContentView(R.layout.activity_stream_media);
         EdgeToEdgeHelper.enableEdgeToEdge(this);
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        file_path = findViewById(R.id.file_path_txt);
-        file_path.setText(PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getString(lastMedia, ""));
-
-        btnSelectFile = findViewById(R.id.media_file_select_btn);
-        btnStream = findViewById(R.id.btn_stream);
-        btnPlayPause = findViewById(R.id.btn_play_pause);
-        btnStop = findViewById(R.id.btn_stop);
-        txtMediaInfo = findViewById(R.id.media_info);
-        txtPosition = findViewById(R.id.txt_position);
-        txtDuration = findViewById(R.id.txt_duration);
-        seekBar = findViewById(R.id.seek_bar);
-
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        this.file_path = (EditText) findViewById(R.id.file_path_txt);
+        this.file_path.setText(PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getString(lastMedia, ""));
+        this.btnSelectFile = (Button) findViewById(R.id.media_file_select_btn);
+        this.btnStream = (Button) findViewById(R.id.btn_stream);
+        this.btnPlayPause = (Button) findViewById(R.id.btn_play_pause);
+        this.btnStop = (Button) findViewById(R.id.btn_stop);
+        this.txtMediaInfo = (TextView) findViewById(R.id.media_info);
+        this.txtPosition = (TextView) findViewById(R.id.txt_position);
+        this.txtDuration = (TextView) findViewById(R.id.txt_duration);
+        this.seekBar = (SeekBar) findViewById(R.id.seek_bar);
+        this.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() { 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && mMediaFileInfo != null && mMediaFileInfo.uDurationMSec > 0) {
-                    int pos = (int) ((long) mMediaFileInfo.uDurationMSec * progress / seekBar.getMax());
-                    txtPosition.setText(formatDuration(pos));
+                if (fromUser && StreamMediaActivity.this.mMediaFileInfo != null && StreamMediaActivity.this.mMediaFileInfo.uDurationMSec > 0) {
+                    int pos = (int) ((StreamMediaActivity.this.mMediaFileInfo.uDurationMSec * progress) / seekBar.getMax());
+                    StreamMediaActivity.this.txtPosition.setText(StreamMediaActivity.this.formatDuration(pos));
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                seekBarTouching = true;
+                StreamMediaActivity.this.seekBarTouching = true;
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                seekBarTouching = false;
-                if (mMediaFileInfo == null || mMediaFileInfo.uDurationMSec <= 0) return;
-                int offset = (int) ((long) mMediaFileInfo.uDurationMSec * seekBar.getProgress() / seekBar.getMax());
-                mPlayback.uOffsetMSec = offset;
-                mPlayback.bPaused = false;
-
-                if (localPlaybackId > 0) {
-                    getClient().updateLocalPlayback(localPlaybackId, mPlayback);
-                } else if (isStreaming) {
+                StreamMediaActivity.this.seekBarTouching = false;
+                if (StreamMediaActivity.this.mMediaFileInfo == null || StreamMediaActivity.this.mMediaFileInfo.uDurationMSec <= 0) {
+                    return;
+                }
+                int offset = (int) ((StreamMediaActivity.this.mMediaFileInfo.uDurationMSec * seekBar.getProgress()) / seekBar.getMax());
+                StreamMediaActivity.this.mPlayback.uOffsetMSec = offset;
+                StreamMediaActivity.this.mPlayback.bPaused = false;
+                int i = StreamMediaActivity.this.localPlaybackId;
+                StreamMediaActivity streamMediaActivity = StreamMediaActivity.this;
+                if (i > 0) {
+                    streamMediaActivity.getClient().updateLocalPlayback(StreamMediaActivity.this.localPlaybackId, StreamMediaActivity.this.mPlayback);
+                } else if (streamMediaActivity.isStreaming) {
                     VideoCodec vc = new VideoCodec();
-                    vc.nCodec = Codec.NO_CODEC;
-                    getClient().updateStreamingMediaFileToChannel(mPlayback, vc);
+                    vc.nCodec = 0;
+                    StreamMediaActivity.this.getClient().updateStreamingMediaFileToChannel(StreamMediaActivity.this.mPlayback, vc);
                 }
             }
         });
@@ -137,7 +133,8 @@ extends AppCompatActivity implements TeamTalkConnectionListener {
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;
-        } else if (id == android.R.id.home) {
+        }
+        if (id == 16908332) {
             stopLocalPlayback();
             finish();
             return true;
@@ -152,204 +149,284 @@ extends AppCompatActivity implements TeamTalkConnectionListener {
         return true;
     }
 
-    @Override
-    protected void onStart() {
+        @Override
+    public void onStart() {
         super.onStart();
-        if (!mConnection.isBound()) {
-            Intent intent = new Intent(getApplicationContext(), TeamTalkService.class);
-            if (!bindService(intent, mConnection, Context.BIND_AUTO_CREATE))
-                Log.e(TAG, "Failed to bind to TeamTalk service");
+        if (!this.mConnection.isBound()) {
+            Intent intent = new Intent(getApplicationContext(), (Class<?>) TeamTalkService.class);
+            if (!bindService(intent, this.mConnection, 1)) {
+                Log.e("bearware", "Failed to bind to TeamTalk service");
+            }
         }
     }
 
-    @Override
-    protected void onStop() {
+        @Override
+    public void onPause() {
+        super.onPause();
+        if (this.file_path != null) {
+            String path = this.file_path.getText().toString();
+            PreferenceManager.getDefaultSharedPreferences(getBaseContext()).edit().putString(lastMedia, path).apply();
+        }
+    }
+
+        @Override
+    public void onStop() {
         super.onStop();
-        if (mConnection.isBound()) {
+        if (this.mConnection.isBound()) {
             onServiceDisconnected(getService());
-            unbindService(mConnection);
-            mConnection.setBound(false);
+            unbindService(this.mConnection);
+            this.mConnection.setBound(false);
         }
-        handler.removeCallbacks(progressUpdater);
+        this.handler.removeCallbacks(this.progressUpdater);
     }
 
-    @Override
-    protected void onDestroy() {
+        @Override
+    public void onDestroy() {
         stopLocalPlayback();
         super.onDestroy();
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Permissions granted = Permissions.onRequestResult(this, requestCode, grantResults);
-        if (granted == null)
+        if (granted == null) {
             return;
-        if (granted == Permissions.READ_EXTERNAL_STORAGE ||
-            granted == Permissions.READ_MEDIA_VIDEO ||
-            granted == Permissions.READ_MEDIA_AUDIO) {
-            if ((Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) || areMediaPermissionsComplete())
-                mediaSelectionStart();
         }
+        if (granted == Permissions.READ_EXTERNAL_STORAGE || granted == Permissions.READ_MEDIA_VIDEO || granted == Permissions.READ_MEDIA_AUDIO) {
+            if (Build.VERSION.SDK_INT < 33 || areMediaPermissionsComplete()) {
+                mediaSelectionStart();
+            }
+        }
+    }
+
+        public void lambda$onServiceConnected$1(final MediaFileInfo mfi) {
+        runOnUiThread(new Runnable() { 
+            @Override
+            public final void run() {
+                StreamMediaActivity.this.lambda$onServiceConnected$0(mfi);
+            }
+        });
     }
 
     @Override
     public void onServiceConnected(TeamTalkService service) {
-        streamMediaFileListener = mfi -> runOnUiThread(() -> onStreamMediaFile(mfi));
-        localMediaFileListener = mfi -> runOnUiThread(() -> onLocalMediaFile(mfi));
-        getService().getEventHandler().registerOnStreamMediaFile(streamMediaFileListener, true);
-        getService().getEventHandler().registerOnLocalMediaFile(localMediaFileListener, true);
-
-        // Restore active playback or streaming state from service
-        if (service.isStreamingMedia() || service.getLocalPlaybackId() > 0) {
-            String path = service.getCurrentStreamPath();
-            if (path != null && !path.isEmpty()) {
-                file_path.setText(path);
-                mMediaFileInfo = service.getCurrentMediaFileInfo();
-                mPlayback = service.getCurrentPlayback();
-                localPlaybackId = service.getLocalPlaybackId();
-                isStreaming = service.isStreamingMedia();
-
-                if (mMediaFileInfo != null) {
-                    showMediaFileInfo(mMediaFileInfo);
-                    updateSeekBar();
-                    updateSeekBarPosition(mMediaFileInfo.uElapsedMSec);
+        String path;
+        this.streamMediaFileListener = new ClientEventListener.OnStreamMediaFileListener() { 
+            @Override
+            public final void onStreamMediaFile(MediaFileInfo mediaFileInfo) {
+                StreamMediaActivity.this.lambda$onServiceConnected$1(mediaFileInfo);
+            }
+        };
+        this.localMediaFileListener = new ClientEventListener.OnLocalMediaFileListener() { 
+            @Override
+            public final void onLocalMediaFile(MediaFileInfo mediaFileInfo) {
+                StreamMediaActivity.this.lambda$onServiceConnected$3(mediaFileInfo);
+            }
+        };
+        getService().getEventHandler().registerOnStreamMediaFile(this.streamMediaFileListener, true);
+        getService().getEventHandler().registerOnLocalMediaFile(this.localMediaFileListener, true);
+        if ((service.isStreamingMedia() || service.getLocalPlaybackId() > 0) && (path = service.getCurrentStreamPath()) != null && !path.isEmpty()) {
+            this.file_path.setText(path);
+            this.mMediaFileInfo = service.getCurrentMediaFileInfo();
+            this.mPlayback = service.getCurrentPlayback();
+            this.localPlaybackId = service.getLocalPlaybackId();
+            this.isStreaming = service.isStreamingMedia();
+            if (this.mMediaFileInfo != null) {
+                showMediaFileInfo(this.mMediaFileInfo);
+                updateSeekBar();
+                updateSeekBarPosition(this.mMediaFileInfo.uElapsedMSec);
+            }
+            if (this.isStreaming) {
+                this.btnStream.setText(R.string.action_stop);
+            }
+            if (this.localPlaybackId > 0) {
+                this.btnStop.setEnabled(true);
+                if (this.mPlayback != null) {
+                    this.btnPlayPause.setText(this.mPlayback.bPaused ? R.string.action_play : R.string.action_pause);
                 }
-
-                if (isStreaming) {
-                    btnStream.setText(R.string.action_stop);
-                }
-
-                if (localPlaybackId > 0) {
-                    btnStop.setEnabled(true);
-                    if (mPlayback != null) {
-                        btnPlayPause.setText(mPlayback.bPaused ? R.string.action_play : R.string.action_pause);
-                    }
-                    startProgressUpdater();
-                }
+                startProgressUpdater();
             }
         }
-
-        btnSelectFile.setOnClickListener(v -> {
-            if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ?
-                requestMediaPermissions() :
-                Permissions.READ_EXTERNAL_STORAGE.request(this)) {
-                mediaSelectionStart();
+        this.btnSelectFile.setOnClickListener(new View.OnClickListener() { 
+            @Override
+            public final void onClick(View view) {
+                StreamMediaActivity.this.lambda$onServiceConnected$4(view);
             }
         });
+        this.btnStream.setOnClickListener(new View.OnClickListener() { 
+            @Override
+            public final void onClick(View view) {
+                StreamMediaActivity.this.lambda$onServiceConnected$5(view);
+            }
+        });
+        this.btnPlayPause.setOnClickListener(new View.OnClickListener() { 
+            @Override
+            public final void onClick(View view) {
+                StreamMediaActivity.this.lambda$onServiceConnected$6(view);
+            }
+        });
+        this.btnStop.setOnClickListener(new View.OnClickListener() { 
+            @Override
+            public final void onClick(View view) {
+                StreamMediaActivity.this.lambda$onServiceConnected$7(view);
+            }
+        });
+    }
 
-        btnStream.setOnClickListener(v -> toggleStreaming());
+        public void lambda$onServiceConnected$3(final MediaFileInfo mfi) {
+        runOnUiThread(new Runnable() { 
+            @Override
+            public final void run() {
+                StreamMediaActivity.this.lambda$onServiceConnected$2(mfi);
+            }
+        });
+    }
 
-        btnPlayPause.setOnClickListener(v -> togglePlayPause());
+        public void lambda$onServiceConnected$4(View v) {
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (!requestMediaPermissions()) {
+                return;
+            }
+        } else if (!Permissions.READ_EXTERNAL_STORAGE.request(this)) {
+            return;
+        }
+        mediaSelectionStart();
+    }
 
-        btnStop.setOnClickListener(v -> stopLocalPlayback());
+        public void lambda$onServiceConnected$5(View v) {
+        toggleStreaming();
+    }
+
+        public void lambda$onServiceConnected$6(View v) {
+        togglePlayPause();
+    }
+
+        public void lambda$onServiceConnected$7(View v) {
+        stopLocalPlayback();
     }
 
     @Override
     public void onServiceDisconnected(TeamTalkService service) {
         if (service != null && service.getEventHandler() != null) {
-            if (streamMediaFileListener != null) {
-                service.getEventHandler().registerOnStreamMediaFile(streamMediaFileListener, false);
+            if (this.streamMediaFileListener != null) {
+                service.getEventHandler().registerOnStreamMediaFile(this.streamMediaFileListener, false);
             }
-            if (localMediaFileListener != null) {
-                service.getEventHandler().registerOnLocalMediaFile(localMediaFileListener, false);
+            if (this.localMediaFileListener != null) {
+                service.getEventHandler().registerOnLocalMediaFile(this.localMediaFileListener, false);
             }
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if ((requestCode == REQUEST_STREAM_MEDIA) && (resultCode == RESULT_OK)) {
-            if (data == null) return;
-            
-            playlistUris.clear();
-            playlistIndex = 0;
-
+        @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1 && resultCode == -1) {
+            if (data == null) {
+                return;
+            }
+            this.playlistUris.clear();
+            this.playlistIndex = 0;
             if (data.getClipData() != null) {
                 int count = data.getClipData().getItemCount();
                 for (int i = 0; i < count; i++) {
-                    playlistUris.add(data.getClipData().getItemAt(i).getUri());
+                    this.playlistUris.add(data.getClipData().getItemAt(i).getUri());
                 }
                 playPlaylistCurrent();
-            } else if (data.getData() != null) {
-                playlistUris.add(data.getData());
-                playPlaylistCurrent();
+                return;
             }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
+            if (data.getData() != null) {
+                this.playlistUris.add(data.getData());
+                playPlaylistCurrent();
+                return;
+            }
+            return;
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private String getFileNameAndExtension(Uri uri) {
+        Uri uri2;
+        int nameIndex;
+        int cut;
         String result = null;
-        if ("content".equals(uri.getScheme())) {
-            try (android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
-                    if (nameIndex >= 0) {
-                        result = cursor.getString(nameIndex);
+        if (!"content".equals(uri.getScheme())) {
+            uri2 = uri;
+        } else {
+            try {
+                uri2 = uri;
+                try {
+                    Cursor cursor = getContentResolver().query(uri2, null, null, null, null);
+                    if (cursor != null) {
+                        try {
+                            if (cursor.moveToFirst() && (nameIndex = cursor.getColumnIndex("_display_name")) >= 0) {
+                                result = cursor.getString(nameIndex);
+                            }
+                        } finally {
+                        }
                     }
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                } catch (Exception e) {
                 }
-            } catch (Exception e) {
-                // ignore
+            } catch (Exception e2) {
+                uri2 = uri;
             }
         }
         if (result == null) {
-            result = uri.getPath();
-            if (result != null) {
-                int cut = result.lastIndexOf('/');
-                if (cut != -1) {
-                    result = result.substring(cut + 1);
-                }
+            String result2 = uri2.getPath();
+            if (result2 != null && (cut = result2.lastIndexOf(47)) != -1) {
+                return result2.substring(cut + 1);
             }
+            return result2;
         }
         return result;
     }
 
     private String copyUriToCache(Uri uri) {
+        int dotIndex;
         try {
             InputStream is = getContentResolver().openInputStream(uri);
-            if (is == null) return null;
-            
+            if (is == null) {
+                return null;
+            }
             String fileName = getFileNameAndExtension(uri);
             String extension = ".tmp";
             String prefix = "media_";
-            if (fileName != null) {
-                int dotIndex = fileName.lastIndexOf('.');
-                if (dotIndex != -1) {
-                    extension = fileName.substring(dotIndex);
-                    prefix = fileName.substring(0, dotIndex);
-                    if (prefix.length() < 3) {
-                        prefix = "media_" + prefix;
-                    }
+            if (fileName != null && (dotIndex = fileName.lastIndexOf(46)) != -1) {
+                extension = fileName.substring(dotIndex);
+                prefix = fileName.substring(0, dotIndex);
+                if (prefix.length() < 3) {
+                    prefix = "media_" + prefix;
                 }
             }
-
             File cacheDir = getCacheDir();
             File tempFile = File.createTempFile(prefix + "_", extension, cacheDir);
             FileOutputStream os = new FileOutputStream(tempFile);
             byte[] buf = new byte[8192];
-            int len;
-            while ((len = is.read(buf)) > 0) {
-                os.write(buf, 0, len);
+            while (true) {
+                int len = is.read(buf);
+                if (len > 0) {
+                    os.write(buf, 0, len);
+                } else {
+                    os.close();
+                    is.close();
+                    return tempFile.getAbsolutePath();
+                }
             }
-            os.close();
-            is.close();
-            return tempFile.getAbsolutePath();
         } catch (Exception e) {
-            Log.e(TAG, "Failed to copy URI to cache", e);
+            Log.e("bearware", "Failed to copy URI to cache", e);
             return null;
         }
     }
 
     private void mediaSelectionStart() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        Intent intent = new Intent("android.intent.action.GET_CONTENT");
+        intent.addCategory("android.intent.category.OPENABLE");
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra("android.intent.extra.ALLOW_MULTIPLE", true);
         Intent i = Intent.createChooser(intent, "File");
-        startActivityForResult(i, REQUEST_STREAM_MEDIA);
+        startActivityForResult(i, 1);
     }
 
     private boolean requestMediaPermissions() {
@@ -359,29 +436,27 @@ extends AppCompatActivity implements TeamTalkConnectionListener {
     }
 
     private boolean areMediaPermissionsComplete() {
-        return !(Permissions.READ_MEDIA_VIDEO.isPending() ||
-                 Permissions.READ_MEDIA_AUDIO.isPending());
+        return (Permissions.READ_MEDIA_VIDEO.isPending() || Permissions.READ_MEDIA_AUDIO.isPending()) ? false : true;
     }
 
     private void loadMediaFileInfo(String path) {
         if (path.startsWith("http://") || path.startsWith("https://")) {
-            mMediaFileInfo = null;
-            txtMediaInfo.setText(R.string.msg_streaming_url);
-            txtMediaInfo.setVisibility(View.VISIBLE);
-            txtDuration.setText("--:--");
-            seekBar.setEnabled(false);
+            this.mMediaFileInfo = null;
+            this.txtMediaInfo.setText(R.string.msg_streaming_url);
+            this.txtMediaInfo.setVisibility(0);
+            this.txtDuration.setText("--:--");
+            this.seekBar.setEnabled(false);
             return;
         }
-
         MediaFileInfo info = new MediaFileInfo();
         if (TeamTalkBase.getMediaFileInfo(path, info)) {
-            mMediaFileInfo = info;
+            this.mMediaFileInfo = info;
             showMediaFileInfo(info);
             updateSeekBar();
         } else {
-            mMediaFileInfo = null;
-            txtMediaInfo.setVisibility(View.GONE);
-            txtDuration.setText("00:00");
+            this.mMediaFileInfo = null;
+            this.txtMediaInfo.setVisibility(8);
+            this.txtDuration.setText("00:00");
         }
     }
 
@@ -401,250 +476,262 @@ extends AppCompatActivity implements TeamTalkConnectionListener {
             sb.append(getString(R.string.msg_no_video));
         }
         sb.append("\n").append(getString(R.string.label_duration)).append(": ").append(formatDuration(info.uDurationMSec));
-        txtMediaInfo.setText(sb.toString());
-        txtMediaInfo.setVisibility(View.VISIBLE);
-        txtDuration.setText(formatDuration(info.uDurationMSec));
+        this.txtMediaInfo.setText(sb.toString());
+        this.txtMediaInfo.setVisibility(0);
+        this.txtDuration.setText(formatDuration(info.uDurationMSec));
     }
 
     private void toggleStreaming() {
-        if (isStreaming) {
+        if (this.isStreaming) {
             getClient().stopStreamingMediaFileToChannel();
-            isStreaming = false;
-            btnStream.setText(R.string.button_stream_media_file);
-            Toast.makeText(this, R.string.msg_stream_stopped, Toast.LENGTH_SHORT).show();
+            this.isStreaming = false;
+            this.btnStream.setText(R.string.button_stream_media_file);
+            Toast.makeText(this, R.string.msg_stream_stopped, 0).show();
             if (getService() != null) {
                 getService().setStreamingMedia(false);
                 getService().setCurrentStreamPath("");
                 getService().setCurrentMediaFileInfo(null);
+                return;
             }
-        } else {
-            String path = file_path.getText().toString();
-            if (path.isEmpty()) return;
-
-            if (mMediaFileInfo == null) {
-                loadMediaFileInfo(path);
-            }
-
-            VideoCodec videocodec = new VideoCodec();
-            videocodec.nCodec = Codec.NO_CODEC;
-            if (mMediaFileInfo != null && mMediaFileInfo.videoFmt != null && mMediaFileInfo.videoFmt.picFourCC != 0) {
-                videocodec.nCodec = Codec.WEBM_VP8_CODEC;
-            }
-
-            if (!getClient().startStreamingMediaFileToChannel(path, videocodec)) {
-                Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
-            } else {
-                isStreaming = true;
-                btnStream.setText(R.string.action_stop);
-                Toast.makeText(this, R.string.msg_stream_started, Toast.LENGTH_SHORT).show();
-                if (getService() != null) {
-                    getService().setStreamingMedia(true);
-                    getService().setCurrentStreamPath(path);
-                    getService().setCurrentMediaFileInfo(mMediaFileInfo);
-                }
-            }
+            return;
+        }
+        String path = this.file_path.getText().toString();
+        if (path.isEmpty()) {
+            return;
+        }
+        if (this.mMediaFileInfo == null) {
+            loadMediaFileInfo(path);
+        }
+        VideoCodec videocodec = new VideoCodec();
+        videocodec.nCodec = 0;
+        if (this.mMediaFileInfo != null && this.mMediaFileInfo.videoFmt != null && this.mMediaFileInfo.videoFmt.picFourCC != 0) {
+            videocodec.nCodec = 128;
+        }
+        if (!getClient().startStreamingMediaFileToChannel(path, videocodec)) {
+            Toast.makeText(this, R.string.err_stream_media, 1).show();
+            return;
+        }
+        this.isStreaming = true;
+        this.btnStream.setText(R.string.action_stop);
+        Toast.makeText(this, R.string.msg_stream_started, 0).show();
+        if (getService() != null) {
+            getService().setStreamingMedia(true);
+            getService().setCurrentStreamPath(path);
+            getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
         }
     }
 
     private void togglePlayPause() {
-        String path = file_path.getText().toString();
-        if (path.isEmpty()) return;
-
-        if (localPlaybackId > 0) {
-            mPlayback.bPaused = !mPlayback.bPaused;
-            mPlayback.uOffsetMSec = -1;
-            if (getClient().updateLocalPlayback(localPlaybackId, mPlayback)) {
-                btnPlayPause.setText(mPlayback.bPaused ? R.string.action_play : R.string.action_pause);
-                if (getService() != null) {
-                    getService().setCurrentPlayback(mPlayback);
-                }
-            }
-        } else {
-            if (mMediaFileInfo == null && !path.startsWith("http://") && !path.startsWith("https://")) {
-                loadMediaFileInfo(path);
-            }
-            mPlayback = new MediaFilePlayback();
-            mPlayback.bPaused = false;
-            if (mMediaFileInfo != null) {
-                mPlayback.uOffsetMSec = (int) ((long) mMediaFileInfo.uDurationMSec * seekBar.getProgress() / seekBar.getMax());
-            } else {
-                mPlayback.uOffsetMSec = 0;
-            }
-            localPlaybackId = getClient().initLocalPlayback(path, mPlayback);
-            if (localPlaybackId > 0) {
-                btnPlayPause.setText(R.string.action_pause);
-                btnStop.setEnabled(true);
-                startProgressUpdater();
-                if (getService() != null) {
-                    getService().setLocalPlaybackId(localPlaybackId);
-                    getService().setCurrentStreamPath(path);
-                    getService().setCurrentMediaFileInfo(mMediaFileInfo);
-                    getService().setCurrentPlayback(mPlayback);
-                }
-            } else {
-                Toast.makeText(this, R.string.err_play_media, Toast.LENGTH_LONG).show();
-            }
+        String path = this.file_path.getText().toString();
+        if (path.isEmpty()) {
+            return;
         }
+        if (this.localPlaybackId > 0) {
+            this.mPlayback.bPaused = true ^ this.mPlayback.bPaused;
+            this.mPlayback.uOffsetMSec = -1;
+            if (getClient().updateLocalPlayback(this.localPlaybackId, this.mPlayback)) {
+                this.btnPlayPause.setText(this.mPlayback.bPaused ? R.string.action_play : R.string.action_pause);
+                if (getService() != null) {
+                    getService().setCurrentPlayback(this.mPlayback);
+                    return;
+                }
+                return;
+            }
+            return;
+        }
+        if (this.mMediaFileInfo == null && !path.startsWith("http://") && !path.startsWith("https://")) {
+            loadMediaFileInfo(path);
+        }
+        this.mPlayback = new MediaFilePlayback();
+        this.mPlayback.bPaused = false;
+        MediaFileInfo mediaFileInfo = this.mMediaFileInfo;
+        MediaFilePlayback mediaFilePlayback = this.mPlayback;
+        if (mediaFileInfo != null) {
+            mediaFilePlayback.uOffsetMSec = (int) ((this.mMediaFileInfo.uDurationMSec * this.seekBar.getProgress()) / this.seekBar.getMax());
+        } else {
+            mediaFilePlayback.uOffsetMSec = 0;
+        }
+        this.localPlaybackId = getClient().initLocalPlayback(path, this.mPlayback);
+        if (this.localPlaybackId > 0) {
+            this.btnPlayPause.setText(R.string.action_pause);
+            this.btnStop.setEnabled(true);
+            startProgressUpdater();
+            if (getService() != null) {
+                getService().setLocalPlaybackId(this.localPlaybackId);
+                getService().setCurrentStreamPath(path);
+                getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
+                getService().setCurrentPlayback(this.mPlayback);
+                return;
+            }
+            return;
+        }
+        Toast.makeText(this, R.string.err_play_media, 1).show();
     }
 
     private void stopLocalPlayback() {
-        if (localPlaybackId > 0) {
-            getClient().stopLocalPlayback(localPlaybackId);
-            localPlaybackId = 0;
+        if (this.localPlaybackId > 0) {
+            getClient().stopLocalPlayback(this.localPlaybackId);
+            this.localPlaybackId = 0;
             if (getService() != null) {
                 getService().setLocalPlaybackId(0);
                 getService().setCurrentPlayback(null);
                 getService().setCurrentMediaFileInfo(null);
             }
         }
-        btnPlayPause.setText(R.string.action_play);
-        btnStop.setEnabled(false);
-        seekBar.setProgress(0);
-        txtPosition.setText("00:00");
-        handler.removeCallbacks(progressUpdater);
+        this.btnPlayPause.setText(R.string.action_play);
+        this.btnStop.setEnabled(false);
+        this.seekBar.setProgress(0);
+        this.txtPosition.setText("00:00");
+        this.handler.removeCallbacks(this.progressUpdater);
     }
 
-    private void onStreamMediaFile(MediaFileInfo mfi) {
-        mMediaFileInfo = mfi;
+        /* renamed from: onStreamMediaFile, reason: merged with bridge method [inline-methods] */
+    public void lambda$onServiceConnected$0(MediaFileInfo mfi) {
+        this.mMediaFileInfo = mfi;
         if (getService() != null) {
             getService().setCurrentMediaFileInfo(mfi);
         }
         if (mfi.uDurationMSec > 0) {
-            txtDuration.setText(formatDuration(mfi.uDurationMSec));
-            if (!seekBarTouching)
+            this.txtDuration.setText(formatDuration(mfi.uDurationMSec));
+            if (!this.seekBarTouching) {
                 updateSeekBarPosition(mfi.uElapsedMSec);
+            }
         }
         switch (mfi.nStatus) {
-            case MediaFileStatus.MFS_STARTED:
-            case MediaFileStatus.MFS_PLAYING:
-                btnStream.setText(R.string.action_stop);
-                break;
-            case MediaFileStatus.MFS_PAUSED:
-                break;
-            case MediaFileStatus.MFS_ERROR:
-            case MediaFileStatus.MFS_FINISHED:
-            case MediaFileStatus.MFS_ABORTED:
-                isStreaming = false;
-                btnStream.setText(R.string.button_stream_media_file);
+            case 1:
+            case 3:
+            case 4:
+                this.isStreaming = false;
+                this.btnStream.setText(R.string.button_stream_media_file);
                 if (getService() != null) {
                     getService().setStreamingMedia(false);
                     getService().setCurrentStreamPath("");
                     getService().setCurrentMediaFileInfo(null);
                 }
-                if (!playlistUris.isEmpty() && playlistIndex < playlistUris.size() - 1) {
-                    playlistIndex++;
+                if (!this.playlistUris.isEmpty() && this.playlistIndex < this.playlistUris.size() - 1) {
+                    this.playlistIndex++;
                     playPlaylistCurrent();
+                    return;
                 }
-                break;
+                return;
+            case 2:
+            case 6:
+                this.btnStream.setText(R.string.action_stop);
+                return;
+            case 5:
+            default:
+                return;
         }
     }
 
-    private void onLocalMediaFile(MediaFileInfo mfi) {
-        mMediaFileInfo = mfi;
+        /* renamed from: onLocalMediaFile, reason: merged with bridge method [inline-methods] */
+    public void lambda$onServiceConnected$2(MediaFileInfo mfi) {
+        this.mMediaFileInfo = mfi;
         if (getService() != null) {
             getService().setCurrentMediaFileInfo(mfi);
         }
-        if (!seekBarTouching && mfi.uDurationMSec > 0)
+        if (!this.seekBarTouching && mfi.uDurationMSec > 0) {
             updateSeekBarPosition(mfi.uElapsedMSec);
-
+        }
         switch (mfi.nStatus) {
-            case MediaFileStatus.MFS_STARTED:
-            case MediaFileStatus.MFS_PLAYING:
-                btnPlayPause.setText(R.string.action_pause);
-                break;
-            case MediaFileStatus.MFS_PAUSED:
-                btnPlayPause.setText(R.string.action_play);
-                break;
-            case MediaFileStatus.MFS_ERROR:
-            case MediaFileStatus.MFS_FINISHED:
-            case MediaFileStatus.MFS_ABORTED:
-                localPlaybackId = 0;
-                btnPlayPause.setText(R.string.action_play);
-                btnStop.setEnabled(false);
-                handler.removeCallbacks(progressUpdater);
-                if (!seekBarTouching) {
-                    seekBar.setProgress(0);
-                    txtPosition.setText("00:00");
+            case 1:
+            case 3:
+            case 4:
+                this.localPlaybackId = 0;
+                this.btnPlayPause.setText(R.string.action_play);
+                this.btnStop.setEnabled(false);
+                this.handler.removeCallbacks(this.progressUpdater);
+                if (!this.seekBarTouching) {
+                    this.seekBar.setProgress(0);
+                    this.txtPosition.setText("00:00");
                 }
                 if (getService() != null) {
                     getService().setLocalPlaybackId(0);
                     getService().setCurrentPlayback(null);
                     getService().setCurrentMediaFileInfo(null);
+                    return;
                 }
-                break;
+                return;
+            case 2:
+            case 6:
+                this.btnPlayPause.setText(R.string.action_pause);
+                return;
+            case 5:
+                this.btnPlayPause.setText(R.string.action_play);
+                return;
+            default:
+                return;
         }
     }
 
     private void startProgressUpdater() {
-        handler.removeCallbacks(progressUpdater);
-        progressUpdater = new Runnable() {
+        this.handler.removeCallbacks(this.progressUpdater);
+        this.progressUpdater = new Runnable() { 
             @Override
             public void run() {
-                if (localPlaybackId > 0 && !seekBarTouching && mMediaFileInfo != null) {
-                    updateSeekBarPosition(mMediaFileInfo.uElapsedMSec);
+                if (StreamMediaActivity.this.localPlaybackId > 0 && !StreamMediaActivity.this.seekBarTouching && StreamMediaActivity.this.mMediaFileInfo != null) {
+                    StreamMediaActivity.this.updateSeekBarPosition(StreamMediaActivity.this.mMediaFileInfo.uElapsedMSec);
                 }
-                handler.postDelayed(this, 250);
+                StreamMediaActivity.this.handler.postDelayed(this, 250L);
             }
         };
-        handler.postDelayed(progressUpdater, 250);
+        this.handler.postDelayed(this.progressUpdater, 250L);
     }
 
-    private void updateSeekBarPosition(int elapsed) {
-        txtPosition.setText(formatDuration(elapsed));
-        if (mMediaFileInfo != null && mMediaFileInfo.uDurationMSec > 0) {
-            int progress = (int) ((long) elapsed * seekBar.getMax() / mMediaFileInfo.uDurationMSec);
-            seekBar.setProgress(progress);
+        public void updateSeekBarPosition(int elapsed) {
+        this.txtPosition.setText(formatDuration(elapsed));
+        if (this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0) {
+            int progress = (int) ((elapsed * this.seekBar.getMax()) / this.mMediaFileInfo.uDurationMSec);
+            this.seekBar.setProgress(progress);
         }
     }
 
     private void updateSeekBar() {
-        if (mMediaFileInfo != null && mMediaFileInfo.uDurationMSec > 0) {
-            seekBar.setEnabled(true);
+        if (this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0) {
+            this.seekBar.setEnabled(true);
         } else {
-            seekBar.setEnabled(false);
+            this.seekBar.setEnabled(false);
         }
     }
 
-    private String formatDuration(int msec) {
+        public String formatDuration(int msec) {
         int sec = msec / 1000;
         int min = sec / 60;
-        sec = sec % 60;
-        return String.format("%02d:%02d", min, sec);
+        return String.format("%02d:%02d", Integer.valueOf(min), Integer.valueOf(sec % 60));
     }
 
     private void playPlaylistCurrent() {
-        if (playlistUris.isEmpty() || playlistIndex >= playlistUris.size()) return;
-        Uri uri = playlistUris.get(playlistIndex);
-        String path = AbsolutePathHelper.getRealPath(this.getBaseContext(), uri);
+        if (this.playlistUris.isEmpty() || this.playlistIndex >= this.playlistUris.size()) {
+            return;
+        }
+        Uri uri = this.playlistUris.get(this.playlistIndex);
+        String path = AbsolutePathHelper.getRealPath(getBaseContext(), uri);
         if (path == null && uri != null) {
             path = copyUriToCache(uri);
         }
         if (path != null) {
-            file_path.setText(path);
+            this.file_path.setText(path);
             loadMediaFileInfo(path);
-            Toast.makeText(this, getString(R.string.msg_playlist_playing, (playlistIndex + 1), playlistUris.size()), Toast.LENGTH_SHORT).show();
-
-            if (isStreaming) {
+            Toast.makeText(this, getString(R.string.msg_playlist_playing, new Object[]{Integer.valueOf(this.playlistIndex + 1), Integer.valueOf(this.playlistUris.size())}), 0).show();
+            if (this.isStreaming) {
                 getClient().stopStreamingMediaFileToChannel();
-
                 VideoCodec videocodec = new VideoCodec();
-                videocodec.nCodec = Codec.NO_CODEC;
-                if (mMediaFileInfo != null && mMediaFileInfo.videoFmt != null && mMediaFileInfo.videoFmt.picFourCC != 0) {
-                    videocodec.nCodec = Codec.WEBM_VP8_CODEC;
+                videocodec.nCodec = 0;
+                if (this.mMediaFileInfo != null && this.mMediaFileInfo.videoFmt != null && this.mMediaFileInfo.videoFmt.picFourCC != 0) {
+                    videocodec.nCodec = 128;
                 }
-
                 if (!getClient().startStreamingMediaFileToChannel(path, videocodec)) {
-                    Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
-                    isStreaming = false;
-                    btnStream.setText(R.string.button_stream_media_file);
-                } else {
-                    isStreaming = true;
-                    btnStream.setText(R.string.action_stop);
-                    if (getService() != null) {
-                        getService().setStreamingMedia(true);
-                        getService().setCurrentStreamPath(path);
-                        getService().setCurrentMediaFileInfo(mMediaFileInfo);
-                    }
+                    Toast.makeText(this, R.string.err_stream_media, 1).show();
+                    this.isStreaming = false;
+                    this.btnStream.setText(R.string.button_stream_media_file);
+                    return;
+                }
+                this.isStreaming = true;
+                this.btnStream.setText(R.string.action_stop);
+                if (getService() != null) {
+                    getService().setStreamingMedia(true);
+                    getService().setCurrentStreamPath(path);
+                    getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
                 }
             }
         }

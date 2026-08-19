@@ -143,11 +143,12 @@ public class UserAccountsActivity extends AppCompatActivity implements
     }
 
     private TeamTalkService getService() {
-        return mConnection.getService();
+        return mConnection != null ? mConnection.getService() : null;
     }
 
     private TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
     @Override

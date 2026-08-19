@@ -1,50 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <CheckBoxPreference
-        android:key="bg_mgmt_enabled"
-        android:title="@string/pref_title_bg_mgmt_enabled"
-        android:summary="@string/pref_summary_bg_mgmt_enabled"
-        android:defaultValue="false" />
-
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference android:title="@string/pref_title_bg_mgmt_enabled" android:key="bg_mgmt_enabled" android:summary="@string/pref_summary_bg_mgmt_enabled" android:defaultValue="false" />
     <PreferenceCategory android:title="@string/pref_category_bg_mgmt_elements">
-        <CheckBoxPreference
-            android:key="bg_mgmt_show_voice"
-            android:title="@string/pref_title_bg_mgmt_show_voice"
-            android:defaultValue="true"
-            android:dependency="bg_mgmt_enabled" />
-
-        <CheckBoxPreference
-            android:key="bg_mgmt_show_mute"
-            android:title="@string/pref_title_bg_mgmt_show_mute"
-            android:defaultValue="true"
-            android:dependency="bg_mgmt_enabled" />
-
-        <CheckBoxPreference
-            android:key="bg_mgmt_show_ping"
-            android:title="@string/pref_title_bg_mgmt_show_ping"
-            android:defaultValue="true"
-            android:dependency="bg_mgmt_enabled" />
-
-        <CheckBoxPreference
-            android:key="bg_mgmt_show_chat"
-            android:title="@string/pref_title_bg_mgmt_show_chat"
-            android:defaultValue="true"
-            android:dependency="bg_mgmt_enabled" />
-
-        <CheckBoxPreference
-            android:key="bg_mgmt_show_channels"
-            android:title="@string/pref_title_bg_mgmt_show_channels"
-            android:summary="@string/pref_summary_bg_mgmt_show_channels"
-            android:defaultValue="true"
-            android:dependency="bg_mgmt_enabled" />
+        <CheckBoxPreference android:title="@string/pref_title_bg_mgmt_show_voice" android:key="bg_mgmt_show_voice" android:dependency="bg_mgmt_enabled" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_bg_mgmt_show_mute" android:key="bg_mgmt_show_mute" android:dependency="bg_mgmt_enabled" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_bg_mgmt_show_ping" android:key="bg_mgmt_show_ping" android:dependency="bg_mgmt_enabled" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_bg_mgmt_show_chat" android:key="bg_mgmt_show_chat" android:dependency="bg_mgmt_enabled" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_bg_mgmt_show_channels" android:key="bg_mgmt_show_channels" android:summary="@string/pref_summary_bg_mgmt_show_channels" android:dependency="bg_mgmt_enabled" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_bg_mgmt_show_servers" android:key="bg_mgmt_show_servers" android:summary="@string/pref_summary_bg_mgmt_show_servers" android:dependency="bg_mgmt_enabled" android:defaultValue="true" />
     </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/pref_category_bg_mgmt_behavior">
-        <CheckBoxPreference
-            android:key="bg_mgmt_close_on_app_open"
-            android:title="@string/pref_title_bg_mgmt_close_on_app_open"
-            android:summary="@string/pref_summary_bg_mgmt_close_on_app_open"
-            android:defaultValue="false"
-            android:dependency="bg_mgmt_enabled" />
+        <ListPreference android:entries="@array/bg_mgmt_display_type_entries" android:title="@string/pref_title_bg_mgmt_display_type" android:key="bg_mgmt_display_type" android:summary="@string/pref_summary_bg_mgmt_display_type" android:dependency="bg_mgmt_enabled" android:defaultValue="window" android:entryValues="@array/bg_mgmt_display_type_values" />
+        <CheckBoxPreference android:title="@string/pref_title_bg_mgmt_close_on_app_open" android:key="bg_mgmt_close_on_app_open" android:summary="@string/pref_summary_bg_mgmt_close_on_app_open" android:dependency="bg_mgmt_enabled" android:defaultValue="false" />
     </PreferenceCategory>
 </PreferenceScreen>

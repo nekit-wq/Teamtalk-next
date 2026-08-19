@@ -1,19 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="theme_entries">
-        <item>Авто (системная)</item>
-        <item>Белая (светлая)</item>
-        <item>Тёмная</item>
-    </string-array>
-    <string-array name="sound_pack_entries">
-        <item>По умолчанию</item>
-        <item>Пользовательский</item>
-        <item>Без звука</item>
-    </string-array>
     <string-array name="audio_input_source_entries">
         <item>Микрофон</item>
         <item>Внутренний звук</item>
         <item>Смешанный (микрофон + внутр. звук)</item>
+    </string-array>
+    <string-array name="bg_mgmt_display_type_entries">
+        <item>Плавающее окно</item>
+        <item>Уведомление</item>
+    </string-array>
+    <string-array name="default_file_manager_entries">
+        <item>Спрашивать каждый раз</item>
+        <item>Системный проводник</item>
+        <item>Встроенный проводник</item>
+    </string-array>
+    <string-array name="display_button_size_entries">
+        <item>Маленький</item>
+        <item>Средний</item>
+        <item>Большой</item>
+    </string-array>
+    <string-array name="display_button_size_values">
+        <item>small</item>
+        <item>medium</item>
+        <item>large</item>
+    </string-array>
+    <string-array name="pref_tts_language_behavior_entries">
+        <item>Следовать языку приложения</item>
+        <item>Системный по умолчанию</item>
     </string-array>
     <string-array name="recording_format_entries">
         <item>WAV (без сжатия)</item>
@@ -28,15 +41,19 @@
         <item>256 кбит/с</item>
         <item>320 кбит/с</item>
     </string-array>
-    
-    <string-array name="display_button_size_entries">
-        <item>Маленький</item>
-        <item>Средний</item>
-        <item>Большой</item>
+    <string-array name="sound_pack_entries">
+        <item>По умолчанию (встроенные)</item>
+        <item>Default Windows</item>
+        <item>Legacy Android</item>
+        <item>Majorly-G</item>
+        <item>Old</item>
+        <item>Team Talk Pro</item>
+        <item>Пользовательский</item>
+        <item>Без звука</item>
     </string-array>
-    <string-array name="display_button_size_values">
-        <item>small</item>
-        <item>medium</item>
-        <item>large</item>
+    <string-array name="theme_entries">
+        <item>Тёмная тема</item>
+        <item>Светлая тема</item>
+        <item>Системная (как в телефоне)</item>
     </string-array>
 </resources>

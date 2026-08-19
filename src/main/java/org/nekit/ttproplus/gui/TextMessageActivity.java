@@ -134,7 +134,7 @@ extends AppCompatActivity implements TeamTalkConnectionListener, ClientEventList
     public void onServiceConnected(TeamTalkService service) {
         final int userid = this.getIntent().getExtras().getInt(EXTRA_USERID);
         final TeamTalkBase ttclient = service.getTTInstance();
-        adapter = new TextMessageAdapter(this.getBaseContext(), accessibilityAssistant,
+        adapter = new TextMessageAdapter(this, accessibilityAssistant,
                                          service.getUserTextMsgs(userid),
                                          ttclient.getMyUserID());
         

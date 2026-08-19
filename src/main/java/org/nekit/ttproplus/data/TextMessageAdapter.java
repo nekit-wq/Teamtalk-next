@@ -19,6 +19,21 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.util.Patterns;
+import android.view.WindowManager;
+import android.widget.Toast;
+import java.util.ArrayList;
+import java.util.List;
+import android.app.Activity;
+import java.util.regex.Matcher;
+
 
 public class TextMessageAdapter extends BaseAdapter {
 
@@ -230,6 +245,14 @@ public class TextMessageAdapter extends BaseAdapter {
             }
         }
 
+        convertView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                showMessageInteractionDialog(v.getContext(), txtmsg);
+                return true;
+            }
+        });
+
         convertView.setBackgroundColor(bg_color);
         if (accessibilityAssistant != null) {
             convertView.setAccessibilityDelegate(accessibilityAssistant);
@@ -291,5 +314,89 @@ public class TextMessageAdapter extends BaseAdapter {
         if (accessibilityAssistant != null) {
             accessibilityAssistant.unlockEvents();
         }
+    }
+    public void showMessageInteractionDialog(final Context context, MyTextMessage txtmsg) {
+        final String messageText = txtmsg.szMessage;
+        if (messageText == null) {
+            return;
+        }
+        final List<String> urls = new ArrayList<>();
+        Matcher m = Patterns.WEB_URL.matcher(messageText);
+        while (m.find()) {
+            String url = m.group();
+            if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("ftp://")) {
+                url = "http://" + url;
+            }
+            urls.add(url);
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(R.string.message_options_title);
+        List<String> options = new ArrayList<>();
+        options.add(context.getString(R.string.message_option_copy));
+        if (!urls.isEmpty()) {
+            options.add(context.getString(R.string.message_option_open_link));
+        }
+        builder.setItems(options.toArray(new String[0]), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == 0) {
+                    ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("message", messageText);
+                    if (clipboard != null) {
+                        clipboard.setPrimaryClip(clip);
+                    }
+                    Toast.makeText(context, R.string.message_copied, Toast.LENGTH_SHORT).show();
+                } else if (which == 1) {
+                    if (urls.size() == 1) {
+                        openUrl(context, urls.get(0));
+                    } else {
+                        showLinkSelectionDialog(context, urls);
+                    }
+                }
+            }
+        });
+        AlertDialog dialog = builder.create();
+        if (!(context instanceof Activity)) {
+            if (dialog.getWindow() != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+                } else {
+                    dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_PHONE);
+                }
+            }
+        }
+        dialog.show();
+    }
+
+    public void openUrl(Context context, String url) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(context, R.string.err_cannot_open_link, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void showLinkSelectionDialog(final Context context, final List<String> urls) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(R.string.message_select_link);
+        builder.setItems(urls.toArray(new String[0]), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                openUrl(context, urls.get(which));
+            }
+        });
+        AlertDialog dialog = builder.create();
+        if (!(context instanceof Activity)) {
+            if (dialog.getWindow() != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+                } else {
+                    dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_PHONE);
+                }
+            }
+        }
+        dialog.show();
     }
 }

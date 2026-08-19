@@ -32,11 +32,12 @@ public class ServerStatsActivity extends AppCompatActivity implements TeamTalkCo
     private ServerStatistics lastStats;
 
     TeamTalkService getService() {
-        return mConnection.getService();
+        return mConnection != null ? mConnection.getService() : null;
     }
 
     TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
     @Override

@@ -38,11 +38,12 @@ public class ServerPropActivity extends AppCompatActivity implements TeamTalkCon
     public ServerProperties mProps = new ServerProperties();
 
     TeamTalkService getService() {
-        return mConnection.getService();
+        return mConnection != null ? mConnection.getService() : null;
     }
 
     TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
     @Override

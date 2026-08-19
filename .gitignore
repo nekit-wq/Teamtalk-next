@@ -5,7 +5,10 @@ debug
 release
 local.properties
 *.iml
-*.jar
 *.jks
 *.keystore
-*.so
+
+# Allow project JARs and native SO libraries
+!libs/*.jar
+!gradle/wrapper/gradle-wrapper.jar
+!src/main/jniLibs/**/*.so

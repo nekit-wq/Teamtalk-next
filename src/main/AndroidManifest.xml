@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.nekit.ttproplus">
+    >
     <queries>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
@@ -31,10 +31,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"></uses-permission>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"></uses-permission>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"></uses-permission>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"></uses-permission>
     <uses-feature android:name="android.hardware.sensor.proximity" android:required="false"></uses-feature>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" android:maxSdkVersion="35" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
         android:allowBackup="true"
@@ -209,6 +211,12 @@
         <activity
             android:name=".gui.ServerStatsActivity"
             android:label="@string/title_activity_server_stats"
+            android:exported="false" />
+
+        <activity
+            android:name=".gui.EqualizerActivity"
+            android:label="@string/title_equalizer"
+            android:theme="@style/AppTheme"
             android:exported="false" />
 
         <receiver android:name=".gui.MediaButtonEventReceiver"

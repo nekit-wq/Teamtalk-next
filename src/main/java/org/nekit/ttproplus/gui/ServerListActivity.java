@@ -116,9 +116,12 @@ public class ServerListActivity extends AppCompatActivity
     private static final int REQUEST_JOINCODE = 4;
     private static final String POSITION_NAME = "pos";
 
+    private String appliedTheme;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
+        this.appliedTheme = PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.THEME_PREF_KEY, "dark");
         super.onCreate(savedInstanceState);
 
         mConnection = new TeamTalkConnection(this);
@@ -176,16 +179,24 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     TeamTalkService getService() {
-        return mConnection.getService();
+        return mConnection != null ? mConnection.getService() : null;
     }
 
     TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        String currentTheme = PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.THEME_PREF_KEY, "dark");
+        if (this.appliedTheme != null && !this.appliedTheme.equals(currentTheme)) {
+            this.appliedTheme = currentTheme;
+            recreate();
+            return;
+        }
 
         Intent intent = getIntent();
         Uri uri = intent.getData();
@@ -745,7 +756,7 @@ public class ServerListActivity extends AppCompatActivity
 
             String urlToRead = AppInfo.getServerListURL(ServerListActivity.this,
                     pref.getBoolean(Preferences.PREF_GENERAL_OFFICIALSERVERS, true),
-                    pref.getBoolean(Preferences.PREF_GENERAL_UNOFFICIALSERVERS, false));
+                    pref.getBoolean(Preferences.PREF_GENERAL_UNOFFICIALSERVERS, true));
 
             String xml = Utils.getURL(urlToRead);
             Vector<ServerEntry> entries = null;

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:gravity="center" android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="20sp" android:textStyle="bold" android:textColor="?android:textColorPrimary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:text="@string/welcome_permissions_title" />
+        <TextView android:textSize="14sp" android:textColor="?android:textColorSecondary" android:gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="24dp" android:text="@string/welcome_permissions_description" />
+        <Button android:id="@+id/welcome_request_permissions_btn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:text="@string/welcome_permissions_btn" android:paddingStart="24dp" android:paddingEnd="24dp" />
+        <TextView android:textSize="14sp" android:textColor="?android:textColorSecondary" android:gravity="center" android:id="@+id/welcome_permissions_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="24dp" android:text="@string/welcome_permissions_pending" />
+        <Button android:id="@+id/welcome_request_battery_btn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:text="@string/welcome_battery_btn" android:paddingStart="24dp" android:paddingEnd="24dp" />
+        <TextView android:textSize="14sp" android:textColor="?android:textColorSecondary" android:gravity="center" android:id="@+id/welcome_battery_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/welcome_battery_pending" />
+    </LinearLayout>
+</ScrollView>

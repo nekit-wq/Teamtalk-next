@@ -68,11 +68,12 @@ implements TeamTalkConnectionListener, ClientEventListener.OnCmdErrorListener, C
     Channel channel;
 
     TeamTalkService getService() {
-        return mConnection.getService();
+        return mConnection != null ? mConnection.getService() : null;
     }
 
     TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
     @Override

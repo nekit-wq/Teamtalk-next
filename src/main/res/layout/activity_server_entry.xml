@@ -1,404 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_server_info"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:accessibilityHeading="true" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_server_name"
-            android:labelFor="@+id/server_name_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/server_name_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:selectAllOnFocus="true" />
+<ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="18sp" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:text="@string/pref_title_server_info" />
+        <TextView android:textSize="14sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_server_name" android:labelFor="@id/server_name_edit" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/server_name_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <LinearLayout
-            android:id="@+id/server_status_section"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/pref_title_server_status"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp"
-                android:accessibilityHeading="true" />
-
-            <TextView
-                android:id="@+id/user_count_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/pref_title_server_usercount"
-                android:padding="8dp"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/motd_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/pref_title_server_motd"
-                android:padding="8dp"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/country_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/pref_title_server_country"
-                android:padding="8dp"
-                android:textSize="14sp"
-                android:layout_marginBottom="16dp" />
+        <LinearLayout android:orientation="vertical" android:id="@+id/server_status_section" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:textSize="18sp" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:text="@string/pref_title_server_status" />
+            <TextView android:textSize="14sp" android:id="@+id/user_count_text" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/pref_title_server_usercount" />
+            <TextView android:textSize="14sp" android:id="@+id/motd_text" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/pref_title_server_motd" />
+            <TextView android:textSize="14sp" android:id="@+id/country_text" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:text="@string/pref_title_server_country" />
         </LinearLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_server_connection"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:accessibilityHeading="true" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_server_address"
-            android:labelFor="@+id/ip_address_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/ip_address_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:selectAllOnFocus="true" />
+        <TextView android:textSize="18sp" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:text="@string/pref_title_server_connection" />
+        <TextView android:textSize="14sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_server_address" android:labelFor="@id/ip_address_edit" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/ip_address_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:baselineAligned="false"
-            android:layout_marginBottom="8dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginEnd="8dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/pref_title_tcp_port"
-                    android:labelFor="@+id/tcp_port_edit"
-                    android:layout_marginBottom="4dp"
-                    android:textSize="14sp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/tcp_port_edit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:maxLength="5"
-                        android:text="@string/default_port"
-                        android:singleLine="true"
-                        android:selectAllOnFocus="true" />
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:baselineAligned="false">
+            <LinearLayout android:orientation="vertical" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginEnd="8dp">
+                <TextView android:textSize="14sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_tcp_port" android:labelFor="@id/tcp_port_edit" />
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/tcp_port_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/default_port" android:singleLine="true" android:selectAllOnFocus="true" android:maxLength="5" android:inputType="number" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="8dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/pref_title_udp_port"
-                    android:labelFor="@+id/udp_port_edit"
-                    android:layout_marginBottom="4dp"
-                    android:textSize="14sp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/udp_port_edit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:maxLength="5"
-                        android:text="@string/default_port"
-                        android:singleLine="true"
-                        android:selectAllOnFocus="true" />
+            <LinearLayout android:orientation="vertical" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:layout_marginStart="8dp">
+                <TextView android:textSize="14sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_udp_port" android:labelFor="@id/udp_port_edit" />
+                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/udp_port_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/default_port" android:singleLine="true" android:selectAllOnFocus="true" android:maxLength="5" android:inputType="number" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
         </LinearLayout>
-
-        <CheckBox
-            android:id="@+id/encrypted_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_encription"
-            android:layout_marginBottom="16dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_authentication"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:accessibilityHeading="true" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_username"
-            android:labelFor="@+id/username_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/username_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:selectAllOnFocus="true" />
+        <CheckBox android:id="@+id/encrypted_checkbox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:text="@string/pref_title_encription" />
+        <TextView android:textSize="18sp" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:text="@string/pref_title_authentication" />
+        <TextView android:textSize="14sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_username" android:labelFor="@id/username_edit" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/username_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_password"
-            android:labelFor="@+id/password_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/password_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:singleLine="true"
-                android:selectAllOnFocus="true" />
+        <TextView android:textSize="14sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_password" android:labelFor="@id/password_edit" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/password_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <CheckBox
-            android:id="@+id/web_login_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_bearware"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_nickname"
-            android:labelFor="@+id/nickname_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/nickname_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:selectAllOnFocus="true" />
+        <CheckBox android:id="@+id/web_login_checkbox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:text="@string/pref_title_bearware" />
+        <TextView android:textSize="14sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_nickname" android:labelFor="@id/nickname_edit" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/nickname_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_statusmsg"
-            android:labelFor="@+id/statusmsg_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/statusmsg_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:selectAllOnFocus="true" />
+        <TextView android:textSize="14sp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_statusmsg" android:labelFor="@id/statusmsg_edit" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/statusmsg_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_join_channel"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:accessibilityHeading="true" />
-
-        <CheckBox
-            android:id="@+id/remember_last_channel_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_last_channel"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/channel_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_channel"
-            android:labelFor="@+id/channel_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/channel_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/channel_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:selectAllOnFocus="true" />
+        <TextView android:textSize="18sp" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:text="@string/pref_title_join_channel" />
+        <CheckBox android:id="@+id/remember_last_channel_checkbox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:text="@string/pref_title_last_channel" />
+        <TextView android:textSize="14sp" android:id="@+id/channel_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_channel" android:labelFor="@id/channel_edit" />
+        <com.google.android.material.textfield.TextInputLayout android:id="@+id/channel_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/channel_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/channel_password_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_channel_password"
-            android:labelFor="@+id/channel_password_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/channel_password_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/channel_password_edit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:singleLine="true"
-                android:selectAllOnFocus="true" />
+        <TextView android:textSize="14sp" android:id="@+id/channel_password_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_channel_password" android:labelFor="@id/channel_password_edit" />
+        <com.google.android.material.textfield.TextInputLayout android:id="@+id/channel_password_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/channel_password_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/pref_title_joincode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/pref_title_joincode"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:accessibilityHeading="true" />
-
-        <TextView
-            android:id="@+id/text_joincode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/text_joincode"
-            android:labelFor="@+id/joincode_edit"
-            android:layout_marginBottom="4dp"
-            android:textSize="14sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/joincode_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginBottom="8dp">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/joincode_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:selectAllOnFocus="true"
-                    android:singleLine="true" />
+        <TextView android:textSize="18sp" android:textStyle="bold" android:id="@+id/pref_title_joincode" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:text="@string/pref_title_joincode" />
+        <TextView android:textSize="14sp" android:id="@+id/text_joincode" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/text_joincode" android:labelFor="@id/joincode_edit" />
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <com.google.android.material.textfield.TextInputLayout android:id="@+id/joincode_layout" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:layout_weight="1.0">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/joincode_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:selectAllOnFocus="true" />
             </com.google.android.material.textfield.TextInputLayout>
-
-            <Button
-                android:id="@+id/copy_joincode_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/text_copy"
-                android:layout_marginStart="8dp" />
+            <Button android:id="@+id/copy_joincode_btn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/text_copy" android:layout_marginStart="8dp" />
         </LinearLayout>
-
     </LinearLayout>
 </ScrollView>

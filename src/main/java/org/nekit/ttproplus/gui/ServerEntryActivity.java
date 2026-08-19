@@ -1,32 +1,7 @@
-/*
- * Copyright (c) 2005-2018, BearWare.dk
- * 
- * Contact Information:
- *
- * Bjoern D. Rasmussen
- * Kirketoften 5
- * DK-8260 Viby J
- * Denmark
- * Email: contact@bearware.dk
- * Phone: +45 20 20 54 59
- * Web: http://www.bearware.dk
- *
- * This source code is part of the TeamTalk SDK owned by
- * BearWare.dk. Use of this file, or its compiled unit, requires a
- * TeamTalk SDK License Key issued by BearWare.dk.
- *
- * The TeamTalk SDK License Agreement along with its Terms and
- * Conditions are outlined in the file License.txt included with the
- * TeamTalk SDK distribution.
- *
- */
-
 package org.nekit.ttproplus.gui;
-import org.nekit.ttproplus.R;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -35,140 +10,161 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.Locale;
-
 import com.google.android.material.textfield.TextInputEditText;
-
-import org.nekit.ttproplus.databinding.ActivityServerEntryBinding;
-
 import dk.bearware.TeamTalkBase;
 import dk.bearware.UserAccount;
+import dk.bearware.events.ClientEventListener;
+import java.util.Objects;
+import java.util.Locale;
+import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
-import org.nekit.ttproplus.data.AppInfo;
 import org.nekit.ttproplus.data.ServerEntry;
-import dk.bearware.events.ClientEventListener;
+import org.nekit.ttproplus.databinding.ActivityServerEntryBinding;
 
-public class ServerEntryActivity extends AppCompatActivity
-        implements TeamTalkConnectionListener,
-        ClientEventListener.OnCmdMyselfLoggedInListener {
-
-    private static final String TAG = "bearware";
-    private static final int MIN_PORT = 1;
+public class ServerEntryActivity extends AppCompatActivity implements TeamTalkConnectionListener, ClientEventListener.OnCmdMyselfLoggedInListener {
     private static final int MAX_PORT = 65535;
-
+    private static final int MIN_PORT = 1;
+    private static final String TAG = "bearware";
+    private ActivityServerEntryBinding binding;
     private TeamTalkConnection mConnection;
     private ServerEntry serverentry;
-    private ActivityServerEntryBinding binding;
 
     TeamTalkService getService() {
-        return mConnection.getService();
+        return this.mConnection != null ? this.mConnection.getService() : null;
     }
 
     TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+        @Override
+    public void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
-        mConnection = new TeamTalkConnection(this);
-        binding = ActivityServerEntryBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        this.mConnection = new TeamTalkConnection(this);
+        this.binding = ActivityServerEntryBinding.inflate(getLayoutInflater());
+        setContentView(this.binding.getRoot());
         EdgeToEdgeHelper.enableEdgeToEdge(this);
-
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        
         setupListeners();
     }
 
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
+        @Override
+    public void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        ServerEntry entry = Utils.getServerEntry(this.getIntent());
-        if(entry != null) {
+        ServerEntry entry = Utils.getServerEntry(getIntent());
+        if (entry != null) {
             showServer(entry);
-        }
-        else {
-            binding.serverStatusSection.setVisibility(View.GONE);
+        } else {
+            this.binding.serverStatusSection.setVisibility(8);
             hideJoinCode();
         }
     }
 
+        public void lambda$setupListeners$0(CompoundButton buttonView, boolean isChecked) {
+        onWebLoginChanged(isChecked);
+    }
 
     private void setupListeners() {
-        binding.webLoginCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> onWebLoginChanged(isChecked));
-        binding.rememberLastChannelCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> setChannelViewsVisibility(!isChecked));
-        
-        binding.tcpPortEdit.addTextChangedListener(new PortTextWatcher(binding.tcpPortEdit));
-        binding.udpPortEdit.addTextChangedListener(new PortTextWatcher(binding.udpPortEdit));
-
-        binding.copyJoincodeBtn.setOnClickListener(v -> {
-            String joincode = binding.joincodeEdit.getText().toString();
-            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            ClipData clip = ClipData.newPlainText("label", joincode);
-            clipboard.setPrimaryClip(clip);
+        this.binding.webLoginCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() { 
+            @Override
+            public final void onCheckedChanged(CompoundButton compoundButton, boolean z) {
+                ServerEntryActivity.this.lambda$setupListeners$0(compoundButton, z);
+            }
+        });
+        this.binding.rememberLastChannelCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() { 
+            @Override
+            public final void onCheckedChanged(CompoundButton compoundButton, boolean z) {
+                ServerEntryActivity.this.lambda$setupListeners$1(compoundButton, z);
+            }
+        });
+        this.binding.tcpPortEdit.addTextChangedListener(new PortTextWatcher(this.binding.tcpPortEdit));
+        this.binding.udpPortEdit.addTextChangedListener(new PortTextWatcher(this.binding.udpPortEdit));
+        this.binding.copyJoincodeBtn.setOnClickListener(new View.OnClickListener() { 
+            @Override
+            public final void onClick(View view) {
+                ServerEntryActivity.this.lambda$setupListeners$2(view);
+            }
         });
     }
 
-    private void setChannelViewsVisibility(boolean visible) {
-        int visibility = visible ? View.VISIBLE : View.GONE;
-        binding.channelLabel.setVisibility(visibility);
-        binding.channelLayout.setVisibility(visibility);
-        binding.channelPasswordLabel.setVisibility(visibility);
-        binding.channelPasswordLayout.setVisibility(visibility);
+        public void lambda$setupListeners$1(CompoundButton buttonView, boolean isChecked) {
+        setChannelViewsVisibility(!isChecked);
     }
 
-    private record PortTextWatcher(TextInputEditText editText) implements TextWatcher {
+        public void lambda$setupListeners$2(View v) {
+        String joincode = this.binding.joincodeEdit.getText().toString();
+        ClipboardManager clipboard = (ClipboardManager) getSystemService("clipboard");
+        ClipData clip = ClipData.newPlainText("label", joincode);
+        clipboard.setPrimaryClip(clip);
+    }
+
+    private void setChannelViewsVisibility(boolean visible) {
+        int visibility = visible ? 0 : 8;
+        this.binding.channelLabel.setVisibility(visibility);
+        this.binding.channelLayout.setVisibility(visibility);
+        this.binding.channelPasswordLabel.setVisibility(visibility);
+        this.binding.channelPasswordLayout.setVisibility(visibility);
+    }
+
+        public static final class PortTextWatcher implements TextWatcher {
+        private final TextInputEditText editText;
+
+        private PortTextWatcher(TextInputEditText editText) {
+            this.editText = editText;
+        }
+
+        public TextInputEditText editText() {
+            return this.editText;
+        }
 
         @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String text = s.toString().trim();
-                if (text.isEmpty()) {
-                    editText.setError(null);
-                    return;
-                }
-
-                try {
-                    int port = Integer.parseInt(text);
-                    if (port < MIN_PORT || port > MAX_PORT) {
-                        editText.setError("Port must be between " + MIN_PORT + " and " + MAX_PORT);
-                    } else {
-                        editText.setError(null);
-                    }
-                } catch (NumberFormatException e) {
-                    editText.setError("Invalid port number");
-                }
-            }
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
         }
 
-    @Override
-    protected void onResume() {
+        @Override
+        public void afterTextChanged(Editable s) {
+            String text = s.toString().trim();
+            if (text.isEmpty()) {
+                this.editText.setError(null);
+                return;
+            }
+            try {
+                int port = Integer.parseInt(text);
+                if (port >= 1 && port <= 65535) {
+                    this.editText.setError(null);
+                } else {
+                    this.editText.setError("Port must be between 1 and 65535");
+                }
+            } catch (NumberFormatException e) {
+                this.editText.setError("Invalid port number");
+            }
+        }
+    }
+
+        @Override
+    public void onResume() {
         super.onResume();
-        if (mConnection.isBound()) {
+        if (this.mConnection.isBound()) {
             resetTeamTalkService();
             getService().getEventHandler().registerOnCmdMyselfLoggedIn(this, true);
         }
     }
 
-    @Override
-    protected void onPause() {
+        @Override
+    public void onPause() {
         super.onPause();
-        if (mConnection.isBound()) {
+        if (this.mConnection.isBound()) {
             getService().getEventHandler().registerOnCmdMyselfLoggedIn(this, false);
         }
     }
@@ -179,47 +175,47 @@ public class ServerEntryActivity extends AppCompatActivity
         getClient().closeSoundOutputDevice();
     }
 
-    @Override
-    protected void onStart() {
+        @Override
+    public void onStart() {
         super.onStart();
-        if (serverentry != null) {
-            showServer(serverentry);
-            serverentry = null;
+        if (this.serverentry != null) {
+            showServer(this.serverentry);
+            this.serverentry = null;
         }
         bindToTeamTalkService();
     }
 
-    @Override
-    protected void onStop() {
+        @Override
+    public void onStop() {
         super.onStop();
         if (isFinishing()) {
             unbindFromTeamTalkService();
         }
     }
 
-    @Override
-    protected void onDestroy() {
+        @Override
+    public void onDestroy() {
         super.onDestroy();
         unbindFromTeamTalkService();
-        binding = null;
-        Log.d(TAG, "Activity destroyed " + this.hashCode());
+        this.binding = null;
+        Log.d("bearware", "Activity destroyed " + hashCode());
     }
 
     private void bindToTeamTalkService() {
-        if (!mConnection.isBound()) {
-            Intent intent = new Intent(getApplicationContext(), TeamTalkService.class);
-            if (!bindService(intent, mConnection, Context.BIND_AUTO_CREATE)) {
-                Log.e(TAG, "Failed to bind to TeamTalk service");
+        if (!this.mConnection.isBound()) {
+            Intent intent = new Intent(getApplicationContext(), (Class<?>) TeamTalkService.class);
+            if (!bindService(intent, this.mConnection, 1)) {
+                Log.e("bearware", "Failed to bind to TeamTalk service");
             }
         }
     }
 
     private void unbindFromTeamTalkService() {
-        if (mConnection.isBound()) {
+        if (this.mConnection.isBound()) {
             getService().resetState();
             onServiceDisconnected(getService());
-            unbindService(mConnection);
-            mConnection.setBound(false);
+            unbindService(this.mConnection);
+            this.mConnection.setBound(false);
         }
     }
 
@@ -234,22 +230,25 @@ public class ServerEntryActivity extends AppCompatActivity
         int itemId = item.getItemId();
         if (itemId == R.id.action_connect) {
             connectToServer();
-        } else if (itemId == R.id.action_saveserver) {
-            saveServerAndFinish();
-        } else if (itemId == android.R.id.home) {
-            setResult(RESULT_CANCELED);
-            finish();
-        } else {
-            return super.onOptionsItemSelected(item);
+            return true;
         }
-        return true;
+        if (itemId == R.id.action_saveserver) {
+            saveServerAndFinish();
+            return true;
+        }
+        if (itemId == 16908332) {
+            setResult(0);
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void connectToServer() {
-        serverentry = getServerEntry();
-        getService().setServerEntry(serverentry);
+        this.serverentry = getServerEntry();
+        getService().setServerEntry(this.serverentry);
         if (!getService().reconnect()) {
-            Toast.makeText(this, R.string.err_connection, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.err_connection, 1).show();
         }
     }
 
@@ -257,24 +256,24 @@ public class ServerEntryActivity extends AppCompatActivity
         ServerEntry server = getServerEntry();
         server.servertype = ServerEntry.ServerType.LOCAL;
         Intent intent = Utils.putServerEntry(getIntent(), server);
-        setResult(RESULT_OK, intent);
+        setResult(-1, intent);
         finish();
     }
 
     private ServerEntry getServerEntry() {
         ServerEntry server = new ServerEntry();
-        server.servername = getTextValue(binding.serverNameEdit);
-        server.ipaddr = getTextValue(binding.ipAddressEdit);
-        server.tcpport = parsePort(getTextValue(binding.tcpPortEdit));
-        server.udpport = parsePort(getTextValue(binding.udpPortEdit));
-        server.encrypted = binding.encryptedCheckbox.isChecked();
-        server.username = getTextValue(binding.usernameEdit);
-        server.password = getTextValue(binding.passwordEdit);
-        server.nickname = getTextValue(binding.nicknameEdit);
-        server.statusmsg = getTextValue(binding.statusmsgEdit);
-        server.rememberLastChannel = binding.rememberLastChannelCheckbox.isChecked();
-        server.channel = getTextValue(binding.channelEdit);
-        server.chanpasswd = getTextValue(binding.channelPasswordEdit);
+        server.servername = getTextValue(this.binding.serverNameEdit);
+        server.ipaddr = getTextValue(this.binding.ipAddressEdit);
+        server.tcpport = parsePort(getTextValue(this.binding.tcpPortEdit));
+        server.udpport = parsePort(getTextValue(this.binding.udpPortEdit));
+        server.encrypted = this.binding.encryptedCheckbox.isChecked();
+        server.username = getTextValue(this.binding.usernameEdit);
+        server.password = getTextValue(this.binding.passwordEdit);
+        server.nickname = getTextValue(this.binding.nicknameEdit);
+        server.statusmsg = getTextValue(this.binding.statusmsgEdit);
+        server.rememberLastChannel = this.binding.rememberLastChannelCheckbox.isChecked();
+        server.channel = getTextValue(this.binding.channelEdit);
+        server.chanpasswd = getTextValue(this.binding.channelPasswordEdit);
         return server;
     }
 
@@ -285,7 +284,7 @@ public class ServerEntryActivity extends AppCompatActivity
         }
         try {
             int port = Integer.parseInt(portStr);
-            return (port >= MIN_PORT && port <= MAX_PORT) ? port : defaultPort;
+            return (port < 1 || port > 65535) ? defaultPort : port;
         } catch (NumberFormatException e) {
             return defaultPort;
         }
@@ -295,15 +294,14 @@ public class ServerEntryActivity extends AppCompatActivity
         try {
             return Integer.parseInt(getString(R.string.default_port));
         } catch (NumberFormatException e) {
-            return 10333; // Fallback value
+            return 10333;
         }
     }
-
 
     private String getTextValue(TextInputEditText editText) {
         return editText.getText() != null ? editText.getText().toString().trim() : "";
     }
-    
+
     private void showServer(ServerEntry entry) {
         populateServerInfo(entry);
         populateServerStatus(entry);
@@ -314,17 +312,16 @@ public class ServerEntryActivity extends AppCompatActivity
     }
 
     private void populateServerInfo(ServerEntry entry) {
-        binding.serverNameEdit.setText(entry.servername);
+        this.binding.serverNameEdit.setText(entry.servername);
     }
 
     private void populateServerStatus(ServerEntry entry) {
-        boolean isLocal = (entry.servertype == ServerEntry.ServerType.LOCAL);
-        binding.serverStatusSection.setVisibility(isLocal ? View.GONE : View.VISIBLE);
-        
+        boolean isLocal = entry.servertype == ServerEntry.ServerType.LOCAL;
+        this.binding.serverStatusSection.setVisibility(isLocal ? 8 : 0);
         if (!isLocal) {
-            binding.userCountText.setText(formatServerInfo(R.string.pref_title_server_usercount, String.valueOf(entry.stats_usercount)));
-            binding.motdText.setText(formatServerInfo(R.string.pref_title_server_motd, entry.stats_motd));
-            binding.countryText.setText(formatServerInfo(R.string.pref_title_server_country, getCountryDisplayName(entry.stats_country)));
+            this.binding.userCountText.setText(formatServerInfo(R.string.pref_title_server_usercount, String.valueOf(entry.stats_usercount)));
+            this.binding.motdText.setText(formatServerInfo(R.string.pref_title_server_motd, entry.stats_motd));
+            this.binding.countryText.setText(formatServerInfo(R.string.pref_title_server_country, getCountryDisplayName(entry.stats_country)));
         }
     }
 
@@ -332,7 +329,6 @@ public class ServerEntryActivity extends AppCompatActivity
         if (countryCode == null || countryCode.trim().isEmpty()) {
             return countryCode;
         }
-        
         try {
             Locale locale = new Locale("", countryCode.toUpperCase(Locale.ROOT));
             String displayName = locale.getDisplayCountry();
@@ -343,44 +339,43 @@ public class ServerEntryActivity extends AppCompatActivity
     }
 
     private void populateConnectionSettings(ServerEntry entry) {
-        binding.ipAddressEdit.setText(entry.ipaddr);
-        binding.tcpPortEdit.setText(String.valueOf(entry.tcpport));
-        binding.udpPortEdit.setText(String.valueOf(entry.udpport));
-        binding.encryptedCheckbox.setChecked(entry.encrypted);
+        this.binding.ipAddressEdit.setText(entry.ipaddr);
+        this.binding.tcpPortEdit.setText(String.valueOf(entry.tcpport));
+        this.binding.udpPortEdit.setText(String.valueOf(entry.udpport));
+        this.binding.encryptedCheckbox.setChecked(entry.encrypted);
     }
 
     private void populateAuthenticationSettings(ServerEntry entry) {
         boolean weblogin = Utils.isWebLogin(entry.username);
-        binding.usernameEdit.setText(entry.username);
-        binding.passwordEdit.setText(entry.password);
+        this.binding.usernameEdit.setText(entry.username);
+        this.binding.passwordEdit.setText(entry.password);
         setAuthFieldsEnabled(!weblogin);
-        binding.webLoginCheckbox.setChecked(weblogin);
-        binding.nicknameEdit.setText(entry.nickname);
-        binding.statusmsgEdit.setText(entry.statusmsg);
+        this.binding.webLoginCheckbox.setChecked(weblogin);
+        this.binding.nicknameEdit.setText(entry.nickname);
+        this.binding.statusmsgEdit.setText(entry.statusmsg);
     }
 
     private void populateChannelSettings(ServerEntry entry) {
-        binding.rememberLastChannelCheckbox.setChecked(entry.rememberLastChannel);
-        binding.channelEdit.setText(entry.channel);
-        binding.channelPasswordEdit.setText(entry.chanpasswd);
+        this.binding.rememberLastChannelCheckbox.setChecked(entry.rememberLastChannel);
+        this.binding.channelEdit.setText(entry.channel);
+        this.binding.channelPasswordEdit.setText(entry.chanpasswd);
         setChannelViewsVisibility(!entry.rememberLastChannel);
     }
 
     private void populateJoinCodeSettings(ServerEntry entry) {
         if (!entry.joincode.isEmpty()) {
-            binding.joincodeEdit.setText(entry.joincode);
-        }
-        else {
+            this.binding.joincodeEdit.setText(entry.joincode);
+        } else {
             hideJoinCode();
         }
     }
 
     private void hideJoinCode() {
-        binding.prefTitleJoincode.setVisibility(View.GONE);
-        binding.joincodeLayout.setVisibility(View.GONE);
-        binding.textJoincode.setVisibility(View.GONE);
-        binding.joincodeEdit.setVisibility(View.GONE);
-        binding.copyJoincodeBtn.setVisibility(View.GONE);
+        this.binding.prefTitleJoincode.setVisibility(8);
+        this.binding.joincodeLayout.setVisibility(8);
+        this.binding.textJoincode.setVisibility(8);
+        this.binding.joincodeEdit.setVisibility(8);
+        this.binding.copyJoincodeBtn.setVisibility(8);
     }
 
     private String formatServerInfo(int titleResId, String value) {
@@ -388,25 +383,24 @@ public class ServerEntryActivity extends AppCompatActivity
     }
 
     private void setAuthFieldsEnabled(boolean enabled) {
-        binding.usernameEdit.setEnabled(enabled);
-        binding.passwordEdit.setEnabled(enabled);
+        this.binding.usernameEdit.setEnabled(enabled);
+        this.binding.passwordEdit.setEnabled(enabled);
     }
 
     private void onWebLoginChanged(boolean weblogin) {
         setAuthFieldsEnabled(!weblogin);
-        
         if (weblogin) {
-            binding.usernameEdit.setText(AppInfo.WEBLOGIN_BEARWARE_USERNAME);
-            binding.passwordEdit.setText("");
-        } else {
-            ServerEntry entry = serverentry != null ? serverentry : Utils.getServerEntry(getIntent());
-            if (entry != null) {
-                binding.usernameEdit.setText(entry.username);
-                binding.passwordEdit.setText(entry.password);
-            }
+            this.binding.usernameEdit.setText("bearware");
+            this.binding.passwordEdit.setText("");
+            return;
+        }
+        ServerEntry entry = this.serverentry != null ? this.serverentry : Utils.getServerEntry(getIntent());
+        if (entry != null) {
+            this.binding.usernameEdit.setText(entry.username);
+            this.binding.passwordEdit.setText(entry.password);
         }
     }
-    
+
     @Override
     public void onServiceConnected(TeamTalkService service) {
         service.getEventHandler().registerOnCmdMyselfLoggedIn(this, true);
@@ -419,7 +413,7 @@ public class ServerEntryActivity extends AppCompatActivity
 
     @Override
     public void onCmdMyselfLoggedIn(int my_userid, UserAccount useraccount) {
-        Intent intent = new Intent(getBaseContext(), MainActivity.class);
-        startActivity(intent.putExtra(ServerEntry.KEY_SERVERNAME, serverentry.servername));
+        Intent intent = new Intent(getBaseContext(), (Class<?>) MainActivity.class);
+        startActivity(intent.putExtra(ServerEntry.KEY_SERVERNAME, this.serverentry.servername));
     }
 }

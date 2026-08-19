@@ -112,11 +112,11 @@ public class SimpleChatActivity extends AppCompatActivity
         final TeamTalkBase ttclient = service.getTTInstance();
         
         if ("global".equals(chatType)) {
-            adapter = new TextMessageAdapter(this.getBaseContext(), accessibilityAssistant,
+            adapter = new TextMessageAdapter(this, accessibilityAssistant,
                     service.getChatLogTextMsgs(),
                     ttclient.getMyUserID());
         } else {
-            adapter = new TextMessageAdapter(this.getBaseContext(), accessibilityAssistant,
+            adapter = new TextMessageAdapter(this, accessibilityAssistant,
                     service.getUserTextMsgs(userid),
                     ttclient.getMyUserID());
         }

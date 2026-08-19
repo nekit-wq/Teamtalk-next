@@ -1,39 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-    <PreferenceCategory
-        android:key="about_def"
-        android:title="@string/pref_cat_about">
-        
-        <Preference
-            android:enabled="false"
-            android:title="@string/pref_fork_desc_title"
-            android:summary="@string/pref_fork_desc_summary" />
-
-        <Preference
-            android:title="@string/pref_source_code_title"
-            android:summary="https://github.com/nekit-wq/Teamtalk-pro-android-code">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="https://github.com/nekit-wq/Teamtalk-pro-android-code" />
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pref_cat_about" android:key="about_def">
+        <Preference android:enabled="false" android:title="@string/pref_fork_desc_title" android:summary="@string/pref_fork_desc_summary" />
+        <Preference android:title="@string/pref_source_code_title" android:summary="https://github.com/nekit-wq/Teamtalk-pro-android-code">
+            <intent android:action="android.intent.action.VIEW" android:data="https://github.com/nekit-wq/Teamtalk-pro-android-code" />
         </Preference>
     </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/pref_title_contrib">
-        <Preference
-            android:enabled="false"
-            android:title="NEKIT" />
+        <Preference android:enabled="false" android:title="NEKIT" />
+        <Preference android:enabled="false" android:title="flastik" />
     </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/pref_title_translator">
-        <Preference
-            android:enabled="false"
-            android:title="@string/text_translator" />
+        <Preference android:enabled="false" android:title="@string/text_translator" />
     </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/pref_title_libraries">
-        <Preference
-            android:enabled="false"
-            android:summary="ACE, FFmpeg, Ogg, OpenSSL, Opus, Opus-tools, Speex, SpeexDSP, WebM, Zlib" />
+        <Preference android:enabled="false" android:summary="ACE, FFmpeg, Ogg, OpenSSL, Opus, Opus-tools, Speex, SpeexDSP, WebM, Zlib" />
     </PreferenceCategory>
-
 </PreferenceScreen>

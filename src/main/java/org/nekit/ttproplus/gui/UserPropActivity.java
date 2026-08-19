@@ -64,11 +64,12 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
     User user = new User();
 
     TeamTalkService getService() {
-        return mConnection.getService();
+        return mConnection != null ? mConnection.getService() : null;
     }
 
     TeamTalkBase getClient() {
-        return getService().getTTInstance();
+        TeamTalkService service = getService();
+        return service != null ? service.getTTInstance() : null;
     }
 
     @Override

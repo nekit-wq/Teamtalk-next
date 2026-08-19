@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="theme_entries">
-        <item>Auto (System)</item>
-        <item>White (Light)</item>
-        <item>Dark</item>
-    </string-array>
-    <string-array name="theme_values">
-        <item>auto</item>
-        <item>white</item>
-        <item>dark</item>
-    </string-array>
-    <string-array name="sound_pack_entries">
-        <item>Default</item>
-        <item>Custom</item>
-        <item>Silent</item>
-    </string-array>
-    <string-array name="sound_pack_values">
-        <item>default</item>
-        <item>custom</item>
-        <item>silent</item>
-    </string-array>
     <string-array name="audio_input_source_entries">
         <item>Microphone</item>
         <item>Internal Audio</item>
@@ -29,6 +9,42 @@
         <item>mic</item>
         <item>internal</item>
         <item>mixed</item>
+    </string-array>
+    <string-array name="bg_mgmt_display_type_entries">
+        <item>Floating Window</item>
+        <item>Notification</item>
+    </string-array>
+    <string-array name="bg_mgmt_display_type_values">
+        <item>window</item>
+        <item>notification</item>
+    </string-array>
+    <string-array name="default_file_manager_entries">
+        <item>Ask every time</item>
+        <item>System File Picker</item>
+        <item>Built-in File Picker</item>
+    </string-array>
+    <string-array name="default_file_manager_values">
+        <item>ask</item>
+        <item>system</item>
+        <item>builtin</item>
+    </string-array>
+    <string-array name="display_button_size_entries">
+        <item>Small</item>
+        <item>Medium</item>
+        <item>Large</item>
+    </string-array>
+    <string-array name="display_button_size_values">
+        <item>small</item>
+        <item>medium</item>
+        <item>large</item>
+    </string-array>
+    <string-array name="pref_tts_language_behavior_entries">
+        <item>Follow Application Language</item>
+        <item>System Default</item>
+    </string-array>
+    <string-array name="pref_tts_language_behavior_values">
+        <item>follow_app</item>
+        <item>system_default</item>
     </string-array>
     <string-array name="recording_format_entries">
         <item>WAV (uncompressed)</item>
@@ -56,15 +72,34 @@
         <item>256</item>
         <item>320</item>
     </string-array>
-    
-    <string-array name="display_button_size_entries">
-        <item>Small</item>
-        <item>Medium</item>
-        <item>Large</item>
+    <string-array name="sound_pack_entries">
+        <item>Default</item>
+        <item>Default Windows</item>
+        <item>Legacy Android</item>
+        <item>Majorly-G</item>
+        <item>Old</item>
+        <item>Team Talk Pro</item>
+        <item>Custom</item>
+        <item>Silent</item>
     </string-array>
-    <string-array name="display_button_size_values">
-        <item>small</item>
-        <item>medium</item>
-        <item>large</item>
+    <string-array name="sound_pack_values">
+        <item>default</item>
+        <item>Default Windows</item>
+        <item>Legacy Android</item>
+        <item>Majorly-G</item>
+        <item>Old</item>
+        <item>Team Talk Pro</item>
+        <item>custom</item>
+        <item>silent</item>
+    </string-array>
+    <string-array name="theme_entries">
+        <item>Dark Theme</item>
+        <item>Light Theme</item>
+        <item>System Default</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>dark</item>
+        <item>white</item>
+        <item>auto</item>
     </string-array>
 </resources>
