@@ -379,7 +379,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 for (int i = 0; i < CLIENT_PRESETS.length; i++) {
                     titles[i] = CLIENT_PRESETS[i][0];
                 }
-                titles[CLIENT_PRESETS.length] = getString(R.string.clientname_preset_custom);
+                titles[CLIENT_PRESETS.length] = getActivity().getString(R.string.clientname_preset_custom);
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setTitle(R.string.pref_title_clientname_preset);

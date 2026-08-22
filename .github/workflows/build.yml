@@ -37,6 +37,16 @@ jobs:
       - name: Build APKs
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
+      - name: Upload Build Failure Logs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-failure-reports
+          path: |
+            **/build/reports/
+            **/build/outputs/logs/
+          if-no-files-found: ignore
+
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
         if: always()

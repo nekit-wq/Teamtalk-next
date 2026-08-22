@@ -93,11 +93,9 @@
                 <data android:host="*" />
                 <data android:mimeType="*/*" />
                 <data android:pathPattern=".*\\.tt" />
-                <data android:pathPattern=".*\\..*\\.tt" />
-                <data android:pathPattern=".*\\..*\\..*\\.tt" />
                 <data android:pathPattern=".*\\.TT" />
-                <data android:pathPattern=".*\\..*\\.TT" />
-                <data android:pathPattern=".*\\..*\\..*\\.TT" />
+                <data android:pathSuffix=".tt" />
+                <data android:pathSuffix=".TT" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
