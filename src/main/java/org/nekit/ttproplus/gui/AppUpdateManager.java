@@ -93,16 +93,40 @@ public class AppUpdateManager {
                 long apkSize = 0;
 
                 JSONArray assets = json.optJSONArray("assets");
-                if (assets != null) {
+                if (assets != null && assets.length() > 0) {
+                    // Priority 1: Universal APK
                     for (int i = 0; i < assets.length(); i++) {
                         JSONObject asset = assets.getJSONObject(i);
                         String assetName = asset.optString("name", "");
-                        if (assetName.toLowerCase().endsWith(".apk")) {
+                        if (assetName.toLowerCase().endsWith(".apk") && assetName.toLowerCase().contains("universal")) {
                             apkDownloadUrl = asset.optString("browser_download_url", null);
                             apkName = assetName;
                             apkSize = asset.optLong("size", 0);
-                            // Prefer universal or release/debug apk
-                            if (assetName.toLowerCase().contains("universal") || assetName.toLowerCase().contains("release")) {
+                            break;
+                        }
+                    }
+                    // Priority 2: ARM64 APK
+                    if (apkDownloadUrl == null) {
+                        for (int i = 0; i < assets.length(); i++) {
+                            JSONObject asset = assets.getJSONObject(i);
+                            String assetName = asset.optString("name", "");
+                            if (assetName.toLowerCase().endsWith(".apk") && assetName.toLowerCase().contains("arm64")) {
+                                apkDownloadUrl = asset.optString("browser_download_url", null);
+                                apkName = assetName;
+                                apkSize = asset.optLong("size", 0);
+                                break;
+                            }
+                        }
+                    }
+                    // Priority 3: Any APK
+                    if (apkDownloadUrl == null) {
+                        for (int i = 0; i < assets.length(); i++) {
+                            JSONObject asset = assets.getJSONObject(i);
+                            String assetName = asset.optString("name", "");
+                            if (assetName.toLowerCase().endsWith(".apk")) {
+                                apkDownloadUrl = asset.optString("browser_download_url", null);
+                                apkName = assetName;
+                                apkSize = asset.optLong("size", 0);
                                 break;
                             }
                         }
@@ -119,7 +143,7 @@ public class AppUpdateManager {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
                 String ignoredVersion = prefs.getString(Preferences.PREF_IGNORED_UPDATE_VERSION, "");
 
-                if (isNewer && !TextUtils.isEmpty(finalApkUrl)) {
+                if ((isNewer || (userInitiated && !normalizeVersion(tagName).equalsIgnoreCase(normalizeVersion(currentVersion)))) && !TextUtils.isEmpty(finalApkUrl)) {
                     if (!userInitiated && tagName.equalsIgnoreCase(ignoredVersion)) {
                         Log.d(TAG, "Update " + tagName + " was ignored by user.");
                         return;
@@ -153,13 +177,22 @@ public class AppUpdateManager {
         });
     }
 
+    private static String normalizeVersion(String v) {
+        if (v == null) return "";
+        return v.replaceAll("^[vV]", "").trim();
+    }
+
     private static boolean isVersionNewer(String latestTag, String currentVersion) {
         if (TextUtils.isEmpty(latestTag) || TextUtils.isEmpty(currentVersion)) {
             return false;
         }
 
-        String v1 = latestTag.replaceAll("^[vV]", "").trim();
-        String v2 = currentVersion.replaceAll("^[vV]", "").trim();
+        String v1 = normalizeVersion(latestTag);
+        String v2 = normalizeVersion(currentVersion);
+
+        if (v1.equalsIgnoreCase(v2)) {
+            return false;
+        }
 
         String[] parts1 = v1.split("[.\\-_]");
         String[] parts2 = v2.split("[.\\-_]");
@@ -185,7 +218,7 @@ public class AppUpdateManager {
                 return false;
             }
         }
-        return false;
+        return parts1.length > parts2.length;
     }
 
     private static void showUpdateDialog(final Activity activity, final String tagName, final String releaseName,

@@ -59,26 +59,30 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkProPlus-5.30-source.zip HEAD
+          git archive --format=zip --output=TeamTalkProPlus-5.35-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.30' }}
-          name: "TeamTalk Pro Plus v5.30"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.35' }}
+          name: "TeamTalk Pro Plus v5.35"
           body: |
-            ### TeamTalk Pro Plus v5.30
+            ### TeamTalk Pro Plus v5.35
 
             #### Список изменений:
-            - **Кнопка канала «Покинуть канал» / «Войти в канал»:** размещена прямо перед меню «Ещё», позволяет в 1 клик покинуть текущий канал (выйти на сервер) или войти в канал.
-            - **Кнопка «Mute TTS» (Заглушить / Включить озвучивание):** размещена перед кнопкой канала, мгновенно глушит или включает TTS синтезатор речи.
-            - **Единая настройка «Имя клиента»:** чистое и понятное поле ввода имени клиента в настройках.
-            - **Постоянная цифровая подпись APK:** бесшовная установка и обновление поверх любой установленной версии.
+            - **Полностью стабильный нативный звук:** микрофон и динамик работают чисто, без перехода в режим звонка и без артефактов связи.
+            - **Улучшенный механизм обновлений из приложения:**
+              - Всегда проверяет и находит самый последний актуальный релиз с GitHub API.
+              - Умный выбор правильного APK (Universal / ARM64).
+              - Кнопка «Проверить обновления» в настройках гарантированно предлагает установить свежий релиз.
+            - **Кнопка канала «Покинуть канал» / «Войти в канал»** на верхней панели перед меню «Ещё».
+            - **Кнопка «Mute TTS»** для быстрого включения/отключения синтезатора речи.
+            - **Постоянная цифровая подпись APK.**
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkProPlus-5.30-source.zip
+            TeamTalkProPlus-5.35-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
