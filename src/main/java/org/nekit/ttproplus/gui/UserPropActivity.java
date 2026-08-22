@@ -138,6 +138,7 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         TextView userid = findViewById(R.id.user_userid);
         TextView statusmsg = findViewById(R.id.user_statusmsg);
         TextView clientname = findViewById(R.id.user_clientname);
+        TextView clientversion = findViewById(R.id.user_clientversion);
         TextView ipaddress = findViewById(R.id.user_ipaddress);
         final SeekBar voiceVol = findViewById(R.id.user_vol_voiceSeekBar);
         final Button defVoiceBtn = findViewById(R.id.defVoiceVolBtn);
@@ -167,10 +168,22 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         nickname.setText(getString(R.string.user_prop_title_nickname) + " " + user.szNickname);
         username.setText(getString(R.string.user_prop_title_username) + " " + user.szUsername);
         userid.setText(getString(R.string.user_prop_title_userid) + " " + user.nUserID);
-        String clientDisplay = (user.szClientName != null && !user.szClientName.isEmpty())
+        statusmsg.setText(getString(R.string.user_prop_title_statusmsg) + " " + user.szStatusMsg);
+
+        String clientNameText = (user.szClientName != null && !user.szClientName.isEmpty())
                 ? user.szClientName
-                : (((user.uVersion >> 16) & 0xFF) + "." + ((user.uVersion >> 8) & 0xFF) + "." + (user.uVersion & 0xFF));
-        clientname.setText(getString(R.string.user_prop_title_clientname) + " " + clientDisplay);
+                : "TeamTalk";
+        clientname.setText(getString(R.string.user_prop_title_clientname) + " " + clientNameText);
+
+        String verText;
+        if (user.uVersion > 0) {
+            verText = ((user.uVersion >> 16) & 0xFF) + "." + ((user.uVersion >> 8) & 0xFF) + "." + (user.uVersion & 0xFF);
+        } else {
+            verText = "5.26.0";
+        }
+        if (clientversion != null) {
+            clientversion.setText(getString(R.string.user_prop_title_clientversion) + " " + verText);
+        }
         ipaddress.setText(getString(R.string.user_prop_title_ipaddress) + " " + user.szIPAddress);
 
         UserAccount myAccount = new UserAccount();

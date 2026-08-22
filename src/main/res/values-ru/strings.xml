@@ -761,6 +761,7 @@
     <string name="upload_succeeded">Файл %1$s успешно выложен</string>
     <string name="user_accounts">Учётные записи</string>
     <string name="user_prop_title_clientname">Имя клиента:</string>
+    <string name="user_prop_title_clientversion">Версия клиента:</string>
     <string name="user_prop_title_ipaddress">IP Адрес:</string>
     <string name="user_prop_title_location">Местоположение:</string>
     <string name="user_prop_title_media_volume">Громкость Проигрывания Медиафайлов</string>

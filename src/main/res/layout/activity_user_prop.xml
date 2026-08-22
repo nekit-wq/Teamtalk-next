@@ -8,6 +8,7 @@
         <TextView android:textSize="14sp" android:id="@+id/user_userid" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
         <TextView android:textSize="14sp" android:id="@+id/user_statusmsg" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
         <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:id="@+id/user_clientname" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:id="@+id/user_clientversion" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
         <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:id="@+id/user_ipaddress" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
         <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:id="@+id/user_location" android:padding="4dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" />
         <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="12dp" android:layout_marginBottom="12dp" />

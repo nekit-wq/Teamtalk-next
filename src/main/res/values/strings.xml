@@ -762,6 +762,7 @@ By: %3$s"</string>
     <string name="upload_succeeded">File %1$s has been successfully uploaded</string>
     <string name="user_accounts">User Accounts</string>
     <string name="user_prop_title_clientname">Client Name:</string>
+    <string name="user_prop_title_clientversion">Client Version:</string>
     <string name="user_prop_title_ipaddress">IP Address:</string>
     <string name="user_prop_title_location">Location:</string>
     <string name="user_prop_title_media_volume">Media File Volume</string>
