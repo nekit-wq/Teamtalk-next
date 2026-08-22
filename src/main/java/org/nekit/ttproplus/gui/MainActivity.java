@@ -323,29 +323,53 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         boolean uploadRight = (myuseraccount.uUserRights & 512) != 0;
         boolean broadcastRight = (myuseraccount.uUserRights & 16) != 0;
         boolean isEditable = this.curchannel != null;
-        boolean isJoinable = (this.curchannel == null || getClient().getMyChannelID() == this.curchannel.nChannelID || this.curchannel.nMaxUsers <= 0) ? false : true;
         boolean isLeaveable = getClient().getMyChannelID() > 0;
         boolean isMyChannel = this.curchannel != null && getClient().getMyChannelID() == this.curchannel.nChannelID;
         boolean canEditServer = (myuseraccount.uUserRights & 2048) != 0;
         boolean hasUserAccounts = (myuseraccount.uUserType & 2) != 0;
         boolean canBan = (myuseraccount.uUserRights & 64) != 0;
-        menu.findItem(R.id.action_edit).setEnabled(isEditable).setVisible(isEditable);
-        menu.findItem(R.id.action_join).setEnabled(isJoinable).setVisible(isJoinable);
-        menu.findItem(R.id.action_leave).setEnabled(isLeaveable).setVisible(isLeaveable);
-        menu.findItem(R.id.action_upload).setEnabled(uploadRight).setVisible(uploadRight);
-        menu.findItem(R.id.action_broadcast).setEnabled(broadcastRight).setVisible(broadcastRight);
-        menu.findItem(R.id.action_stream).setEnabled(isMyChannel).setVisible(isMyChannel);
-        menu.findItem(R.id.action_user_accounts).setEnabled(hasUserAccounts).setVisible(hasUserAccounts && isLeaveable);
-        menu.findItem(R.id.action_server_properties).setEnabled(canEditServer).setVisible(canEditServer && isLeaveable);
-        menu.findItem(R.id.action_banned_users).setEnabled(canBan).setVisible(canBan && isLeaveable);
-        menu.findItem(R.id.action_server_stats).setEnabled(hasUserAccounts && isLeaveable).setVisible(hasUserAccounts && isLeaveable);
-        boolean isRecording = getService() != null && getService().isRecording();
-        menu.findItem(R.id.action_start_recording).setEnabled(isLeaveable && !isRecording).setVisible(isLeaveable && !isRecording);
-        MenuItem enabled = menu.findItem(R.id.action_stop_recording).setEnabled(isLeaveable && isRecording);
-        if (isLeaveable && isRecording) {
-            z = true;
+
+        MenuItem muteTtsItem = menu.findItem(R.id.action_mute_tts);
+        if (muteTtsItem != null) {
+            boolean isTtsMuted = this.ttsWrapper != null && this.ttsWrapper.isMuted();
+            muteTtsItem.setTitle(isTtsMuted ? R.string.action_unmute_tts : R.string.action_mute_tts);
+            muteTtsItem.setIcon(isTtsMuted ? R.drawable.mute_blue : R.drawable.speaker_blue);
         }
-        enabled.setVisible(z);
+
+        MenuItem chanToggleItem = menu.findItem(R.id.action_channel_toggle);
+        if (chanToggleItem != null) {
+            if (isLeaveable) {
+                chanToggleItem.setTitle(R.string.action_leave);
+            } else {
+                chanToggleItem.setTitle(R.string.action_join_channel);
+            }
+            chanToggleItem.setEnabled(true).setVisible(true);
+        }
+
+        MenuItem editItem = menu.findItem(R.id.action_edit);
+        if (editItem != null) editItem.setEnabled(isEditable).setVisible(isEditable);
+        MenuItem uploadItem = menu.findItem(R.id.action_upload);
+        if (uploadItem != null) uploadItem.setEnabled(uploadRight).setVisible(uploadRight);
+        MenuItem bcastItem = menu.findItem(R.id.action_broadcast);
+        if (bcastItem != null) bcastItem.setEnabled(broadcastRight).setVisible(broadcastRight);
+        MenuItem streamItem = menu.findItem(R.id.action_stream);
+        if (streamItem != null) streamItem.setEnabled(isMyChannel).setVisible(isMyChannel);
+        MenuItem userAccItem = menu.findItem(R.id.action_user_accounts);
+        if (userAccItem != null) userAccItem.setEnabled(hasUserAccounts).setVisible(hasUserAccounts && isLeaveable);
+        MenuItem srvPropItem = menu.findItem(R.id.action_server_properties);
+        if (srvPropItem != null) srvPropItem.setEnabled(canEditServer).setVisible(canEditServer && isLeaveable);
+        MenuItem bannedItem = menu.findItem(R.id.action_banned_users);
+        if (bannedItem != null) bannedItem.setEnabled(canBan).setVisible(canBan && isLeaveable);
+        MenuItem statsItem = menu.findItem(R.id.action_server_stats);
+        if (statsItem != null) statsItem.setEnabled(hasUserAccounts && isLeaveable).setVisible(hasUserAccounts && isLeaveable);
+        boolean isRecording = getService() != null && getService().isRecording();
+        MenuItem startRecItem = menu.findItem(R.id.action_start_recording);
+        if (startRecItem != null) startRecItem.setEnabled(isLeaveable && !isRecording).setVisible(isLeaveable && !isRecording);
+        MenuItem stopRecItem = menu.findItem(R.id.action_stop_recording);
+        if (stopRecItem != null) {
+            stopRecItem.setEnabled(isLeaveable && isRecording);
+            stopRecItem.setVisible(isLeaveable && isRecording);
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -355,15 +379,33 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         File recordedFile;
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         int itemId = item.getItemId();
-        if (itemId == R.id.action_join) {
-            if (this.curchannel != null) {
-                joinChannel(this.curchannel);
-                return true;
+        if (itemId == R.id.action_mute_tts) {
+            if (this.ttsWrapper != null) {
+                boolean newMuted = !this.ttsWrapper.isMuted();
+                this.ttsWrapper.setMuted(newMuted);
+                String msg = getString(newMuted ? R.string.msg_tts_muted : R.string.msg_tts_unmuted);
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                if (!newMuted) {
+                    this.ttsWrapper.speak(msg);
+                }
+                invalidateOptionsMenu();
             }
             return true;
         }
-        if (itemId == R.id.action_leave) {
-            leaveChannel();
+        if (itemId == R.id.action_channel_toggle) {
+            if (getClient() != null && getClient().getMyChannelID() > 0) {
+                leaveChannel();
+            } else {
+                if (this.curchannel != null && this.curchannel.nChannelID > 0) {
+                    joinChannel(this.curchannel);
+                } else if (getClient() != null) {
+                    Channel root = getClient().getRootChannel();
+                    if (root != null) {
+                        joinChannel(root);
+                    }
+                }
+            }
+            invalidateOptionsMenu();
             return true;
         }
         if (itemId == R.id.action_upload) {
@@ -1117,6 +1159,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     private void setMyChannel(Channel channel) {
         this.mychannel = channel;
         adjustVoiceGain();
+        invalidateOptionsMenu();
     }
 
     private void subscriptionChange(User user) {

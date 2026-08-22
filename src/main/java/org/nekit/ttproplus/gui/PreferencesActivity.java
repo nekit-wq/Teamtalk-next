@@ -276,10 +276,6 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 preference.setSummary(TextUtils.isEmpty(stringValue) ? AppInfo.APPNAME_SHORT : stringValue);
                 return true;
             }
-            if (Preferences.PREF_GENERAL_CLIENTVERSION.equals(preference.getKey())) {
-                preference.setSummary(TextUtils.isEmpty(stringValue) ? preference.getContext().getString(R.string.pref_summary_clientversion_default) : stringValue);
-                return true;
-            }
         }
         preference.setSummary(stringValue);
         return true;
@@ -299,7 +295,6 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_NICKNAME));
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_STATUSMSG));
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_CLIENTNAME));
-            PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_CLIENTVERSION));
 
             Preference fileMgrPref = findPreference(Preferences.PREF_GENERAL_DEFAULT_FILE_MANAGER);
             if (fileMgrPref != null) {

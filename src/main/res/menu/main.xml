@@ -3,6 +3,19 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_mute_tts"
+        android:orderInCategory="80"
+        app:showAsAction="always"
+        android:icon="@drawable/speaker_blue"
+        android:title="@string/action_mute_tts"/>
+
+    <item
+        android:id="@+id/action_channel_toggle"
+        android:orderInCategory="90"
+        app:showAsAction="always"
+        android:title="@string/action_leave"/>
+
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         app:showAsAction="never"
@@ -10,59 +23,63 @@
 
     <item
         android:id="@+id/action_newchannel"
-        app:showAsAction="ifRoom|withText"
+        android:orderInCategory="101"
+        app:showAsAction="never"
         android:title="@string/action_new_channel"/>
     <item
-        android:id="@+id/action_join"
-        app:showAsAction="ifRoom|withText"
-        android:title="@string/action_join"/>
-    <item
         android:id="@+id/action_edit"
-        app:showAsAction="ifRoom|withText"
+        android:orderInCategory="102"
+        app:showAsAction="never"
         android:title="@string/action_edit"/>
     <item
         android:id="@+id/action_stream"
-        app:showAsAction="ifRoom|withText"
+        android:orderInCategory="103"
+        app:showAsAction="never"
         android:title="@string/action_stream"/>
     <item
-        android:id="@+id/action_leave"
-        app:showAsAction="ifRoom|withText"
-        android:title="@string/action_leave"/>
-    <item
         android:id="@+id/action_upload"
-        app:showAsAction="ifRoom|withText"
+        android:orderInCategory="104"
+        app:showAsAction="never"
         android:title="@string/action_upload"/>
     <item
         android:id="@+id/action_online_users"
-        app:showAsAction="ifRoom|withText"
+        android:orderInCategory="105"
+        app:showAsAction="never"
         android:title="@string/online_users"/>
     <item
         android:id="@+id/action_broadcast"
-        app:showAsAction="ifRoom|withText"
+        android:orderInCategory="106"
+        app:showAsAction="never"
         android:title="@string/action_broadcast"/>
     <item
         android:id="@+id/action_user_accounts"
+        android:orderInCategory="107"
         app:showAsAction="never"
         android:title="@string/action_user_accounts"/>
     <item
         android:id="@+id/action_server_properties"
+        android:orderInCategory="108"
         app:showAsAction="never"
         android:title="@string/action_server_properties"/>
     <item
         android:id="@+id/action_banned_users"
+        android:orderInCategory="109"
         app:showAsAction="never"
         android:title="@string/action_banned_users"/>
     <item
         android:id="@+id/action_server_stats"
+        android:orderInCategory="110"
         app:showAsAction="never"
         android:title="@string/action_server_stats"/>
 
     <item
         android:id="@+id/action_start_recording"
+        android:orderInCategory="111"
         app:showAsAction="never"
         android:title="@string/action_start_recording"/>
     <item
         android:id="@+id/action_stop_recording"
+        android:orderInCategory="112"
         app:showAsAction="never"
         android:title="@string/action_stop_recording"/>
 

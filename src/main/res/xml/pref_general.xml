@@ -12,7 +12,6 @@
     <CheckBoxPreference android:title="@string/pref_title_keep_screen_on" android:key="keep_screen_on_checkbox" android:defaultValue="false" />
     <CheckBoxPreference android:title="@string/pref_show_log_messages" android:key="show_log_messages" android:defaultValue="true" />
     <EditTextPreference android:singleLine="true" android:selectAllOnFocus="true" android:title="@string/pref_title_clientname" android:key="clientname_text" android:summary="@string/pref_summary_clientname" />
-    <EditTextPreference android:singleLine="true" android:selectAllOnFocus="true" android:title="@string/pref_title_clientversion" android:key="clientversion_text" android:summary="@string/pref_summary_clientversion" />
     <ListPreference android:entries="@array/default_file_manager_entries" android:title="@string/pref_title_default_file_manager" android:key="default_file_manager" android:summary="@string/pref_summary_default_file_manager" android:defaultValue="ask" android:entryValues="@array/default_file_manager_values" />
     <Preference android:title="@string/pref_check_updates" android:key="check_updates" android:summary="@string/pref_summary_check_updates" />
 </PreferenceScreen>

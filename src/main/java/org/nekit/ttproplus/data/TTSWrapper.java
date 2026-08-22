@@ -107,7 +107,26 @@ public class TTSWrapper {
         }
     }
 
+    private boolean mMuted = false;
+
+    public boolean isMuted() {
+        return this.mMuted;
+    }
+
+    public void setMuted(boolean muted) {
+        this.mMuted = muted;
+        if (muted) {
+            this.mPendingSpeeches.clear();
+            if (this.tts != null) {
+                this.tts.stop();
+            }
+        }
+    }
+
     public void speak(String text) {
+        if (this.mMuted) {
+            return;
+        }
         if (Boolean.TRUE.equals(this.useAnnouncements)) {
             AccessibilityManager manager = (AccessibilityManager) this.mContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
             if (manager != null && manager.isEnabled()) {

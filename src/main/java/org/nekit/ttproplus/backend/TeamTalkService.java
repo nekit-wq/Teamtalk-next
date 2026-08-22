@@ -1313,24 +1313,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String clientName = prefs.getString(Preferences.PREF_GENERAL_CLIENTNAME, "");
-        String clientVersion = prefs.getString(Preferences.PREF_GENERAL_CLIENTVERSION, "");
-
-        if (!TextUtils.isEmpty(clientVersion)) {
-            NativePatch.applyVersion(clientVersion.trim());
-        }
 
         String fullClientName;
         if (TextUtils.isEmpty(clientName)) {
             fullClientName = AppInfo.APPNAME_SHORT;
         } else {
             fullClientName = clientName.trim();
-        }
-
-        if (!TextUtils.isEmpty(clientVersion)) {
-            String ver = clientVersion.trim();
-            if (!fullClientName.contains(ver)) {
-                fullClientName = fullClientName + " " + ver;
-            }
         }
 
         int loginCmdId = this.ttclient.doLoginEx(nickname, this.ttserver.username, this.ttserver.password, fullClientName);

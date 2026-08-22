@@ -28,6 +28,10 @@
     <string name="action_kicksrv">Выгнать с сервера</string>
     <string name="action_kicksrv_short">Кик</string>
     <string name="action_leave">Покинуть канал</string>
+    <string name="action_mute_tts">Заглушить озвучивание</string>
+    <string name="action_unmute_tts">Включить озвучивание</string>
+    <string name="msg_tts_muted">Озвучивание выключено</string>
+    <string name="msg_tts_unmuted">Озвучивание включено</string>
     <string name="action_make_operator">Предоставить права Оператора</string>
     <string name="action_message">Сообщения</string>
     <string name="action_move">Переместить Сюда</string>

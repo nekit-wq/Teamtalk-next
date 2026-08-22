@@ -28,6 +28,10 @@
     <string name="action_kicksrv">Kick from server</string>
     <string name="action_kicksrv_short">Kick</string>
     <string name="action_leave">Leave Channel</string>
+    <string name="action_mute_tts">Mute TTS</string>
+    <string name="action_unmute_tts">Unmute TTS</string>
+    <string name="msg_tts_muted">TTS muted</string>
+    <string name="msg_tts_unmuted">TTS unmuted</string>
     <string name="action_make_operator">Grant Operator</string>
     <string name="action_message">Messages</string>
     <string name="action_move">Move Here</string>
