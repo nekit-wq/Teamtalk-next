@@ -70,10 +70,9 @@ android {
     }
 
     lint {
-        abortOnError false
-        checkReleaseBuilds false
-        disable 'MissingTranslation'
-        disable 'ExtraTranslation'
+        abortOnError = false
+        checkReleaseBuilds = false
+        disable += ['MissingTranslation', 'ExtraTranslation']
     }
 }
 

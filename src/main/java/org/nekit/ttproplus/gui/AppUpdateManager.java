@@ -233,7 +233,7 @@ public class AppUpdateManager {
         builder.setView(progressView);
 
         final AtomicBoolean isCancelled = new AtomicBoolean(false);
-        builder.setNegativeButton(R.string.cancel, (dialog, which) -> {
+        builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> {
             isCancelled.set(true);
             dialog.dismiss();
         });

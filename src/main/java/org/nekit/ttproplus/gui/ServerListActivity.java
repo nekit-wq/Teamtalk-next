@@ -1022,7 +1022,7 @@ public class ServerListActivity extends AppCompatActivity
             onServerClick(firstEntry);
         });
 
-        builder.setNeutralButton(R.string.cancel, (dialog, which) -> dialog.dismiss());
+        builder.setNeutralButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss());
 
         builder.show();
     }
