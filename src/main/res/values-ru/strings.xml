@@ -841,6 +841,9 @@
     <string name="pref_title_clientname_preset">Шаблон клиента / ОС</string>
     <string name="pref_summary_clientname_preset">Быстрый выбор ОС и версии для маскировки</string>
     <string name="clientname_preset_custom">Свой вариант (ввести вручную)…</string>
+    <string name="pref_title_clientversion">Версия клиента</string>
+    <string name="pref_summary_clientversion">Пользовательская версия клиента (например, 5.15.0 или 5.28.0)</string>
+    <string name="pref_summary_clientversion_default">По умолчанию</string>
     <string name="pref_check_updates">Проверить обновления</string>
     <string name="pref_summary_check_updates">Проверить GitHub на наличие новых релизов</string>
     <string name="action_check_updates">Проверить обновления</string>

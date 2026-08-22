@@ -842,6 +842,9 @@ By: %3$s"</string>
     <string name="pref_title_clientname_preset">Client Preset / OS</string>
     <string name="pref_summary_clientname_preset">Quickly choose an OS or client type for masking</string>
     <string name="clientname_preset_custom">Custom (enter manually)…</string>
+    <string name="pref_title_clientversion">Client version</string>
+    <string name="pref_summary_clientversion">Custom client version (e.g. 5.15.0 or 5.28.0)</string>
+    <string name="pref_summary_clientversion_default">Default</string>
     <string name="pref_check_updates">Check for updates</string>
     <string name="pref_summary_check_updates">Check GitHub for latest releases and updates</string>
     <string name="action_check_updates">Check for updates</string>

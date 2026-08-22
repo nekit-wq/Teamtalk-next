@@ -137,12 +137,20 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     Map<Integer, User> users = new HashMap();
     Map<Integer, Vector<MyTextMessage>> usertxtmsgs = new HashMap();
     Vector<MyTextMessage> chatlogtxtmsgs = new Vector<>();
-    Map<String, UserCached> usercache = new HashMap();
+    Map<String, UserCached> usercache = new HashMap<>();
     private final SharedPreferences.OnSharedPreferenceChangeListener mPrefListener = new SharedPreferences.OnSharedPreferenceChangeListener() { 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             if ((Preferences.PREF_BG_MGMT_ENABLED.equals(key) || Preferences.PREF_BG_MGMT_SHOW_VOICE.equals(key) || Preferences.PREF_BG_MGMT_SHOW_MUTE.equals(key) || Preferences.PREF_BG_MGMT_SHOW_PING.equals(key) || Preferences.PREF_BG_MGMT_SHOW_CHAT.equals(key) || Preferences.PREF_BG_MGMT_SHOW_CHANNELS.equals(key)) && TeamTalkService.this.mFloatingWindowManager != null) {
                 TeamTalkService.this.mFloatingWindowManager.checkAndShow();
+            }
+            if ("eq_mic_ns".equals(key) || "eq_mic_aec".equals(key) || "eq_mic_agc".equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING.equals(key) || Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE.equals(key) || Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN.equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL.equals(key)) {
+                TeamTalkService.this.applyRealTimeAudioProcessing();
+            }
+            if (Preferences.PREF_GENERAL_CLIENTNAME.equals(key) || Preferences.PREF_GENERAL_CLIENTVERSION.equals(key) || Preferences.PREF_GENERAL_NICKNAME.equals(key)) {
+                if (TeamTalkService.this.ttclient != null && (TeamTalkService.this.ttclient.getFlags() & 2) != 0) {
+                    TeamTalkService.this.login();
+                }
             }
         }
     };
@@ -1294,18 +1302,35 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.reconnectHandler.postDelayed(this.reconnectTimer, delayMsec);
     }
 
-        public void login() {
+    public void login() {
+        if (this.ttclient == null || this.ttserver == null) {
+            return;
+        }
         String nickname = this.ttserver.nickname;
         if (TextUtils.isEmpty(nickname)) {
             nickname = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString(Preferences.PREF_GENERAL_NICKNAME, "");
         }
-        String clientName = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString(Preferences.PREF_GENERAL_CLIENTNAME, "");
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String clientName = prefs.getString(Preferences.PREF_GENERAL_CLIENTNAME, "");
+        String clientVersion = prefs.getString(Preferences.PREF_GENERAL_CLIENTVERSION, "");
+
+        String fullClientName;
         if (TextUtils.isEmpty(clientName)) {
-            clientName = AppInfo.APPNAME_SHORT;
+            fullClientName = AppInfo.APPNAME_SHORT;
+        } else {
+            fullClientName = clientName.trim();
         }
-        int loginCmdId = this.ttclient.doLoginEx(nickname, this.ttserver.username, this.ttserver.password, clientName);
+
+        if (!TextUtils.isEmpty(clientVersion)) {
+            String ver = clientVersion.trim();
+            if (!fullClientName.contains(ver)) {
+                fullClientName = fullClientName + " " + ver;
+            }
+        }
+
+        int loginCmdId = this.ttclient.doLoginEx(nickname, this.ttserver.username, this.ttserver.password, fullClientName);
         if (loginCmdId < 0) {
-            Toast.makeText(this, getResources().getString(R.string.text_cmderr_login), 1).show();
+            Toast.makeText(this, getResources().getString(R.string.text_cmderr_login), Toast.LENGTH_SHORT).show();
         } else {
             this.activecmds.put(loginCmdId, CmdComplete.CMD_COMPLETE_LOGIN);
         }
@@ -1356,10 +1381,18 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         boolean aecEnabled = prefs.getBoolean("eq_mic_aec", false);
         boolean agcEnabled = prefs.getBoolean("eq_mic_agc", false);
         boolean vpEnabled = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING, false);
+        boolean speakerphone = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE, false);
 
         ap.webrtc.noisesuppression.bEnable = nsEnabled || vpEnabled;
         ap.webrtc.noisesuppression.nLevel = 2;
         ap.webrtc.echocanceller.bEnable = aecEnabled || vpEnabled;
+
+        if (ap.speexdsp != null) {
+            ap.speexdsp.bEnableDenoise = nsEnabled || vpEnabled;
+            ap.speexdsp.bEnableEchoCancellation = aecEnabled || vpEnabled;
+            ap.speexdsp.nEchoSuppress = -40;
+            ap.speexdsp.nEchoSuppressActive = -40;
+        }
 
         if (this.mychannel != null && this.mychannel.audiocfg.bEnableAGC) {
             ap.webrtc.gaincontroller2.bEnable = true;
@@ -1370,6 +1403,22 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
 
         this.ttclient.setSoundInputPreprocess(ap);
+
+        try {
+            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager != null && !audioManager.isBluetoothA2dpOn()) {
+                if (aecEnabled || vpEnabled) {
+                    audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                    if (speakerphone && !audioManager.isWiredHeadsetOn()) {
+                        audioManager.setSpeakerphoneOn(true);
+                    }
+                } else {
+                    audioManager.setMode(AudioManager.MODE_NORMAL);
+                }
+            }
+        } catch (Exception e) {
+            Log.e("bearware", "Failed to configure AudioManager mode", e);
+        }
 
         int gain = (this.mychannel != null && this.mychannel.audiocfg.bEnableAGC)
                 ? SoundLevel.SOUND_GAIN_DEFAULT

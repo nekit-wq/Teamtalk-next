@@ -167,8 +167,10 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         nickname.setText(getString(R.string.user_prop_title_nickname) + " " + user.szNickname);
         username.setText(getString(R.string.user_prop_title_username) + " " + user.szUsername);
         userid.setText(getString(R.string.user_prop_title_userid) + " " + user.nUserID);
-        statusmsg.setText(getString(R.string.user_prop_title_statusmsg) + " " + user.szStatusMsg);
-        clientname.setText(getString(R.string.user_prop_title_clientname) + " " + user.szClientName + " " + ((user.uVersion >> 16) & 0xFF) + "." + ((user.uVersion >> 8) & 0xFF) + "." + (user.uVersion & 0xFF));
+        String clientDisplay = (user.szClientName != null && !user.szClientName.isEmpty())
+                ? user.szClientName
+                : (((user.uVersion >> 16) & 0xFF) + "." + ((user.uVersion >> 8) & 0xFF) + "." + (user.uVersion & 0xFF));
+        clientname.setText(getString(R.string.user_prop_title_clientname) + " " + clientDisplay);
         ipaddress.setText(getString(R.string.user_prop_title_ipaddress) + " " + user.szIPAddress);
 
         UserAccount myAccount = new UserAccount();

@@ -270,165 +270,58 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             }
             return true;
         }
-        if (preference instanceof CheckBoxPreference) {
-            preference.getKey().equals(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
-            return true;
+        if (preference instanceof EditTextPreference) {
+            if (Preferences.PREF_GENERAL_CLIENTNAME.equals(preference.getKey())) {
+                preference.setSummary(TextUtils.isEmpty(stringValue) ? AppInfo.APPNAME_SHORT : stringValue);
+                return true;
+            }
+            if (Preferences.PREF_GENERAL_CLIENTVERSION.equals(preference.getKey())) {
+                preference.setSummary(TextUtils.isEmpty(stringValue) ? preference.getContext().getString(R.string.pref_summary_clientversion_default) : stringValue);
+                return true;
+            }
         }
         preference.setSummary(stringValue);
         return true;
     }
 
-        public static void bindPreferenceSummaryToValue(Preference preference) {
+    public static void bindPreferenceSummaryToValue(Preference preference) {
+        if (preference == null) return;
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
         sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
     }
 
-        public static class GeneralPreferenceFragment extends PreferenceFragment {
-            private static final String[][] CLIENT_PRESETS = {
-                {"TeamTalk Pro+ (Android)", "TeamTalk Pro+"},
-                {"TeamTalk 5 Windows (v5.28.0)", "TeamTalk 5 Windows 5.28.0"},
-                {"TeamTalk 5 Windows (v5.15.0)", "TeamTalk5"},
-                {"TeamTalk 5 Windows (v5.8.2)", "TeamTalk 5 Windows 5.8.2"},
-                {"TeamTalk 5 macOS", "TeamTalk 5 macOS"},
-                {"TeamTalk 5 Linux", "TeamTalk 5 Linux"},
-                {"TeamTalk 5 iOS", "TeamTalk 5 iOS"},
-                {"TeamTalk Classic", "TeamTalkClassic"}
-            };
+    public static class GeneralPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_general);
+            PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_NICKNAME));
+            PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_STATUSMSG));
+            PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_CLIENTNAME));
+            PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_CLIENTVERSION));
 
-            @Override
-            public void onCreate(Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
-                addPreferencesFromResource(R.xml.pref_general);
-                PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_NICKNAME));
-                PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_STATUSMSG));
-
-                final android.preference.EditTextPreference clientNamePref = (android.preference.EditTextPreference) findPreference(Preferences.PREF_GENERAL_CLIENTNAME);
-                final Preference clientPresetPref = findPreference(Preferences.PREF_GENERAL_CLIENTNAME_PRESET);
-                updateClientNameSummaries(clientNamePref, clientPresetPref);
-
-                if (clientNamePref != null) {
-                    clientNamePref.setOnPreferenceChangeListener((preference, newValue) -> {
-                        String val = newValue != null ? newValue.toString() : "";
-                        preference.setSummary(val.isEmpty() ? AppInfo.APPNAME_SHORT : val);
-                        if (clientPresetPref != null) {
-                            clientPresetPref.setSummary(getPresetLabelForValue(val));
-                        }
-                        Toast.makeText(getActivity(), R.string.msg_reconnect_for_clientname, Toast.LENGTH_SHORT).show();
-                        return true;
-                    });
-                }
-
-                if (clientPresetPref != null) {
-                    clientPresetPref.setOnPreferenceClickListener(pref -> {
-                        showPresetDialog(clientNamePref, clientPresetPref);
-                        return true;
-                    });
-                }
-
-                Preference fileMgrPref = findPreference(Preferences.PREF_GENERAL_DEFAULT_FILE_MANAGER);
-                if (fileMgrPref != null) {
-                    PreferencesActivity.bindPreferenceSummaryToValue(fileMgrPref);
-                }
-
-                Preference checkUpdatePref = findPreference("check_updates");
-                if (checkUpdatePref != null) {
-                    checkUpdatePref.setOnPreferenceClickListener(pref -> {
-                        AppUpdateManager.checkUpdate(getActivity(), true);
-                        return true;
-                    });
-                }
-
-                Preference bearwareLogin = findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
-                if (bearwareLogin != null) {
-                    bearwareLogin.setOnPreferenceChangeListener((preference, o) -> {
-                        Intent edit = new Intent(getActivity(), (Class<?>) WebLoginActivity.class);
-                        getActivity().startActivityForResult(edit, 2);
-                        return true;
-                    });
-                }
+            Preference fileMgrPref = findPreference(Preferences.PREF_GENERAL_DEFAULT_FILE_MANAGER);
+            if (fileMgrPref != null) {
+                PreferencesActivity.bindPreferenceSummaryToValue(fileMgrPref);
             }
 
-            private void updateClientNameSummaries(android.preference.EditTextPreference clientNamePref, Preference clientPresetPref) {
-                if (getActivity() == null) return;
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                String current = prefs.getString(Preferences.PREF_GENERAL_CLIENTNAME, "");
-                String display = current.isEmpty() ? AppInfo.APPNAME_SHORT : current;
-                if (clientNamePref != null) {
-                    clientNamePref.setSummary(display);
-                }
-                if (clientPresetPref != null) {
-                    clientPresetPref.setSummary(getPresetLabelForValue(current));
-                }
-            }
-
-            private String getPresetLabelForValue(String value) {
-                if (TextUtils.isEmpty(value)) {
-                    return CLIENT_PRESETS[0][0];
-                }
-                for (String[] preset : CLIENT_PRESETS) {
-                    if (preset[1].equalsIgnoreCase(value)) {
-                        return preset[0];
-                    }
-                }
-                return value;
-            }
-
-            private void showPresetDialog(final android.preference.EditTextPreference clientNamePref, final Preference clientPresetPref) {
-                if (getActivity() == null) return;
-                String[] titles = new String[CLIENT_PRESETS.length + 1];
-                for (int i = 0; i < CLIENT_PRESETS.length; i++) {
-                    titles[i] = CLIENT_PRESETS[i][0];
-                }
-                titles[CLIENT_PRESETS.length] = getActivity().getString(R.string.clientname_preset_custom);
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle(R.string.pref_title_clientname_preset);
-                builder.setItems(titles, (dialog, which) -> {
-                    if (which < CLIENT_PRESETS.length) {
-                        String chosenValue = CLIENT_PRESETS[which][1];
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                        prefs.edit().putString(Preferences.PREF_GENERAL_CLIENTNAME, chosenValue).apply();
-                        if (clientNamePref != null) {
-                            clientNamePref.setText(chosenValue);
-                            clientNamePref.setSummary(chosenValue);
-                        }
-                        if (clientPresetPref != null) {
-                            clientPresetPref.setSummary(CLIENT_PRESETS[which][0]);
-                        }
-                        Toast.makeText(getActivity(), R.string.msg_reconnect_for_clientname, Toast.LENGTH_SHORT).show();
-                    } else {
-                        showCustomClientNameDialog(clientNamePref, clientPresetPref);
-                    }
+            Preference checkUpdatePref = findPreference("check_updates");
+            if (checkUpdatePref != null) {
+                checkUpdatePref.setOnPreferenceClickListener(pref -> {
+                    AppUpdateManager.checkUpdate(getActivity(), true);
+                    return true;
                 });
-                builder.show();
             }
 
-            private void showCustomClientNameDialog(final android.preference.EditTextPreference clientNamePref, final Preference clientPresetPref) {
-                if (getActivity() == null) return;
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle(R.string.pref_title_clientname);
-
-                final android.widget.EditText input = new android.widget.EditText(getActivity());
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                input.setText(prefs.getString(Preferences.PREF_GENERAL_CLIENTNAME, AppInfo.APPNAME_SHORT));
-                input.setSelection(input.getText().length());
-                builder.setView(input);
-
-                builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                    String customVal = input.getText().toString().trim();
-                    prefs.edit().putString(Preferences.PREF_GENERAL_CLIENTNAME, customVal).apply();
-                    if (clientNamePref != null) {
-                        clientNamePref.setText(customVal);
-                        clientNamePref.setSummary(customVal.isEmpty() ? AppInfo.APPNAME_SHORT : customVal);
-                    }
-                    if (clientPresetPref != null) {
-                        clientPresetPref.setSummary(getPresetLabelForValue(customVal));
-                    }
-                    Toast.makeText(getActivity(), R.string.msg_reconnect_for_clientname, Toast.LENGTH_SHORT).show();
+            Preference bearwareLogin = findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
+            if (bearwareLogin != null) {
+                bearwareLogin.setOnPreferenceChangeListener((preference, o) -> {
+                    Intent edit = new Intent(getActivity(), (Class<?>) WebLoginActivity.class);
+                    getActivity().startActivityForResult(edit, 2);
+                    return true;
                 });
-                builder.setNegativeButton(android.R.string.cancel, null);
-                builder.show();
             }
+        }
 
             @Override
             public void onResume() {

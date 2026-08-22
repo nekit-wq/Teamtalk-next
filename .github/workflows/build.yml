@@ -59,26 +59,26 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkProPlus-5.25-source.zip HEAD
+          git archive --format=zip --output=TeamTalkProPlus-5.26-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.25' }}
-          name: "TeamTalk Pro Plus v5.25"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.26' }}
+          name: "TeamTalk Pro Plus v5.26"
           body: |
-            ### TeamTalk Pro Plus v5.25
+            ### TeamTalk Pro Plus v5.26
 
             #### Список изменений:
-            - **Маскировка версии и ОС клиента:** быстрый выбор пресетов (Windows 5.28.0, 5.15.0, 5.8.2, macOS, Linux, iOS, Android, либо любая произвольная строка).
-            - **Открытие файлов `.tt` («Открыть с помощью» / Share):** отображение всех параметров сервера (название, хост/IP, TCP/UDP порты, логин, пароль, канал, шифрование) с возможностью импорта в список или прямого быстрого подключения без сохранения.
-            - **Встроенная автопроверка обновлений с GitHub Releases:** проверка при запуске и через меню/настройки, показ описания релиза, опция «Больше не напоминать», скачивание APK с прогресс-баром и запуск установки внутри приложения.
-            - **Исправление шумоподавления и микрофона:** исправлен сброс WebRTC Noise Suppression, эхоподавления (AEC) и АРУ при переподключении, входе на сервер и смене каналов. Настройки теперь сохраняются и применяются стабильно.
+            - **Прямая настройка имени и версии клиента:** отдельные поля ввода «Имя клиента» и «Версия клиента» в Основных настройках без жестких шаблонов. Изменения мгновенно применяются на сервере на лету.
+            - **Аппаратное и программное эхоподавление (AEC):** режим связи `MODE_IN_COMMUNICATION` в системе Android для активации аппаратного эхоподавителя микрофона + WebRTC AEC и Speex AEC.
+            - **Открытие файлов `.tt` («Открыть с помощью» / Share):** отображение всех параметров сервера с возможностью импорта или быстрого прямого подключения.
+            - **Встроенная автопроверка обновлений с GitHub Releases:** проверка при старте и через меню/настройки.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkProPlus-5.25-source.zip
+            TeamTalkProPlus-5.26-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

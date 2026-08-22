@@ -2279,8 +2279,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return;
         }
         boolean z = false;
-        boolean voiceProcessing = ((Boolean) this.prefs.get(Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING, false)).booleanValue();
-        this.audioManager.setMode(voiceProcessing ? 3 : 0);
+        boolean aec = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("eq_mic_aec", false);
+        boolean voiceProcessing = ((Boolean) this.prefs.get(Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING, false)).booleanValue() || aec;
+        this.audioManager.setMode(voiceProcessing ? AudioManager.MODE_IN_COMMUNICATION : AudioManager.MODE_NORMAL);
         if (voiceProcessing) {
             AudioManager audioManager = this.audioManager;
             if (((Boolean) this.prefs.get(Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE, false)).booleanValue() && !this.audioManager.isWiredHeadsetOn()) {
