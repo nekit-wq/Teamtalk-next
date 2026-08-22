@@ -37,6 +37,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:allowBackup="true"
@@ -46,6 +47,16 @@
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
         android:supportsRtl="true">
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <activity
             android:name=".gui.WebLoginActivity"
@@ -72,15 +83,21 @@
 
                 <data android:scheme="tt" />
             </intent-filter>
+            <!-- Handle .tt files via file/content schemes -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="file" />
                 <data android:scheme="content" />
-                <data android:mimeType="*/*" />
                 <data android:host="*" />
+                <data android:mimeType="*/*" />
                 <data android:pathPattern=".*\\.tt" />
+                <data android:pathPattern=".*\\..*\\.tt" />
+                <data android:pathPattern=".*\\..*\\..*\\.tt" />
+                <data android:pathPattern=".*\\.TT" />
+                <data android:pathPattern=".*\\..*\\.TT" />
+                <data android:pathPattern=".*\\..*\\..*\\.TT" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -88,9 +105,21 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="file" />
                 <data android:scheme="content" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/xml" />
+                <data android:mimeType="text/xml" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="application/x-teamtalk" />
+            </intent-filter>
+            <!-- Handle shared .tt files via Share/Send -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
-                <data android:host="*" />
-                <data android:pathPattern=".*\\.TT" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/xml" />
+                <data android:mimeType="text/xml" />
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
 

@@ -37,6 +37,7 @@ public class Preferences {
             PREF_GENERAL_BEARWARE_TOKEN = "bearware_token",
             PREF_GENERAL_GENDER = "gender_checkbox",
             PREF_GENERAL_CLIENTNAME = "clientname_text",
+            PREF_GENERAL_CLIENTNAME_PRESET = "clientname_preset",
             PREF_GENERAL_DEFAULT_FILE_MANAGER = "default_file_manager";
     public static final String
             PREF_SOUNDSYSTEM_MEDIAFILE_VOLUME = "mediafilevolume_seekbar",
@@ -94,4 +95,5 @@ public class Preferences {
             PREF_DISPLAY_QUICK_BAN_CHAN = "display_quick_ban_chan";
 
     public static final String PREF_WELCOME_SHOWN = "welcome_shown";
+    public static final String PREF_IGNORED_UPDATE_VERSION = "ignored_update_version";
 }

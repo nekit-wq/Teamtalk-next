@@ -49,27 +49,26 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkProPlus-5.24-source.zip HEAD
+          git archive --format=zip --output=TeamTalkProPlus-5.25-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.24' }}
-          name: "TeamTalk Pro Plus v5.24"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.25' }}
+          name: "TeamTalk Pro Plus v5.25"
           body: |
-            ### TeamTalk Pro Plus v5.24
+            ### TeamTalk Pro Plus v5.25
 
             #### Список изменений:
-            - Исправление ошибок версии 5.24
-            - Исправлено переключение звуковых тем и кэширование звуков
-            - Исправлено зависание при смене темы оформления на сервере
-            - Исправлено отображение текста при переключении тем без перезапуска
-            - Добавлен flastik в список разработчиков
+            - **Маскировка версии и ОС клиента:** быстрый выбор пресетов (Windows 5.28.0, 5.15.0, 5.8.2, macOS, Linux, iOS, Android, либо любая произвольная строка).
+            - **Открытие файлов `.tt` («Открыть с помощью» / Share):** отображение всех параметров сервера (название, хост/IP, TCP/UDP порты, логин, пароль, канал, шифрование) с возможностью импорта в список или прямого быстрого подключения без сохранения.
+            - **Встроенная автопроверка обновлений с GitHub Releases:** проверка при запуске и через меню/настройки, показ описания релиза, опция «Больше не напоминать», скачивание APK с прогресс-баром и запуск установки внутри приложения.
+            - **Исправление шумоподавления и микрофона:** исправлен сброс WebRTC Noise Suppression, эхоподавления (AEC) и АРУ при переподключении, входе на сервер и смене каналов. Настройки теперь сохраняются и применяются стабильно.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkProPlus-5.24-source.zip
+            TeamTalkProPlus-5.25-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

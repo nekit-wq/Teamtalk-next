@@ -548,6 +548,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.ttclient.closeSoundInputDevice();
             int indevid = getPreferredSoundInputDeviceId();
             if (this.ttclient.initSoundInputDevice(indevid)) {
+                applyRealTimeAudioProcessing();
                 if (tx) {
                     this.ttclient.enableVoiceTransmission(true);
                 }
@@ -834,6 +835,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             } else {
                 int indevid = getPreferredSoundInputDeviceId();
                 if ((this.ttclient.getFlags() & 1) != 0 || this.ttclient.initSoundInputDevice(indevid)) {
+                    applyRealTimeAudioProcessing();
                     this.ttclient.enableVoiceTransmission(true);
                 }
             }
@@ -1127,6 +1129,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             } else {
                 int indevid = getPreferredSoundInputDeviceId();
                 if ((this.ttclient.getFlags() & 1) != 0 || this.ttclient.initSoundInputDevice(indevid)) {
+                    applyRealTimeAudioProcessing();
                     this.ttclient.enableVoiceActivation(true);
                 }
             }
@@ -1340,19 +1343,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     private void setupAudioPreprocessor() {
-        if (this.mychannel != null && this.mychannel.audiocfg.bEnableAGC) {
-            AudioPreprocessor ap = new AudioPreprocessor(4, true);
-            ap.webrtc.gaincontroller2.bEnable = true;
-            float gainPercent = this.mychannel.audiocfg.nGainLevel / 32000.0f;
-            ap.webrtc.gaincontroller2.fixeddigital.fGainDB = 49.9f * gainPercent;
-            this.ttclient.setSoundInputPreprocess(ap);
-            this.ttclient.setSoundInputGainLevel(SoundLevel.SOUND_GAIN_DEFAULT);
-            return;
-        }
-        this.ttclient.setSoundInputPreprocess(new AudioPreprocessor());
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        int gain = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN, SoundLevel.SOUND_GAIN_DEFAULT);
-        this.ttclient.setSoundInputGainLevel(gain);
+        applyRealTimeAudioProcessing();
     }
 
     public void applyRealTimeAudioProcessing() {
@@ -1361,13 +1352,30 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         AudioPreprocessor ap = new AudioPreprocessor(4, true);
-        ap.webrtc.noisesuppression.bEnable = prefs.getBoolean("eq_mic_ns", false);
+        boolean nsEnabled = prefs.getBoolean("eq_mic_ns", false);
+        boolean aecEnabled = prefs.getBoolean("eq_mic_aec", false);
+        boolean agcEnabled = prefs.getBoolean("eq_mic_agc", false);
+        boolean vpEnabled = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING, false);
+
+        ap.webrtc.noisesuppression.bEnable = nsEnabled || vpEnabled;
         ap.webrtc.noisesuppression.nLevel = 2;
-        ap.webrtc.echocanceller.bEnable = prefs.getBoolean("eq_mic_aec", false);
-        ap.webrtc.gaincontroller2.bEnable = prefs.getBoolean("eq_mic_agc", false);
+        ap.webrtc.echocanceller.bEnable = aecEnabled || vpEnabled;
+
+        if (this.mychannel != null && this.mychannel.audiocfg.bEnableAGC) {
+            ap.webrtc.gaincontroller2.bEnable = true;
+            float gainPercent = this.mychannel.audiocfg.nGainLevel / 32000.0f;
+            ap.webrtc.gaincontroller2.fixeddigital.fGainDB = 49.9f * gainPercent;
+        } else {
+            ap.webrtc.gaincontroller2.bEnable = agcEnabled || vpEnabled;
+        }
+
         this.ttclient.setSoundInputPreprocess(ap);
-        int gain = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN, SoundLevel.SOUND_GAIN_DEFAULT);
+
+        int gain = (this.mychannel != null && this.mychannel.audiocfg.bEnableAGC)
+                ? SoundLevel.SOUND_GAIN_DEFAULT
+                : prefs.getInt(Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN, SoundLevel.SOUND_GAIN_DEFAULT);
         this.ttclient.setSoundInputGainLevel(gain);
+
         int vox = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL, 0);
         this.ttclient.setVoiceActivationLevel(vox);
     }

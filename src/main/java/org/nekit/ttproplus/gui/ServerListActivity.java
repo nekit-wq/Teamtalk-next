@@ -135,6 +135,9 @@ public class ServerListActivity extends AppCompatActivity
         setTitle(R.string.title_activity_server_list);
         executorService = Executors.newFixedThreadPool(2);
 
+        // Check for app updates from GitHub Releases
+        AppUpdateManager.checkUpdate(this, false);
+
         // Show welcome screen on first launch
         SharedPreferences appPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (!appPrefs.getBoolean(Preferences.PREF_WELCOME_SHOWN, false)) {
@@ -198,11 +201,7 @@ public class ServerListActivity extends AppCompatActivity
             return;
         }
 
-        Intent intent = getIntent();
-        Uri uri = intent.getData();
-        if (uri != null) {
-            loadServerFromUri(uri);
-        }
+        handleIncomingIntent(getIntent());
 
         if (mConnection.isBound()) {
             // reset state since we're creating a new connection
@@ -227,9 +226,24 @@ public class ServerListActivity extends AppCompatActivity
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        handleIncomingIntent(intent);
+    }
 
-        if (intent.getData() != null) {
-            loadServerFromUri(intent.getData());
+    private void handleIncomingIntent(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        if (Intent.ACTION_VIEW.equals(action)) {
+            Uri uri = intent.getData();
+            if (uri != null) {
+                intent.setData(null);
+                loadServerFromUri(uri);
+            }
+        } else if (Intent.ACTION_SEND.equals(action)) {
+            Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (uri != null) {
+                intent.removeExtra(Intent.EXTRA_STREAM);
+                loadServerFromUri(uri);
+            }
         }
     }
 
@@ -406,6 +420,8 @@ public class ServerListActivity extends AppCompatActivity
         } else if (itemId == R.id.action_settings) {
             Intent intent = new Intent(ServerListActivity.this, PreferencesActivity.class);
             startActivity(intent);
+        } else if (itemId == R.id.action_check_updates) {
+            AppUpdateManager.checkUpdate(this, true);
         } else if (itemId == R.id.action_exit) {
             finish();
         } else {
@@ -460,7 +476,7 @@ public class ServerListActivity extends AppCompatActivity
                     BufferedReader source = new BufferedReader(new InputStreamReader(inputStream));
                     String line;
                     while ((line = source.readLine()) != null) {
-                        xml.append(line);
+                        xml.append(line).append("\n");
                     }
                     source.close();
                 }
@@ -470,35 +486,34 @@ public class ServerListActivity extends AppCompatActivity
 
             Vector<ServerEntry> entries = Utils.getXmlServerEntries(xml.toString());
             if (entries != null && !entries.isEmpty()) {
-                getIntent().setData(null);
                 processImportedServers(entries);
             } else {
-                Toast.makeText(this, "Failed to parse .tt file", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_SHORT).show();
             }
             return;
         }
 
         ServerEntry entry = new ServerEntry();
         String host = uri.getHost();
-        
+
         if (host != null && !host.isEmpty()) {
             entry.ipaddr = host;
             entry.servername = host + ":" + getIntParameterOrDefault(uri, "tcpport", Constants.DEFAULT_TCP_PORT);
         }
-        
+
         entry.tcpport = getIntParameterOrDefault(uri, "tcpport", Constants.DEFAULT_TCP_PORT);
         entry.udpport = getIntParameterOrDefault(uri, "udpport", Constants.DEFAULT_UDP_PORT);
         entry.username = getStringParameterOrDefault(uri, "username", "");
         entry.password = getStringParameterOrDefault(uri, "password", "");
         entry.channel = getStringParameterOrDefault(uri, "channel", entry.channel);
         entry.chanpasswd = getStringParameterOrDefault(uri, "chanpasswd", entry.chanpasswd);
-        
+
         String encrypted = uri.getQueryParameter("encrypted");
         entry.encrypted = encrypted != null && (encrypted.equalsIgnoreCase("true") || encrypted.equals("1"));
 
-        this.serverentry = entry;
-        getIntent().setData(null);
-        Log.i(TAG, "Connecting to " + entry.servername);
+        Vector<ServerEntry> singleList = new Vector<>();
+        singleList.add(entry);
+        processImportedServers(singleList);
     }
 
     private int getIntParameterOrDefault(Uri uri, String parameter, int defaultValue) {
@@ -959,7 +974,35 @@ public class ServerListActivity extends AppCompatActivity
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.tt_file_action_title);
-        builder.setMessage(R.string.tt_file_action_message);
+
+        StringBuilder sb = new StringBuilder();
+        if (entries.size() == 1) {
+            ServerEntry entry = entries.get(0);
+            sb.append(getString(R.string.tt_file_server_name, entry.servername)).append("\n");
+            sb.append(getString(R.string.tt_file_server_host, entry.ipaddr)).append("\n");
+            sb.append(getString(R.string.tt_file_server_ports, entry.tcpport, entry.udpport)).append("\n");
+            sb.append(getString(R.string.tt_file_server_encrypted, entry.encrypted ? getString(R.string.yes) : getString(R.string.no))).append("\n");
+            if (!TextUtils.isEmpty(entry.username)) {
+                sb.append(getString(R.string.tt_file_server_username, entry.username)).append("\n");
+            }
+            if (!TextUtils.isEmpty(entry.password)) {
+                sb.append(getString(R.string.tt_file_server_password, "••••••••")).append("\n");
+            }
+            if (!TextUtils.isEmpty(entry.channel)) {
+                sb.append(getString(R.string.tt_file_server_channel, entry.channel)).append("\n");
+            }
+        } else {
+            sb.append(getString(R.string.tt_file_multiple_servers, entries.size())).append("\n\n");
+            for (int i = 0; i < Math.min(entries.size(), 5); i++) {
+                ServerEntry e = entries.get(i);
+                sb.append("• ").append(e.servername).append(" (").append(e.ipaddr).append(":").append(e.tcpport).append(")\n");
+            }
+            if (entries.size() > 5) {
+                sb.append("… ").append(getString(R.string.and_more, entries.size() - 5)).append("\n");
+            }
+        }
+        sb.append("\n").append(getString(R.string.tt_file_action_message));
+        builder.setMessage(sb.toString());
 
         builder.setPositiveButton(R.string.tt_file_action_import, (dialog, which) -> {
             for (ServerEntry entry : entries) {
@@ -977,6 +1020,8 @@ public class ServerListActivity extends AppCompatActivity
             firstEntry.servertype = ServerEntry.ServerType.LOCAL;
             onServerClick(firstEntry);
         });
+
+        builder.setNeutralButton(R.string.cancel, (dialog, which) -> dialog.dismiss());
 
         builder.show();
     }
