@@ -148,7 +148,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             if ("eq_mic_ns".equals(key) || "eq_mic_aec".equals(key) || "eq_mic_agc".equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING.equals(key) || Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE.equals(key) || Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN.equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL.equals(key)) {
                 TeamTalkService.this.applyRealTimeAudioProcessing();
             }
-            if (Preferences.PREF_GENERAL_CLIENTNAME.equals(key) || Preferences.PREF_GENERAL_CLIENTVERSION.equals(key) || Preferences.PREF_GENERAL_NICKNAME.equals(key)) {
+            if (Preferences.PREF_GENERAL_CLIENTNAME.equals(key) || Preferences.PREF_GENERAL_NICKNAME.equals(key)) {
                 if (TeamTalkService.this.ttclient != null && (TeamTalkService.this.ttclient.getFlags() & 2) != 0) {
                     TeamTalkService.this.login();
                 }
