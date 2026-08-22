@@ -850,7 +850,7 @@
     <string name="update_dont_remind">Больше не напоминать для этой версии</string>
     <string name="update_downloading_title">Загрузка обновления</string>
     <string name="update_downloading_init">Подключение к серверу…</string>
-    <string name="update_download_progress_format">%1$d%% (%.1f МБ / %.1f МБ)</string>
+    <string name="update_download_progress_format">%1$d%% (%2$.1f МБ / %3$.1f МБ)</string>
     <string name="update_download_failed">Ошибка скачивания обновления</string>
     <string name="update_check_failed">Не удалось проверить обновления</string>
     <string name="update_already_latest">У вас установлена последняя версия (%1$s)</string>

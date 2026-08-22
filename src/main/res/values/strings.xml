@@ -851,7 +851,7 @@ By: %3$s"</string>
     <string name="update_dont_remind">Don\'t remind again for this version</string>
     <string name="update_downloading_title">Downloading Update</string>
     <string name="update_downloading_init">Connecting to server…</string>
-    <string name="update_download_progress_format">%1$d%% (%.1f MB / %.1f MB)</string>
+    <string name="update_download_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
     <string name="update_download_failed">Failed to download update APK</string>
     <string name="update_check_failed">Could not check for updates</string>
     <string name="update_already_latest">You are already using the latest version (%1$s)</string>
