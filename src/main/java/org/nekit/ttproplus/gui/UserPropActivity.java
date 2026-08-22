@@ -173,16 +173,24 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         String clientNameText = (user.szClientName != null && !user.szClientName.isEmpty())
                 ? user.szClientName
                 : "TeamTalk";
-        clientname.setText(getString(R.string.user_prop_title_clientname) + " " + clientNameText);
 
         String verText;
         if (user.uVersion > 0) {
             verText = ((user.uVersion >> 16) & 0xFF) + "." + ((user.uVersion >> 8) & 0xFF) + "." + (user.uVersion & 0xFF);
         } else {
-            verText = "5.26.0";
+            verText = "";
         }
+
+        String fullDisplay;
+        if (!verText.isEmpty() && !clientNameText.contains(verText)) {
+            fullDisplay = clientNameText + " " + verText;
+        } else {
+            fullDisplay = clientNameText;
+        }
+
+        clientname.setText(getString(R.string.user_prop_title_clientname) + " " + fullDisplay);
         if (clientversion != null) {
-            clientversion.setText(getString(R.string.user_prop_title_clientversion) + " " + verText);
+            clientversion.setVisibility(View.GONE);
         }
         ipaddress.setText(getString(R.string.user_prop_title_ipaddress) + " " + user.szIPAddress);
 

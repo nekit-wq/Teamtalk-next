@@ -59,26 +59,25 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkProPlus-5.27-source.zip HEAD
+          git archive --format=zip --output=TeamTalkProPlus-5.28-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27' }}
-          name: "TeamTalk Pro Plus v5.27"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.28' }}
+          name: "TeamTalk Pro Plus v5.28"
           body: |
-            ### TeamTalk Pro Plus v5.27
+            ### TeamTalk Pro Plus v5.28
 
             #### Список изменений:
-            - **Отображение имени и версии клиента:** в свойствах любого пользователя теперь раздельно и всегда выводятся «Имя клиента» и «Версия клиента».
-            - **Спуфинг клиента на сервере:** при указании версии и имени клиента они сразу корректно передаются серверу и транслируются всем подключенным пользователям (на Windows, macOS, Android и т.д.).
-            - **Постоянная цифровая подпись:** добавлен постоянный ключ подписи `release.keystore` для бесшовной установки обновлений поверх существующих версий в 1 клик.
-            - **Аппаратное эхоподавление (AEC):** поддержка режима `MODE_IN_COMMUNICATION` для аппаратного шумоподавления и подавления эха.
+            - **Реальный спуфинг версии клиента в ядре TeamTalk:** добавлен нативный патчер `NativePatch`, динамически обновляющий строку версии в памяти `libTeamTalk5-jni.so`. Теперь при логине клиент отправляет серверу указанную пользователем версию (например `5.33.0`, `5.28.0` и т.д.), и сервер регистрирует её как настоящую `uVersion`.
+            - **Отображение клиента в свойствах:** имя и версия клиента объединены в одну строку (например `шлюха 5.33.0`).
+            - **Постоянная цифровая подпись APK:** стабильная установка обновлений поверх существующих версий без удаления.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkProPlus-5.27-source.zip
+            TeamTalkProPlus-5.28-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

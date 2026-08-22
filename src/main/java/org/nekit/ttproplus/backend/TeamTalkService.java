@@ -1315,6 +1315,10 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         String clientName = prefs.getString(Preferences.PREF_GENERAL_CLIENTNAME, "");
         String clientVersion = prefs.getString(Preferences.PREF_GENERAL_CLIENTVERSION, "");
 
+        if (!TextUtils.isEmpty(clientVersion)) {
+            NativePatch.applyVersion(clientVersion.trim());
+        }
+
         String fullClientName;
         if (TextUtils.isEmpty(clientName)) {
             fullClientName = AppInfo.APPNAME_SHORT;
