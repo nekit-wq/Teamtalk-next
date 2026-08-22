@@ -59,26 +59,26 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkProPlus-5.25-source.zip HEAD
+          git archive --format=zip --output=TeamTalkProPlus-5.30-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.25' }}
-          name: "TeamTalk Pro Plus v5.25"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.30' }}
+          name: "TeamTalk Pro Plus v5.30"
           body: |
-            ### TeamTalk Pro Plus v5.25
+            ### TeamTalk Pro Plus v5.30
 
             #### Список изменений:
-            - **Кнопка переключения канала «Покинуть канал» / «Войти в канал»:** размещена прямо перед меню «Ещё», динамически меняет название и статус при нахождении в канале или вне его.
-            - **Кнопка «Mute TTS» (Заглушить озвучивание):** размещена перед кнопкой канала, позволяет в 1 клик выключить или включить синтезатор речи TTS.
-            - **Упрощенная настройка имени клиента:** оставлено единое чистое поле «Имя клиента» в настройках.
-            - **Постоянная цифровая подпись APK:** стабильная установка и обновление поверх любой версии в 1 клик.
+            - **Кнопка канала «Покинуть канал» / «Войти в канал»:** размещена прямо перед меню «Ещё», позволяет в 1 клик покинуть текущий канал (выйти на сервер) или войти в канал.
+            - **Кнопка «Mute TTS» (Заглушить / Включить озвучивание):** размещена перед кнопкой канала, мгновенно глушит или включает TTS синтезатор речи.
+            - **Единая настройка «Имя клиента»:** чистое и понятное поле ввода имени клиента в настройках.
+            - **Постоянная цифровая подпись APK:** бесшовная установка и обновление поверх любой установленной версии.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkProPlus-5.25-source.zip
+            TeamTalkProPlus-5.30-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
