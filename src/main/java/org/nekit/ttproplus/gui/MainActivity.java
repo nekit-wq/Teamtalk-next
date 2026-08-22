@@ -398,8 +398,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             } else {
                 if (this.curchannel != null && this.curchannel.nChannelID > 0) {
                     joinChannel(this.curchannel);
-                } else if (getClient() != null) {
-                    Channel root = getClient().getRootChannel();
+                } else if (getClient() != null && getService() != null) {
+                    int rootId = getClient().getRootChannelID();
+                    Channel root = getService().getChannels().get(Integer.valueOf(rootId));
                     if (root != null) {
                         joinChannel(root);
                     }
