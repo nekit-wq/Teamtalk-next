@@ -23,20 +23,21 @@ android {
 
     signingConfigs {
         release {
-            if (file('release.keystore').exists()) {
-                storeFile = file('release.keystore')
-                storePassword = 'android'
-                keyAlias = 'release'
-                keyPassword = 'android'
-                enableV1Signing = true
-                enableV2Signing = true
-                enableV3Signing = true
-                enableV4Signing = true
-            }
+            storeFile = file('release.keystore')
+            storePassword = 'android'
+            keyAlias = 'release'
+            keyPassword = 'android'
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
         }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.release
+        }
         release {
             minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

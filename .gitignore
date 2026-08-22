@@ -8,7 +8,8 @@ local.properties
 *.jks
 *.keystore
 
-# Allow project JARs and native SO libraries
+# Allow project JARs, native SO libraries, and fixed signing keystore
 !libs/*.jar
 !gradle/wrapper/gradle-wrapper.jar
 !src/main/jniLibs/**/*.so
+!release.keystore
