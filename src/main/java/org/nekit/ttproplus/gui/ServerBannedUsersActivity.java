@@ -140,6 +140,15 @@ public class ServerBannedUsersActivity extends AppCompatActivity implements Team
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onServiceConnected(TeamTalkService service) {
         service.getEventHandler().registerOnCmdBannedUser(this, true);
         service.getTTInstance().doListBans(channelId, 0, 500);

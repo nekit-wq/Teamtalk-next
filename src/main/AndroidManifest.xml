@@ -175,11 +175,7 @@
         <activity
             android:name=".gui.TextMessageActivity"
             android:label="@string/title_activity_text_message"
-            android:parentActivityName=".gui.MainActivity"
             android:exported="false">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.nekit.ttproplus.gui.MainActivity" />
         </activity>
 
         <activity
@@ -204,10 +200,7 @@
         <activity
             android:name=".gui.OnlineUsersActivity"
             android:label="@string/online_users"
-            android:parentActivityName=".gui.MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.nekit.ttproplus.gui.MainActivity" />
+            android:exported="false">
         </activity>
 
         <activity

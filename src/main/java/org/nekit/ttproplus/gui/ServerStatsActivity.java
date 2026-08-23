@@ -157,4 +157,13 @@ public class ServerStatsActivity extends AppCompatActivity implements TeamTalkCo
         else
             return String.format("%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

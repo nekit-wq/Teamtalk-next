@@ -201,6 +201,15 @@ public class OnlineUsersActivity extends AppCompatActivity implements
         super.onDestroy();
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void confirmAction(AlertDialog.Builder alert, int messageResId, User user, Runnable action) {
         alert.setMessage(getString(messageResId, user.szNickname));
         alert.setPositiveButton(android.R.string.yes, (dialog, which) -> action.run());

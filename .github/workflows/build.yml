@@ -59,31 +59,34 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkProPlus-5.26.4-source.zip HEAD
+          git archive --format=zip --output=TeamTalkProPlus-5.26.5-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.26.4' }}
-          name: "TeamTalk Pro Plus v5.26.4"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.26.5' }}
+          name: "TeamTalk Pro Plus v5.26.5"
           body: |
-            ### TeamTalk Pro Plus v5.26.4
+            ### TeamTalk Pro Plus v5.26.5
 
             #### Список изменений:
-            - **🧹 Упрощены настройки:**
-              - Оставлено чистое и понятное поле ввода названия клиента («Имя клиента»).
-            - **⚙️ Настройка поведения кнопки «Назад»:**
-              - В «Настройки ➔ Общие» доступна опция *«Сворачивать по кнопке Назад»*.
-              - По умолчанию нажатие «Назад» выходит к списку серверов и отключается от сервера.
+            - **🔙 Исправлена навигация по кнопке «Перейти вверх» (Home/Up):**
+              - Нажатие на стрелку «Перейти вверх» в шапке окна сервера (`MainActivity`) теперь корректно выполняет действие «Назад» (поднимается по дереву каналов или выходит в список серверов).
+              - Исправлен критический баг Android `parentActivityName`, из-за которого нажатие «Перейти вверх» в Списке пользователей (`OnlineUsersActivity`) или в чате открывало фантомное дублирующее окно сервера с надписью «нет соединения».
+              - Корректная обработка кнопки «Перейти вверх» во всех дочерних экранах (Список пользователей, Статистика сервера, Бан-листы).
+            - **🧹 Чистые настройки:**
+              - Простое и аккуратное поле «Имя клиента» в «Настройки ➔ Общие».
+            - **⚙️ Настройка кнопки «Назад»:**
+              - Опция «Сворачивать по кнопке «Назад»» в Настройках (по умолчанию — выход к списку серверов).
             - **🔝 Расположение меню:**
-              - Пункт «Настройки» перенесен в самый низ меню.
+              - Пункт «Настройки» находится внизу меню.
             - **🌐 Публикация серверов на BearWare.dk:**
-              - Функция публикации серверов по долгому тапу в списке серверов.
+              - Долгий тап на сервер в списке.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkProPlus-5.26.4-source.zip
+            TeamTalkProPlus-5.26.5-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
