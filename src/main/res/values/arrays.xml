@@ -18,30 +18,6 @@
         <item>window</item>
         <item>notification</item>
     </string-array>
-    <string-array name="clientname_preset_entries">
-        <item>Default (TeamTalk Pro+)</item>
-        <item>TeamTalk 5.35.0 (Windows 64-bit)</item>
-        <item>TeamTalk 5.34.8 (Windows 64-bit)</item>
-        <item>TeamTalk 5.28.0 (Windows 64-bit)</item>
-        <item>TeamTalk 5.15.0 (Windows)</item>
-        <item>TeamTalk5 (macOS)</item>
-        <item>TeamTalk5 (iOS)</item>
-        <item>TeamTalk5 (Android)</item>
-        <item>TeamTalk5 (Linux 64-bit)</item>
-        <item>Custom…</item>
-    </string-array>
-    <string-array name="clientname_preset_values">
-        <item>default</item>
-        <item>TeamTalk5 (Windows 64-bit) v5.35.0</item>
-        <item>TeamTalk5 (Windows 64-bit) v5.34.8</item>
-        <item>TeamTalk5 (Windows 64-bit) v5.28.0</item>
-        <item>TeamTalk5 (Windows) v5.15.0</item>
-        <item>TeamTalk5 (macOS)</item>
-        <item>TeamTalk5 (iOS)</item>
-        <item>TeamTalk5 (Android)</item>
-        <item>TeamTalk5 (Linux 64-bit)</item>
-        <item>custom</item>
-    </string-array>
     <string-array name="default_file_manager_entries">
         <item>Ask every time</item>
         <item>System File Picker</item>

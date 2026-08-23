@@ -1564,12 +1564,14 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     @Override
-    public void onCmdMyselfKickedFromChannel() {
+    public void onCmdMyselfKickedFromChannel(int channelID) {
     }
 
     @Override
-    public void onCmdMyselfKickedFromChannel(User kicker) {
-        this.users.put(Integer.valueOf(kicker.nUserID), kicker);
+    public void onCmdMyselfKickedFromChannel(int channelID, User kicker) {
+        if (kicker != null) {
+            this.users.put(Integer.valueOf(kicker.nUserID), kicker);
+        }
     }
 
     @Override

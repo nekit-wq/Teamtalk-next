@@ -12,7 +12,6 @@
     <CheckBoxPreference android:title="@string/pref_title_keep_screen_on" android:key="keep_screen_on_checkbox" android:defaultValue="false" />
     <CheckBoxPreference android:title="@string/pref_title_minimize_on_back" android:key="minimize_on_back_checkbox" android:summary="@string/pref_summary_minimize_on_back" android:defaultValue="false" />
     <CheckBoxPreference android:title="@string/pref_show_log_messages" android:key="show_log_messages" android:defaultValue="true" />
-    <ListPreference android:entries="@array/clientname_preset_entries" android:title="@string/pref_title_clientname_preset" android:key="clientname_preset" android:summary="@string/pref_summary_clientname_preset" android:defaultValue="default" android:entryValues="@array/clientname_preset_values" />
     <EditTextPreference android:singleLine="true" android:selectAllOnFocus="true" android:title="@string/pref_title_clientname" android:key="clientname_text" android:summary="@string/pref_summary_clientname" />
     <ListPreference android:entries="@array/default_file_manager_entries" android:title="@string/pref_title_default_file_manager" android:key="default_file_manager" android:summary="@string/pref_summary_default_file_manager" android:defaultValue="ask" android:entryValues="@array/default_file_manager_values" />
     <Preference android:title="@string/pref_title_battery_optimization" android:key="battery_optimization" android:summary="@string/pref_summary_battery_optimization" />

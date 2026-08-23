@@ -297,27 +297,6 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_STATUSMSG));
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_CLIENTNAME));
 
-            ListPreference presetPref = (ListPreference) findPreference("clientname_preset");
-            EditTextPreference clientNamePref = (EditTextPreference) findPreference(Preferences.PREF_GENERAL_CLIENTNAME);
-            if (presetPref != null && clientNamePref != null) {
-                PreferencesActivity.bindPreferenceSummaryToValue(presetPref);
-                presetPref.setOnPreferenceChangeListener((preference, newValue) -> {
-                    String val = (String) newValue;
-                    if ("default".equals(val)) {
-                        clientNamePref.setText("");
-                        clientNamePref.setSummary(getString(R.string.pref_summary_clientname));
-                    } else if (!"custom".equals(val)) {
-                        clientNamePref.setText(val);
-                        clientNamePref.setSummary(val);
-                    }
-                    int index = presetPref.findIndexOfValue(val);
-                    if (index >= 0) {
-                        presetPref.setSummary(presetPref.getEntries()[index]);
-                    }
-                    return true;
-                });
-            }
-
             Preference fileMgrPref = findPreference(Preferences.PREF_GENERAL_DEFAULT_FILE_MANAGER);
             if (fileMgrPref != null) {
                 PreferencesActivity.bindPreferenceSummaryToValue(fileMgrPref);
