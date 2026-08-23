@@ -769,6 +769,15 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     @Override
+    public void onBackPressed() {
+        if (getClient() != null && (getClient().getFlags() & 1) != 0) {
+            moveTaskToBack(true);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         if (isFinishing()) {
@@ -780,17 +789,26 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 this.ttsWrapper.shutdown();
                 this.ttsWrapper = null;
             }
-            this.audioManager.setMode(0);
-            if (this.mConnection.isBound()) {
-                Log.d("bearware", "Unbinding TeamTalk service");
-                getService().disablePhoneCallReaction();
-                getService().unwatchBluetoothHeadset();
-                getService().resetState();
-                onServiceDisconnected(getService());
-                unbindService(this.mConnection);
-                this.mConnection.setBound(false);
+            boolean isConnected = getClient() != null && (getClient().getFlags() & 1) != 0;
+            if (!isConnected) {
+                this.audioManager.setMode(0);
+                if (this.mConnection.isBound()) {
+                    Log.d("bearware", "Unbinding TeamTalk service");
+                    getService().disablePhoneCallReaction();
+                    getService().unwatchBluetoothHeadset();
+                    getService().resetState();
+                    onServiceDisconnected(getService());
+                    unbindService(this.mConnection);
+                    this.mConnection.setBound(false);
+                }
+                this.notificationManager.cancelAll();
+            } else {
+                if (this.mConnection.isBound()) {
+                    onServiceDisconnected(getService());
+                    unbindService(this.mConnection);
+                    this.mConnection.setBound(false);
+                }
             }
-            this.notificationManager.cancelAll();
             this.mViewPager.removeOnPageChangeListener(this.mSectionsPagerAdapter);
         }
     }

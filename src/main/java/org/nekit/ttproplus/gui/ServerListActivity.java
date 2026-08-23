@@ -205,6 +205,13 @@ public class ServerListActivity extends AppCompatActivity
         handleIncomingIntent(getIntent());
 
         if (mConnection.isBound()) {
+            if (getClient() != null && (getClient().getFlags() & 1) != 0 && getService() != null && getService().getServerEntry() != null) {
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra(ServerEntry.KEY_SERVERNAME, getService().getServerEntry().servername);
+                startActivity(intent);
+                return;
+            }
+
             // reset state since we're creating a new connection
             getService().resetState();
             getClient().closeSoundInputDevice();
@@ -283,10 +290,13 @@ public class ServerListActivity extends AppCompatActivity
         super.onStop();
 
         if (isFinishing() && mConnection.isBound()) {
-            // Unbind from the service.
-            getService().resetState();
-            onServiceDisconnected(getService());
-            stopService(new Intent(getApplicationContext(), TeamTalkService.class));
+            boolean isConnected = getClient() != null && (getClient().getFlags() & 1) != 0;
+            if (!isConnected) {
+                // Unbind and stop service only if not connected to server
+                getService().resetState();
+                onServiceDisconnected(getService());
+                stopService(new Intent(getApplicationContext(), TeamTalkService.class));
+            }
             unbindService(mConnection);
             mConnection.setBound(false);
         }
@@ -868,6 +878,12 @@ public class ServerListActivity extends AppCompatActivity
 
     @Override
     public void onServiceConnected(TeamTalkService service) {
+        if (service != null && service.getClient() != null && (service.getClient().getFlags() & 1) != 0 && service.getServerEntry() != null) {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra(ServerEntry.KEY_SERVERNAME, service.getServerEntry().servername);
+            startActivity(intent);
+            return;
+        }
 
         service.getEventHandler().registerOnCmdMyselfLoggedIn(this, true);
 
