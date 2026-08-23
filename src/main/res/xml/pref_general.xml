@@ -10,7 +10,7 @@
     <CheckBoxPreference android:title="@string/pref_title_vibrate" android:key="vibrate_checkbox" android:defaultValue="true" />
     <CheckBoxPreference android:title="@string/pref_title_proximity_sensor" android:key="proximity_sensor_checkbox" android:defaultValue="false" />
     <CheckBoxPreference android:title="@string/pref_title_keep_screen_on" android:key="keep_screen_on_checkbox" android:defaultValue="false" />
-    <CheckBoxPreference android:title="@string/pref_title_minimize_on_back" android:key="minimize_on_back_checkbox" android:summary="@string/pref_summary_minimize_on_back" android:defaultValue="false" />
+    <ListPreference android:entries="@array/app_language_entries" android:title="@string/pref_title_language" android:key="app_language" android:summary="@string/pref_summary_language" android:defaultValue="system" android:entryValues="@array/app_language_values" />
     <CheckBoxPreference android:title="@string/pref_show_log_messages" android:key="show_log_messages" android:defaultValue="true" />
     <EditTextPreference android:singleLine="true" android:selectAllOnFocus="true" android:title="@string/pref_title_clientname" android:key="clientname_text" android:summary="@string/pref_summary_clientname" />
     <ListPreference android:entries="@array/default_file_manager_entries" android:title="@string/pref_title_default_file_manager" android:key="default_file_manager" android:summary="@string/pref_summary_default_file_manager" android:defaultValue="ask" android:entryValues="@array/default_file_manager_values" />

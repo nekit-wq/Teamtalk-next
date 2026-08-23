@@ -37,7 +37,7 @@ public class Preferences {
             PREF_GENERAL_BEARWARE_TOKEN = "bearware_token",
             PREF_GENERAL_GENDER = "gender_checkbox",
             PREF_GENERAL_CLIENTNAME = "clientname_text",
-            PREF_GENERAL_MINIMIZE_ON_BACK = "minimize_on_back_checkbox",
+            PREF_GENERAL_LANGUAGE = "app_language",
             PREF_GENERAL_DEFAULT_FILE_MANAGER = "default_file_manager";
     public static final String
             PREF_SOUNDSYSTEM_MEDIAFILE_VOLUME = "mediafilevolume_seekbar",

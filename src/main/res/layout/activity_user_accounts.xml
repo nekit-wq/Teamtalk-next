@@ -2,7 +2,7 @@
 <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
   xmlns:android="http://schemas.android.com/apk/res/android">
     <LinearLayout android:orientation="horizontal" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <EditText android:id="@+id/search_accounts_edit" android:layout_width="0dp" android:layout_height="wrap_content" android:hint="Search..." android:layout_weight="1.0" android:inputType="text" />
+        <EditText android:id="@+id/search_accounts_edit" android:layout_width="0dp" android:layout_height="wrap_content" android:hint="@string/search_hint" android:layout_weight="1.0" android:inputType="text" />
         <Spinner android:id="@+id/spinner_sort_accounts" android:layout_width="wrap_content" android:layout_height="wrap_content" />
     </LinearLayout>
     <ListView android:id="@+id/user_accounts_listview" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.0" />

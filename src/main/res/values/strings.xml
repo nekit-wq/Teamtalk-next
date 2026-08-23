@@ -899,4 +899,61 @@ By: %3$s"</string>
     <string name="action_copy_tag">Copy #teamtalkpublish#</string>
     <string name="tag_clipboard">TeamTalk Tag</string>
     <string name="text_copied_to_clipboard">Copied \"%1$s\" to clipboard</string>
+
+    <!-- App Language -->
+    <string name="pref_title_language">App language</string>
+    <string name="pref_summary_language">Select application interface language</string>
+
+    <!-- Search -->
+    <string name="search_hint">Search…</string>
+
+    <!-- User Account Rights -->
+    <string name="chk_right_all">All Rights</string>
+    <string name="chk_right_multi_login">Log in multiple times</string>
+    <string name="chk_right_change_nickname">Change nickname</string>
+    <string name="chk_right_view_all">See users in all channels</string>
+    <string name="chk_right_view_hidden">See hidden channels</string>
+    <string name="chk_right_create_chan">Create temporary channels</string>
+    <string name="chk_right_modify_chan">Create/modify all channels</string>
+    <string name="chk_right_update_server_props">Edit server properties</string>
+    <string name="chk_right_kick">Kick users</string>
+    <string name="chk_right_ban">Ban users</string>
+    <string name="chk_right_move_users">Move users</string>
+    <string name="chk_right_operator_enable">Make operators</string>
+    <string name="chk_right_upload_files">Upload files</string>
+    <string name="chk_right_download_files">Download files</string>
+    <string name="chk_right_record_voice">Record voice</string>
+    <string name="chk_right_voice">Transmit voice</string>
+    <string name="chk_right_video">Transmit video</string>
+    <string name="chk_right_desktop">Transmit desktop</string>
+    <string name="chk_right_desktop_access">Remote desktop access</string>
+    <string name="chk_right_media_audio">Stream audio files</string>
+    <string name="chk_right_media_video">Stream video files</string>
+    <string name="chk_right_text_user">Send private messages</string>
+    <string name="chk_right_text_chan">Send channel messages</string>
+    <string name="chk_right_text_broadcast">Send broadcast messages</string>
+
+    <!-- Sound Event Assignment -->
+    <string name="sound_assign_title">Assign sound to event</string>
+    <string name="sound_event_serverlost">Server lost</string>
+    <string name="sound_event_tx_on">Voice TX on</string>
+    <string name="sound_event_tx_off">Voice TX off</string>
+    <string name="sound_event_user_msg">Private message</string>
+    <string name="sound_event_chan_msg">Channel message</string>
+    <string name="sound_event_chan_msg_sent">Channel message sent</string>
+    <string name="sound_event_broadcast_msg">Broadcast message</string>
+    <string name="sound_event_fileupdate">Files updated</string>
+    <string name="sound_event_voiceact_enable">Voice activation enable</string>
+    <string name="sound_event_voiceact_disable">Voice activation disable</string>
+    <string name="sound_event_voiceact_on">Voice act triggered</string>
+    <string name="sound_event_voiceact_off">Voice act stopped</string>
+    <string name="sound_event_intercept">Intercept start</string>
+    <string name="sound_event_interceptend">Intercept end</string>
+    <string name="sound_event_txqueue_start">TX queue start</string>
+    <string name="sound_event_txqueue_stop">TX queue stop</string>
+    <string name="sound_event_user_join">User joined</string>
+    <string name="sound_event_user_left">User left</string>
+    <string name="sound_event_logged_on">User logged in</string>
+    <string name="sound_event_logged_off">User logged off</string>
+    <string name="sound_imported_for">Sound imported for %1$s</string>
 </resources>

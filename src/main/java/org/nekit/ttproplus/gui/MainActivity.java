@@ -791,29 +791,23 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
         }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean minimizeOnBack = prefs.getBoolean(Preferences.PREF_GENERAL_MINIMIZE_ON_BACK, false);
-        if (minimizeOnBack && getClient() != null && (getClient().getFlags() & 1) != 0) {
-            moveTaskToBack(true);
-        } else {
-            if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(this);
-                alert.setMessage(R.string.disconnect_alert);
-                alert.setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                    if (getService() != null) {
-                        getService().resetState();
-                    }
-                    finish();
-                });
-                alert.setNegativeButton(android.R.string.cancel, null);
-                alert.show();
-                return;
-            }
-            if (getService() != null) {
-                getService().resetState();
-            }
-            finish();
+        if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setMessage(R.string.disconnect_alert);
+            alert.setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                if (getService() != null) {
+                    getService().resetState();
+                }
+                finish();
+            });
+            alert.setNegativeButton(android.R.string.cancel, null);
+            alert.show();
+            return;
         }
+        if (getService() != null) {
+            getService().resetState();
+        }
+        finish();
     }
 
     @Override

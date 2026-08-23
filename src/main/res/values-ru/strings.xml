@@ -900,4 +900,62 @@
     <string name="action_copy_tag">Скопировать #teamtalkpublish#</string>
     <string name="tag_clipboard">Тег TeamTalk</string>
     <string name="text_copied_to_clipboard">Скопировано в буфер обмена: «%1$s»</string>
+    <string name="default_port">10333</string>
+
+    <!-- Язык приложения -->
+    <string name="pref_title_language">Язык приложения</string>
+    <string name="pref_summary_language">Выбор языка интерфейса приложения</string>
+
+    <!-- Поиск -->
+    <string name="search_hint">Поиск…</string>
+
+    <!-- Права учетной записи -->
+    <string name="chk_right_all">Все права</string>
+    <string name="chk_right_multi_login">Многократный вход</string>
+    <string name="chk_right_change_nickname">Изменение никнейма</string>
+    <string name="chk_right_view_all">Просмотр пользователей во всех каналах</string>
+    <string name="chk_right_view_hidden">Просмотр скрытых каналов</string>
+    <string name="chk_right_create_chan">Создание временных каналов</string>
+    <string name="chk_right_modify_chan">Создание/изменение всех каналов</string>
+    <string name="chk_right_update_server_props">Редактирование свойств сервера</string>
+    <string name="chk_right_kick">Выгонять пользователей</string>
+    <string name="chk_right_ban">Банить пользователей</string>
+    <string name="chk_right_move_users">Перемещать пользователей</string>
+    <string name="chk_right_operator_enable">Назначать операторов</string>
+    <string name="chk_right_upload_files">Загрузка файлов</string>
+    <string name="chk_right_download_files">Скачивание файлов</string>
+    <string name="chk_right_record_voice">Запись голоса</string>
+    <string name="chk_right_voice">Передача голоса</string>
+    <string name="chk_right_video">Передача видео</string>
+    <string name="chk_right_desktop">Демонстрация экрана</string>
+    <string name="chk_right_desktop_access">Удаленный доступ к экрану</string>
+    <string name="chk_right_media_audio">Трансляция аудиофайлов</string>
+    <string name="chk_right_media_video">Трансляция видеофайлов</string>
+    <string name="chk_right_text_user">Отправка личных сообщений</string>
+    <string name="chk_right_text_chan">Отправка сообщений в канал</string>
+    <string name="chk_right_text_broadcast">Отправка оповещений всем (Broadcast)</string>
+
+    <!-- Назначение звуков -->
+    <string name="sound_assign_title">Назначить звук событию</string>
+    <string name="sound_event_serverlost">Потеря соединения</string>
+    <string name="sound_event_tx_on">Включение микрофона</string>
+    <string name="sound_event_tx_off">Выключение микрофона</string>
+    <string name="sound_event_user_msg">Личное сообщение</string>
+    <string name="sound_event_chan_msg">Сообщение в канал</string>
+    <string name="sound_event_chan_msg_sent">Сообщение отправлено</string>
+    <string name="sound_event_broadcast_msg">Оповещение всем (Broadcast)</string>
+    <string name="sound_event_fileupdate">Файлы обновлены</string>
+    <string name="sound_event_voiceact_enable">Голосовая активация вкл</string>
+    <string name="sound_event_voiceact_disable">Голосовая активация выкл</string>
+    <string name="sound_event_voiceact_on">Голосовая активация сработала</string>
+    <string name="sound_event_voiceact_off">Голосовая активация остановлена</string>
+    <string name="sound_event_intercept">Начало перехвата</string>
+    <string name="sound_event_interceptend">Конец перехвата</string>
+    <string name="sound_event_txqueue_start">Очередь TX старт</string>
+    <string name="sound_event_txqueue_stop">Очередь TX стоп</string>
+    <string name="sound_event_user_join">Пользователь вошел в канал</string>
+    <string name="sound_event_user_left">Пользователь вышел из канала</string>
+    <string name="sound_event_logged_on">Пользователь подключился</string>
+    <string name="sound_event_logged_off">Пользователь отключился</string>
+    <string name="sound_imported_for">Звук импортирован для: %1$s</string>
 </resources>

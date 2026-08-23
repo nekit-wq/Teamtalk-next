@@ -302,6 +302,20 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 PreferencesActivity.bindPreferenceSummaryToValue(fileMgrPref);
             }
 
+            Preference langPref = findPreference("app_language");
+            if (langPref != null) {
+                PreferencesActivity.bindPreferenceSummaryToValue(langPref);
+                langPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    String lang = (String) newValue;
+                    LocaleHelper.applyLanguage(lang);
+                    PreferencesActivity.sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, newValue);
+                    if (getActivity() != null) {
+                        getActivity().recreate();
+                    }
+                    return true;
+                });
+            }
+
             Preference batteryOptPref = findPreference("battery_optimization");
             if (batteryOptPref != null) {
                 batteryOptPref.setOnPreferenceClickListener(pref -> {
@@ -432,9 +446,21 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 return;
             }
             final String[] eventKeys = {"serverlost", "on", "off", "user_message", "channel_message", "channel_message_sent", "broadcast_message", "fileupdate", "voiceact_enable", "voiceact_disable", "voiceact_on", "voiceact_off", "intercept", "interceptend", "txqueue_start", "txqueue_stop", "user_join", "user_left", "logged_on", "logged_off"};
-            final String[] eventLabels = {"Server lost", "Voice TX on", "Voice TX off", "Private message", "Channel message", "Channel message sent", "Broadcast message", "Files updated", "Voice activation enable", "Voice activation disable", "Voice act triggered", "Voice act stopped", "Intercept start", "Intercept end", "TX queue start", "TX queue stop", "User joined", "User left", "User logged in", "User logged off"};
+            final int[] labelResIds = {
+                R.string.sound_event_serverlost, R.string.sound_event_tx_on, R.string.sound_event_tx_off,
+                R.string.sound_event_user_msg, R.string.sound_event_chan_msg, R.string.sound_event_chan_msg_sent,
+                R.string.sound_event_broadcast_msg, R.string.sound_event_fileupdate, R.string.sound_event_voiceact_enable,
+                R.string.sound_event_voiceact_disable, R.string.sound_event_voiceact_on, R.string.sound_event_voiceact_off,
+                R.string.sound_event_intercept, R.string.sound_event_interceptend, R.string.sound_event_txqueue_start,
+                R.string.sound_event_txqueue_stop, R.string.sound_event_user_join, R.string.sound_event_user_left,
+                R.string.sound_event_logged_on, R.string.sound_event_logged_off
+            };
+            final String[] eventLabels = new String[labelResIds.length];
+            for (int i = 0; i < labelResIds.length; i++) {
+                eventLabels[i] = context.getString(labelResIds[i]);
+            }
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle("Assign sound to event");
+            builder.setTitle(R.string.sound_assign_title);
             builder.setItems(eventLabels, new DialogInterface.OnClickListener() { 
                 @Override
                 public final void onClick(DialogInterface dialogInterface, int i) {
@@ -445,7 +471,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             builder.show();
         }
 
-                public static void lambda$importSoundFile$1(String[] eventKeys, Context context, Uri uri, String[] eventLabels, DialogInterface dialog, int which) {
+        public static void lambda$importSoundFile$1(String[] eventKeys, Context context, Uri uri, String[] eventLabels, DialogInterface dialog, int which) {
             String fileName = eventKeys[which] + ".ogg";
             File soundsDir = new File(context.getFilesDir(), "sounds");
             soundsDir.mkdirs();
@@ -468,7 +494,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                         editor.putString("sound_pack_preference", "custom");
                         editor.putString("custom_sound_" + eventKeys[which], destFile.getAbsolutePath());
                         editor.apply();
-                        Toast.makeText(context, "Sound imported for " + eventLabels[which], 0).show();
+                        Toast.makeText(context, context.getString(R.string.sound_imported_for, eventLabels[which]), Toast.LENGTH_SHORT).show();
                         out.close();
                         if (in != null) {
                             in.close();

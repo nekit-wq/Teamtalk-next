@@ -30,5 +30,6 @@ public class ThemeHelper {
         if (AppCompatDelegate.getDefaultNightMode() != targetMode) {
             AppCompatDelegate.setDefaultNightMode(targetMode);
         }
+        LocaleHelper.applyLanguage(context);
     }
 }
