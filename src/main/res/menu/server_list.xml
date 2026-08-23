@@ -3,43 +3,48 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        app:showAsAction="never"
-        android:title="@string/action_settings"/>
-    <item
-        android:id="@+id/action_check_updates"
-        android:orderInCategory="100"
-        app:showAsAction="never"
-        android:title="@string/action_check_updates"/>
-    <item
-        android:id="@+id/action_exit"
-        android:orderInCategory="100"
-        app:showAsAction="never"
-        android:title="@string/action_exit"/>
-    <item
-        android:id="@+id/action_enter_joincode"
-        app:showAsAction="never"
-        android:title="@string/action_enter_joincode"/>
-    <item
         android:id="@+id/action_newserverentry"
         app:showAsAction="always|withText"
+        android:orderInCategory="10"
         android:title="@string/action_new_server">
     </item>
     <item
+        android:id="@+id/action_enter_joincode"
+        app:showAsAction="never"
+        android:orderInCategory="20"
+        android:title="@string/action_enter_joincode"/>
+    <item
         android:id="@+id/action_refreshserverlist"
         android:title="@string/action_refresh"
+        android:orderInCategory="30"
         app:showAsAction="ifRoom|withText">
     </item>
     <item
         android:id="@+id/action_import_serverlist"
         app:showAsAction="ifRoom|withText"
+        android:orderInCategory="40"
         android:title="@string/action_import_serverlist">
     </item>
     <item
         android:id="@+id/action_export_serverlist"
         app:showAsAction="ifRoom|withText"
+        android:orderInCategory="50"
         android:title="@string/action_export_serverlist">
     </item>
+    <item
+        android:id="@+id/action_check_updates"
+        android:orderInCategory="900"
+        app:showAsAction="never"
+        android:title="@string/action_check_updates"/>
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="998"
+        app:showAsAction="never"
+        android:title="@string/action_settings"/>
+    <item
+        android:id="@+id/action_exit"
+        android:orderInCategory="999"
+        app:showAsAction="never"
+        android:title="@string/action_exit"/>
 
 </menu>

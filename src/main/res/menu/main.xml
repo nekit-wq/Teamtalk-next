@@ -16,12 +16,6 @@
         android:title="@string/action_leave"/>
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        app:showAsAction="never"
-        android:title="@string/action_settings"/>
-
-    <item
         android:id="@+id/action_newchannel"
         android:orderInCategory="101"
         app:showAsAction="never"
@@ -82,5 +76,11 @@
         android:orderInCategory="112"
         app:showAsAction="never"
         android:title="@string/action_stop_recording"/>
+
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="999"
+        app:showAsAction="never"
+        android:title="@string/action_settings"/>
 
 </menu>

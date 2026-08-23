@@ -770,10 +770,45 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
     @Override
     public void onBackPressed() {
-        if (getClient() != null && (getClient().getFlags() & 1) != 0) {
+        int currentPage = this.mViewPager != null ? this.mViewPager.getCurrentItem() : 0;
+        if (currentPage != 0) {
+            this.mViewPager.setCurrentItem(0);
+            return;
+        }
+
+        if (this.curchannel != null && getService() != null) {
+            Channel parentChannel = getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID));
+            if (parentChannel != null) {
+                setCurrentChannel(parentChannel);
+                if (this.channelsAdapter != null) {
+                    this.channelsAdapter.notifyDataSetChanged();
+                }
+                return;
+            }
+        }
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean minimizeOnBack = prefs.getBoolean(Preferences.PREF_GENERAL_MINIMIZE_ON_BACK, false);
+        if (minimizeOnBack && getClient() != null && (getClient().getFlags() & 1) != 0) {
             moveTaskToBack(true);
         } else {
-            super.onBackPressed();
+            if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
+                AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                alert.setMessage(R.string.disconnect_alert);
+                alert.setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                    if (getService() != null) {
+                        getService().resetState();
+                    }
+                    finish();
+                });
+                alert.setNegativeButton(android.R.string.cancel, null);
+                alert.show();
+                return;
+            }
+            if (getService() != null) {
+                getService().resetState();
+            }
+            finish();
         }
     }
 
