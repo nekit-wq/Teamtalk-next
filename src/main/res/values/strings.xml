@@ -884,4 +884,16 @@ By: %3$s"</string>
     <string name="pref_title_battery_optimization">Ignore battery optimization</string>
     <string name="pref_summary_battery_optimization">Allow app to run in background without being killed by Android</string>
     <string name="battery_optimization_already_ignored">Battery optimization is already disabled for TeamTalk Pro+</string>
+
+    <string name="action_publishsrv">Publish server</string>
+    <string name="title_publish_server">Publish Server</string>
+    <string name="tag_publish_server">#teamtalkpublish#</string>
+    <string name="msg_publish_server_confirmation">Are you sure you want to publish the server \"%1$s\" to the public directory?</string>
+    <string name="text_publish_server_success">Server published successfully. To complete verification, please include #teamtalkpublish# in your server name.</string>
+    <string name="err_publish_server_failed">Failed to publish server. Please check your internet connection and try again.</string>
+    <string name="err_publish_server_login">Please log in with your BearWare.dk account in settings to publish a server.</string>
+    <string name="msg_publish_server_verification_detail">Update your server\'s properties so its server name includes the text #teamtalkpublish#. This will verify that you\'re the owner of the server. Once the server is verified your server will appear in the public list within a couple of minutes.</string>
+    <string name="action_copy_tag">Copy #teamtalkpublish#</string>
+    <string name="tag_clipboard">TeamTalk Tag</string>
+    <string name="text_copied_to_clipboard">Copied \"%1$s\" to clipboard</string>
 </resources>

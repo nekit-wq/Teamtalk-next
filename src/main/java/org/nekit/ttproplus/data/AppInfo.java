@@ -113,4 +113,16 @@ public class AppInfo {
                 joincode, getDefautlUrlArgs(context));
         return urlToRead;
     }
+
+    public static String getPublishServerUrl(Context context, String username, String token) {
+        try {
+            username = URLEncoder.encode(username, "UTF-8");
+            token = URLEncoder.encode(token, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, "Failed to encode publish parameters", e);
+        }
+        return "https://www.bearware.dk/teamtalk/tt5servers.php?" +
+                getDefautlUrlArgs(context) +
+                "&action=publish&username=" + username + "&token=" + token;
+    }
 }

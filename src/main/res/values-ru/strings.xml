@@ -885,4 +885,16 @@
     <string name="pref_title_battery_optimization">Работа в фоне без ограничений</string>
     <string name="pref_summary_battery_optimization">Разрешить приложению работать в фоне без выгрузки системой</string>
     <string name="battery_optimization_already_ignored">Оптимизация батареи уже отключена для TeamTalk Pro+</string>
+
+    <string name="action_publishsrv">Опубликовать сервер</string>
+    <string name="title_publish_server">Опубликовать сервер</string>
+    <string name="tag_publish_server">#teamtalkpublish#</string>
+    <string name="msg_publish_server_confirmation">Вы уверены, что хотите опубликовать сервер «%1$s» в публичном каталоге?</string>
+    <string name="text_publish_server_success">Сервер успешно опубликован! Для завершения верификации добавьте #teamtalkpublish# в имя вашего сервера.</string>
+    <string name="err_publish_server_failed">Не удалось опубликовать сервер. Проверьте интернет-соединение и попробуйте снова.</string>
+    <string name="err_publish_server_login">Пожалуйста, войдите в свой аккаунт BearWare.dk в настройках, чтобы опубликовать сервер.</string>
+    <string name="msg_publish_server_verification_detail">Измените свойства вашего сервера, чтобы в его названии присутствовал текст #teamtalkpublish#. Это подтвердит, что вы являетесь владельцем сервера. После проверки сервер появится в публичном списке BearWare через пару минут.</string>
+    <string name="action_copy_tag">Скопировать #teamtalkpublish#</string>
+    <string name="tag_clipboard">Тег TeamTalk</string>
+    <string name="text_copied_to_clipboard">Скопировано в буфер обмена: «%1$s»</string>
 </resources>

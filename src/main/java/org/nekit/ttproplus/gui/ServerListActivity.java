@@ -26,6 +26,8 @@ import org.nekit.ttproplus.BuildConfig;
 import org.nekit.ttproplus.R;
 
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -455,7 +457,10 @@ public class ServerListActivity extends AppCompatActivity
         serverActions.inflate(R.menu.server_actions);
         serverActions.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.action_exportsrv) {
+            if (itemId == R.id.action_publishsrv) {
+                confirmAndPublishServer(entry);
+                return true;
+            } else if (itemId == R.id.action_exportsrv) {
                 if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) || Permissions.WRITE_EXTERNAL_STORAGE.request(this)) {
                     exportServer(entry);
                 }
@@ -472,6 +477,59 @@ public class ServerListActivity extends AppCompatActivity
             }
         });
         serverActions.show();
+    }
+
+    private void confirmAndPublishServer(ServerEntry entry) {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(R.string.title_publish_server);
+        alert.setMessage(getString(R.string.msg_publish_server_confirmation, entry.servername));
+        alert.setPositiveButton(android.R.string.yes, (dialog, whichButton) -> publishServer(entry));
+        alert.setNegativeButton(android.R.string.no, null);
+        alert.show();
+    }
+
+    private void publishServer(ServerEntry entry) {
+        if (executorService == null) {
+            showToast(getString(R.string.err_publish_server_failed));
+            return;
+        }
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
+        String token = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
+
+        if (username.isEmpty() || token.isEmpty()) {
+            showToast(getString(R.string.err_publish_server_login));
+            Intent intent = new Intent(this, WebLoginActivity.class);
+            startActivity(intent);
+            return;
+        }
+
+        executorService.execute(() -> {
+            String serverXml = Utils.generateServerEntryXml(entry);
+            String response = Utils.postURL(AppInfo.getPublishServerUrl(ServerListActivity.this, username, token), serverXml);
+            final boolean finalSuccess = response != null && !response.isEmpty();
+
+            runOnUiThread(() -> {
+                if (finalSuccess) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle(R.string.text_publish_server_success);
+                    builder.setMessage(R.string.msg_publish_server_verification_detail);
+                    builder.setPositiveButton(android.R.string.ok, null);
+                    builder.setNeutralButton(R.string.action_copy_tag, (dialog, which) -> {
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                        ClipData clip = ClipData.newPlainText(getString(R.string.tag_clipboard), getString(R.string.tag_publish_server));
+                        if (clipboard != null) {
+                            clipboard.setPrimaryClip(clip);
+                        }
+                        showToast(getString(R.string.text_copied_to_clipboard, getString(R.string.tag_publish_server)));
+                    });
+                    builder.show();
+                } else {
+                    showToast(getString(R.string.err_publish_server_failed));
+                }
+            });
+        });
     }
 
     private void loadServerFromUri(Uri uri) {

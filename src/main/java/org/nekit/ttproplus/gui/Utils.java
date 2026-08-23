@@ -499,27 +499,107 @@ public class Utils {
     }
 
     public static String getURL(String urlToRead) {
-        URL url;
-        HttpURLConnection conn;
-        BufferedReader rd;
+        return postURL(urlToRead, null);
+    }
+
+    public static String postURL(String urlString, String body) {
+        HttpURLConnection conn = null;
+        BufferedReader rd = null;
         StringBuilder result = new StringBuilder();
         try {
-            url = new URL(urlToRead);
+            URL url = new URL(urlString);
             conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
+            if (body != null) {
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type", "text/xml");
+                java.io.OutputStream os = conn.getOutputStream();
+                os.write(body.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                os.flush();
+                os.close();
+            } else {
+                conn.setRequestMethod("GET");
+            }
+
             rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             char[] buff = new char[1024];
             int len;
             while((len = rd.read(buff)) > 0) {
                 result.append(buff, 0, len);
             }
-            rd.close();
         }
         catch(IOException e) {
-            Log.d(TAG, "Failed to receive URL: "+urlToRead+". " + e);
+            String errorMsg = e.getMessage() != null ? e.getMessage() : e.toString();
+            Log.e(TAG, "Failed to " + (body != null ? "POST" : "GET") + " URL: " + urlString + ". Error: " + errorMsg);
+        } finally {
+            if (rd != null) {
+                try {
+                    rd.close();
+                } catch (IOException ignored) {}
+            }
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
-        
+
         return result.toString();
+    }
+
+    public static String generateServerEntryXml(ServerEntry server) {
+        try {
+            java.io.StringWriter writer = new java.io.StringWriter();
+            XmlSerializer serializer = Xml.newSerializer();
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+            serializer.startTag(null, "teamtalk").attribute(null, "version", "5.0");
+
+            serializer.startTag(null, "host");
+            if (server.servername != null)
+                serializer.startTag(null, "name").text(server.servername).endTag(null, "name");
+            if (server.ipaddr != null)
+                serializer.startTag(null, "address").text(server.ipaddr).endTag(null, "address");
+            serializer.startTag(null, "tcpport").text(String.valueOf(server.tcpport)).endTag(null, "tcpport");
+            serializer.startTag(null, "udpport").text(String.valueOf(server.udpport)).endTag(null, "udpport");
+            serializer.startTag(null, "encrypted").text(String.valueOf(server.encrypted)).endTag(null, "encrypted");
+
+            if ((server.username != null && !server.username.isEmpty()) || 
+                (server.password != null && !server.password.isEmpty()) ||
+                (server.nickname != null && !server.nickname.isEmpty()) ||
+                (server.statusmsg != null && !server.statusmsg.isEmpty())) {
+                serializer.startTag(null, "auth");
+                if (server.username != null)
+                    serializer.startTag(null, "username").text(server.username).endTag(null, "username");
+                if (server.password != null)
+                    serializer.startTag(null, "password").text(server.password).endTag(null, "password");
+                if (server.nickname != null)
+                    serializer.startTag(null, "nickname").text(server.nickname).endTag(null, "nickname");
+                if (server.statusmsg != null)
+                    serializer.startTag(null, "statusmsg").text(server.statusmsg).endTag(null, "statusmsg");
+                serializer.endTag(null, "auth");
+            }
+
+            if ((server.channel != null && !server.channel.isEmpty()) || 
+                (server.chanpasswd != null && !server.chanpasswd.isEmpty()) ||
+                server.rememberLastChannel) {
+                serializer.startTag(null, "join");
+                serializer.startTag(null, "join-last-channel").text(String.valueOf(server.rememberLastChannel)).endTag(null, "join-last-channel");
+                if (server.channel != null)
+                    serializer.startTag(null, "channel").text(server.channel).endTag(null, "channel");
+                if (server.chanpasswd != null)
+                    serializer.startTag(null, "password").text(server.chanpasswd).endTag(null, "password");
+                serializer.endTag(null, "join");
+            }
+
+            serializer.endTag(null, "host");
+            serializer.endTag(null, "teamtalk");
+            serializer.endDocument();
+            return writer.toString();
+        }
+        catch(Exception e) {
+            Log.e(TAG, "Unable to generate XML for server",  e);
+            return null;
+        }
     }
     
     public static Vector<ServerEntry> getXmlServerEntries(String xml) {
