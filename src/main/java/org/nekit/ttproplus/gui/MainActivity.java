@@ -1257,32 +1257,6 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         public void lambda$joinChannel$5(EditText input, DialogInterface dialog, int whichButton) {
         InputMethodManager im = (InputMethodManager) getSystemService("input_method");
-        im.hideSoftInputFromWindow(input.getWindowToken(), 0);
-    }
-
-    private void setCurrentChannel(Channel channel) {
-        this.curchannel = channel;
-        ActionBar ab = getSupportActionBar();
-        if (ab != null) {
-            if (channel != null) {
-                ab.setSubtitle(channel.szName.isEmpty() ? "/" : channel.szName);
-            } else {
-                ServerProperties srvprop = new ServerProperties();
-                if (getClient() != null) {
-                    getClient().getServerProperties(srvprop);
-                    ab.setSubtitle(srvprop.szServerName.isEmpty() ? "/" : srvprop.szServerName);
-                } else {
-                    ab.setSubtitle("/");
-                }
-            }
-        }
-        invalidateOptionsMenu();
-    }
-
-    private void setMyChannel(Channel channel) {
-        this.mychannel = channel;
-        adjustVoiceGain();
-        invalidateOptionsMenu();
     }
 
     private void subscriptionChange(User user) {
@@ -1556,7 +1530,34 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
     }
 
-            public class ChannelListAdapter extends BaseAdapter {
+    private void setCurrentChannel(Channel channel) {
+        this.curchannel = channel;
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            if (channel != null) {
+                String name = (channel.szName != null && !channel.szName.isEmpty()) ? channel.szName : "/";
+                ab.setSubtitle(name);
+            } else {
+                ServerProperties srvprop = new ServerProperties();
+                if (getClient() != null) {
+                    getClient().getServerProperties(srvprop);
+                    String srvName = (srvprop.szServerName != null && !srvprop.szServerName.isEmpty()) ? srvprop.szServerName : "/";
+                    ab.setSubtitle(srvName);
+                } else {
+                    ab.setSubtitle("/");
+                }
+            }
+        }
+        invalidateOptionsMenu();
+    }
+
+    private void setMyChannel(Channel channel) {
+        this.mychannel = channel;
+        adjustVoiceGain();
+        invalidateOptionsMenu();
+    }
+
+    public class ChannelListAdapter extends BaseAdapter {
         private static final int CHANNEL_VIEW_TYPE = 1;
         private static final int INFO_VIEW_TYPE = 3;
         private static final int PARENT_CHANNEL_VIEW_TYPE = 0;
@@ -1572,9 +1573,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.inflater = LayoutInflater.from(context);
         }
 
-                public void doNotifyDataSetChanged() {
+        public void doNotifyDataSetChanged() {
             this.pendingUpdate = false;
-            if (MainActivity.this.getService() == null || MainActivity.this.getClient() == null || MainActivity.this.getService().getChannels() == null) {
+            if (MainActivity.this.getService() == null || MainActivity.this.getClient() == null || MainActivity.this.getService().getChannels() == null || MainActivity.this.getService().getUsers() == null) {
                 if (MainActivity.this.accessibilityAssistant != null) {
                     MainActivity.this.accessibilityAssistant.lockEvents();
                 }
@@ -1594,7 +1595,6 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.stickychannels.clear();
             this.currentusers.clear();
             Channel channel = MainActivity.this.curchannel;
-            MainActivity mainActivity = MainActivity.this;
             if (channel != null) {
                 int chanid = channel.nChannelID;
                 this.subchannels = Utils.getSubChannels(chanid, MainActivity.this.getService().getChannels());
@@ -1615,17 +1615,17 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             Collections.sort(this.subchannels, new Comparator() { 
                 @Override
                 public final int compare(Object obj, Object obj2) {
-                    int compareToIgnoreCase;
-                    compareToIgnoreCase = ((Channel) obj).szName.compareToIgnoreCase(((Channel) obj2).szName);
-                    return compareToIgnoreCase;
+                    String name1 = ((Channel) obj).szName != null ? ((Channel) obj).szName : "";
+                    String name2 = ((Channel) obj2).szName != null ? ((Channel) obj2).szName : "";
+                    return name1.compareToIgnoreCase(name2);
                 }
             });
             Collections.sort(this.stickychannels, new Comparator() { 
                 @Override
                 public final int compare(Object obj, Object obj2) {
-                    int compareToIgnoreCase;
-                    compareToIgnoreCase = ((Channel) obj).szName.compareToIgnoreCase(((Channel) obj2).szName);
-                    return compareToIgnoreCase;
+                    String name1 = ((Channel) obj).szName != null ? ((Channel) obj).szName : "";
+                    String name2 = ((Channel) obj2).szName != null ? ((Channel) obj2).szName : "";
+                    return name1.compareToIgnoreCase(name2);
                 }
             });
             final Map<Integer, String> nameCache = new HashMap<>();
@@ -1646,7 +1646,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             MainActivity.this.accessibilityAssistant.unlockEvents();
         }
 
-                public int lambda$doNotifyDataSetChanged$2(Map nameCache, User u1, User u2) {
+        public int lambda$doNotifyDataSetChanged$2(Map nameCache, User u1, User u2) {
             if (((Boolean) MainActivity.this.prefs.get("movetalk_checkbox", true)).booleanValue()) {
                 if ((u1.uUserState & 1) != 0 && (u2.uUserState & 1) == 0) {
                     return -1;
@@ -1657,6 +1657,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
             String name1 = (String) nameCache.get(Integer.valueOf(u1.nUserID));
             String name2 = (String) nameCache.get(Integer.valueOf(u2.nUserID));
+            if (name1 == null) name1 = "";
+            if (name2 == null) name2 = "";
             return name1.compareToIgnoreCase(name2);
         }
 
