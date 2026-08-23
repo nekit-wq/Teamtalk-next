@@ -1710,13 +1710,16 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             int position3 = position2 - this.currentusers.size();
             if (shouldShowBackItem()) {
                 if (position3 == 0) {
-                    if (MainActivity.this.curchannel.nParentID > 0 && MainActivity.this.getService() != null) {
+                    if (MainActivity.this.curchannel.nParentID > 0 && MainActivity.this.getService() != null && MainActivity.this.getService().getChannels() != null) {
                         Channel parent = MainActivity.this.getService().getChannels().get(Integer.valueOf(MainActivity.this.curchannel.nParentID));
                         if (parent != null) {
                             return parent;
                         }
                     }
-                    return new Channel();
+                    Channel rootParent = new Channel();
+                    rootParent.szName = "";
+                    rootParent.szTopic = "";
+                    return rootParent;
                 }
                 position3--;
             }
@@ -1789,13 +1792,13 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                         if (channel.nChannelID == 0 || (MainActivity.this.curchannel != null && MainActivity.this.curchannel.nParentID == 0)) {
                             parentNameStr = MainActivity.this.getString(R.string.root_server);
                         } else {
-                            parentNameStr = channel.szName.isEmpty() ? MainActivity.this.getString(R.string.root_channel) : channel.szName;
+                            parentNameStr = (channel.szName != null && !channel.szName.isEmpty()) ? channel.szName : MainActivity.this.getString(R.string.root_channel);
                         }
                         pName.setText(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}));
                         if (pTopic != null) {
-                            pTopic.setText(channel.szTopic);
+                            pTopic.setText(channel.szTopic != null ? channel.szTopic : "");
                         }
-                        convertView3.setContentDescription(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}) + (channel.szTopic.isEmpty() ? "" : ", " + channel.szTopic));
+                        convertView3.setContentDescription(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}) + (channel.szTopic != null && !channel.szTopic.isEmpty() ? ", " + channel.szTopic : ""));
                         break;
                     case 1:
                         if (convertView3 == null || convertView3.findViewById(R.id.channelname) == null) {

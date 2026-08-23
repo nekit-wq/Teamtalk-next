@@ -35,17 +35,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build APKs
-        run: |
-          set -o pipefail
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle_build.log
-
-      - name: Print Failure Info
-        if: failure()
-        run: |
-          echo "### ❌ Build Failure Summary" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          tail -n 120 /tmp/gradle_build.log >> $GITHUB_STEP_SUMMARY || true
-          echo '```' >> $GITHUB_STEP_SUMMARY
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload Build Failure Logs
         uses: actions/upload-artifact@v4
