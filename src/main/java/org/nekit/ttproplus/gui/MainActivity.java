@@ -2815,14 +2815,14 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     @Override
-    public void onCmdMyselfKickedFromChannel(int channelID) {
+    public void onCmdMyselfKickedFromChannel() {
         this.accessibilityAssistant.lockEvents();
         this.channelsAdapter.notifyDataSetChanged();
         this.accessibilityAssistant.unlockEvents();
     }
 
     @Override
-    public void onCmdMyselfKickedFromChannel(int channelID, User kicker) {
+    public void onCmdMyselfKickedFromChannel(User kicker) {
         this.accessibilityAssistant.lockEvents();
         this.channelsAdapter.notifyDataSetChanged();
         this.accessibilityAssistant.unlockEvents();
