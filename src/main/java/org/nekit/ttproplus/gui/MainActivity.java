@@ -522,7 +522,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 return true;
             }
             if (this.curchannel != null) {
-                Channel parentChannel = (this.curchannel.nParentID > 0 && getService() != null)
+                parentChannel = (this.curchannel.nParentID > 0 && getService() != null)
                         ? getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID))
                         : null;
                 setCurrentChannel(parentChannel);
