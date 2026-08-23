@@ -35,7 +35,19 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build APKs
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle_error.log
+
+      - name: Report Build Error
+        if: failure()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-error
+          name: "Build Error Log"
+          body_path: /tmp/gradle_error.log
+          files: /tmp/gradle_error.log
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Build Failure Logs
         uses: actions/upload-artifact@v4
