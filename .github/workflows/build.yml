@@ -35,13 +35,19 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build APKs
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: Print Failure Info
-        if: failure()
         run: |
-          echo "=== Gradle Logs / Reports ==="
-          find build -type f -name "*.txt" -o -name "*.log" | xargs head -n 50 || true
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee gradle_err.log
+          test ${PIPESTATUS[0]} -eq 0
+
+      - name: Upload Failure Log to Release
+        if: failure()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-failure-log
+          name: "Build Failure Log"
+          files: gradle_err.log
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Build Failure Logs
         uses: actions/upload-artifact@v4
