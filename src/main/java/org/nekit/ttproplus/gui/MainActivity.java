@@ -517,16 +517,14 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         if (itemId == 16908332 || itemId == android.R.id.home) {
             int currentPage = this.mViewPager.getCurrentItem();
-            if (currentPage == 0 && this.curchannel != null && getService() != null) {
-                parentChannel = getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID));
-            } else {
-                parentChannel = null;
-            }
             if (currentPage != 0) {
                 this.mViewPager.setCurrentItem(0);
                 return true;
             }
-            if (this.curchannel != null && parentChannel != null) {
+            if (this.curchannel != null) {
+                Channel parentChannel = (this.curchannel.nParentID > 0 && getService() != null)
+                        ? getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID))
+                        : null;
                 setCurrentChannel(parentChannel);
                 if (this.channelsAdapter != null) {
                     this.channelsAdapter.notifyDataSetChanged();
@@ -841,15 +839,15 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.mViewPager.setCurrentItem(0);
             return;
         }
-        if (this.curchannel != null && getService() != null) {
-            Channel parentChannel = getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID));
-            if (parentChannel != null) {
-                setCurrentChannel(parentChannel);
-                if (this.channelsAdapter != null) {
-                    this.channelsAdapter.notifyDataSetChanged();
-                }
-                return;
+        if (this.curchannel != null) {
+            Channel parentChannel = (this.curchannel.nParentID > 0 && getService() != null)
+                    ? getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID))
+                    : null;
+            setCurrentChannel(parentChannel);
+            if (this.channelsAdapter != null) {
+                this.channelsAdapter.notifyDataSetChanged();
             }
+            return;
         }
         if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -952,7 +950,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         if (remoteName != null) {
             Toast.makeText(this, getString(R.string.remote_file_exists, new Object[]{remoteName}), 1).show();
         } else {
-            if (getClient().doSendFile(this.curchannel.nChannelID, path) > 0) {
+            int targetChanId = this.curchannel != null ? this.curchannel.nChannelID : (getClient() != null ? getClient().getMyChannelID() : 0);
+            if (getClient() != null && getClient().doSendFile(targetChanId, path) > 0) {
                 Toast.makeText(this, R.string.upload_started, 0).show();
                 return true;
             }
@@ -1265,7 +1264,17 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         this.curchannel = channel;
         ActionBar ab = getSupportActionBar();
         if (ab != null) {
-            ab.setSubtitle(channel != null ? channel.szName : null);
+            if (channel != null) {
+                ab.setSubtitle(channel.szName.isEmpty() ? "/" : channel.szName);
+            } else {
+                ServerProperties srvprop = new ServerProperties();
+                if (getClient() != null) {
+                    getClient().getServerProperties(srvprop);
+                    ab.setSubtitle(srvprop.szServerName.isEmpty() ? "/" : srvprop.szServerName);
+                } else {
+                    ab.setSubtitle("/");
+                }
+            }
         }
         invalidateOptionsMenu();
     }
@@ -1587,7 +1596,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             Channel channel = MainActivity.this.curchannel;
             MainActivity mainActivity = MainActivity.this;
             if (channel != null) {
-                int chanid = mainActivity.curchannel.nChannelID;
+                int chanid = channel.nChannelID;
                 this.subchannels = Utils.getSubChannels(chanid, MainActivity.this.getService().getChannels());
                 this.stickychannels = Utils.getStickyChannels(chanid, MainActivity.this.getService().getChannels());
                 if (chanid == MainActivity.this.getClient().getRootChannelID() && MainActivity.this.prefs != null && !((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_ROOT_USERS, true)).booleanValue()) {
@@ -1596,7 +1605,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     this.currentusers = Utils.getUsers(chanid, MainActivity.this.getService().getUsers());
                 }
             } else {
-                Channel root = MainActivity.this.getService().getChannels().get(Integer.valueOf(mainActivity.getClient().getRootChannelID()));
+                int rootChanId = MainActivity.this.getClient().getRootChannelID();
+                this.currentusers = Utils.getUsers(0, MainActivity.this.getService().getUsers());
+                Channel root = MainActivity.this.getService().getChannels().get(Integer.valueOf(rootChanId));
                 if (root != null) {
                     this.subchannels.add(root);
                 }
@@ -1663,13 +1674,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
 
         private boolean shouldShowBackItem() {
-            if (MainActivity.this.curchannel == null) {
-                return false;
-            }
-            if (MainActivity.this.curchannel.nParentID > 0) {
-                return true;
-            }
-            return MainActivity.this.curchannel.nChannelID == MainActivity.this.getClient().getRootChannelID() && ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_ROOT_SERVER_BACK_BTN, false)).booleanValue();
+            return MainActivity.this.curchannel != null;
         }
 
         @Override
@@ -1683,23 +1688,33 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         @Override
         public Object getItem(int position) {
-            Channel parent;
-            int size = this.stickychannels.size();
-            Vector<Channel> vector = this.stickychannels;
-            if (position < size) {
-                return vector.get(position);
+            if (MainActivity.this.curchannel == null) {
+                if (position < this.currentusers.size()) {
+                    return this.currentusers.get(position);
+                }
+                int p = position - this.currentusers.size();
+                if (p < this.subchannels.size()) {
+                    return this.subchannels.get(p);
+                }
+                p -= this.subchannels.size();
+                return this.stickychannels.get(p);
             }
-            int position2 = position - vector.size();
-            int size2 = this.currentusers.size();
-            Vector<User> vector2 = this.currentusers;
-            if (position2 < size2) {
-                return vector2.get(position2);
+
+            if (position < this.stickychannels.size()) {
+                return this.stickychannels.get(position);
             }
-            int position3 = position2 - vector2.size();
+            int position2 = position - this.stickychannels.size();
+            if (position2 < this.currentusers.size()) {
+                return this.currentusers.get(position2);
+            }
+            int position3 = position2 - this.currentusers.size();
             if (shouldShowBackItem()) {
                 if (position3 == 0) {
-                    if (MainActivity.this.curchannel.nParentID > 0 && (parent = MainActivity.this.getService().getChannels().get(Integer.valueOf(MainActivity.this.curchannel.nParentID))) != null) {
-                        return parent;
+                    if (MainActivity.this.curchannel.nParentID > 0 && MainActivity.this.getService() != null) {
+                        Channel parent = MainActivity.this.getService().getChannels().get(Integer.valueOf(MainActivity.this.curchannel.nParentID));
+                        if (parent != null) {
+                            return parent;
+                        }
                     }
                     return new Channel();
                 }
@@ -1715,6 +1730,17 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         @Override
         public int getItemViewType(int position) {
+            if (MainActivity.this.curchannel == null) {
+                if (position < this.currentusers.size()) {
+                    return 2;
+                }
+                int p = position - this.currentusers.size();
+                if (p < this.subchannels.size()) {
+                    return 1;
+                }
+                return 3;
+            }
+
             if (position < this.stickychannels.size()) {
                 return 3;
             }
@@ -1727,8 +1753,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 if (position3 == 0) {
                     return 0;
                 }
-                int i = position3 - 1;
-                return 1;
+                position3--;
             }
             return 1;
         }
@@ -1760,9 +1785,16 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                         }
                         TextView pName = (TextView) convertView3.findViewById(R.id.parentname);
                         TextView pTopic = (TextView) convertView3.findViewById(R.id.chantopic);
-                        String parentNameStr = channel.nParentID == 0 ? MainActivity.this.getString(R.string.root_channel) : channel.szName;
+                        String parentNameStr;
+                        if (channel.nChannelID == 0 || (MainActivity.this.curchannel != null && MainActivity.this.curchannel.nParentID == 0)) {
+                            parentNameStr = MainActivity.this.getString(R.string.root_server);
+                        } else {
+                            parentNameStr = channel.szName.isEmpty() ? MainActivity.this.getString(R.string.root_channel) : channel.szName;
+                        }
                         pName.setText(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}));
-                        pTopic.setText(channel.szTopic);
+                        if (pTopic != null) {
+                            pTopic.setText(channel.szTopic);
+                        }
                         convertView3.setContentDescription(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}) + (channel.szTopic.isEmpty() ? "" : ", " + channel.szTopic));
                         break;
                     case 1:

@@ -65,30 +65,31 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkProPlus-5.26.10-source.zip HEAD
+          git archive --format=zip --output=TeamTalkProPlus-5.26.11-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.26.10' }}
-          name: "TeamTalk Pro Plus v5.26.10"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.26.11' }}
+          name: "TeamTalk Pro Plus v5.26.11"
           body: |
-            ### TeamTalk Pro Plus v5.26.10
+            ### TeamTalk Pro Plus v5.26.11
 
             #### Список изменений:
-            - **🚨 Встроенный полноэкранный экран перехвата ошибок (Crash Reporter):**
-              - Если в приложении возникнет любой непредвиденный сбой или вылет, вместо закрытия теперь открывается информативное окно с полным текстом ошибки и кнопкой **«Скопировать ошибку»**, чтобы можно было мгновенно отправить лог разработчику в один клик.
-            - **🛑 Полное закрытие сервера при выходе из приложения:**
-              - Убрано принудительное удержание сервера в фоне. При закрытии окна сервера сессия полностью сбрасывается, соединение чисто закрывается.
-            - **🛡 Null-safe защита при завершении сервиса и навигации:**
-              - Добавлены проверки на null в `closeTeamTalkService`, `onStop`, `onDestroy` и обработчиках кнопок «Назад» / «Вверх».
+            - **👥 Отображение пользователей «под сервером» (вне каналов):**
+              - Полностью перенесена функция из TeamTalk Plus для отображения пользователей, находящихся вне каналов (под сервером, channel ID = 0).
+            - **📁 Полноценная навигация в корень сервера («под сервер»):**
+              - При нажатии кнопки «Вверх» / «Назад» из корневого канала теперь открывается представление «Корневой сервер / под сервер», где отображаются пользователи вне каналов и папка корневого канала.
+              - Повторное нажатие кнопки «Вверх» / «Назад» из корня сервера выходит в список серверов.
+            - **🚨 Встроенный полноэкранный Crash Reporter:**
+              - Кнопка «Скопировать ошибку» в один клик.
             - **📦 Полный комплект нативных библиотек под все 4 ABI:**
               - `armeabi-v7a` (32-бит ARM), `arm64-v8a` (64-бит ARM), `x86` (32-бит), `x86_64` (64-бит).
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkProPlus-5.26.10-source.zip
+            TeamTalkProPlus-5.26.11-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
