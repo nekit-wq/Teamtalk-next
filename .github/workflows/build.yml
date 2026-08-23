@@ -37,6 +37,12 @@ jobs:
       - name: Build APKs
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
+      - name: Print Failure Info
+        if: failure()
+        run: |
+          echo "=== Gradle Logs / Reports ==="
+          find build -type f -name "*.txt" -o -name "*.log" | xargs head -n 50 || true
+
       - name: Upload Build Failure Logs
         uses: actions/upload-artifact@v4
         if: failure()
