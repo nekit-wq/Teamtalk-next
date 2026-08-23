@@ -2924,8 +2924,18 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         this.users.put(Integer.valueOf(user.nUserID), user);
         if (user.nUserID == getClient().getMyUserID()) {
             this.textmsgAdapter.notifyDataSetChanged();
-            setCurrentChannel(null);
             setMyChannel(null);
+            if (this.curchannel == null && getService() != null) {
+                Channel chan = getService().getChannels().get(Integer.valueOf(channelid));
+                if (chan != null) {
+                    setCurrentChannel(chan);
+                }
+            }
+            if (this.channelsAdapter != null) {
+                this.accessibilityAssistant.lockEvents();
+                this.channelsAdapter.notifyDataSetChanged();
+                this.accessibilityAssistant.unlockEvents();
+            }
         } else if (this.curchannel != null && channelid == this.curchannel.nChannelID) {
             this.accessibilityAssistant.lockEvents();
             this.textmsgAdapter.notifyDataSetChanged();
