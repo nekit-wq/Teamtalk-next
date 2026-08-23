@@ -878,7 +878,7 @@ public class ServerListActivity extends AppCompatActivity
 
     @Override
     public void onServiceConnected(TeamTalkService service) {
-        if (service != null && service.getClient() != null && (service.getClient().getFlags() & 1) != 0 && service.getServerEntry() != null) {
+        if (service != null && service.getTTInstance() != null && (service.getTTInstance().getFlags() & 1) != 0 && service.getServerEntry() != null) {
             Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra(ServerEntry.KEY_SERVERNAME, service.getServerEntry().servername);
             startActivity(intent);
