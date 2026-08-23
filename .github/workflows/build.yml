@@ -35,13 +35,17 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build APKs
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle_build.log
 
       - name: Print Failure Info
         if: failure()
         run: |
-          echo "=== Gradle Logs / Reports ==="
-          find build -type f -name "*.txt" -o -name "*.log" | xargs head -n 50 || true
+          echo "### ❌ Build Failure Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -n 120 /tmp/gradle_build.log >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Build Failure Logs
         uses: actions/upload-artifact@v4
