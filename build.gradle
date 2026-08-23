@@ -95,10 +95,7 @@ dependencies {
     implementation files('libs/TeamTalk5.jar')
 
     testImplementation libs.junit
-    testImplementation files('libs/TeamTalk5Test.jar')
-
     androidTestImplementation libs.androidx.test.core
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.rules
-    androidTestImplementation files('libs/TeamTalk5Test.jar')
 }
