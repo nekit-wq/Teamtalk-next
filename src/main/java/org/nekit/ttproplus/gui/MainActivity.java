@@ -6,10 +6,14 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import org.nekit.ttproplus.data.AppInfo;
+import org.nekit.ttproplus.data.ServerEntry;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.hardware.Sensor;
@@ -511,38 +515,67 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             startActivity(intent8);
             return true;
         }
-        if (itemId == 16908332) {
-            int currentPage = this.mViewPager.getCurrentItem();
-            if (currentPage == 0 && this.curchannel != null) {
-                parentChannel = getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID));
-            } else {
-                parentChannel = null;
-            }
-            if (currentPage != 0) {
-                this.mViewPager.setCurrentItem(0);
-                return true;
-            }
-            if (this.curchannel != null) {
-                setCurrentChannel(parentChannel);
-                this.channelsAdapter.notifyDataSetChanged();
-                return true;
-            }
-            if (this.filesAdapter.getActiveTransfersCount() > 0) {
-                alert.setMessage(R.string.disconnect_alert);
-                alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() { 
-                    @Override
-                    public final void onClick(DialogInterface dialogInterface, int i) {
-                        MainActivity.this.lambda$onOptionsItemSelected$2(dialogInterface, i);
-                    }
-                });
-                alert.setNegativeButton(android.R.string.cancel, (DialogInterface.OnClickListener) null);
-                alert.show();
-                return true;
-            }
-            finish();
+        if (itemId == R.id.action_publishsrv) {
+            publishCurrentServer();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void publishCurrentServer() {
+        ServerEntry entry = null;
+        if (getService() != null) {
+            entry = getService().getServerEntry();
+        }
+        if (entry == null) {
+            Toast.makeText(this, R.string.err_publish_server_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
+        String token = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
+
+        if (username.isEmpty() || token.isEmpty()) {
+            Toast.makeText(this, R.string.err_publish_server_login, Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, WebLoginActivity.class);
+            startActivity(intent);
+            return;
+        }
+
+        final ServerEntry finalEntry = entry;
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(R.string.title_publish_server);
+        alert.setMessage(getString(R.string.msg_publish_server_confirmation, finalEntry.servername));
+        alert.setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
+            new Thread(() -> {
+                String serverXml = Utils.generateServerEntryXml(finalEntry);
+                String response = Utils.postURL(AppInfo.getPublishServerUrl(MainActivity.this, username, token), serverXml);
+                final boolean finalSuccess = response != null && !response.isEmpty();
+
+                runOnUiThread(() -> {
+                    if (finalSuccess) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setTitle(R.string.text_publish_server_success);
+                        builder.setMessage(R.string.msg_publish_server_verification_detail);
+                        builder.setPositiveButton(android.R.string.ok, null);
+                        builder.setNeutralButton(R.string.action_copy_tag, (d, w) -> {
+                            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                            ClipData clip = ClipData.newPlainText(getString(R.string.tag_clipboard), getString(R.string.tag_publish_server));
+                            if (clipboard != null) {
+                                clipboard.setPrimaryClip(clip);
+                            }
+                            Toast.makeText(MainActivity.this, getString(R.string.text_copied_to_clipboard, getString(R.string.tag_publish_server)), Toast.LENGTH_SHORT).show();
+                        });
+                        builder.show();
+                    } else {
+                        Toast.makeText(MainActivity.this, R.string.err_publish_server_failed, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }).start();
+        });
+        alert.setNegativeButton(android.R.string.no, null);
+        alert.show();
     }
 
         public void lambda$onOptionsItemSelected$1(final EditText input, DialogInterface dialog, int whichButton) {
@@ -780,30 +813,6 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return;
         }
 
-        if (this.curchannel != null && getService() != null) {
-            Channel parentChannel = getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID));
-            if (parentChannel != null) {
-                setCurrentChannel(parentChannel);
-                if (this.channelsAdapter != null) {
-                    this.channelsAdapter.notifyDataSetChanged();
-                }
-                return;
-            }
-        }
-
-        if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
-            alert.setMessage(R.string.disconnect_alert);
-            alert.setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                if (getService() != null) {
-                    getService().resetState();
-                }
-                finish();
-            });
-            alert.setNegativeButton(android.R.string.cancel, null);
-            alert.show();
-            return;
-        }
         if (getService() != null) {
             getService().resetState();
         }

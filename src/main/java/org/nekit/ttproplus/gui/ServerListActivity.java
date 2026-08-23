@@ -207,9 +207,11 @@ public class ServerListActivity extends AppCompatActivity
         handleIncomingIntent(getIntent());
 
         if (mConnection.isBound()) {
-            if (getClient() != null && (getClient().getFlags() & 1) != 0 && getService() != null && getService().getServerEntry() != null) {
+            if (getService() != null && getClient() != null && (getClient().getFlags() & 1) != 0) {
                 Intent intent = new Intent(this, MainActivity.class);
-                intent.putExtra(ServerEntry.KEY_SERVERNAME, getService().getServerEntry().servername);
+                if (getService().getServerEntry() != null) {
+                    intent.putExtra(ServerEntry.KEY_SERVERNAME, getService().getServerEntry().servername);
+                }
                 startActivity(intent);
                 return;
             }
@@ -936,9 +938,11 @@ public class ServerListActivity extends AppCompatActivity
 
     @Override
     public void onServiceConnected(TeamTalkService service) {
-        if (service != null && service.getTTInstance() != null && (service.getTTInstance().getFlags() & 1) != 0 && service.getServerEntry() != null) {
+        if (service != null && service.getTTInstance() != null && (service.getTTInstance().getFlags() & 1) != 0) {
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra(ServerEntry.KEY_SERVERNAME, service.getServerEntry().servername);
+            if (service.getServerEntry() != null) {
+                intent.putExtra(ServerEntry.KEY_SERVERNAME, service.getServerEntry().servername);
+            }
             startActivity(intent);
             return;
         }
