@@ -877,18 +877,30 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 this.ttsWrapper.shutdown();
                 this.ttsWrapper = null;
             }
-            this.audioManager.setMode(0);
-            if (this.mConnection.isBound()) {
+            if (this.audioManager != null) {
+                this.audioManager.setMode(0);
+            }
+            if (this.mConnection != null && this.mConnection.isBound()) {
                 Log.d("bearware", "Unbinding TeamTalk service");
-                getService().disablePhoneCallReaction();
-                getService().unwatchBluetoothHeadset();
-                getService().resetState();
-                onServiceDisconnected(getService());
-                unbindService(this.mConnection);
+                TeamTalkService service = getService();
+                if (service != null) {
+                    service.disablePhoneCallReaction();
+                    service.unwatchBluetoothHeadset();
+                    service.resetState();
+                    onServiceDisconnected(service);
+                }
+                try {
+                    unbindService(this.mConnection);
+                } catch (Exception ignored) {
+                }
                 this.mConnection.setBound(false);
             }
-            this.notificationManager.cancelAll();
-            this.mViewPager.removeOnPageChangeListener(this.mSectionsPagerAdapter);
+            if (this.notificationManager != null) {
+                this.notificationManager.cancelAll();
+            }
+            if (this.mViewPager != null && this.mSectionsPagerAdapter != null) {
+                this.mViewPager.removeOnPageChangeListener(this.mSectionsPagerAdapter);
+            }
         }
     }
 
@@ -899,13 +911,16 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.mSensorManager.unregisterListener(this);
             this.isProximitySensorRegistered = false;
         }
-        if (this.mConnection.isBound()) {
+        if (this.mConnection != null && this.mConnection.isBound()) {
             Log.d("bearware", "Unbinding TeamTalk service");
             TeamTalkService service = getService();
             if (service != null) {
                 onServiceDisconnected(service);
             }
-            unbindService(this.mConnection);
+            try {
+                unbindService(this.mConnection);
+            } catch (Exception ignored) {
+            }
             this.mConnection.setBound(false);
         }
         Log.d("bearware", "Activity destroyed " + hashCode());
@@ -2774,13 +2789,21 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     private void closeTeamTalkService(TeamTalkService service) {
-        if (this.wakeLock.isHeld()) {
+        if (this.wakeLock != null && this.wakeLock.isHeld()) {
             this.wakeLock.release();
         }
-        service.setOnVoiceTransmissionToggleListener(null);
-        service.getEventHandler().unregisterListener(this);
-        this.filesAdapter.setTeamTalkService(null);
-        this.mediaAdapter.clearTeamTalkService(service);
+        if (service != null) {
+            service.setOnVoiceTransmissionToggleListener(null);
+            if (service.getEventHandler() != null) {
+                service.getEventHandler().unregisterListener(this);
+            }
+            if (this.mediaAdapter != null) {
+                this.mediaAdapter.clearTeamTalkService(service);
+            }
+        }
+        if (this.filesAdapter != null) {
+            this.filesAdapter.setTeamTalkService(null);
+        }
     }
 
     @Override

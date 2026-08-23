@@ -207,15 +207,6 @@ public class ServerListActivity extends AppCompatActivity
         handleIncomingIntent(getIntent());
 
         if (mConnection.isBound()) {
-            if (getService() != null && getClient() != null && (getClient().getFlags() & 1) != 0) {
-                Intent intent = new Intent(this, MainActivity.class);
-                if (getService().getServerEntry() != null) {
-                    intent.putExtra(ServerEntry.KEY_SERVERNAME, getService().getServerEntry().servername);
-                }
-                startActivity(intent);
-                return;
-            }
-
             // reset state since we're creating a new connection
             getService().resetState();
             getClient().closeSoundInputDevice();
@@ -938,15 +929,6 @@ public class ServerListActivity extends AppCompatActivity
 
     @Override
     public void onServiceConnected(TeamTalkService service) {
-        if (service != null && service.getTTInstance() != null && (service.getTTInstance().getFlags() & 1) != 0) {
-            Intent intent = new Intent(this, MainActivity.class);
-            if (service.getServerEntry() != null) {
-                intent.putExtra(ServerEntry.KEY_SERVERNAME, service.getServerEntry().servername);
-            }
-            startActivity(intent);
-            return;
-        }
-
         service.getEventHandler().registerOnCmdMyselfLoggedIn(this, true);
 
         // Connect to server if 'serverentry' is specified.

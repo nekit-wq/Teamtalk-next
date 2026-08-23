@@ -958,4 +958,12 @@
     <string name="sound_event_logged_on">Пользователь подключился</string>
     <string name="sound_event_logged_off">Пользователь отключился</string>
     <string name="sound_imported_for">Звук импортирован для: %1$s</string>
+
+    <!-- Crash Screen -->
+    <string name="crash_title">Произошла ошибка в TeamTalk</string>
+    <string name="crash_subtitle">В приложении произошёл непредвиденный сбой</string>
+    <string name="crash_btn_copy">Скопировать ошибку</string>
+    <string name="crash_btn_restart">Перезапустить TeamTalk</string>
+    <string name="crash_btn_close">Закрыть</string>
+    <string name="crash_copied_toast">Текст ошибки скопирован в буфер обмена</string>
 </resources>

@@ -956,4 +956,12 @@ By: %3$s"</string>
     <string name="sound_event_logged_on">User logged in</string>
     <string name="sound_event_logged_off">User logged off</string>
     <string name="sound_imported_for">Sound imported for %1$s</string>
+
+    <!-- Crash Screen -->
+    <string name="crash_title">Application Error</string>
+    <string name="crash_subtitle">An unexpected error occurred in TeamTalk Pro+</string>
+    <string name="crash_btn_copy">Copy Error</string>
+    <string name="crash_btn_restart">Restart TeamTalk</string>
+    <string name="crash_btn_close">Close</string>
+    <string name="crash_copied_toast">Error details copied to clipboard</string>
 </resources>
