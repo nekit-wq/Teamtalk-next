@@ -1607,7 +1607,12 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 }
             } else {
                 int rootChanId = MainActivity.this.getClient().getRootChannelID();
-                this.currentusers = Utils.getUsers(0, MainActivity.this.getService().getUsers());
+                boolean showRootUsers = MainActivity.this.prefs != null ? ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_ROOT_USERS, true)).booleanValue() : true;
+                if (showRootUsers) {
+                    this.currentusers = Utils.getUsers(0, MainActivity.this.getService().getUsers());
+                } else {
+                    this.currentusers = new Vector<>();
+                }
                 Channel root = MainActivity.this.getService().getChannels().get(Integer.valueOf(rootChanId));
                 if (root != null) {
                     this.subchannels.add(root);
@@ -1677,7 +1682,13 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
 
         private boolean shouldShowBackItem() {
-            return MainActivity.this.curchannel != null;
+            if (MainActivity.this.curchannel == null) {
+                return false;
+            }
+            if (MainActivity.this.curchannel.nParentID > 0) {
+                return true;
+            }
+            return MainActivity.this.prefs != null && ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_ROOT_SERVER_BACK_BTN, false)).booleanValue();
         }
 
         @Override
