@@ -383,10 +383,6 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         File recordedFile;
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         int itemId = item.getItemId();
-        if (itemId == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
         if (itemId == R.id.action_mute_tts) {
             if (this.ttsWrapper != null) {
                 boolean newMuted = !this.ttsWrapper.isMuted();
@@ -517,6 +513,39 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         if (itemId == R.id.action_publishsrv) {
             publishCurrentServer();
+            return true;
+        }
+        if (itemId == 16908332 || itemId == android.R.id.home) {
+            int currentPage = this.mViewPager.getCurrentItem();
+            if (currentPage == 0 && this.curchannel != null && getService() != null) {
+                parentChannel = getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID));
+            } else {
+                parentChannel = null;
+            }
+            if (currentPage != 0) {
+                this.mViewPager.setCurrentItem(0);
+                return true;
+            }
+            if (this.curchannel != null && parentChannel != null) {
+                setCurrentChannel(parentChannel);
+                if (this.channelsAdapter != null) {
+                    this.channelsAdapter.notifyDataSetChanged();
+                }
+                return true;
+            }
+            if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
+                alert.setMessage(R.string.disconnect_alert);
+                alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() { 
+                    @Override
+                    public final void onClick(DialogInterface dialogInterface, int i) {
+                        MainActivity.this.lambda$onOptionsItemSelected$2(dialogInterface, i);
+                    }
+                });
+                alert.setNegativeButton(android.R.string.cancel, (DialogInterface.OnClickListener) null);
+                alert.show();
+                return true;
+            }
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -812,9 +841,26 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.mViewPager.setCurrentItem(0);
             return;
         }
-
-        if (getService() != null) {
-            getService().resetState();
+        if (this.curchannel != null && getService() != null) {
+            Channel parentChannel = getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID));
+            if (parentChannel != null) {
+                setCurrentChannel(parentChannel);
+                if (this.channelsAdapter != null) {
+                    this.channelsAdapter.notifyDataSetChanged();
+                }
+                return;
+            }
+        }
+        if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setMessage(R.string.disconnect_alert);
+            alert.setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                this.filesAdapter.cancelAllTransfers();
+                finish();
+            });
+            alert.setNegativeButton(android.R.string.cancel, null);
+            alert.show();
+            return;
         }
         finish();
     }
@@ -831,26 +877,17 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 this.ttsWrapper.shutdown();
                 this.ttsWrapper = null;
             }
-            boolean isConnected = getClient() != null && (getClient().getFlags() & 1) != 0;
-            if (!isConnected) {
-                this.audioManager.setMode(0);
-                if (this.mConnection.isBound()) {
-                    Log.d("bearware", "Unbinding TeamTalk service");
-                    getService().disablePhoneCallReaction();
-                    getService().unwatchBluetoothHeadset();
-                    getService().resetState();
-                    onServiceDisconnected(getService());
-                    unbindService(this.mConnection);
-                    this.mConnection.setBound(false);
-                }
-                this.notificationManager.cancelAll();
-            } else {
-                if (this.mConnection.isBound()) {
-                    onServiceDisconnected(getService());
-                    unbindService(this.mConnection);
-                    this.mConnection.setBound(false);
-                }
+            this.audioManager.setMode(0);
+            if (this.mConnection.isBound()) {
+                Log.d("bearware", "Unbinding TeamTalk service");
+                getService().disablePhoneCallReaction();
+                getService().unwatchBluetoothHeadset();
+                getService().resetState();
+                onServiceDisconnected(getService());
+                unbindService(this.mConnection);
+                this.mConnection.setBound(false);
             }
+            this.notificationManager.cancelAll();
             this.mViewPager.removeOnPageChangeListener(this.mSectionsPagerAdapter);
         }
     }
