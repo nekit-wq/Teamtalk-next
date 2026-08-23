@@ -338,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         MenuItem chanToggleItem = menu.findItem(R.id.action_channel_toggle);
         if (chanToggleItem != null) {
-            if (isLeaveable) {
+            if (isMyChannel) {
                 chanToggleItem.setTitle(R.string.action_leave);
             } else {
                 chanToggleItem.setTitle(R.string.action_join_channel);
@@ -393,7 +393,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return true;
         }
         if (itemId == R.id.action_channel_toggle) {
-            if (getClient() != null && getClient().getMyChannelID() > 0) {
+            boolean isMyChannel = this.curchannel != null && getClient() != null && getClient().getMyChannelID() == this.curchannel.nChannelID;
+            if (isMyChannel) {
                 leaveChannel();
             } else {
                 if (this.curchannel != null && this.curchannel.nChannelID > 0) {

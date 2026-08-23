@@ -881,4 +881,8 @@
         <item quantity="many">Разбанить %1$d выбранных пользователей?</item>
         <item quantity="other">Разбанить %1$d выбранных пользователей?</item>
     </plurals>
+
+    <string name="pref_title_battery_optimization">Работа в фоне без ограничений</string>
+    <string name="pref_summary_battery_optimization">Разрешить приложению работать в фоне без выгрузки системой</string>
+    <string name="battery_optimization_already_ignored">Оптимизация батареи уже отключена для TeamTalk Pro+</string>
 </resources>

@@ -880,4 +880,8 @@ By: %3$s"</string>
         <item quantity="one">Unban %1$d selected user?</item>
         <item quantity="other">Unban %1$d selected users?</item>
     </plurals>
+
+    <string name="pref_title_battery_optimization">Ignore battery optimization</string>
+    <string name="pref_summary_battery_optimization">Allow app to run in background without being killed by Android</string>
+    <string name="battery_optimization_already_ignored">Battery optimization is already disabled for TeamTalk Pro+</string>
 </resources>

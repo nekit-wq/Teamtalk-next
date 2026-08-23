@@ -156,10 +156,10 @@
 
         <service
             android:name="org.nekit.ttproplus.backend.TeamTalkService"
-            android:foregroundServiceType="microphone|mediaProjection"
+            android:foregroundServiceType="microphone|mediaPlayback|mediaProjection"
             android:enabled="true"
             android:exported="false"
-            android:stopWithTask="true" />
+            android:stopWithTask="false" />
 
         <activity
             android:name=".gui.CustomFilePickerActivity"

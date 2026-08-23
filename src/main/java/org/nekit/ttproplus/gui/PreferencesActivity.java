@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -299,6 +300,29 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             Preference fileMgrPref = findPreference(Preferences.PREF_GENERAL_DEFAULT_FILE_MANAGER);
             if (fileMgrPref != null) {
                 PreferencesActivity.bindPreferenceSummaryToValue(fileMgrPref);
+            }
+
+            Preference batteryOptPref = findPreference("battery_optimization");
+            if (batteryOptPref != null) {
+                batteryOptPref.setOnPreferenceClickListener(pref -> {
+                    if (getActivity() != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        String packageName = getActivity().getPackageName();
+                        PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+                        if (pm != null && !pm.isIgnoringBatteryOptimizations(packageName)) {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            intent.setData(Uri.parse("package:" + packageName));
+                            try {
+                                getActivity().startActivity(intent);
+                            } catch (Exception e) {
+                                Intent fallback = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                                getActivity().startActivity(fallback);
+                            }
+                        } else {
+                            Toast.makeText(getActivity(), R.string.battery_optimization_already_ignored, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    return true;
+                });
             }
 
             Preference checkUpdatePref = findPreference("check_updates");

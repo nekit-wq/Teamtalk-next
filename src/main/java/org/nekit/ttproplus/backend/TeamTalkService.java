@@ -16,12 +16,14 @@ import android.media.AudioRecord;
 import android.media.MediaScannerConnection;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -108,6 +110,8 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     private MediaProjection mediaProjection;
     private MediaSessionCompat mediaSession;
     private AudioRecord micAudioRecord;
+    private PowerManager.WakeLock mServiceWakeLock;
+    private WifiManager.WifiLock mServiceWifiLock;
     Channel mychannel;
     private NotificationManager notificationManager;
     OnVoiceTransmissionToggleListener onVoiceTransmissionToggleListener;
@@ -377,6 +381,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.mFloatingWindowManager.checkAndShow();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         prefs.registerOnSharedPreferenceChangeListener(this.mPrefListener);
+        acquireServiceLocks();
     }
 
         public static void lambda$onCreate$0(int focusChange) {
@@ -398,6 +403,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         } else {
             mediaSessionCompat.setPlaybackState(new PlaybackStateCompat.Builder().setState(3, 0L, 1.0f).setActions(512L).build());
         }
+        acquireServiceLocks();
         return 1;
     }
 
@@ -412,6 +418,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.mEventHandler.unregisterListener(this);
         disablePhoneCallReaction();
         unwatchBluetoothHeadset();
+        releaseServiceLocks();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         prefs.unregisterOnSharedPreferenceChangeListener(this.mPrefListener);
         if (this.mFloatingWindowManager != null) {
@@ -462,11 +469,52 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     private int getMyForegroundServiceType() {
-        if (this.mediaProjection == null) {
-            return 128;
+        int type = 128 | 2; // FOREGROUND_SERVICE_TYPE_MICROPHONE | FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+        if (this.mediaProjection != null) {
+            type |= 32; // FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
         }
-        int type = 128 | 32;
         return type;
+    }
+
+    public synchronized void acquireServiceLocks() {
+        try {
+            if (this.mServiceWakeLock == null) {
+                PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                if (pm != null) {
+                    this.mServiceWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ttproplus:ServiceWakeLock");
+                    this.mServiceWakeLock.setReferenceCounted(false);
+                }
+            }
+            if (this.mServiceWakeLock != null && !this.mServiceWakeLock.isHeld()) {
+                this.mServiceWakeLock.acquire();
+            }
+
+            if (this.mServiceWifiLock == null) {
+                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                if (wm != null) {
+                    this.mServiceWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "ttproplus:ServiceWifiLock");
+                    this.mServiceWifiLock.setReferenceCounted(false);
+                }
+            }
+            if (this.mServiceWifiLock != null && !this.mServiceWifiLock.isHeld()) {
+                this.mServiceWifiLock.acquire();
+            }
+        } catch (Exception e) {
+            Log.w("bearware", "Failed to acquire service locks", e);
+        }
+    }
+
+    public synchronized void releaseServiceLocks() {
+        try {
+            if (this.mServiceWakeLock != null && this.mServiceWakeLock.isHeld()) {
+                this.mServiceWakeLock.release();
+            }
+            if (this.mServiceWifiLock != null && this.mServiceWifiLock.isHeld()) {
+                this.mServiceWifiLock.release();
+            }
+        } catch (Exception e) {
+            Log.w("bearware", "Failed to release service locks", e);
+        }
     }
 
     private void adjustMuteOnTx(boolean txEnabled) {
