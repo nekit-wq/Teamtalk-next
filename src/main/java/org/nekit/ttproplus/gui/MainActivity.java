@@ -1255,8 +1255,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         joinChannel(channel, input.getText().toString());
     }
 
-        public void lambda$joinChannel$5(EditText input, DialogInterface dialog, int whichButton) {
+    public void lambda$joinChannel$5(EditText input, DialogInterface dialog, int whichButton) {
         InputMethodManager im = (InputMethodManager) getSystemService("input_method");
+        im.hideSoftInputFromWindow(input.getWindowToken(), 0);
     }
 
     private void subscriptionChange(User user) {
