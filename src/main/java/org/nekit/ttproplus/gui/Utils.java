@@ -1036,19 +1036,17 @@ public class Utils {
             return baseDir;
         }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String mode = prefs.getString(Preferences.PREF_RECORDING_FOLDER_STRUCTURE, "server_channel");
-        File targetDir = baseDir;
+        boolean createServerFolder = prefs.getBoolean(Preferences.PREF_RECORDING_CREATE_SERVER_FOLDER, false);
+        boolean createChannelFolder = prefs.getBoolean(Preferences.PREF_RECORDING_CREATE_CHANNEL_FOLDER, false);
 
-        if ("server_channel".equals(mode)) {
+        File targetDir = baseDir;
+        if (createServerFolder && !TextUtils.isEmpty(serverName)) {
             String safeServer = sanitizeFilename(serverName);
+            targetDir = new File(targetDir, safeServer);
+        }
+        if (createChannelFolder && !TextUtils.isEmpty(channelName)) {
             String safeChannel = sanitizeFilename(channelName);
-            targetDir = new File(new File(baseDir, safeServer), safeChannel);
-        } else if ("server".equals(mode)) {
-            String safeServer = sanitizeFilename(serverName);
-            targetDir = new File(baseDir, safeServer);
-        } else if ("date".equals(mode)) {
-            SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy-MM", Locale.US);
-            targetDir = new File(baseDir, monthFormat.format(new Date()));
+            targetDir = new File(targetDir, safeChannel);
         }
 
         if (!targetDir.exists()) {

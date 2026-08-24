@@ -112,18 +112,6 @@
         <item>white</item>
         <item>auto</item>
     </string-array>
-    <string-array name="pref_recording_folder_structure_entries">
-        <item>Server / Channel (recommended)</item>
-        <item>Server only</item>
-        <item>By Date (YYYY-MM)</item>
-        <item>Flat (all in one folder)</item>
-    </string-array>
-    <string-array name="pref_recording_folder_structure_values">
-        <item>server_channel</item>
-        <item>server</item>
-        <item>date</item>
-        <item>flat</item>
-    </string-array>
     <string-array name="pref_recording_session_mode_entries">
         <item>Per-channel (separate file per room)</item>
         <item>Continuous session (auto-resume across rooms)</item>

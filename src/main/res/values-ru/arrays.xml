@@ -66,12 +66,6 @@
         <item>Светлая тема</item>
         <item>Системная (как в телефоне)</item>
     </string-array>
-    <string-array name="pref_recording_folder_structure_entries">
-        <item>Сервер / Комната (рекомендуется)</item>
-        <item>Только Сервер</item>
-        <item>По датам (ГГГГ-ММ)</item>
-        <item>В одну папку (без подпапок)</item>
-    </string-array>
     <string-array name="pref_recording_session_mode_entries">
         <item>По комнатам (новый файл для каждого канала)</item>
         <item>Непрерывная сессия (автопродолжение при переходах)</item>
