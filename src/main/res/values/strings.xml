@@ -65,7 +65,7 @@
     <string name="antispam_re_enable_msg">Anti-Spam has disabled your subscriptions. Re-enable them in Settings → Anti-Spam or reconnect.</string>
     <string name="antispam_re_enable_title">Anti-Spam Re-enable</string>
     <string name="antispam_triggered">Anti-Spam: message limit exceeded (%d/s). Subscriptions disabled.</string>
-    <string name="app_name">ttpro+</string>
+    <string name="app_name">TeamTalk Next</string>
     <string name="back_to_channel">Back to: %s</string>
     <string name="ban_confirmation">Do you really wish to ban user %1$s?</string>
     <string name="ban_info_fmt">"Time: %1$s
@@ -332,7 +332,7 @@ By: %3$s"</string>
     <string name="pref_default_nickname">NoName</string>
     <string name="pref_equalizer_summary">Adjust frequency bands, hardware audio effects, noise suppression and microphone gain in real time</string>
     <string name="pref_equalizer_title">Real-time Equalizer &amp; Microphone Settings</string>
-    <string name="pref_fork_desc_summary">Fork of TeamTalk pro+ for Android. Features: spam protection (auto-unsubscribing), flexible sound themes for events, administration (accounts, bans, server properties &amp; stats), redesigned media streaming, updated design, and improved dark theme.</string>
+    <string name="pref_fork_desc_summary">TeamTalk Next for Android. Features: system audio capture, spam protection, flexible sound themes, server administration, seamless network switching, updated modern design, and dark theme.</string>
     <string name="pref_fork_desc_title">Fork Description</string>
     <string name="pref_header_antispam">Anti-Spam</string>
     <string name="pref_header_background_mgmt">Background Mode</string>
@@ -724,7 +724,7 @@ By: %3$s"</string>
     <string name="title_activity_preferences">Preferences</string>
     <string name="title_activity_server_banned_users">Server Banned Users</string>
     <string name="title_activity_server_entry">TeamTalk 5 Server Properties</string>
-    <string name="title_activity_server_list">ttpro+</string>
+    <string name="title_activity_server_list">TeamTalk Next</string>
     <string name="title_activity_server_properties">Server Properties</string>
     <string name="title_activity_server_stats">Server Statistics</string>
     <string name="title_activity_stream_media">Stream media file to channel</string>
@@ -846,7 +846,7 @@ By: %3$s"</string>
     <string name="welcome_settings_vibrate">Vibrate on voice transmission</string>
     <string name="welcome_settings_voice_processing">Enable voice processing (AEC, AGC, Denoiser)</string>
     <string name="welcome_skip">Skip</string>
-    <string name="welcome_title">Welcome to TeamTalk Pro+</string>
+    <string name="welcome_title">Welcome to TeamTalk Next</string>
     <string name="pref_title_clientname_preset">Client Preset / OS</string>
     <string name="pref_summary_clientname_preset">Quickly choose an OS or client type for masking</string>
     <string name="clientname_preset_custom">Custom (enter manually)…</string>
@@ -889,7 +889,7 @@ By: %3$s"</string>
 
     <string name="pref_title_battery_optimization">Ignore battery optimization</string>
     <string name="pref_summary_battery_optimization">Allow app to run in background without being killed by Android</string>
-    <string name="battery_optimization_already_ignored">Battery optimization is already disabled for TeamTalk Pro+</string>
+    <string name="battery_optimization_already_ignored">Battery optimization is already disabled for TeamTalk Next</string>
 
     <string name="action_publishsrv">Publish server</string>
     <string name="title_publish_server">Publish Server</string>
@@ -962,7 +962,7 @@ By: %3$s"</string>
 
     <!-- Crash Screen -->
     <string name="crash_title">Application Error</string>
-    <string name="crash_subtitle">An unexpected error occurred in TeamTalk Pro+</string>
+    <string name="crash_subtitle">An unexpected error occurred in TeamTalk Next</string>
     <string name="crash_btn_copy">Copy Error</string>
     <string name="crash_btn_restart">Restart TeamTalk</string>
     <string name="crash_btn_close">Close</string>

@@ -65,7 +65,7 @@
     <string name="antispam_re_enable_msg">Антиспам отключил ваши подписки. Включите их заново в Настройках → Антиспам или переподключитесь.</string>
     <string name="antispam_re_enable_title">Антиспам — повторное включение</string>
     <string name="antispam_triggered">Антиспам: превышен лимит сообщений (%d/с). Подписки отключены.</string>
-    <string name="app_name">ttpro+</string>
+    <string name="app_name">TeamTalk Next</string>
     <string name="back_to_channel">Назад в: %s</string>
     <string name="ban_confirmation">Вы действительно намерены забанить пользователя %1$s?</string>
     <string name="ban_info_fmt">"Время: %1$s
@@ -331,7 +331,7 @@
     <string name="pref_default_nickname">Аноним</string>
     <string name="pref_equalizer_summary">Настройка частотных полос, аудиоэффектов, шумоподавления и микрофона без переподключения к серверу</string>
     <string name="pref_equalizer_title">Эквалайзер и настройки микрофона (в реальном времени)</string>
-    <string name="pref_fork_desc_summary">Форк TeamTalk pro+ для Android. Особенности: защита от спама (автовыключение подписок), гибкая настройка звуковых тем для событий, администрирование (учетные записи, баны, свойства и статистика сервера), переработанная трансляция медиафайлов, обновленный дизайн и темная тема.</string>
+    <string name="pref_fork_desc_summary">TeamTalk Next для Android. Особенности: захват системного звука, защита от спама, гибкая настройка звуковых тем, администрирование сервера, бесшовное переключение сетей, обновленный дизайн и темная тема.</string>
     <string name="pref_fork_desc_title">Описание форка</string>
     <string name="pref_header_antispam">Антиспам</string>
     <string name="pref_header_background_mgmt">Фоновый режим</string>
@@ -723,7 +723,7 @@
     <string name="title_activity_preferences">Настройки</string>
     <string name="title_activity_server_banned_users">Баны сервера</string>
     <string name="title_activity_server_entry">Свойства Сервера TeamTalk 5</string>
-    <string name="title_activity_server_list">ttpro+</string>
+    <string name="title_activity_server_list">TeamTalk Next</string>
     <string name="title_activity_server_properties">Свойства сервера</string>
     <string name="title_activity_server_stats">Статистика сервера</string>
     <string name="title_activity_stream_media">Трансляция медиафайла в канале</string>
@@ -845,7 +845,7 @@
     <string name="welcome_settings_vibrate">Вибрация при передаче голоса</string>
     <string name="welcome_settings_voice_processing">Включить обработку голоса (эхоподавление, АРУ)</string>
     <string name="welcome_skip">Пропустить</string>
-    <string name="welcome_title">Добро пожаловать в TeamTalk Pro+</string>
+    <string name="welcome_title">Добро пожаловать в TeamTalk Next</string>
     <string name="pref_title_clientname_preset">Шаблон клиента / ОС</string>
     <string name="pref_summary_clientname_preset">Быстрый выбор ОС и версии для маскировки</string>
     <string name="clientname_preset_custom">Свой вариант (ввести вручную)…</string>
@@ -890,7 +890,7 @@
 
     <string name="pref_title_battery_optimization">Работа в фоне без ограничений</string>
     <string name="pref_summary_battery_optimization">Разрешить приложению работать в фоне без выгрузки системой</string>
-    <string name="battery_optimization_already_ignored">Оптимизация батареи уже отключена для TeamTalk Pro+</string>
+    <string name="battery_optimization_already_ignored">Оптимизация батареи уже отключена для TeamTalk Next</string>
 
     <string name="action_publishsrv">Опубликовать сервер</string>
     <string name="title_publish_server">Опубликовать сервер</string>

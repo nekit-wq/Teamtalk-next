@@ -49,7 +49,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
             String dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
             String abiStr = Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0 ? Build.SUPPORTED_ABIS[0] : "unknown";
-            String deviceInfo = "TeamTalk Pro+ v" + versionName + " (" + versionCode + ")\n"
+            String deviceInfo = "TeamTalk Next v" + versionName + " (" + versionCode + ")\n"
                     + "Device: " + Build.MANUFACTURER + " " + Build.MODEL + " (" + Build.DEVICE + ")\n"
                     + "Android: " + Build.VERSION.RELEASE + " (SDK " + Build.VERSION.SDK_INT + ")\n"
                     + "ABI: " + abiStr + "\n"

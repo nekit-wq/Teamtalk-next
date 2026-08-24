@@ -36,7 +36,7 @@ import dk.bearware.TeamTalkBase;
 public class AppInfo {
     public static final String TAG = "bearware";
 
-    public static final String APPNAME_SHORT = "ttpro+";
+    public static final String APPNAME_SHORT = "TeamTalkNext";
     public static final String APPVERSION_POSTFIX = "";
     public static final String OSTYPE = "Android";
 
