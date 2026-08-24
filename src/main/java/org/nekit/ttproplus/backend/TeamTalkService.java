@@ -774,7 +774,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (this.isRecording || this.mychannel == null) {
             return;
         }
-        String srvName = (this.ttserver != null && !TextUtils.isEmpty(this.ttserver.srvname)) ? this.ttserver.srvname : "Server";
+        String srvName = (this.ttserver != null && !TextUtils.isEmpty(this.ttserver.servername)) ? this.ttserver.servername : "Server";
         String chanName = (this.mychannel != null && !TextUtils.isEmpty(this.mychannel.szName)) ? this.mychannel.szName : "Channel";
         File dir = Utils.getRecordingsDirectory(getApplicationContext(), srvName, chanName);
 
