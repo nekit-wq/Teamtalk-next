@@ -24,6 +24,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.text.InputType;
 import android.widget.Toast;
 import dk.bearware.Channel;
