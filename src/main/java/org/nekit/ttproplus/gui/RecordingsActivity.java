@@ -480,7 +480,7 @@ public class RecordingsActivity extends AppCompatActivity {
             }
         });
 
-        builder.setNegativeButton(R.string.dialog_cancel, null);
+        builder.setNegativeButton(android.R.string.cancel, null);
         builder.show();
     }
 
@@ -500,7 +500,7 @@ public class RecordingsActivity extends AppCompatActivity {
             }
         });
 
-        builder.setNegativeButton(R.string.dialog_cancel, null);
+        builder.setNegativeButton(android.R.string.cancel, null);
         builder.show();
     }
 

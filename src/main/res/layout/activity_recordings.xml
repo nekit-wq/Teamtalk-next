@@ -129,7 +129,7 @@
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_delete"
                 android:tint="@color/textSecondary"
-                android:contentDescription="@string/dialog_cancel" />
+                android:contentDescription="@android:string/cancel" />
 
         </LinearLayout>
 
