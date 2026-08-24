@@ -1038,20 +1038,9 @@
     <string name="net_stats_reset_toast">Сетевая статистика сброшена</string>
     <string name="net_report_copied_toast">Диагностический отчет скопирован в буфер обмена</string>
 
-    <!-- Управление аудиоканалами и стерео пользователя -->
-    <string name="user_prop_title_audio_channels">Аудиоканалы и стерео</string>
-    <string name="user_prop_voice_left_speaker">Левый динамик (канал L)</string>
-    <string name="user_prop_voice_right_speaker">Правый динамик (канал R)</string>
-    <string name="user_prop_preset_stereo">Стерео (L+R)</string>
-    <string name="user_prop_preset_left_only">Только левый</string>
-    <string name="user_prop_preset_right_only">Только правый</string>
-    <string name="user_prop_preset_mono_fix">⚡ Антипротивофаза / Моно</string>
-    <string name="user_prop_pan_title">Стерео-баланс (Панорама)</string>
-    <string name="user_prop_pan_center">Центр</string>
-    <string name="user_prop_pan_left_fmt">Влево %d%%</string>
-    <string name="user_prop_pan_right_fmt">Вправо %d%%</string>
-    <string name="user_prop_media_channels_title">Каналы медиафайлов</string>
-    <string name="user_prop_media_left_speaker">Медиа: Левый динамик (L)</string>
-    <string name="user_prop_media_right_speaker">Медиа: Правый динамик (R)</string>
-    <string name="toast_antiphase_fixed">Противофаза исправлена: включён чистый моно-канал</string>
+    <!-- Управление аудиоканалами пользователя -->
+    <string name="user_prop_voice_left_speaker">Левое ухо / канал (L)</string>
+    <string name="user_prop_voice_right_speaker">Правое ухо / канал (R)</string>
+    <string name="user_prop_media_left_speaker">Медиа: Левое ухо / канал (L)</string>
+    <string name="user_prop_media_right_speaker">Медиа: Правое ухо / канал (R)</string>
 </resources>

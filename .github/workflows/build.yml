@@ -71,31 +71,25 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.6-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.7-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.6' }}
-          name: "TeamTalk Next v5.27.6"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.7' }}
+          name: "TeamTalk Next v5.27.7"
           body: |
-            ### TeamTalk Next v5.27.6
+            ### TeamTalk Next v5.27.7
 
             #### Список изменений и нововведений:
-            - **🎧 Управление аудиоканалами собеседников и стерео-маршрутизация:**
-              - Добавлено раздельное управление левым и правым динамиками (каналами L/R) для голоса и медиафайлов каждого пользователя.
-              - Возможность заглушить левый или правый канал собеседника в один клик.
-            - **⚡ Исправление противофазы (Fix Antiphase / Mono):**
-              - Кнопка устранения фазового конфликта — маршрутизирует чистый моно-сигнал собеседника в оба уха по центру, избавляя от неприятного эффекта давления на уши и пропадания баса.
-            - **🎚 Стерео-баланс и 3D-панорама:**
-              - Слайдер позиционирования звука собеседника (от 100% Влево до 100% Вправо) с быстрой центровкой.
-            - **✨ Кнопки быстрых пресетов:**
-              - Стерео (L+R), Только Левый (L), Только Правый (R) и Антипротивофаза.
+            - **🎧 Поканальное управление аудио (Левое и правое ухо):**
+              - Простое и удобное раздельное выключение левого и правого канала/уха для голоса и медиафайлов каждого пользователя в его свойствах.
+              - Удалены неработающие промежуточные режимы сведения.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.6-source.zip
+            TeamTalkNext-5.27.7-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

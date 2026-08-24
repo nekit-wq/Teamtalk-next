@@ -18,133 +18,18 @@
             <Button android:textSize="13sp" android:id="@+id/defVoiceVolBtn" android:paddingTop="4dp" android:paddingBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/default_" />
         </LinearLayout>
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_mutevoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_mute_voice" />
-        
-        <!-- Audio Channels & Stereo Control Section -->
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
-        <TextView android:textSize="14sp" android:textStyle="bold" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_audio_channels" />
-        
         <androidx.appcompat.widget.SwitchCompat 
             android:id="@+id/user_voice_left_speaker_switch" 
             android:padding="4dp" 
             android:layout_width="match_parent" 
             android:layout_height="wrap_content" 
             android:text="@string/user_prop_voice_left_speaker" />
-            
         <androidx.appcompat.widget.SwitchCompat 
             android:id="@+id/user_voice_right_speaker_switch" 
             android:padding="4dp" 
             android:layout_width="match_parent" 
             android:layout_height="wrap_content" 
             android:text="@string/user_prop_voice_right_speaker" />
-
-        <LinearLayout 
-            android:orientation="horizontal" 
-            android:layout_width="match_parent" 
-            android:layout_height="wrap_content" 
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp">
-            
-            <Button 
-                android:id="@+id/btn_preset_stereo"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textSize="11sp"
-                android:text="@string/user_prop_preset_stereo"
-                android:layout_marginEnd="2dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:minHeight="0dp" />
-                
-            <Button 
-                android:id="@+id/btn_preset_left_only"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textSize="11sp"
-                android:text="@string/user_prop_preset_left_only"
-                android:layout_marginEnd="2dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:minHeight="0dp" />
-                
-            <Button 
-                android:id="@+id/btn_preset_right_only"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textSize="11sp"
-                android:text="@string/user_prop_preset_right_only"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:minHeight="0dp" />
-        </LinearLayout>
-
-        <Button 
-            android:id="@+id/btn_preset_antiphase_fix"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:text="@string/user_prop_preset_mono_fix"
-            android:layout_marginTop="2dp"
-            android:layout_marginBottom="6dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:minHeight="0dp" />
-
-        <LinearLayout 
-            android:layout_width="match_parent" 
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingTop="2dp">
-            
-            <TextView 
-                android:id="@+id/user_pan_title"
-                android:textSize="13sp" 
-                android:textStyle="bold" 
-                android:padding="4dp" 
-                android:layout_width="0dp" 
-                android:layout_height="wrap_content" 
-                android:layout_weight="1"
-                android:text="@string/user_prop_pan_title" />
-
-            <TextView 
-                android:id="@+id/user_pan_value_text"
-                android:textSize="12sp" 
-                android:textColor="@color/colorAccent"
-                android:paddingEnd="4dp"
-                android:layout_width="wrap_content" 
-                android:layout_height="wrap_content" 
-                android:text="@string/user_prop_pan_center" />
-        </LinearLayout>
-
-        <LinearLayout 
-            android:gravity="center_vertical" 
-            android:orientation="horizontal" 
-            android:layout_width="match_parent" 
-            android:layout_height="wrap_content" 
-            android:paddingStart="4dp">
-            
-            <SeekBar 
-                android:id="@+id/user_pan_voiceSeekBar" 
-                android:layout_width="0dp" 
-                android:layout_height="wrap_content" 
-                android:layout_weight="1.0" 
-                android:max="200"
-                android:progress="100"
-                android:contentDescription="@string/user_prop_pan_title" />
-                
-            <Button 
-                android:textSize="13sp" 
-                android:id="@+id/defVoicePanBtn" 
-                android:paddingTop="4dp" 
-                android:paddingBottom="4dp" 
-                android:layout_width="wrap_content" 
-                android:layout_height="wrap_content" 
-                android:minHeight="0dp" 
-                android:text="@string/user_prop_pan_center" />
-        </LinearLayout>
 
         <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
         <TextView android:textSize="14sp" android:textStyle="bold" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_media_volume" />

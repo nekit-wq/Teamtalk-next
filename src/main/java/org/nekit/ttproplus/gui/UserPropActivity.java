@@ -146,13 +146,6 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         final SwitchCompat voiceMute = findViewById(R.id.user_mutevoiceSwitch);
         final SwitchCompat voiceLeftSpeakerSwitch = findViewById(R.id.user_voice_left_speaker_switch);
         final SwitchCompat voiceRightSpeakerSwitch = findViewById(R.id.user_voice_right_speaker_switch);
-        final Button btnPresetStereo = findViewById(R.id.btn_preset_stereo);
-        final Button btnPresetLeftOnly = findViewById(R.id.btn_preset_left_only);
-        final Button btnPresetRightOnly = findViewById(R.id.btn_preset_right_only);
-        final Button btnPresetAntiphaseFix = findViewById(R.id.btn_preset_antiphase_fix);
-        final SeekBar voicePanSeekBar = findViewById(R.id.user_pan_voiceSeekBar);
-        final TextView voicePanValText = findViewById(R.id.user_pan_value_text);
-        final Button defVoicePanBtn = findViewById(R.id.defVoicePanBtn);
         final SeekBar mediaVol = findViewById(R.id.user_vol_mediaSeekBar);
         final Button defMfBtn = findViewById(R.id.defMfVolBtn);
         final SwitchCompat mediaMute = findViewById(R.id.user_mutemediaSwitch);
@@ -260,70 +253,6 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         mediaRightSpeakerSwitch.setOnCheckedChangeListener((btn, checked) -> {
             boolean left = mediaLeftSpeakerSwitch.isChecked();
             getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, left, checked);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
-        });
-
-        btnPresetStereo.setOnClickListener(v -> {
-            voiceLeftSpeakerSwitch.setChecked(true);
-            voiceRightSpeakerSwitch.setChecked(true);
-            getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_VOICE, true, true);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
-        });
-
-        btnPresetLeftOnly.setOnClickListener(v -> {
-            voiceLeftSpeakerSwitch.setChecked(true);
-            voiceRightSpeakerSwitch.setChecked(false);
-            getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_VOICE, true, false);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
-        });
-
-        btnPresetRightOnly.setOnClickListener(v -> {
-            voiceLeftSpeakerSwitch.setChecked(false);
-            voiceRightSpeakerSwitch.setChecked(true);
-            getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_VOICE, false, true);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
-        });
-
-        btnPresetAntiphaseFix.setOnClickListener(v -> {
-            voiceLeftSpeakerSwitch.setChecked(true);
-            voiceRightSpeakerSwitch.setChecked(false);
-            getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_VOICE, true, false);
-            getClient().enable3DSoundPositioning(true);
-            getClient().setUserPosition(user.nUserID, StreamType.STREAMTYPE_VOICE, 0.0f, 0.0f, 0.0f);
-            voicePanSeekBar.setProgress(100);
-            voicePanValText.setText(R.string.user_prop_pan_center);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
-            Toast.makeText(this, R.string.toast_antiphase_fixed, Toast.LENGTH_SHORT).show();
-        });
-
-        voicePanSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int offset = progress - 100;
-                if (offset == 0) {
-                    voicePanValText.setText(R.string.user_prop_pan_center);
-                } else if (offset < 0) {
-                    voicePanValText.setText(getString(R.string.user_prop_pan_left_fmt, Math.abs(offset)));
-                } else {
-                    voicePanValText.setText(getString(R.string.user_prop_pan_right_fmt, offset));
-                }
-                if (fromUser) {
-                    float panX = (float) offset / 50.0f;
-                    getClient().enable3DSoundPositioning(true);
-                    getClient().setUserPosition(user.nUserID, StreamType.STREAMTYPE_VOICE, panX, 0.0f, 0.0f);
-                    getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
-                }
-            }
-
-            @Override public void onStartTrackingTouch(SeekBar arg0) {}
-            @Override public void onStopTrackingTouch(SeekBar arg0) {}
-        });
-
-        defVoicePanBtn.setOnClickListener(v -> {
-            voicePanSeekBar.setProgress(100);
-            voicePanValText.setText(R.string.user_prop_pan_center);
-            getClient().enable3DSoundPositioning(true);
-            getClient().setUserPosition(user.nUserID, StreamType.STREAMTYPE_VOICE, 0.0f, 0.0f, 0.0f);
             getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
         });
 

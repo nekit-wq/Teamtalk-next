@@ -1036,20 +1036,9 @@ By: %3$s"</string>
     <string name="net_stats_reset_toast">Network statistics reset</string>
     <string name="net_report_copied_toast">Diagnostic report copied to clipboard</string>
 
-    <!-- User Audio Channel & Stereo Positioning -->
-    <string name="user_prop_title_audio_channels">Audio Channels &amp; Stereo</string>
-    <string name="user_prop_voice_left_speaker">Left speaker (L channel)</string>
-    <string name="user_prop_voice_right_speaker">Right speaker (R channel)</string>
-    <string name="user_prop_preset_stereo">Stereo (L+R)</string>
-    <string name="user_prop_preset_left_only">Left Only</string>
-    <string name="user_prop_preset_right_only">Right Only</string>
-    <string name="user_prop_preset_mono_fix">⚡ Fix Antiphase / Mono</string>
-    <string name="user_prop_pan_title">Stereo Balance (Pan)</string>
-    <string name="user_prop_pan_center">Center</string>
-    <string name="user_prop_pan_left_fmt">Left %d%%</string>
-    <string name="user_prop_pan_right_fmt">Right %d%%</string>
-    <string name="user_prop_media_channels_title">Media Audio Channels</string>
-    <string name="user_prop_media_left_speaker">Media: Left speaker (L)</string>
-    <string name="user_prop_media_right_speaker">Media: Right speaker (R)</string>
-    <string name="toast_antiphase_fixed">Antiphase fixed: routed clean mono channel</string>
+    <!-- User Audio Channel Routing -->
+    <string name="user_prop_voice_left_speaker">Left ear / channel (L)</string>
+    <string name="user_prop_voice_right_speaker">Right ear / channel (R)</string>
+    <string name="user_prop_media_left_speaker">Media: Left ear / channel (L)</string>
+    <string name="user_prop_media_right_speaker">Media: Right ear / channel (R)</string>
 </resources>
