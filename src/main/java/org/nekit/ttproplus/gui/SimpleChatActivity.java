@@ -24,8 +24,10 @@ import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
+import org.nekit.ttproplus.data.ChatHistoryDbHelper;
 import org.nekit.ttproplus.data.MyTextMessage;
 import org.nekit.ttproplus.data.TextMessageAdapter;
+import org.nekit.ttproplus.gui.Utils;
 
 public class SimpleChatActivity extends AppCompatActivity 
         implements TeamTalkConnectionListener, ClientEventListener.OnCmdUserTextMessageListener {
@@ -166,9 +168,13 @@ public class SimpleChatActivity extends AppCompatActivity
                 textmsg.szMessage = msgText;
 
                 boolean sent = true;
+                String srvKey = service.getServerEntry() != null ? (service.getServerEntry().ipaddr + ":" + service.getServerEntry().tcpport) : "";
+                User targetUser = service.getUsers().get(userid);
+                String targetName = targetUser != null ? Utils.getDisplayName(getBaseContext(), targetUser) : "";
                 for (MyTextMessage m : textmsg.split()) {
                     sent = sent && ttclient.doTextMessage(m) > 0;
                     service.getUserTextMsgs(userid).add(m);
+                    ChatHistoryDbHelper.getInstance(SimpleChatActivity.this).saveOutgoingMessage(srvKey, m, name, targetName, "");
                 }
                 if (sent) {
                     send_msg.setText("");

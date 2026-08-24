@@ -61,6 +61,18 @@
         app:showAsAction="never"
         android:title="@string/action_banned_users"/>
     <item
+        android:id="@+id/action_chat_history"
+        android:orderInCategory="105"
+        app:showAsAction="never"
+        android:title="@string/action_chat_history"/>
+
+    <item
+        android:id="@+id/action_network_monitor"
+        android:orderInCategory="106"
+        app:showAsAction="never"
+        android:title="@string/action_network_monitor"/>
+
+    <item
         android:id="@+id/action_server_stats"
         android:orderInCategory="110"
         app:showAsAction="never"

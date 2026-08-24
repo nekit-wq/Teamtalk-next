@@ -61,7 +61,10 @@ import dk.bearware.User;
 import dk.bearware.UserAccount;
 import dk.bearware.events.ClientEventListener;
 import dk.bearware.events.TeamTalkEventHandler;
+import org.nekit.ttproplus.data.ChatHistoryDbHelper;
+import org.nekit.ttproplus.data.ChatMessageEntry;
 import org.nekit.ttproplus.gui.Utils;
+import java.util.List;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -1255,7 +1258,23 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public Vector<MyTextMessage> getUserTextMsgs(int userid) {
         if (this.usertxtmsgs.get(Integer.valueOf(userid)) == null) {
-            this.usertxtmsgs.put(Integer.valueOf(userid), new Vector<>());
+            Vector<MyTextMessage> msgs = new Vector<>();
+            this.usertxtmsgs.put(Integer.valueOf(userid), msgs);
+            if (this.ttserver != null) {
+                String srvKey = this.ttserver.ipaddr + ":" + this.ttserver.tcpport;
+                List<ChatMessageEntry> history = ChatHistoryDbHelper.getInstance(getApplicationContext())
+                        .getRecentMessages(srvKey, ChatMessageEntry.TYPE_PRIVATE, 0, userid, 50);
+                for (ChatMessageEntry entry : history) {
+                    MyTextMessage m = new MyTextMessage(entry.getSenderDisplayName());
+                    m.nMsgType = entry.getMsgType();
+                    m.nFromUserID = entry.getFromUserId();
+                    m.nToUserID = entry.getToUserId();
+                    m.szFromUsername = entry.getFromUsername();
+                    m.szMessage = entry.getMessageText();
+                    m.time = new Date(entry.getTimestamp());
+                    msgs.add(m);
+                }
+            }
         }
         Vector<MyTextMessage> msgs = this.usertxtmsgs.get(Integer.valueOf(userid));
         if (msgs.size() > this.HISTORY_USER_MSG_MAX) {
@@ -1265,6 +1284,22 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     public Vector<MyTextMessage> getChatLogTextMsgs() {
+        if (this.chatlogtxtmsgs.isEmpty() && this.ttserver != null) {
+            String srvKey = this.ttserver.ipaddr + ":" + this.ttserver.tcpport;
+            int chanId = this.mychannel != null ? this.mychannel.nChannelID : 0;
+            List<ChatMessageEntry> history = ChatHistoryDbHelper.getInstance(getApplicationContext())
+                    .getRecentMessages(srvKey, ChatMessageEntry.TYPE_CHANNEL, chanId, 0, 50);
+            for (ChatMessageEntry entry : history) {
+                MyTextMessage m = new MyTextMessage(entry.getSenderDisplayName());
+                m.nMsgType = entry.getMsgType();
+                m.nChannelID = entry.getChannelId();
+                m.nFromUserID = entry.getFromUserId();
+                m.szFromUsername = entry.getFromUsername();
+                m.szMessage = entry.getMessageText();
+                m.time = new Date(entry.getTimestamp());
+                this.chatlogtxtmsgs.add(m);
+            }
+        }
         if (this.chatlogtxtmsgs.size() > this.HISTORY_CHATLOG_MSG_MAX) {
             this.chatlogtxtmsgs.remove(0);
         }
@@ -1332,7 +1367,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
         String fullClientName;
         if (TextUtils.isEmpty(clientName)) {
-            fullClientName = "TeamTalk Next " + AppInfo.getVersion(getApplicationContext());
+            fullClientName = "TeamTalk Next";
         } else {
             fullClientName = clientName.trim();
         }
@@ -1721,6 +1756,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
         User user = getUsers().get(Integer.valueOf(textmessage.nFromUserID));
         MyTextMessage newmsg = new MyTextMessage(textmessage, user == null ? "" : Utils.getDisplayName(getBaseContext(), user));
+
+        String srvKey = this.ttserver != null ? (this.ttserver.ipaddr + ":" + this.ttserver.tcpport) : "";
+        String chanName = this.mychannel != null ? this.mychannel.szName : "";
+        ChatHistoryDbHelper.getInstance(getApplicationContext()).saveIncomingMessage(srvKey, textmessage, newmsg.szNickName, chanName);
+
         switch (textmessage.nMsgType) {
             case 1:
                 getUserTextMsgs(textmessage.nFromUserID).add(newmsg);

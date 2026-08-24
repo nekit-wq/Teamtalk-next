@@ -3,7 +3,8 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     <ListView android:id="@+id/channel_im_listview" android:layout_width="match_parent" android:layout_height="0dp" android:divider="@null" android:dividerHeight="0dp" android:layout_weight="1.0" />
     <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" />
-    <LinearLayout android:orientation="horizontal" android:background="@color/surfaceColor" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@color/surfaceColor" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <ImageButton android:id="@+id/channel_im_historybtn" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_chat_history" android:tint="@color/textSecondary" android:contentDescription="@string/action_chat_history" android:layout_marginEnd="6dp" />
         <EditText android:id="@+id/channel_im_edittext" android:background="@drawable/edit_text_background" android:padding="8dp" android:layout_width="0dp" android:layout_height="wrap_content" android:hint="@string/editmsg" android:singleLine="true" android:layout_weight="1.0" android:inputType="textCapSentences" android:imeOptions="actionSend" />
         <Button android:textSize="14sp" android:id="@+id/channel_im_sendbtn" android:paddingTop="8dp" android:paddingBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/button_send" android:paddingStart="20dp" android:paddingEnd="20dp" android:layout_marginStart="8dp" />
     </LinearLayout>

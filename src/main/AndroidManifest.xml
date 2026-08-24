@@ -242,6 +242,18 @@
             android:theme="@style/AppTheme"
             android:exported="false" />
 
+        <activity
+            android:name=".gui.ChatHistoryActivity"
+            android:label="@string/title_activity_chat_history"
+            android:theme="@style/AppTheme"
+            android:exported="false" />
+
+        <activity
+            android:name=".gui.NetworkMonitorActivity"
+            android:label="@string/title_activity_network_monitor"
+            android:theme="@style/AppTheme"
+            android:exported="false" />
+
         <receiver android:name=".gui.MediaButtonEventReceiver"
             android:enabled="true"
             android:exported="true">

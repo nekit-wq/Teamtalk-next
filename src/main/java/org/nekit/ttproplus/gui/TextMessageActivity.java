@@ -47,6 +47,7 @@ import dk.bearware.User;
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
+import org.nekit.ttproplus.data.ChatHistoryDbHelper;
 import org.nekit.ttproplus.data.MyTextMessage;
 import org.nekit.ttproplus.data.TextMessageAdapter;
 import dk.bearware.events.ClientEventListener;
@@ -160,9 +161,13 @@ extends AppCompatActivity implements TeamTalkConnectionListener, ClientEventList
             textmsg.szMessage = newmsg;
 
             boolean sent = true;
+            String srvKey = service.getServerEntry() != null ? (service.getServerEntry().ipaddr + ":" + service.getServerEntry().tcpport) : "";
+            User targetUser = service.getUsers().get(userid);
+            String targetName = targetUser != null ? Utils.getDisplayName(getBaseContext(), targetUser) : "";
             for (MyTextMessage m : textmsg.split()) {
                 sent = sent && ttclient.doTextMessage(m) > 0;
                 service.getUserTextMsgs(userid).add(m);
+                ChatHistoryDbHelper.getInstance(TextMessageActivity.this).saveOutgoingMessage(srvKey, m, name, targetName, "");
             }
             if (sent) {
                 send_msg.setText("");

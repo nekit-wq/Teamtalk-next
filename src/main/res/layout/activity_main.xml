@@ -6,7 +6,16 @@
     <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" />
     <ProgressBar android:id="@+id/mic_activity_bar" android:visibility="gone" android:layout_width="match_parent" android:layout_height="8dp" android:max="100" android:progress="0" style="?android:progressBarStyleHorizontal" />
     <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@color/surfaceColor" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="8dp">
+        <LinearLayout
+            android:id="@+id/network_stats_container"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:padding="2dp"
+            android:background="?android:selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
             <TextView android:textSize="13sp" android:textStyle="bold" android:id="@+id/connectionstat_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:importantForAccessibility="yes" />
             <TextView android:textSize="13sp" android:id="@+id/pingstat_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:importantForAccessibility="yes" />
             <TextView android:textSize="13sp" android:id="@+id/totalstat_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:importantForAccessibility="yes" />

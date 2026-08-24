@@ -182,7 +182,7 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         }
 
         String fullDisplay;
-        if (!verText.isEmpty() && !clientNameText.contains(verText)) {
+        if (!verText.isEmpty() && !clientNameText.matches(".*\\d+\\.\\d+.*")) {
             fullDisplay = clientNameText + " " + verText;
         } else {
             fullDisplay = clientNameText;

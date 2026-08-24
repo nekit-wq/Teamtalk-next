@@ -391,11 +391,9 @@ public class OnlineUsersActivity extends AppCompatActivity implements
                 if (!user.szClientName.isEmpty()) {
                     if (channelInfo.length() > 0) channelInfo.append(" · ");
                     channelInfo.append(user.szClientName);
-                    if (user.uVersion > 0) {
+                    if (user.uVersion > 0 && !user.szClientName.matches(".*\\d+\\.\\d+.*")) {
                         String clientVersion = ((user.uVersion >> 16) & 0xFF) + "." + ((user.uVersion >> 8) & 0xFF) + "." + (user.uVersion & 0xFF);
-                        if (!user.szClientName.contains(clientVersion)) {
-                            channelInfo.append(" ").append(clientVersion);
-                        }
+                        channelInfo.append(" ").append(clientVersion);
                     }
                 }
 

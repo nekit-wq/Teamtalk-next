@@ -308,6 +308,14 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 mMediaPlayer.start();
             }
         }
+
+        View netStatsContainer = findViewById(R.id.network_stats_container);
+        if (netStatsContainer != null) {
+            netStatsContainer.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, NetworkMonitorActivity.class);
+                startActivity(intent);
+            });
+        }
     }
 
     @Override
@@ -366,6 +374,10 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         if (bannedItem != null) bannedItem.setEnabled(canBan).setVisible(canBan && isLeaveable);
         MenuItem statsItem = menu.findItem(R.id.action_server_stats);
         if (statsItem != null) statsItem.setEnabled(hasUserAccounts && isLeaveable).setVisible(hasUserAccounts && isLeaveable);
+        MenuItem chatHistoryItem = menu.findItem(R.id.action_chat_history);
+        if (chatHistoryItem != null) chatHistoryItem.setEnabled(true).setVisible(true);
+        MenuItem netMonItem = menu.findItem(R.id.action_network_monitor);
+        if (netMonItem != null) netMonItem.setEnabled(true).setVisible(true);
         boolean isRecording = getService() != null && getService().isRecording();
         MenuItem startRecItem = menu.findItem(R.id.action_start_recording);
         if (startRecItem != null) startRecItem.setEnabled(isLeaveable && !isRecording).setVisible(isLeaveable && !isRecording);
@@ -485,6 +497,16 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         if (itemId == R.id.action_server_stats) {
             Intent intent6 = new Intent(this, (Class<?>) ServerStatsActivity.class);
             startActivity(intent6);
+            return true;
+        }
+        if (itemId == R.id.action_chat_history) {
+            Intent intentHistory = new Intent(this, (Class<?>) ChatHistoryActivity.class);
+            startActivity(intentHistory);
+            return true;
+        }
+        if (itemId == R.id.action_network_monitor) {
+            Intent intentNet = new Intent(this, (Class<?>) NetworkMonitorActivity.class);
+            startActivity(intentNet);
             return true;
         }
         if (itemId == R.id.action_settings) {
@@ -1404,6 +1426,18 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             if (chatlog != null && this.mainActivity != null && this.mainActivity.getTextMessagesAdapter() != null) {
                 chatlog.setTranscriptMode(2);
                 chatlog.setAdapter((ListAdapter) this.mainActivity.getTextMessagesAdapter());
+            }
+            ImageButton historyBtn = (ImageButton) rootView.findViewById(R.id.channel_im_historybtn);
+            if (historyBtn != null) {
+                historyBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (getActivity() != null) {
+                            Intent intent = new Intent(getActivity(), ChatHistoryActivity.class);
+                            startActivity(intent);
+                        }
+                    }
+                });
             }
             Button sendBtn = (Button) rootView.findViewById(R.id.channel_im_sendbtn);
             if (sendBtn != null) {
