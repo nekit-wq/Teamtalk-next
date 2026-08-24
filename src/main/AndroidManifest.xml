@@ -254,6 +254,12 @@
             android:theme="@style/AppTheme"
             android:exported="false" />
 
+        <activity
+            android:name=".gui.RecordingsActivity"
+            android:label="@string/title_activity_recordings"
+            android:theme="@style/AppTheme"
+            android:exported="false" />
+
         <receiver android:name=".gui.MediaButtonEventReceiver"
             android:enabled="true"
             android:exported="true">

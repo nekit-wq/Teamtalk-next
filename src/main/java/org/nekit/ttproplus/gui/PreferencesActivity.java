@@ -663,6 +663,17 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_recording);
+            Preference openRecPref = findPreference("pref_open_recordings_manager");
+            if (openRecPref != null) {
+                openRecPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        startActivity(new Intent(getActivity(), RecordingsActivity.class));
+                        return true;
+                    }
+                });
+            }
+
             Preference pathPref = findPreference(Preferences.PREF_RECORDING_PATH);
             if (pathPref != null) {
                 updatePathSummary(pathPref);

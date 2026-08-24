@@ -1043,4 +1043,45 @@
     <string name="user_prop_voice_right_speaker">Правое ухо / канал (R)</string>
     <string name="user_prop_media_left_speaker">Медиа: Левое ухо / канал (L)</string>
     <string name="user_prop_media_right_speaker">Медиа: Правое ухо / канал (R)</string>
+
+    <!-- Настройки и функции записи -->
+    <string name="title_activity_recordings">Записи</string>
+    <string name="action_recordings">Записи</string>
+    <string name="pref_recording_category_general">Хранилище и структура</string>
+    <string name="pref_recording_category_automation">Автоматизация и режимы</string>
+    <string name="pref_recording_category_notifications">Уведомления и диалоги</string>
+    <string name="pref_open_recordings_manager_title">Открыть менеджер записей</string>
+    <string name="pref_open_recordings_manager_summary">Просмотр, прослушивание, отправка и управление аудиозаписями</string>
+    <string name="pref_recording_folder_structure_title">Организация по папкам</string>
+    <string name="pref_recording_folder_structure_summary">Сортировка файлов по папкам серверов и комнат</string>
+    <string name="pref_recording_session_mode_title">Режим записи при смене комнат</string>
+    <string name="pref_recording_session_mode_summary">Поведение записи при переходе между каналами</string>
+    <string name="pref_recording_silence_pause_title">Авто-пауза при тишине</string>
+    <string name="pref_recording_silence_pause_summary">Приостанавливать запись, когда в канале никто не говорит</string>
+    <string name="pref_recording_multitrack_title">Мультитрек (отдельные дорожки)</string>
+    <string name="pref_recording_multitrack_summary">Записывать участников в отдельные дорожки параллельно с общим миксом</string>
+    <string name="recording_silence_paused">Запись приостановлена (тишина)</string>
+    <string name="recording_silence_resumed">Обнаружен голос, запись возобновлена</string>
+    <string name="recording_session_resumed">Запись продолжена в канале: %1$s</string>
+
+    <!-- Менеджер записей -->
+    <string name="recordings_search_hint">Поиск по записям…</string>
+    <string name="recordings_count_format">Записей: %1$d (%2$s)</string>
+    <string name="recordings_empty">Записей пока нет</string>
+    <string name="recordings_filter_all">Все записи</string>
+    <string name="recordings_filter_server">По серверам</string>
+    <string name="recordings_filter_channel">По комнатам</string>
+    <string name="recordings_action_play">Воспроизвести</string>
+    <string name="recordings_action_pause">Пауза</string>
+    <string name="recordings_action_share">Поделиться</string>
+    <string name="recordings_action_rename">Переименовать</string>
+    <string name="recordings_action_delete">Удалить</string>
+    <string name="recordings_action_open_folder">Открыть в проводнике</string>
+    <string name="recordings_delete_title">Удаление записи</string>
+    <string name="recordings_delete_message">Вы действительно хотите удалить файл «%1$s»?</string>
+    <string name="recordings_deleted_toast">Запись удалена</string>
+    <string name="recordings_rename_title">Переименование записи</string>
+    <string name="recordings_rename_hint">Введите новое имя файла</string>
+    <string name="recordings_now_playing">Сейчас играет:</string>
+    <string name="recordings_play_error">Не удалось воспроизвести аудиофайл</string>
 </resources>

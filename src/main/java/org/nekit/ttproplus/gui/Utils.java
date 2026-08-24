@@ -984,7 +984,14 @@ public class Utils {
         return intent;
     }
 
-    public static File getRecordingsDirectory(Context context) {
+    public static String sanitizeFilename(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "General";
+        }
+        return name.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
+    }
+
+    public static File getRecordingsBaseDirectory(Context context) {
         if (context == null) {
             File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             return new File(downloadDir, "TT Recordings");
@@ -1014,5 +1021,36 @@ public class Utils {
             fallbackDir.mkdirs();
         }
         return fallbackDir;
+    }
+
+    public static File getRecordingsDirectory(Context context) {
+        return getRecordingsBaseDirectory(context);
+    }
+
+    public static File getRecordingsDirectory(Context context, String serverName, String channelName) {
+        File baseDir = getRecordingsBaseDirectory(context);
+        if (context == null) {
+            return baseDir;
+        }
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String mode = prefs.getString(Preferences.PREF_RECORDING_FOLDER_STRUCTURE, "server_channel");
+        File targetDir = baseDir;
+
+        if ("server_channel".equals(mode)) {
+            String safeServer = sanitizeFilename(serverName);
+            String safeChannel = sanitizeFilename(channelName);
+            targetDir = new File(new File(baseDir, safeServer), safeChannel);
+        } else if ("server".equals(mode)) {
+            String safeServer = sanitizeFilename(serverName);
+            targetDir = new File(baseDir, safeServer);
+        } else if ("date".equals(mode)) {
+            SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy-MM", Locale.US);
+            targetDir = new File(baseDir, monthFormat.format(new Date()));
+        }
+
+        if (!targetDir.exists()) {
+            targetDir.mkdirs();
+        }
+        return targetDir.exists() ? targetDir : baseDir;
     }
 }

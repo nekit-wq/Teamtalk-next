@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="?android:selectableItemBackground"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/rec_item_icon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/audio_on"
+            android:tint="@color/colorAccent"
+            android:contentDescription="@string/title_activity_recordings"
+            android:layout_marginEnd="12dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/rec_item_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Channel_2026-08-25_00-00-00.ogg"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/textPrimary"
+                android:ellipsize="middle"
+                android:singleLine="true" />
+
+            <TextView
+                android:id="@+id/rec_item_folder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Server / Channel"
+                android:textSize="12sp"
+                android:textColor="@color/textSecondary"
+                android:layout_marginTop="2dp"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/rec_item_details"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="25.08.2026 00:00 · 1.2 MB"
+                android:textSize="11sp"
+                android:textColor="@color/textTertiary"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/rec_btn_play_item"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:src="@drawable/sound_on"
+            android:tint="@color/colorPrimary"
+            android:contentDescription="@string/recordings_action_play"
+            android:layout_marginStart="4dp" />
+
+        <ImageButton
+            android:id="@+id/rec_btn_share_item"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_file"
+            android:tint="@color/textSecondary"
+            android:contentDescription="@string/recordings_action_share"
+            android:layout_marginStart="2dp" />
+
+        <ImageButton
+            android:id="@+id/rec_btn_more_item"
+            android:layout_width="36dp"
+            android:layout_height="40dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:src="@drawable/wrench"
+            android:tint="@color/textSecondary"
+            android:contentDescription="@string/action_edit"
+            android:layout_marginStart="2dp" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/dividerColor"
+        android:layout_marginTop="10dp" />
+
+</LinearLayout>

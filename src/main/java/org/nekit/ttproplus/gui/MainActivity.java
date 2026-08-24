@@ -386,6 +386,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             stopRecItem.setEnabled(isLeaveable && isRecording);
             stopRecItem.setVisible(isLeaveable && isRecording);
         }
+        MenuItem recItem = menu.findItem(R.id.action_recordings);
+        if (recItem != null) recItem.setEnabled(true).setVisible(true);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -526,6 +528,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 showRecordingCompleteDialog(recordedFile);
                 return true;
             }
+            return true;
+        }
+        if (itemId == R.id.action_recordings) {
+            Intent intentRec = new Intent(this, (Class<?>) RecordingsActivity.class);
+            startActivity(intentRec);
             return true;
         }
         if (itemId == R.id.action_online_users) {

@@ -1,8 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <Preference android:title="@string/pref_recording_path_title" android:key="recording_path" android:summary="@string/pref_recording_path_summary" />
-    <CheckBoxPreference android:title="@string/pref_recording_show_dialog_title" android:key="recording_show_dialog_after" android:summary="@string/pref_recording_show_dialog_summary" android:defaultValue="true" />
-    <CheckBoxPreference android:title="@string/pref_recording_show_toast_title" android:key="recording_show_toast_notifications" android:summary="@string/pref_recording_show_toast_summary" android:defaultValue="true" />
-    <CheckBoxPreference android:title="@string/pref_auto_record_conversations_title" android:key="auto_record_conversations" android:summary="@string/pref_auto_record_conversations_summary" android:defaultValue="false" />
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_recording_category_general">
+        <Preference
+            android:key="pref_open_recordings_manager"
+            android:title="@string/pref_open_recordings_manager_title"
+            android:summary="@string/pref_open_recordings_manager_summary" />
+
+        <Preference
+            android:key="recording_path"
+            android:title="@string/pref_recording_path_title"
+            android:summary="@string/pref_recording_path_summary" />
+
+        <ListPreference
+            android:key="recording_folder_structure"
+            android:title="@string/pref_recording_folder_structure_title"
+            android:summary="@string/pref_recording_folder_structure_summary"
+            android:entries="@array/pref_recording_folder_structure_entries"
+            android:entryValues="@array/pref_recording_folder_structure_values"
+            android:defaultValue="server_channel" />
+
+        <ListPreference
+            android:key="recording_session_mode"
+            android:title="@string/pref_recording_session_mode_title"
+            android:summary="@string/pref_recording_session_mode_summary"
+            android:entries="@array/pref_recording_session_mode_entries"
+            android:entryValues="@array/pref_recording_session_mode_values"
+            android:defaultValue="channel_split" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_recording_category_automation">
+        <CheckBoxPreference
+            android:key="auto_record_conversations"
+            android:title="@string/pref_auto_record_conversations_title"
+            android:summary="@string/pref_auto_record_conversations_summary"
+            android:defaultValue="false" />
+
+        <ListPreference
+            android:key="recording_silence_pause"
+            android:title="@string/pref_recording_silence_pause_title"
+            android:summary="@string/pref_recording_silence_pause_summary"
+            android:entries="@array/pref_recording_silence_pause_entries"
+            android:entryValues="@array/pref_recording_silence_pause_values"
+            android:defaultValue="0" />
+
+        <CheckBoxPreference
+            android:key="recording_multitrack"
+            android:title="@string/pref_recording_multitrack_title"
+            android:summary="@string/pref_recording_multitrack_summary"
+            android:defaultValue="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_recording_category_notifications">
+        <CheckBoxPreference
+            android:key="recording_show_dialog_after"
+            android:title="@string/pref_recording_show_dialog_title"
+            android:summary="@string/pref_recording_show_dialog_summary"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="recording_show_toast_notifications"
+            android:title="@string/pref_recording_show_toast_title"
+            android:summary="@string/pref_recording_show_toast_summary"
+            android:defaultValue="true" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

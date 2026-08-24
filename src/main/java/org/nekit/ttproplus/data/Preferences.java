@@ -80,6 +80,10 @@ public class Preferences {
             PREF_RECORDING_FORMAT = "recording_format",
             PREF_RECORDING_MP3_BITRATE = "recording_mp3_bitrate",
             PREF_RECORDING_PATH = "recording_path",
+            PREF_RECORDING_FOLDER_STRUCTURE = "recording_folder_structure",
+            PREF_RECORDING_SESSION_MODE = "recording_session_mode",
+            PREF_RECORDING_SILENCE_PAUSE = "recording_silence_pause",
+            PREF_RECORDING_MULTITRACK = "recording_multitrack",
             PREF_RECORDING_SHOW_DIALOG = "recording_show_dialog_after",
             PREF_RECORDING_SHOW_TOAST = "recording_show_toast_notifications",
             PREF_RECORDING_AUTO = "auto_record_conversations";

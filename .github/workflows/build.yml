@@ -71,25 +71,32 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.7-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.8-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.7' }}
-          name: "TeamTalk Next v5.27.7"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.8' }}
+          name: "TeamTalk Next v5.27.8"
           body: |
-            ### TeamTalk Next v5.27.7
+            ### TeamTalk Next v5.27.8
 
             #### Список изменений и нововведений:
-            - **Поканальное управление аудио (Левое и правое ухо):**
-              - Простое и удобное раздельное выключение левого и правого канала/уха для голоса и медиафайлов каждого пользователя в его свойствах.
-              - Удалены неработающие промежуточные режимы сведения.
+            - **Встроенный менеджер и плеер записей:**
+              - Новый экран «Записи» с поиском, фильтрацией по серверам и папкам, встроенным аудиоплеером (Play/Pause, перемотка +-5 сек, SeekBar) и кнопками «Поделиться», «Переименовать», «Удалить».
+            - **Каталогизация и структура папок:**
+              - Сортировка записей по папкам серверов и комнат («Сервер / Комната», «Только Сервер», «По датам», «В одну папку»).
+            - **Непрерывная сквозная запись всей сессии:**
+              - Режим непрерывной записи при переходе между комнатами сервера без прерывания сессии.
+            - **Умная авто-пауза при тишине:**
+              - Автоматическая пауза записи при отсутствии голоса в канале (через 10, 20, 30, 60 сек) и мгновенное возобновление при появлении речи.
+            - **Мультитрек:**
+              - Опция записи отдельных дорожек участников в папку сессии.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.7-source.zip
+            TeamTalkNext-5.27.8-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

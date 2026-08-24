@@ -107,9 +107,38 @@
         <item>Light Theme</item>
         <item>System Default</item>
     </string-array>
-    <string-array name="theme_values">
-        <item>dark</item>
-        <item>white</item>
-        <item>auto</item>
+    <string-array name="pref_recording_folder_structure_entries">
+        <item>Server / Channel (recommended)</item>
+        <item>Server only</item>
+        <item>By Date (YYYY-MM)</item>
+        <item>Flat (all in one folder)</item>
+    </string-array>
+    <string-array name="pref_recording_folder_structure_values">
+        <item>server_channel</item>
+        <item>server</item>
+        <item>date</item>
+        <item>flat</item>
+    </string-array>
+    <string-array name="pref_recording_session_mode_entries">
+        <item>Per-channel (separate file per room)</item>
+        <item>Continuous session (auto-resume across rooms)</item>
+    </string-array>
+    <string-array name="pref_recording_session_mode_values">
+        <item>channel_split</item>
+        <item>continuous</item>
+    </string-array>
+    <string-array name="pref_recording_silence_pause_entries">
+        <item>Disabled (record continuously)</item>
+        <item>After 10 seconds of silence</item>
+        <item>After 20 seconds of silence</item>
+        <item>After 30 seconds of silence</item>
+        <item>After 60 seconds of silence</item>
+    </string-array>
+    <string-array name="pref_recording_silence_pause_values">
+        <item>0</item>
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+        <item>60</item>
     </string-array>
 </resources>

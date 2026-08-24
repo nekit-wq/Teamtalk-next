@@ -1041,4 +1041,45 @@ By: %3$s"</string>
     <string name="user_prop_voice_right_speaker">Right ear / channel (R)</string>
     <string name="user_prop_media_left_speaker">Media: Left ear / channel (L)</string>
     <string name="user_prop_media_right_speaker">Media: Right ear / channel (R)</string>
+
+    <!-- Recording Preferences and Features -->
+    <string name="title_activity_recordings">Recordings</string>
+    <string name="action_recordings">Recordings</string>
+    <string name="pref_recording_category_general">Storage &amp; Folders</string>
+    <string name="pref_recording_category_automation">Automation &amp; Modes</string>
+    <string name="pref_recording_category_notifications">Notifications &amp; Dialogs</string>
+    <string name="pref_open_recordings_manager_title">Open Recordings Manager</string>
+    <string name="pref_open_recordings_manager_summary">Browse, listen to, share and manage recorded audio files</string>
+    <string name="pref_recording_folder_structure_title">Folder Organization</string>
+    <string name="pref_recording_folder_structure_summary">Sort files into server and room subfolders</string>
+    <string name="pref_recording_session_mode_title">Multi-room Recording Mode</string>
+    <string name="pref_recording_session_mode_summary">Behavior when switching between channels</string>
+    <string name="pref_recording_silence_pause_title">Silence Auto-Pause</string>
+    <string name="pref_recording_silence_pause_summary">Automatically pause recording when nobody is speaking</string>
+    <string name="pref_recording_multitrack_title">Multitrack Recording</string>
+    <string name="pref_recording_multitrack_summary">Record individual user tracks alongside the main mix</string>
+    <string name="recording_silence_paused">Recording paused (silence)</string>
+    <string name="recording_silence_resumed">Voice detected, recording resumed</string>
+    <string name="recording_session_resumed">Recording resumed in channel: %1$s</string>
+
+    <!-- Recordings Manager Activity -->
+    <string name="recordings_search_hint">Search recordings…</string>
+    <string name="recordings_count_format">Files: %1$d (%2$s)</string>
+    <string name="recordings_empty">No recordings found</string>
+    <string name="recordings_filter_all">All recordings</string>
+    <string name="recordings_filter_server">By server</string>
+    <string name="recordings_filter_channel">By channel</string>
+    <string name="recordings_action_play">Play</string>
+    <string name="recordings_action_pause">Pause</string>
+    <string name="recordings_action_share">Share</string>
+    <string name="recordings_action_rename">Rename</string>
+    <string name="recordings_action_delete">Delete</string>
+    <string name="recordings_action_open_folder">Open in folder</string>
+    <string name="recordings_delete_title">Delete recording</string>
+    <string name="recordings_delete_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="recordings_deleted_toast">Recording deleted</string>
+    <string name="recordings_rename_title">Rename recording</string>
+    <string name="recordings_rename_hint">Enter new file name</string>
+    <string name="recordings_now_playing">Now Playing:</string>
+    <string name="recordings_play_error">Failed to play audio file</string>
 </resources>

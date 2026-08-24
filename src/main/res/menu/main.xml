@@ -88,6 +88,11 @@
         android:orderInCategory="112"
         app:showAsAction="never"
         android:title="@string/action_stop_recording"/>
+    <item
+        android:id="@+id/action_recordings"
+        android:orderInCategory="113"
+        app:showAsAction="never"
+        android:title="@string/action_recordings"/>
 
     <item
         android:id="@+id/action_publishsrv"
