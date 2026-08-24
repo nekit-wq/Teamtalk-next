@@ -1332,7 +1332,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
         String fullClientName;
         if (TextUtils.isEmpty(clientName)) {
-            fullClientName = "TeamTalk Pro+";
+            fullClientName = "TeamTalk Pro+ " + AppInfo.getVersion(getApplicationContext());
         } else {
             fullClientName = clientName.trim();
         }
