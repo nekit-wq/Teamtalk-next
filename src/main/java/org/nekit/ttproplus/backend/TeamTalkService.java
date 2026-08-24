@@ -45,7 +45,6 @@ import dk.bearware.AudioBlock;
 import dk.bearware.AudioFileFormat;
 import dk.bearware.AudioPreprocessor;
 import dk.bearware.Channel;
-import org.nekit.ttproplus.audio.AudioConverter;
 import dk.bearware.ClientErrorMsg;
 import dk.bearware.EncryptionContext;
 import dk.bearware.FileTransfer;
@@ -266,9 +265,6 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     private boolean isRecording = false;
     private volatile boolean manualDisconnect = false;
     private File currentRecordingFile = null;
-    private File targetRecordingFile = null;
-    private boolean isMp3Recording = false;
-    private int targetMp3Bitrate = 128;
     private boolean isInternalAudioRunning = false;
     private String currentStreamPath = "";
     private boolean isStreamingMedia = false;
@@ -701,57 +697,25 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (this.isRecording || this.mychannel == null) {
             return;
         }
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         File dir = Utils.getRecordingsDirectory(getApplicationContext());
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        String format = prefs.getString(Preferences.PREF_RECORDING_FORMAT, "wav");
-        String extension;
-        int audioFormat;
-        this.isMp3Recording = "mp3".equalsIgnoreCase(format);
-
-        if (this.isMp3Recording) {
-            String bitrateStr = prefs.getString(Preferences.PREF_RECORDING_MP3_BITRATE, "128");
-            try {
-                this.targetMp3Bitrate = Integer.parseInt(bitrateStr);
-            } catch (Exception e) {
-                this.targetMp3Bitrate = 128;
-            }
-            extension = ".mp3";
-            audioFormat = AudioFileFormat.AFF_WAVE_FORMAT;
-        } else if ("codec".equalsIgnoreCase(format)) {
-            extension = ".ogg";
-            audioFormat = AudioFileFormat.AFF_CHANNELCODEC_FORMAT;
-        } else {
-            extension = ".wav";
-            audioFormat = AudioFileFormat.AFF_WAVE_FORMAT;
-        }
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
-        String baseName = this.mychannel.szName.replaceAll("[^a-zA-Z0-9_-]", "_") + "_" + sdf.format(new Date());
+        String name = this.mychannel.szName.replaceAll("[^a-zA-Z0-9_-]", "_") + "_" + sdf.format(new Date()) + ".ogg";
+        File file = new File(dir, name);
 
-        File actualFileToRecord;
-        if (this.isMp3Recording) {
-            this.targetRecordingFile = new File(dir, baseName + ".mp3");
-            actualFileToRecord = new File(dir, ".temp_" + System.currentTimeMillis() + "_" + baseName + ".wav");
-        } else {
-            actualFileToRecord = new File(dir, baseName + extension);
-            this.targetRecordingFile = actualFileToRecord;
-        }
-
-        this.currentRecordingFile = actualFileToRecord;
-        this.isRecording = this.ttclient.startRecordingMuxedAudioFile(this.mychannel.audiocodec, actualFileToRecord.getAbsolutePath(), audioFormat);
+        this.currentRecordingFile = file;
+        this.isRecording = this.ttclient.startRecordingMuxedAudioFile(this.mychannel.audiocodec, file.getAbsolutePath(), AudioFileFormat.AFF_CHANNELCODEC_FORMAT);
 
         if (this.isRecording) {
-            Log.d("bearware", "Recording started: " + actualFileToRecord.getAbsolutePath() + " (Target: " + this.targetRecordingFile.getName() + ")");
-            showRecordingToast(getString(R.string.recording_started, new Object[]{this.targetRecordingFile.getName()}));
+            Log.d("bearware", "Recording started: " + file.getAbsolutePath());
+            showRecordingToast(getString(R.string.recording_started, new Object[]{file.getName()}));
         } else {
             Log.e("bearware", "Failed to start recording");
             showRecordingToast(R.string.recording_start_failed);
             this.currentRecordingFile = null;
-            this.targetRecordingFile = null;
-            this.isMp3Recording = false;
         }
     }
 
@@ -761,54 +725,28 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
         this.ttclient.stopRecordingMuxedAudioFile();
         this.isRecording = false;
-        File rawRecordedFile = this.currentRecordingFile;
-        File finalFile = this.targetRecordingFile;
-        boolean wasMp3 = this.isMp3Recording;
-
+        File recordedFile = this.currentRecordingFile;
         this.currentRecordingFile = null;
-        this.targetRecordingFile = null;
-        this.isMp3Recording = false;
 
-        if (rawRecordedFile == null || !rawRecordedFile.exists()) {
-            Log.e("bearware", "Raw recording file does not exist");
+        if (recordedFile == null || !recordedFile.exists()) {
             return null;
         }
 
-        if (rawRecordedFile.length() <= 1024) {
-            Log.d("bearware", "Discarding empty recording (" + rawRecordedFile.length() + " bytes): " + rawRecordedFile.getName());
-            rawRecordedFile.delete();
-            if (finalFile != null && finalFile.exists() && !finalFile.equals(rawRecordedFile)) {
-                finalFile.delete();
-            }
+        if (recordedFile.length() <= 1024) {
+            Log.d("bearware", "Discarding empty recording (" + recordedFile.length() + " bytes): " + recordedFile.getName());
+            recordedFile.delete();
             return null;
-        }
-
-        File resultFile = rawRecordedFile;
-        if (wasMp3 && finalFile != null) {
-            Log.i("bearware", "Converting raw WAV (" + rawRecordedFile.length() + " bytes) to MP3 (" + this.targetMp3Bitrate + " kbps)...");
-            boolean converted = AudioConverter.convertWavToMp3(rawRecordedFile, finalFile, this.targetMp3Bitrate);
-            if (converted && finalFile.exists() && finalFile.length() > 0) {
-                rawRecordedFile.delete();
-                resultFile = finalFile;
-                Log.i("bearware", "MP3 recording saved successfully: " + finalFile.getAbsolutePath() + " (" + finalFile.length() + " bytes)");
-            } else {
-                Log.e("bearware", "MP3 conversion failed, preserving original WAV recording");
-                File fallbackWav = new File(rawRecordedFile.getParentFile(), rawRecordedFile.getName().replace(".temp_", "").replace(".wav", "") + ".wav");
-                if (rawRecordedFile.renameTo(fallbackWav)) {
-                    resultFile = fallbackWav;
-                }
-            }
         }
 
         try {
-            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{resultFile.getAbsolutePath()}, null, null);
+            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{recordedFile.getAbsolutePath()}, null, null);
         } catch (Exception e) {
             Log.e("bearware", "Failed to scan recorded file into media store", e);
         }
 
-        Log.d("bearware", "Recording stopped: " + resultFile.getName());
+        Log.d("bearware", "Recording stopped: " + recordedFile.getName());
         showRecordingToast(R.string.recording_stopped);
-        return resultFile;
+        return recordedFile;
     }
 
     public boolean shouldShowRecordingDialog() {

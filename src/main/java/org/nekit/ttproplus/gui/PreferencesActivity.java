@@ -663,39 +663,17 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_recording);
-            ListPreference formatPref = (ListPreference) findPreference(Preferences.PREF_RECORDING_FORMAT);
-            final Preference bitratePref = findPreference(Preferences.PREF_RECORDING_MP3_BITRATE);
-            if (formatPref != null && bitratePref != null) {
-                bitratePref.setEnabled("mp3".equals(formatPref.getValue()));
-                formatPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() { 
-                    @Override
-                    public final boolean onPreferenceChange(Preference preference, Object obj) {
-                        return PreferencesActivity.RecordingPreferenceFragment.lambda$onCreate$0(bitratePref, preference, obj);
-                    }
-                });
-            }
             Preference pathPref = findPreference(Preferences.PREF_RECORDING_PATH);
             if (pathPref != null) {
                 updatePathSummary(pathPref);
                 pathPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() { 
                     @Override
                     public final boolean onPreferenceClick(Preference preference) {
-                        boolean lambda$onCreate$1;
-                        lambda$onCreate$1 = PreferencesActivity.RecordingPreferenceFragment.this.lambda$onCreate$1(preference);
-                        return lambda$onCreate$1;
+                        PreferencesActivity.RecordingPreferenceFragment.this.showFolderPickerDialog();
+                        return true;
                     }
                 });
             }
-        }
-
-                public static boolean lambda$onCreate$0(Preference bitratePref, Preference preference, Object newValue) {
-            bitratePref.setEnabled("mp3".equals(newValue));
-            return true;
-        }
-
-                public boolean lambda$onCreate$1(Preference preference) {
-            showFolderPickerDialog();
-            return true;
         }
 
         private void updatePathSummary(Preference pathPref) {

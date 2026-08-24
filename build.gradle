@@ -15,8 +15,8 @@ android {
         applicationId = 'org.nekit.ttproplus'
         minSdk = 21
         targetSdk = 36
-        versionCode = 401
-        versionName = '5.27.1'
+        versionCode = 402
+        versionName = '5.27.2'
 
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -88,7 +88,6 @@ dependencies {
     implementation libs.androidx.preference
     implementation libs.androidx.viewpager
     implementation libs.material
-    implementation libs.jump3r
     implementation files('libs/TeamTalk5.jar')
 
     testImplementation libs.junit

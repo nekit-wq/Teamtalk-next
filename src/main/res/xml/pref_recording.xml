@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <ListPreference android:entries="@array/recording_format_entries" android:title="@string/pref_recording_format_title" android:key="recording_format" android:summary="@string/pref_recording_format_summary" android:defaultValue="wav" android:entryValues="@array/recording_format_values" />
-    <ListPreference android:entries="@array/recording_mp3_bitrate_entries" android:title="@string/pref_recording_mp3_bitrate_title" android:key="recording_mp3_bitrate" android:summary="@string/pref_recording_mp3_bitrate_summary" android:defaultValue="128" android:entryValues="@array/recording_mp3_bitrate_values" />
     <Preference android:title="@string/pref_recording_path_title" android:key="recording_path" android:summary="@string/pref_recording_path_summary" />
     <CheckBoxPreference android:title="@string/pref_recording_show_dialog_title" android:key="recording_show_dialog_after" android:summary="@string/pref_recording_show_dialog_summary" android:defaultValue="true" />
     <CheckBoxPreference android:title="@string/pref_recording_show_toast_title" android:key="recording_show_toast_notifications" android:summary="@string/pref_recording_show_toast_summary" android:defaultValue="true" />

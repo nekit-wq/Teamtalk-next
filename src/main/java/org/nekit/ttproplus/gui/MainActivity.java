@@ -76,7 +76,6 @@ import androidx.fragment.app.ListFragment;
 import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.tabs.TabLayout;
 import android.text.InputType;
-import org.nekit.ttproplus.audio.AudioConverter;
 import dk.bearware.Channel;
 import dk.bearware.ClientStatistics;
 import dk.bearware.RemoteFile;
@@ -3263,137 +3262,45 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     private void showRecordingCompleteDialog(final File recordedFile) {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String fileName = recordedFile.getName();
-        String nameWithoutExt = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf(46)) : fileName;
+        final String nameWithoutExt = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf(46)) : fileName;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.recording_rename_title);
         LinearLayout linearLayout = new LinearLayout(this);
-        linearLayout.setOrientation(1);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
         linearLayout.setPadding(32, 16, 32, 16);
         final EditText nameInput = new EditText(this);
         nameInput.setHint(R.string.recording_rename_hint);
         nameInput.setText(nameWithoutExt);
         nameInput.setSelectAllOnFocus(true);
         linearLayout.addView(nameInput);
-        TextView formatLabel = new TextView(this);
-        formatLabel.setText(R.string.pref_recording_format_title);
-        formatLabel.setPadding(0, 16, 0, 4);
-        linearLayout.addView(formatLabel);
-        final Spinner formatSpinner = new Spinner(this);
-        ArrayAdapter<CharSequence> formatAdapter = ArrayAdapter.createFromResource(this, R.array.recording_format_entries, android.R.layout.simple_spinner_item);
-        formatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        formatSpinner.setAdapter((SpinnerAdapter) formatAdapter);
-        String currentFormat = prefs.getString(Preferences.PREF_RECORDING_FORMAT, "wav");
-        final String[] formatValues = getResources().getStringArray(R.array.recording_format_values);
-        int i = 0;
-        while (true) {
-            if (i >= formatValues.length) {
-                break;
-            }
-            if (!formatValues[i].equals(currentFormat)) {
-                i++;
-            } else {
-                formatSpinner.setSelection(i);
-                break;
-            }
-        }
-        linearLayout.addView(formatSpinner);
-        final TextView bitrateLabel = new TextView(this);
-        bitrateLabel.setText(R.string.pref_recording_mp3_bitrate_title);
-        bitrateLabel.setPadding(0, 16, 0, 4);
-        linearLayout.addView(bitrateLabel);
-        final Spinner bitrateSpinner = new Spinner(this);
-        ArrayAdapter<CharSequence> bitrateAdapter = ArrayAdapter.createFromResource(this, R.array.recording_mp3_bitrate_entries, android.R.layout.simple_spinner_item);
-        bitrateAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        bitrateSpinner.setAdapter((SpinnerAdapter) bitrateAdapter);
-        String currentBitrate = prefs.getString(Preferences.PREF_RECORDING_MP3_BITRATE, "128");
-        final String nameWithoutExt2 = nameWithoutExt;
-        final String[] bitrateValues = getResources().getStringArray(R.array.recording_mp3_bitrate_values);
-        for (int i2 = 0; i2 < bitrateValues.length; i2++) {
-            if (bitrateValues[i2].equals(currentBitrate)) {
-                bitrateSpinner.setSelection(i2);
-                break;
-            }
-        }
-        linearLayout.addView(bitrateSpinner);
-        boolean isMp3 = "mp3".equals(currentFormat);
-        bitrateLabel.setVisibility(isMp3 ? 0 : 8);
-        bitrateSpinner.setVisibility(isMp3 ? 0 : 8);
-        formatSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() { 
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                boolean mp3Selected = formatValues[position].equals("mp3");
-                bitrateLabel.setVisibility(mp3Selected ? 0 : 8);
-                bitrateSpinner.setVisibility(mp3Selected ? 0 : 8);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
         builder.setView(linearLayout);
         builder.setPositiveButton(R.string.recording_rename_save, new DialogInterface.OnClickListener() { 
             @Override
             public final void onClick(DialogInterface dialogInterface, int i3) {
-                MainActivity.this.lambda$showRecordingCompleteDialog$22(nameInput, nameWithoutExt2, formatValues, formatSpinner, bitrateValues, bitrateSpinner, recordedFile, prefs, dialogInterface, i3);
+                String newName = nameInput.getText().toString().trim();
+                if (newName.isEmpty()) {
+                    newName = nameWithoutExt;
+                }
+                File newFile = new File(recordedFile.getParent(), newName + ".ogg");
+                if (newFile.getAbsolutePath().equals(recordedFile.getAbsolutePath())) {
+                    return;
+                }
+                boolean renamed = recordedFile.renameTo(newFile);
+                if (renamed) {
+                    try {
+                        MediaScannerConnection.scanFile(MainActivity.this, new String[]{newFile.getAbsolutePath(), recordedFile.getAbsolutePath()}, null, null);
+                    } catch (Exception e) {
+                        Log.e("bearware", "Failed to scan renamed file into media store", e);
+                    }
+                    Toast.makeText(MainActivity.this, getString(R.string.recording_renamed_success, new Object[]{newFile.getName()}), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, R.string.recording_rename_failed, Toast.LENGTH_SHORT).show();
+                }
             }
         });
-        builder.setNegativeButton(R.string.recording_rename_skip, new DialogInterface.OnClickListener() { 
-            @Override
-            public final void onClick(DialogInterface dialogInterface, int i3) {
-                MainActivity.lambda$showRecordingCompleteDialog$23(dialogInterface, i3);
-            }
-        });
+        builder.setNegativeButton(R.string.recording_rename_skip, (DialogInterface.OnClickListener) null);
         builder.show();
-    }
-
-    public void lambda$showRecordingCompleteDialog$22(EditText nameInput, String nameWithoutExt, String[] formatValues, Spinner formatSpinner, String[] bitrateValues, Spinner bitrateSpinner, File recordedFile, SharedPreferences prefs, DialogInterface dialog, int which) {
-        String newName = nameInput.getText().toString().trim();
-        if (newName.isEmpty()) {
-            newName = nameWithoutExt;
-        }
-        String selectedFormat = formatValues[formatSpinner.getSelectedItemPosition()];
-        String selectedBitrate = bitrateValues[bitrateSpinner.getSelectedItemPosition()];
-        String extension;
-        if ("mp3".equalsIgnoreCase(selectedFormat)) {
-            extension = ".mp3";
-        } else if ("codec".equalsIgnoreCase(selectedFormat)) {
-            extension = ".ogg";
-        } else {
-            extension = ".wav";
-        }
-
-        File newFile = new File(recordedFile.getParent(), newName + extension);
-        boolean success = false;
-
-        if (newFile.getAbsolutePath().equals(recordedFile.getAbsolutePath())) {
-            success = true;
-        } else if (extension.equals(".mp3") && recordedFile.getName().endsWith(".wav")) {
-            int bitrate = 128;
-            try { bitrate = Integer.parseInt(selectedBitrate); } catch (Exception ignored) {}
-            success = AudioConverter.convertWavToMp3(recordedFile, newFile, bitrate);
-            if (success) {
-                recordedFile.delete();
-            }
-        } else {
-            success = recordedFile.renameTo(newFile);
-        }
-
-        if (success) {
-            try {
-                MediaScannerConnection.scanFile(this, new String[]{newFile.getAbsolutePath(), recordedFile.getAbsolutePath()}, null, null);
-            } catch (Exception e) {
-                Log.e("bearware", "Failed to scan renamed file into media store", e);
-            }
-            prefs.edit().putString(Preferences.PREF_RECORDING_FORMAT, selectedFormat).putString(Preferences.PREF_RECORDING_MP3_BITRATE, selectedBitrate).apply();
-            Toast.makeText(this, getString(R.string.recording_renamed_success, new Object[]{newFile.getName()}), Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, R.string.recording_rename_failed, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-        public static void lambda$showRecordingCompleteDialog$23(DialogInterface dialog, int which) {
     }
 
     @Override

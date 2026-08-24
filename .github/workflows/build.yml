@@ -71,33 +71,33 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkProPlus-5.27.1-source.zip HEAD
+          git archive --format=zip --output=TeamTalkProPlus-5.27.2-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.1' }}
-          name: "TeamTalk Pro Plus v5.27.1"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.2' }}
+          name: "TeamTalk Pro Plus v5.27.2"
           body: |
-            ### TeamTalk Pro Plus v5.27.1
+            ### TeamTalk Pro Plus v5.27.2
 
             #### Список изменений и исправлений:
-            - **🎙 Исправлена запись аудио в формат MP3:**
-              - Интегрирован встроенный высокопроизводительный LAME MP3 конвертер (`jump3r`).
-              - Запись аудио теперь стабильно и безотказно сохраняется в формате MP3 с выбранным битрейтом (16, 32, 64, 128, 256, 320 kbps).
-              - Поддержана автоконвертация и переименование в диалоге завершения записи.
+            - **🎙 Прямая нативная запись в компактный формат OGG:**
+              - Запись аудио теперь ведётся напрямую через нативный движок в формате **OGG (Channel Codec / Opus)**.
+              - 0 секунд задержки, мгновенное сохранение аудиозаписей без долгой конвертации и зависания приложения.
+              - Упрощён диалог завершения записи — быстрое переименование и сохранение в один клик.
             - **⚡ Бесшовное переключение сети (Wi-Fi ↔ LTE/3G ↔ VPN):**
               - Добавлен системный мониторинг активного сетевого маршрута (`ConnectivityManager.NetworkCallback`).
               - При переключении между Wi-Fi, мобильной сетью или VPN клиент мгновенно переподключается к серверу без зависания аудиопотоков.
             - **🐛 Исправлен выход из сервера и фоновое фантомное переподключение:**
-              - Устранена ошибка, при которой после выхода из сервера клиент в фоне переподключался обратно из-за автоматического таймера переподключения.
+              - Устранена ошибка, при которой после выхода из сервера клиент в фоне переподключался обратно.
             - **📁 Логичная двухэтапная навигация («Перейти вверх» / Home / «Назад»):**
               - Улучшен переход между корневым каналом, пространством под корнем и списком серверов.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkProPlus-5.27.1-source.zip
+            TeamTalkProPlus-5.27.2-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
