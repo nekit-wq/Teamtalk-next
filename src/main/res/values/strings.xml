@@ -10,6 +10,7 @@
     <string name="action_connect">Connect</string>
     <string name="action_createchannel">Create</string>
     <string name="action_delete">Delete</string>
+    <string name="action_disconnect">Disconnect</string>
     <string name="action_deselect">Deselect For Move</string>
     <string name="action_deselect_all">Deselect All</string>
     <string name="action_edit">Edit Channel</string>
@@ -364,6 +365,7 @@ By: %3$s"</string>
     <string name="pref_summary_antispam_unsub_all">Unsubscribe from voice, video, desktop and all subscriptions (not just text)</string>
     <string name="pref_summary_audio_input_source">Choose between microphone and internal audio streaming</string>
     <string name="pref_summary_auto_join_root">Automatically join root channel after connecting to server</string>
+    <string name="pref_summary_seamless_reconnect">Instantly reconnect and restore channel when switching between Wi-Fi, LTE or VPN</string>
     <string name="pref_summary_bearwareid">Setup BearWare.dk WebLogin</string>
     <string name="pref_summary_bg_mgmt_close_on_app_open">Close floating window when entering the app</string>
     <string name="pref_summary_bg_mgmt_display_type">Display as floating window or notification</string>
@@ -449,6 +451,7 @@ By: %3$s"</string>
     <string name="pref_title_audio_input_source">Audio Input Source</string>
     <string name="pref_title_authentication">Authentication</string>
     <string name="pref_title_auto_join_root">Join root channel upon connection</string>
+    <string name="pref_title_seamless_reconnect">Seamless network switching</string>
     <string name="pref_title_bearware">BearWare.dk Web Login</string>
     <string name="pref_title_bearwareid">BearWare.dk WebLogin</string>
     <string name="pref_title_bg_mgmt_close_on_app_open">Close on app open</string>

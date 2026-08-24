@@ -913,6 +913,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             Log.d("bearware", "Unbinding TeamTalk service");
             TeamTalkService service = getService();
             if (service != null) {
+                if (isFinishing()) {
+                    service.disablePhoneCallReaction();
+                    service.unwatchBluetoothHeadset();
+                    service.resetState();
+                }
                 onServiceDisconnected(service);
             }
             try {

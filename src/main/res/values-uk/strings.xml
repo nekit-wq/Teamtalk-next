@@ -10,6 +10,7 @@
     <string name="action_editsrv">Редагувати сервер</string>
     <string name="action_edituser">Властивості користувача</string>
     <string name="action_exit">Вихід</string>
+    <string name="action_disconnect">Відключитися</string>
     <string name="action_export_serverlist">Експортувати список серверів</string>
     <string name="action_exportsrv">Експортувати сервер</string>
     <string name="action_import_serverlist">Імпортувати з файлу .tt</string>
@@ -217,6 +218,8 @@
     <string name="pref_title_audio_icons">Звуки подій</string>
     <string name="pref_title_authentication">Автентифікація</string>
     <string name="pref_title_auto_join_root">"Приєднуватися до кореневого каналу після з'єднання"</string>
+    <string name="pref_title_seamless_reconnect">Безшовне перемикання мережі</string>
+    <string name="pref_summary_seamless_reconnect">Миттєво перепідключатися та зберігати канал при перемиканні між Wi-Fi, LTE та VPN</string>
     <string name="pref_title_bearware">Вхід через BearWare.dk</string>
     <string name="pref_title_bearwareid">Вебреєстрація через BearWare.dk</string>
     <string name="pref_title_bluetooth_headset_checkbox">Використовувати мікрофон Bluetooth-гарнітури</string>

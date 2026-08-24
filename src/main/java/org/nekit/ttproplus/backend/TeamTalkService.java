@@ -16,6 +16,10 @@ import android.media.AudioRecord;
 import android.media.MediaScannerConnection;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Binder;
@@ -134,6 +138,16 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             TeamTalkService.this.reconnect();
         }
     };
+    private ConnectivityManager connectivityManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
+    private Network activeNetwork = null;
+    private volatile boolean isSeamlessReconnecting = false;
+    private final Runnable seamlessReconnectRunnable = new Runnable() { 
+        @Override
+        public final void run() {
+            TeamTalkService.this.performSeamlessReconnect();
+        }
+    };
     private final TeamTalkEventHandler mEventHandler = new TeamTalkEventHandler();
     SparseArray<CmdComplete> activecmds = new SparseArray<>();
     Map<Integer, Channel> channels = new HashMap();
@@ -248,6 +262,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
     };
     private boolean isRecording = false;
+    private volatile boolean manualDisconnect = false;
     private File currentRecordingFile = null;
     private boolean isInternalAudioRunning = false;
     private String currentStreamPath = "";
@@ -269,18 +284,29 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     public void resetState() {
+        this.manualDisconnect = true;
+        this.isSeamlessReconnecting = false;
+        this.reconnectHandler.removeCallbacks(this.seamlessReconnectRunnable);
+        this.reconnectHandler.removeCallbacks(this.reconnectTimer);
         this.antispam_triggered = false;
         this.antispam_count = 0;
         this.antispam_window_start = 0L;
         this.antispam_blocked.clear();
         this.antispam_user_counts.clear();
-        this.reconnectHandler.removeCallbacks(this.reconnectTimer);
         disablePhoneCallReaction();
+        unwatchBluetoothHeadset();
+        if (isRecording()) {
+            stopRecording();
+        }
         syncToUserCache();
         if (this.ttclient != null) {
+            this.ttclient.closeSoundInputDevice();
+            this.ttclient.closeSoundOutputDevice();
             this.ttclient.disconnect();
         }
+        this.ttserver = null;
         displayNotification(false);
+        releaseServiceLocks();
         this.joinchannel = null;
         setMyChannel(null);
         this.activecmds.clear();
@@ -290,6 +316,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.users.clear();
         this.usertxtmsgs.clear();
         this.chatlogtxtmsgs.clear();
+        updateFloatingWindow();
     }
 
     public Map<Integer, Channel> getChannels() {
@@ -382,6 +409,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         prefs.registerOnSharedPreferenceChangeListener(this.mPrefListener);
         acquireServiceLocks();
+        registerNetworkCallback();
     }
 
         public static void lambda$onCreate$0(int focusChange) {
@@ -414,8 +442,13 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onDestroy() {
+        this.manualDisconnect = true;
+        this.isSeamlessReconnecting = false;
+        this.reconnectHandler.removeCallbacks(this.seamlessReconnectRunnable);
+        unregisterNetworkCallback();
         this.eventTimer.cancel();
         this.mEventHandler.unregisterListener(this);
+        this.reconnectHandler.removeCallbacks(this.reconnectTimer);
         disablePhoneCallReaction();
         unwatchBluetoothHeadset();
         releaseServiceLocks();
@@ -426,8 +459,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.mFloatingWindowManager = null;
         }
         if (this.ttclient != null) {
+            this.ttclient.closeSoundInputDevice();
+            this.ttclient.closeSoundOutputDevice();
             this.ttclient.closeTeamTalk();
         }
+        displayNotification(false);
         super.onDestroy();
         this.mediaSession.release();
         Log.d("bearware", "Destroyed TeamTalk 5 service");
@@ -436,12 +472,18 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     private String getNotificationText() {
         Channel channel = this.mychannel;
         ServerEntry serverEntry = this.ttserver;
+        if (serverEntry == null) {
+            return getString(R.string.app_name);
+        }
         return channel != null ? String.format("%s / %s", serverEntry.servername, this.mychannel.szName) : serverEntry.servername;
     }
 
     private void displayNotification(boolean enabled) {
         Notification notification = this.widget;
         if (enabled) {
+            if (this.ttserver == null) {
+                return;
+            }
             if (notification == null) {
                 this.notificationManager = (NotificationManager) getSystemService("notification");
                 Intent ui = new Intent(this, (Class<?>) MainActivity.class);
@@ -462,10 +504,14 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.notificationManager.notify(1, this.widget);
             return;
         }
-        if (notification != null) {
-            ServiceCompat.stopForeground(this, 1);
-            this.widget = null;
+        if (this.notificationManager != null) {
+            this.notificationManager.cancel(1);
         }
+        try {
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
+        } catch (Exception ignored) {
+        }
+        this.widget = null;
     }
 
     private int getMyForegroundServiceType() {
@@ -836,6 +882,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public void setServerEntry(ServerEntry entry) {
         this.ttserver = entry;
+        if (entry != null) {
+            this.manualDisconnect = false;
+        }
     }
 
     public void setJoinChannel(Channel channel) {
@@ -1226,6 +1275,10 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (this.ttserver == null || this.ttclient == null) {
             return false;
         }
+        this.manualDisconnect = false;
+        this.isSeamlessReconnecting = false;
+        this.reconnectHandler.removeCallbacks(this.seamlessReconnectRunnable);
+        this.reconnectHandler.removeCallbacks(this.reconnectTimer);
         syncToUserCache();
         this.ttclient.disconnect();
         if (!setupEncryption()) {
@@ -1472,6 +1525,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onConnectSuccess() {
+        this.isSeamlessReconnecting = false;
         if (this.ttserver == null) {
             throw new AssertionError();
         }
@@ -1485,12 +1539,23 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onEncryptionError(int opensslErrorNo, ClientErrorMsg errmsg) {
+        if (this.manualDisconnect || this.ttserver == null) {
+            return;
+        }
         Log.i("bearware", "Encryption error: " + errmsg.szErrorMsg + " connecting to " + this.ttserver.ipaddr + ":" + this.ttserver.tcpport);
         Toast.makeText(this, getResources().getString(R.string.text_con_encryption_error, errmsg.szErrorMsg), 1).show();
     }
 
     @Override
     public void onConnectFailed() {
+        if (this.manualDisconnect || this.ttserver == null) {
+            return;
+        }
+        if (this.isSeamlessReconnecting) {
+            Log.i("bearware", "Seamless reconnect attempt failed, retrying in 1.5s");
+            createReconnectTimer(1500L);
+            return;
+        }
         Log.i("bearware", "Failed to connect " + this.ttserver.ipaddr + ":" + this.ttserver.tcpport);
         Toast.makeText(this, getResources().getString(R.string.text_con_failed), 0).show();
         createReconnectTimer(5000L);
@@ -1499,6 +1564,14 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onConnectionLost() {
+        if (this.manualDisconnect || this.ttserver == null) {
+            return;
+        }
+        if (this.isSeamlessReconnecting) {
+            Log.i("bearware", "Connection dropped during seamless network transition, retrying in 1.5s");
+            createReconnectTimer(1500L);
+            return;
+        }
         Log.i("bearware", "Connection lost to " + this.ttserver.ipaddr + ":" + this.ttserver.tcpport);
         this.activecmds.clear();
         Toast.makeText(this, getResources().getString(R.string.text_con_lost), 1).show();
@@ -1918,6 +1991,132 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 Log.e("bearware", "XML SAXException: " + e5);
                 return null;
             }
+        }
+    }
+
+    private void registerNetworkCallback() {
+        if (this.connectivityManager == null) {
+            this.connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
+        if (this.connectivityManager == null) {
+            return;
+        }
+        try {
+            this.networkCallback = new ConnectivityManager.NetworkCallback() { 
+                @Override
+                public void onAvailable(Network network) {
+                    TeamTalkService.this.handleNetworkAvailable(network);
+                }
+
+                @Override
+                public void onLost(Network network) {
+                    TeamTalkService.this.handleNetworkLost(network);
+                }
+
+                @Override
+                public void onCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
+                    TeamTalkService.this.handleNetworkCapabilitiesChanged(network, capabilities);
+                }
+            };
+
+            if (Build.VERSION.SDK_INT >= 24) {
+                this.connectivityManager.registerDefaultNetworkCallback(this.networkCallback);
+            } else {
+                NetworkRequest request = new NetworkRequest.Builder()
+                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                        .build();
+                this.connectivityManager.registerNetworkCallback(request, this.networkCallback);
+            }
+        } catch (Exception e) {
+            Log.w("bearware", "Failed to register network callback", e);
+        }
+    }
+
+    private void unregisterNetworkCallback() {
+        if (this.connectivityManager != null && this.networkCallback != null) {
+            try {
+                this.connectivityManager.unregisterNetworkCallback(this.networkCallback);
+            } catch (Exception e) {
+                Log.w("bearware", "Failed to unregister network callback", e);
+            }
+            this.networkCallback = null;
+        }
+    }
+
+    private void handleNetworkAvailable(Network network) {
+        boolean seamlessEnabled = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getBoolean(Preferences.PREF_CONNECTION_SEAMLESS_RECONNECT, true);
+        if (!seamlessEnabled) {
+            this.activeNetwork = network;
+            return;
+        }
+
+        Network oldNetwork = this.activeNetwork;
+        this.activeNetwork = network;
+
+        if (this.ttserver != null && !this.manualDisconnect) {
+            if (oldNetwork != null && !oldNetwork.equals(network)) {
+                Log.i("bearware", "Active network changed (Wi-Fi/LTE/VPN switch). Scheduling seamless reconnect.");
+                scheduleSeamlessReconnect(300L);
+            } else if (oldNetwork == null && this.isSeamlessReconnecting) {
+                Log.i("bearware", "Network restored. Scheduling seamless reconnect.");
+                scheduleSeamlessReconnect(200L);
+            }
+        }
+    }
+
+    private void handleNetworkLost(Network network) {
+        if (network != null && network.equals(this.activeNetwork)) {
+            this.activeNetwork = null;
+            if (this.ttserver != null && !this.manualDisconnect) {
+                Log.i("bearware", "Current active network lost, awaiting new network connection (LTE/Wi-Fi)...");
+                this.isSeamlessReconnecting = true;
+            }
+        }
+    }
+
+    private void handleNetworkCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
+        if (network != null && network.equals(this.activeNetwork) && capabilities != null) {
+            boolean hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+            if (hasInternet && this.ttserver != null && !this.manualDisconnect && this.isSeamlessReconnecting) {
+                scheduleSeamlessReconnect(200L);
+            }
+        }
+    }
+
+    private synchronized void scheduleSeamlessReconnect(long delayMs) {
+        this.reconnectHandler.removeCallbacks(this.seamlessReconnectRunnable);
+        this.reconnectHandler.removeCallbacks(this.reconnectTimer);
+        this.isSeamlessReconnecting = true;
+        this.reconnectHandler.postDelayed(this.seamlessReconnectRunnable, delayMs);
+    }
+
+    private void performSeamlessReconnect() {
+        if (this.ttserver == null || this.manualDisconnect || this.ttclient == null) {
+            this.isSeamlessReconnecting = false;
+            return;
+        }
+        Log.i("bearware", "Performing seamless network reconnect to " + this.ttserver.ipaddr + ":" + this.ttserver.tcpport);
+
+        // Preserve current channel to rejoin after login
+        if (this.mychannel != null) {
+            this.joinchannel = this.mychannel;
+        }
+
+        syncToUserCache();
+        this.ttclient.disconnect();
+
+        if (!setupEncryption()) {
+            Log.w("bearware", "Seamless reconnect encryption setup failed");
+            createReconnectTimer(2000L);
+            return;
+        }
+
+        if (!this.ttclient.connect(this.ttserver.ipaddr, this.ttserver.tcpport, this.ttserver.udpport, 0, 0, this.ttserver.encrypted)) {
+            Log.w("bearware", "Seamless connect() failed, scheduling quick retry");
+            createReconnectTimer(1500L);
+        } else {
+            Log.i("bearware", "Seamless connect() started over new network interface");
         }
     }
 }

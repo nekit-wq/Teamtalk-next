@@ -10,6 +10,7 @@
     <string name="action_connect">Подключиться</string>
     <string name="action_createchannel">Создать</string>
     <string name="action_delete">Удалить</string>
+    <string name="action_disconnect">Отключиться</string>
     <string name="action_deselect">Отменить Выбор</string>
     <string name="action_deselect_all">Снять всё</string>
     <string name="action_edit">Редактировать Свойства</string>
@@ -363,6 +364,7 @@
     <string name="pref_summary_antispam_unsub_all">Отписаться от голоса, видео, демонстрации экрана и всех подписок (не только текст)</string>
     <string name="pref_summary_audio_input_source">Выберите между микрофоном и трансляцией внутреннего звука</string>
     <string name="pref_summary_auto_join_root">Автоматически подключить корневой канал при соединении с сервером</string>
+    <string name="pref_summary_seamless_reconnect">Мгновенно переподключаться и сохранять канал при переключении между Wi-Fi, LTE и VPN</string>
     <string name="pref_summary_bearwareid">Настройка входа через учетную запись на BearWare.dk</string>
     <string name="pref_summary_bg_mgmt_close_on_app_open">Закрывать плавающее окно при входе в приложение</string>
     <string name="pref_summary_bg_mgmt_display_type">Отображать как плавающее окно или уведомление</string>
@@ -448,6 +450,7 @@
     <string name="pref_title_audio_input_source">Источник звука</string>
     <string name="pref_title_authentication">Идентификация</string>
     <string name="pref_title_auto_join_root">Подключить корневой канал при соединении</string>
+    <string name="pref_title_seamless_reconnect">Бесшовное переключение сети</string>
     <string name="pref_title_bearware">Регистрация через BearWare.dk</string>
     <string name="pref_title_bearwareid">Web-регистрация через BearWare.dk</string>
     <string name="pref_title_bg_mgmt_close_on_app_open">Закрывать при входе в приложение</string>

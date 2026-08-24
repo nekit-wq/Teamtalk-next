@@ -51,6 +51,7 @@ public class Preferences {
             PREF_SOUNDSYSTEM_INPUT_SOURCE = "audio_input_source";
     public static final String
             PREF_JOIN_ROOT_CHAN = "auto_join_root_checkbox",
+            PREF_CONNECTION_SEAMLESS_RECONNECT = "seamless_reconnect",
             PREF_SUB_TEXTMESSAGE = "sub_txtmsg_checkbox",
             PREF_SUB_CHANMESSAGE = "sub_chanmsg_checkbox",
             PREF_SUB_BCAST_MESSAGES = "sub_bcastmsg_checkbox",

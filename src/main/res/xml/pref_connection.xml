@@ -3,6 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/pref_cat_connection_general" android:key="con_general_def">
         <CheckBoxPreference android:title="@string/pref_title_auto_join_root" android:key="auto_join_root_checkbox" android:summary="@string/pref_summary_auto_join_root" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_title_seamless_reconnect" android:key="seamless_reconnect" android:summary="@string/pref_summary_seamless_reconnect" android:defaultValue="true" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_cat_subscriptions" android:key="subscriptions_def">
         <CheckBoxPreference android:title="@string/pref_title_sub_txtmsg" android:key="sub_txtmsg_checkbox" android:summary="@string/pref_summary_sub_txtmsg" android:defaultValue="true" />
