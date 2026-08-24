@@ -24,9 +24,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.text.InputType;
 import android.widget.Toast;
-import de.sciss.jump3r.mp3.Encoder;
 import dk.bearware.Channel;
 import dk.bearware.ClientError;
 import dk.bearware.ClientStatistics;
@@ -589,7 +588,7 @@ public class FloatingWindowManager {
             AlertDialog.Builder passBuilder = new AlertDialog.Builder(themedContext);
             passBuilder.setTitle(R.string.chanpswlab);
             final EditText input = new EditText(themedContext);
-            input.setInputType(Encoder.HBLKSIZE_s);
+            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             passBuilder.setView(input);
             passBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() { 
                 @Override

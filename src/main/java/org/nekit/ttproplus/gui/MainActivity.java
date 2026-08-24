@@ -75,7 +75,8 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.fragment.app.ListFragment;
 import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.tabs.TabLayout;
-import de.sciss.jump3r.mp3.Encoder;
+import android.text.InputType;
+import org.nekit.ttproplus.audio.AudioConverter;
 import dk.bearware.Channel;
 import dk.bearware.ClientStatistics;
 import dk.bearware.RemoteFile;
@@ -1230,7 +1231,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             alert.setTitle(R.string.pref_title_join_channel);
             alert.setMessage(R.string.channel_password_prompt);
             final EditText input = new EditText(this);
-            input.setInputType(Encoder.HBLKSIZE_s);
+            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             input.setText(channel.szPassword);
             input.requestFocus();
             alert.setView(input);
@@ -2407,7 +2408,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 alert.setTitle(getClient().isChannelOperator(this.selectedUser.nUserID, this.selectedUser.nChannelID) ? R.string.action_revoke_operator : R.string.action_make_operator);
                 alert.setMessage(R.string.text_operator_password);
                 final EditText input = new EditText(this);
-                input.setInputType(Encoder.HBLKSIZE_s);
+                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() { 
                     @Override
                     public final void onClick(DialogInterface dialogInterface, int i) {
@@ -3347,57 +3348,48 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         builder.show();
     }
 
-            public void lambda$showRecordingCompleteDialog$22(EditText nameInput, String nameWithoutExt, String[] formatValues, Spinner formatSpinner, String[] bitrateValues, Spinner bitrateSpinner, File recordedFile, SharedPreferences prefs, DialogInterface dialog, int which) {
-        char c;
-        String extension;
+    public void lambda$showRecordingCompleteDialog$22(EditText nameInput, String nameWithoutExt, String[] formatValues, Spinner formatSpinner, String[] bitrateValues, Spinner bitrateSpinner, File recordedFile, SharedPreferences prefs, DialogInterface dialog, int which) {
         String newName = nameInput.getText().toString().trim();
         if (newName.isEmpty()) {
             newName = nameWithoutExt;
         }
         String selectedFormat = formatValues[formatSpinner.getSelectedItemPosition()];
         String selectedBitrate = bitrateValues[bitrateSpinner.getSelectedItemPosition()];
-        switch (selectedFormat.hashCode()) {
-            case 108272:
-                if (selectedFormat.equals("mp3")) {
-                    c = 0;
-                    break;
-                }
-                c = 65535;
-                break;
-            case 94834710:
-                if (selectedFormat.equals("codec")) {
-                    c = 1;
-                    break;
-                }
-                c = 65535;
-                break;
-            default:
-                c = 65535;
-                break;
+        String extension;
+        if ("mp3".equalsIgnoreCase(selectedFormat)) {
+            extension = ".mp3";
+        } else if ("codec".equalsIgnoreCase(selectedFormat)) {
+            extension = ".ogg";
+        } else {
+            extension = ".wav";
         }
-        switch (c) {
-            case 0:
-                extension = ".mp3";
-                break;
-            case 1:
-                extension = ".ogg";
-                break;
-            default:
-                extension = ".wav";
-                break;
-        }
+
         File newFile = new File(recordedFile.getParent(), newName + extension);
-        boolean renamed = recordedFile.renameTo(newFile);
-        if (renamed) {
+        boolean success = false;
+
+        if (newFile.getAbsolutePath().equals(recordedFile.getAbsolutePath())) {
+            success = true;
+        } else if (extension.equals(".mp3") && recordedFile.getName().endsWith(".wav")) {
+            int bitrate = 128;
+            try { bitrate = Integer.parseInt(selectedBitrate); } catch (Exception ignored) {}
+            success = AudioConverter.convertWavToMp3(recordedFile, newFile, bitrate);
+            if (success) {
+                recordedFile.delete();
+            }
+        } else {
+            success = recordedFile.renameTo(newFile);
+        }
+
+        if (success) {
             try {
                 MediaScannerConnection.scanFile(this, new String[]{newFile.getAbsolutePath(), recordedFile.getAbsolutePath()}, null, null);
             } catch (Exception e) {
                 Log.e("bearware", "Failed to scan renamed file into media store", e);
             }
             prefs.edit().putString(Preferences.PREF_RECORDING_FORMAT, selectedFormat).putString(Preferences.PREF_RECORDING_MP3_BITRATE, selectedBitrate).apply();
-            Toast.makeText(this, getString(R.string.recording_renamed_success, new Object[]{newFile.getName()}), 0).show();
+            Toast.makeText(this, getString(R.string.recording_renamed_success, new Object[]{newFile.getName()}), Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, R.string.recording_rename_failed, 0).show();
+            Toast.makeText(this, R.string.recording_rename_failed, Toast.LENGTH_SHORT).show();
         }
     }
 
