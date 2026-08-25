@@ -200,8 +200,6 @@ public class ServerListActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
 
-        updateProfileTitle();
-
         String currentTheme = PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.THEME_PREF_KEY, "dark");
         if (this.appliedTheme != null && !this.appliedTheme.equals(currentTheme)) {
             this.appliedTheme = currentTheme;
@@ -229,20 +227,6 @@ public class ServerListActivity extends AppCompatActivity
                 connectToServerAsync(this.serverentry);
             }
         }
-    }
-
-    private void onProfileChanged() {
-        servers.clear();
-        refreshServerList();
-        updateProfileTitle();
-    }
-
-    private void updateProfileTitle() {
-        if (getSupportActionBar() != null) {
-            ProfileManager.Profile p = ProfileManager.getActiveProfile(this);
-            getSupportActionBar().setSubtitle(getString(R.string.profile_active_label) + ": " + p.name);
-        }
-        ProfileManager.setupProfileTabsBar(this, this::onProfileChanged);
     }
 
     @Override

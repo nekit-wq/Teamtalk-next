@@ -131,7 +131,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     ServerEntry ttserver;
     private boolean txSuspended;
     private boolean voxSuspended;
-    private boolean pendingAutoRecord = false;
+    private static volatile TeamTalkService sInstance;
+
+    public static TeamTalkService getInstance() {
+        return sInstance;
+    }
+
     private static int mediaProjectionResultCode = 0;
     private static Intent mediaProjectionData = null;
     private final IBinder mBinder = new LocalBinder();
@@ -371,6 +376,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     @Override
     public void onCreate() {
         super.onCreate();
+        sInstance = this;
         TeamTalk5.loadLibrary();
         TeamTalk5.setLicenseInformation("", "");
         this.ttclient = new TeamTalk5();
@@ -466,6 +472,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onDestroy() {
+        if (sInstance == this) sInstance = null;
         this.manualDisconnect = true;
         this.isSeamlessReconnecting = false;
         this.reconnectHandler.removeCallbacks(this.seamlessReconnectRunnable);

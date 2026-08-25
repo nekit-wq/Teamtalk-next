@@ -26,17 +26,22 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle & Build Cache
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: wrapper
+          cache-read-only: false
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build APKs
         run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee gradle_err.log
+          ./gradlew assembleDebug --build-cache --stacktrace 2>&1 | tee gradle_err.log
           test ${PIPESTATUS[0]} -eq 0
 
       - name: Upload Failure Log to Release
@@ -71,29 +76,34 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.21-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.22-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.21' }}
-          name: "TeamTalk Next v5.27.21"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.22' }}
+          name: "TeamTalk Next v5.27.22"
           body: |
-            ### TeamTalk Next v5.27.21 — Исправление переключения профилей, чистый дизайн и настройка видимости вкладок
+            ### TeamTalk Next v5.27.22 — Категории меню «Ещё», мгновенный отклик и кэш сборки CI
 
             #### 🚀 Главные улучшения:
-            - **⚙️ Настройка видимости вкладок в Основных настройках:**
-              - Добавлена опция **«Показывать вкладки профилей»** в Основных настройках. Можно полностью скрыть или включить панель вкладок по желанию.
-            - **🧼 Чистый лаконичный дизайн без смайликов:**
-              - Убраны все эмодзи из полосы вкладок и диалоговых окон для максимальной строгости и удобства интерфейса.
-            - **⚡️ Исправление переключения серверов и профилей:**
-              - Устранены вылеты и циклическое закрытие при переключении между профилями в окне подключенного сервера.
-              - Корректное завершение предыдущей сессии и мгновенное открытие списка серверов для выбранного профиля.
+            - **📑 Структурированное меню «Ещё» по разделам (SubMenus):**
+              - Перегруженное длинное меню полностью переработано в аккуратные сворачиваемые категории:
+                - 🎙 **Канал и трансляция:** Сменить статус/ник, создать канал, редактировать канал, стрим медиа, пауза, загрузка файлов, трансляция на весь сервер.
+                - ⏺ **Запись звука:** Начать запись, остановить запись, мои записи.
+                - 👥 **Сервер и управление:** Онлайн пользователи, аккаунты, бан-лист, свойства сервера, статистика, монитор сети, история чатов.
+                - ⚙️ **Настройки.**
+
+            - **⚡️ Мгновенный отклик при нажатии на пользователя:**
+              - Устранена задержка при открытии профиля/свойств пользователя (`UserPropActivity`). Данные теперь подтягиваются мгновенно без ожидания IPC привязки к службе.
+
+            - **🚀 Высокоскоростной кэш сборки в GitHub Actions CI:**
+              - Включено полное кэширование Gradle Cache и Daemon для ускорения последующих сборок релизов.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.21-source.zip
+            TeamTalkNext-5.27.22-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

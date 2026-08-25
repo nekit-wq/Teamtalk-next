@@ -70,7 +70,11 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
 
     TeamTalkBase getClient() {
         TeamTalkService service = getService();
-        return service != null ? service.getTTInstance() : null;
+        if (service != null && service.getTTInstance() != null) {
+            return service.getTTInstance();
+        }
+        TeamTalkService direct = TeamTalkService.getInstance();
+        return direct != null ? direct.getTTInstance() : null;
     }
 
     @Override
@@ -81,8 +85,18 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         setContentView(R.layout.activity_user_prop);
         EdgeToEdgeHelper.enableEdgeToEdge(this);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
+        // Render instantly if service is active in memory
+        TeamTalkService directService = TeamTalkService.getInstance();
+        if (directService != null && directService.getTTInstance() != null && getIntent() != null && getIntent().getExtras() != null) {
+            int userid = getIntent().getExtras().getInt(EXTRA_USERID);
+            if (directService.getTTInstance().getUser(userid, user)) {
+                showUser();
+            }
+        }
     }
 
     @Override

@@ -3,12 +3,6 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_profile_tabs"
-        android:orderInCategory="70"
-        app:showAsAction="ifRoom|withText"
-        android:title="@string/action_profile_tabs"/>
-
-    <item
         android:id="@+id/action_mute_tts"
         android:orderInCategory="80"
         app:showAsAction="always"
@@ -21,102 +15,91 @@
         app:showAsAction="always"
         android:title="@string/action_leave"/>
 
+    <!-- Section 1: Channel & Broadcast -->
     <item
-        android:id="@+id/action_statusnick"
+        android:id="@+id/menu_section_channel"
         android:orderInCategory="100"
         app:showAsAction="never"
-        android:title="@string/action_statusnick"/>
+        android:title="@string/menu_section_channel_media">
+        <menu>
+            <item
+                android:id="@+id/action_statusnick"
+                android:title="@string/action_statusnick"/>
+            <item
+                android:id="@+id/action_newchannel"
+                android:title="@string/action_new_channel"/>
+            <item
+                android:id="@+id/action_edit"
+                android:title="@string/action_edit"/>
+            <item
+                android:id="@+id/action_stream"
+                android:title="@string/action_stream"/>
+            <item
+                android:id="@+id/action_pause"
+                android:title="@string/action_pause"/>
+            <item
+                android:id="@+id/action_upload"
+                android:title="@string/action_upload"/>
+            <item
+                android:id="@+id/action_broadcast"
+                android:title="@string/action_broadcast"/>
+        </menu>
+    </item>
 
+    <!-- Section 2: Audio Recording -->
     <item
-        android:id="@+id/action_newchannel"
-        android:orderInCategory="101"
+        android:id="@+id/menu_section_recording"
+        android:orderInCategory="200"
         app:showAsAction="never"
-        android:title="@string/action_new_channel"/>
-    <item
-        android:id="@+id/action_edit"
-        android:orderInCategory="102"
-        app:showAsAction="never"
-        android:title="@string/action_edit"/>
-    <item
-        android:id="@+id/action_stream"
-        android:orderInCategory="103"
-        app:showAsAction="never"
-        android:title="@string/action_stream"/>
-    <item
-        android:id="@+id/action_pause"
-        android:orderInCategory="103"
-        app:showAsAction="never"
-        android:title="@string/action_pause"/>
-    <item
-        android:id="@+id/action_upload"
-        android:orderInCategory="104"
-        app:showAsAction="never"
-        android:title="@string/action_upload"/>
-    <item
-        android:id="@+id/action_online_users"
-        android:orderInCategory="105"
-        app:showAsAction="never"
-        android:title="@string/online_users"/>
-    <item
-        android:id="@+id/action_broadcast"
-        android:orderInCategory="106"
-        app:showAsAction="never"
-        android:title="@string/action_broadcast"/>
-    <item
-        android:id="@+id/action_user_accounts"
-        android:orderInCategory="107"
-        app:showAsAction="never"
-        android:title="@string/action_user_accounts"/>
-    <item
-        android:id="@+id/action_server_properties"
-        android:orderInCategory="108"
-        app:showAsAction="never"
-        android:title="@string/action_server_properties"/>
-    <item
-        android:id="@+id/action_banned_users"
-        android:orderInCategory="109"
-        app:showAsAction="never"
-        android:title="@string/action_banned_users"/>
-    <item
-        android:id="@+id/action_chat_history"
-        android:orderInCategory="105"
-        app:showAsAction="never"
-        android:title="@string/action_chat_history"/>
+        android:title="@string/menu_section_recording">
+        <menu>
+            <item
+                android:id="@+id/action_start_recording"
+                android:title="@string/action_start_recording"/>
+            <item
+                android:id="@+id/action_stop_recording"
+                android:title="@string/action_stop_recording"/>
+            <item
+                android:id="@+id/action_recordings"
+                android:title="@string/action_recordings"/>
+        </menu>
+    </item>
 
+    <!-- Section 3: Server & Management -->
     <item
-        android:id="@+id/action_network_monitor"
-        android:orderInCategory="106"
+        android:id="@+id/menu_section_server"
+        android:orderInCategory="300"
         app:showAsAction="never"
-        android:title="@string/action_network_monitor"/>
+        android:title="@string/menu_section_server_admin">
+        <menu>
+            <item
+                android:id="@+id/action_online_users"
+                android:title="@string/online_users"/>
+            <item
+                android:id="@+id/action_user_accounts"
+                android:title="@string/action_user_accounts"/>
+            <item
+                android:id="@+id/action_server_properties"
+                android:title="@string/action_server_properties"/>
+            <item
+                android:id="@+id/action_banned_users"
+                android:title="@string/action_banned_users"/>
+            <item
+                android:id="@+id/action_chat_history"
+                android:title="@string/action_chat_history"/>
+            <item
+                android:id="@+id/action_network_monitor"
+                android:title="@string/action_network_monitor"/>
+            <item
+                android:id="@+id/action_server_stats"
+                android:title="@string/action_server_stats"/>
+            <item
+                android:id="@+id/action_publishsrv"
+                android:title="@string/action_publishsrv"/>
+        </menu>
+    </item>
 
-    <item
-        android:id="@+id/action_server_stats"
-        android:orderInCategory="110"
-        app:showAsAction="never"
-        android:title="@string/action_server_stats"/>
-
-    <item
-        android:id="@+id/action_start_recording"
-        android:orderInCategory="111"
-        app:showAsAction="never"
-        android:title="@string/action_start_recording"/>
-    <item
-        android:id="@+id/action_stop_recording"
-        android:orderInCategory="112"
-        app:showAsAction="never"
-        android:title="@string/action_stop_recording"/>
-    <item
-        android:id="@+id/action_recordings"
-        android:orderInCategory="113"
-        app:showAsAction="never"
-        android:title="@string/action_recordings"/>
-
-    <item
-        android:id="@+id/action_publishsrv"
-        android:orderInCategory="113"
-        app:showAsAction="never"
-        android:title="@string/action_publishsrv"/>
-
+    <!-- Settings at root -->
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="999"
