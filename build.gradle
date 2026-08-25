@@ -101,7 +101,7 @@ tasks.register('syncNativeLibraryVersion') {
     doLast {
         def ver = android.defaultConfig.versionName
         println "Syncing native .so library version to: ${ver}"
-        exec {
+        project.exec {
             commandLine 'python3', "${rootDir}/tools/update_native_version.py", ver
         }
     }
