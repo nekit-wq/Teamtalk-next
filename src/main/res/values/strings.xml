@@ -1082,4 +1082,23 @@ By: %3$s"</string>
     <string name="recordings_rename_hint">Enter new file name</string>
     <string name="recordings_now_playing">Now Playing:</string>
     <string name="recordings_play_error">Failed to play audio file</string>
+
+    <!-- TeamTalk 5.23 Additions -->
+    <string name="action_stop">Stop stream</string>
+    <string name="action_pause">Pause stream</string>
+    <string name="action_resume">Resume stream</string>
+    <string name="action_statusnick">Change Nickname and Status</string>
+    <string name="user_state_streaming">Streaming media file</string>
+    <string name="user_state_female">Female</string>
+    <string name="user_state_neutral">Neutral</string>
+    <string name="user_state_male">Male</string>
+    <string name="user_state_operator">Channel operator</string>
+    <string name="user_state_admin">Administrator</string>
+    <string name="pref_title_typing_icon">User typing</string>
+    <string name="pref_title_all_channel_join">Other channel join</string>
+    <string name="pref_title_all_channel_leave">Other channel leave</string>
+    <string name="text_user_typing_title">%s is typing…</string>
+    <string name="text_tts_user_typing">%s is typing a message</string>
+    <string name="text_tts_user_joined_other_channel">%1$s joined %2$s</string>
+    <string name="text_tts_user_left_other_channel">%1$s left %2$s</string>
 </resources>

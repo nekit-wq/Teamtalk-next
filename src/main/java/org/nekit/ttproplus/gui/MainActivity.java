@@ -77,15 +77,29 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.tabs.TabLayout;
 import android.text.InputType;
 import dk.bearware.Channel;
+import dk.bearware.ChannelType;
+import dk.bearware.ClientFlag;
 import dk.bearware.ClientStatistics;
+import dk.bearware.Constants;
+import dk.bearware.MediaFileInfo;
+import dk.bearware.MediaFilePlayback;
+import dk.bearware.MediaFilePlaybackConstants;
+import dk.bearware.MediaFileStatus;
 import dk.bearware.RemoteFile;
 import dk.bearware.ServerProperties;
 import dk.bearware.SoundLevel;
+import dk.bearware.StreamType;
 import dk.bearware.TeamTalkBase;
 import dk.bearware.TextMessage;
+import dk.bearware.TextMsgType;
 import dk.bearware.User;
 import dk.bearware.UserAccount;
+import dk.bearware.UserRight;
+import dk.bearware.VideoCodec;
 import dk.bearware.events.ClientEventListener;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.text.TextUtils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -200,10 +214,12 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     final int SOUND_INTERCEPTON = 18;
     final int SOUND_INTERCEPTOFF = 19;
     final int SOUND_CHANMSGSENT = 20;
+    final int SOUND_TYPING = 21;
     SparseIntArray sounds = new SparseIntArray();
     List<Integer> userIDS = new ArrayList();
+    final Map<Integer, Vector<MyTextMessage>> txtmsgMergeBuffer = new HashMap<>();
 
-        private interface OnButtonInteractionListener extends View.OnTouchListener, View.OnClickListener {
+    private interface OnButtonInteractionListener extends View.OnTouchListener, View.OnClickListener {
     }
 
     private static final Map<String, String[]> SOUND_CANDIDATES = new HashMap<>();
@@ -228,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         SOUND_CANDIDATES.put("user_left", new String[]{"removeuser.wav", "user_left.ogg", "removeuser.ogg", "user_left.wav"});
         SOUND_CANDIDATES.put("logged_on", new String[]{"logged_on.wav", "logged_on.ogg"});
         SOUND_CANDIDATES.put("logged_off", new String[]{"logged_off.wav", "logged_off.ogg"});
+        SOUND_CANDIDATES.put("typing", new String[]{"typing.wav", "typing.ogg"});
     }
 
     public ChannelListAdapter getChannelsAdapter() {
@@ -365,7 +382,24 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         MenuItem bcastItem = menu.findItem(R.id.action_broadcast);
         if (bcastItem != null) bcastItem.setEnabled(broadcastRight).setVisible(broadcastRight);
         MenuItem streamItem = menu.findItem(R.id.action_stream);
-        if (streamItem != null) streamItem.setEnabled(isMyChannel).setVisible(isMyChannel);
+        MediaFileInfo mfi = getService() != null ? getService().currentMediaFileInfo : null;
+        int flags = getClient().getFlags();
+        boolean isPaused = (mfi != null && mfi.nStatus == MediaFileStatus.MFS_PAUSED);
+        boolean isStreaming = (flags & ClientFlag.CLIENT_STREAM_AUDIO) == ClientFlag.CLIENT_STREAM_AUDIO || (flags & ClientFlag.CLIENT_STREAM_VIDEO) == ClientFlag.CLIENT_STREAM_VIDEO;
+
+        MenuItem pauseItem = menu.findItem(R.id.action_pause);
+        if (pauseItem != null) {
+            pauseItem.setEnabled(isStreaming).setVisible(isStreaming);
+            pauseItem.setTitle(isPaused ? R.string.action_resume : R.string.action_pause);
+        }
+        if (streamItem != null) {
+            streamItem.setEnabled(isMyChannel || isStreaming).setVisible(isMyChannel || isStreaming);
+            streamItem.setTitle(isStreaming ? R.string.action_stop : R.string.action_stream);
+        }
+        MenuItem statusNickItem = menu.findItem(R.id.action_statusnick);
+        if (statusNickItem != null) {
+            statusNickItem.setEnabled(isLeaveable).setVisible(isLeaveable);
+        }
         MenuItem userAccItem = menu.findItem(R.id.action_user_accounts);
         if (userAccItem != null) userAccItem.setEnabled(hasUserAccounts).setVisible(hasUserAccounts && isLeaveable);
         MenuItem srvPropItem = menu.findItem(R.id.action_server_properties);
@@ -397,6 +431,39 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         File recordedFile;
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         int itemId = item.getItemId();
+        if (itemId == R.id.action_statusnick) {
+            showChangeNicknameStatusDialog();
+            return true;
+        }
+        if (itemId == R.id.action_pause) {
+            MediaFileInfo currentMfi = getService() != null ? getService().currentMediaFileInfo : null;
+            MediaFilePlayback pb = new MediaFilePlayback();
+            VideoCodec vc = new VideoCodec();
+            pb.uOffsetMSec = MediaFilePlaybackConstants.TT_MEDIAPLAYBACK_OFFSET_IGNORE;
+            pb.bPaused = (currentMfi != null && currentMfi.nStatus == MediaFileStatus.MFS_PLAYING);
+            getClient().updateStreamingMediaFileToChannel(pb, vc);
+            invalidateOptionsMenu();
+            return true;
+        }
+        if (itemId == R.id.action_stream) {
+            int currentFlags = getClient() != null ? getClient().getFlags() : 0;
+            boolean currentlyStreaming = (currentFlags & ClientFlag.CLIENT_STREAM_AUDIO) == ClientFlag.CLIENT_STREAM_AUDIO || (currentFlags & ClientFlag.CLIENT_STREAM_VIDEO) == ClientFlag.CLIENT_STREAM_VIDEO;
+            if (currentlyStreaming) {
+                getClient().stopStreamingMediaFileToChannel();
+                if (getService() != null) {
+                    getService().setStreamingMedia(false);
+                    getService().setCurrentStreamPath("");
+                    getService().setCurrentMediaFileInfo(null);
+                    getService().setCurrentPlayback(null);
+                }
+                Toast.makeText(this, R.string.msg_stream_stopped, Toast.LENGTH_SHORT).show();
+                invalidateOptionsMenu();
+            } else {
+                Intent intent = new Intent(MainActivity.this, StreamMediaActivity.class);
+                startActivity(intent);
+            }
+            return true;
+        }
         if (itemId == R.id.action_mute_tts) {
             if (this.ttsWrapper != null) {
                 boolean newMuted = !this.ttsWrapper.isMuted();
@@ -576,6 +643,119 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showChangeNicknameStatusDialog() {
+        if (getService() == null || getClient() == null) return;
+        User myself = getService().getUsers().get(Integer.valueOf(getClient().getMyUserID()));
+        if (myself == null) {
+            Toast.makeText(this, R.string.text_con_cmderr, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final int[] modeValues = {
+                0, // STATUSMODE_AVAILABLE
+                1, // STATUSMODE_AWAY
+                2  // STATUSMODE_QUESTION
+        };
+        int checkedItem = 0;
+        int currentMode = myself.nStatusMode & 3;
+        for (int i = 0; i < modeValues.length; i++) {
+            if (modeValues[i] == currentMode) {
+                checkedItem = i;
+                break;
+            }
+        }
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int padding = (int) (getResources().getDisplayMetrics().density * 20);
+        layout.setPadding(padding, padding / 2, padding, 0);
+
+        TextView nicknameLabel = new TextView(this);
+        nicknameLabel.setText(R.string.pref_title_nickname);
+        layout.addView(nicknameLabel);
+
+        final EditText nicknameInput = new EditText(this);
+        nicknameInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        nicknameInput.setSingleLine();
+        nicknameInput.setText(myself.szNickname != null ? myself.szNickname : "");
+        nicknameInput.setSelection(nicknameInput.getText().length());
+        layout.addView(nicknameInput);
+
+        TextView messageLabel = new TextView(this);
+        messageLabel.setText(R.string.text_status_message);
+        layout.addView(messageLabel);
+
+        final EditText statusMessageInput = new EditText(this);
+        statusMessageInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        statusMessageInput.setSingleLine();
+        statusMessageInput.setText(myself.szStatusMsg != null ? myself.szStatusMsg : "");
+        statusMessageInput.setSelection(statusMessageInput.getText().length());
+        layout.addView(statusMessageInput);
+
+        TextView modeLabel = new TextView(this);
+        modeLabel.setText(R.string.text_status_mode);
+        layout.addView(modeLabel);
+
+        final RadioGroup modeGroup = new RadioGroup(this);
+        modeGroup.setOrientation(RadioGroup.VERTICAL);
+
+        RadioButton availableButton = new RadioButton(this);
+        availableButton.setId(View.generateViewId());
+        availableButton.setText(R.string.status_mode_available);
+        modeGroup.addView(availableButton);
+
+        RadioButton awayButton = new RadioButton(this);
+        awayButton.setId(View.generateViewId());
+        awayButton.setText(R.string.status_mode_away);
+        modeGroup.addView(awayButton);
+
+        RadioButton questionButton = new RadioButton(this);
+        questionButton.setId(View.generateViewId());
+        questionButton.setText(R.string.status_mode_question);
+        modeGroup.addView(questionButton);
+
+        modeGroup.check(modeGroup.getChildAt(checkedItem).getId());
+        layout.addView(modeGroup);
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.action_statusnick)
+                .setView(layout)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        int selectedIndex = modeGroup.indexOfChild(
+                                modeGroup.findViewById(modeGroup.getCheckedRadioButtonId()));
+                        int selectedMode = (selectedIndex >= 0 && selectedIndex < modeValues.length) ? modeValues[selectedIndex] : modeValues[0];
+                        applyNicknameStatusChange(
+                                nicknameInput.getText().toString(),
+                                selectedMode,
+                                statusMessageInput.getText().toString());
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void applyNicknameStatusChange(String nickname, int mode, String statusMessage) {
+        if (getService() == null || getClient() == null) return;
+        User myself = getService().getUsers().get(Integer.valueOf(getClient().getMyUserID()));
+        if (myself == null) return;
+
+        ServerEntry serverEntry = getService().getServerEntry();
+        if (serverEntry != null) {
+            serverEntry.nickname = nickname;
+            serverEntry.statusmsg = statusMessage;
+            getService().setServerEntry(serverEntry);
+        }
+
+        if (!TextUtils.equals(nickname, myself.szNickname)) {
+            getClient().doChangeNickname(nickname);
+        }
+
+        int statusMode = (myself.nStatusMode & ~3) | mode;
+        getClient().doChangeStatus(statusMode, statusMessage);
     }
 
     private void publishCurrentServer() {
@@ -782,6 +962,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
             if (((Boolean) this.prefs.get("userloggedoff_icon", true)).booleanValue()) {
                 this.sounds.put(17, loadSound(this.prefs, this.ctx, soundPack, "logged_off", R.raw.logged_off));
+            }
+            if (((Boolean) this.prefs.get("typing_icon", true)).booleanValue()) {
+                this.sounds.put(SOUND_TYPING, loadSound(this.prefs, this.ctx, soundPack, "typing", R.raw.typing));
             }
         }
         if (getTextMessagesAdapter() != null) {
@@ -1947,27 +2130,21 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 boolean talking = (user.uUserState & 1) != 0;
                 boolean female = (user.nStatusMode & 256) != 0;
                 boolean neutral2 = (user.nStatusMode & 4096) != 0;
-                if (female || neutral2) {
-                }
-                boolean away = (user.nStatusMode & 1) != 0;
+                boolean isAway = (user.nStatusMode & 1) != 0;
+                boolean isStreaming = (user.nStatusMode & 2048) != 0;
+                boolean isAdmin = (user.uUserRights & UserRight.USERRIGHT_ADMIN) != 0;
+                int icon_resource;
                 if (MainActivity.this.getService() != null && MainActivity.this.getClient() != null && user.nUserID == MainActivity.this.getClient().getMyUserID()) {
                     talking = MainActivity.this.getService().isVoiceTransmitting();
                 }
                 String move = selected ? MainActivity.this.getString(R.string.user_state_selected) : "";
-                if (talking) {
-                    neutral = neutral2;
-                    isOperator = isOperator2;
-                    str = "";
-                    speaking = MainActivity.this.getString(R.string.user_state_now_speaking, new Object[]{name2});
-                } else {
-                    neutral = neutral2;
-                    isOperator = isOperator2;
-                    str = "";
-                    speaking = name2;
-                }
-                String gender = female ? " 👩 " : neutral ? " 🧑 " : " 👨 ";
-                String op = isOperator ? MainActivity.this.getString(R.string.user_state_operator) : str;
-                nickname.setContentDescription(move + speaking + gender + op);
+                String speaking = talking ? MainActivity.this.getString(R.string.user_state_now_speaking, new Object[]{name2}) : name2;
+                String gender = female ? MainActivity.this.getString(R.string.user_state_female) : neutral2 ? MainActivity.this.getString(R.string.user_state_neutral) : MainActivity.this.getString(R.string.user_state_male);
+                String op = isOperator2 ? MainActivity.this.getString(R.string.user_state_operator) : "";
+                String admin = isAdmin ? MainActivity.this.getString(R.string.user_state_admin) : "";
+                String away = isAway ? MainActivity.this.getString(R.string.user_state_away) : "";
+                String streaming = isStreaming ? MainActivity.this.getString(R.string.user_state_streaming) : "";
+                nickname.setContentDescription(move + " " + speaking + " " + gender + " " + op + " " + admin);
                 if (talking) {
                     if (female) {
                         icon_resource = R.drawable.woman_green;
@@ -1975,12 +2152,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                         icon_resource = R.drawable.man_green;
                     }
                 } else if (female) {
-                    icon_resource = away ? R.drawable.woman_orange : R.drawable.woman_blue;
+                    icon_resource = isAway ? R.drawable.woman_orange : R.drawable.woman_blue;
                 } else {
-                    icon_resource = away ? R.drawable.man_orange : R.drawable.man_blue;
+                    icon_resource = isAway ? R.drawable.man_orange : R.drawable.man_blue;
                 }
-                String move2 = away ? MainActivity.this.getString(R.string.user_state_away) + " " + user.szStatusMsg : null;
-                status.setContentDescription(move2);
+                status.setContentDescription(away + " " + streaming + " " + (user.szStatusMsg != null ? user.szStatusMsg : ""));
                 usericon.setImageResource(icon_resource);
                 usericon.setImportantForAccessibility(2);
                 Button sndmsg = (Button) convertView3.findViewById(R.id.msg_btn);
@@ -2379,12 +2555,30 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         this.selectedChannel = (Channel) item;
         UserAccount myuseraccount2 = new UserAccount();
         getClient().getMyUserAccount(myuseraccount2);
-        boolean moveRight2 = (myuseraccount2.uUserRights & 128) != 0;
+        boolean moveRight2 = (myuseraccount2.uUserRights & UserRight.USERRIGHT_MOVE_USERS) != 0;
+        boolean modifyRight = (myuseraccount2.uUserRights & UserRight.USERRIGHT_MODIFY_CHANNELS) != 0;
+        boolean operatorRight = getClient().isChannelOperator(getClient().getMyUserID(), this.selectedChannel.nChannelID);
+        boolean isClassroom = (this.selectedChannel.uChannelType & ChannelType.CHANNEL_CLASSROOM) != 0;
+        User everyone = new User();
+        everyone.nUserID = Constants.TT_CLASSROOM_FREEFORALL;
+
         PopupMenu channelActions = new PopupMenu(this, v);
         channelActions.setOnMenuItemClickListener(this);
         channelActions.inflate(R.menu.channel_actions);
         boolean canMove = moveRight2 && !this.userIDS.isEmpty();
         channelActions.getMenu().findItem(R.id.action_move).setEnabled(canMove).setVisible(canMove);
+        if (channelActions.getMenu().findItem(R.id.action_allowvoice) != null) {
+            channelActions.getMenu().findItem(R.id.action_allowvoice).setEnabled(isClassroom && (modifyRight || operatorRight)).setVisible(isClassroom && (modifyRight || operatorRight));
+            channelActions.getMenu().findItem(R.id.action_allowvoice).setTitle(Utils.isTransmitAllowed(everyone, this.selectedChannel, StreamType.STREAMTYPE_VOICE) ? R.string.action_disallowvoice : R.string.action_allowvoice);
+            channelActions.getMenu().findItem(R.id.action_allowvideo).setEnabled(isClassroom && (modifyRight || operatorRight)).setVisible(isClassroom && (modifyRight || operatorRight));
+            channelActions.getMenu().findItem(R.id.action_allowvideo).setTitle(Utils.isTransmitAllowed(everyone, this.selectedChannel, StreamType.STREAMTYPE_VIDEOCAPTURE) ? R.string.action_disallowvideo : R.string.action_allowvideo);
+            channelActions.getMenu().findItem(R.id.action_allowdesktop).setEnabled(isClassroom && (modifyRight || operatorRight)).setVisible(isClassroom && (modifyRight || operatorRight));
+            channelActions.getMenu().findItem(R.id.action_allowdesktop).setTitle(Utils.isTransmitAllowed(everyone, this.selectedChannel, StreamType.STREAMTYPE_DESKTOP) ? R.string.action_disallowdesktop : R.string.action_allowdesktop);
+            channelActions.getMenu().findItem(R.id.action_allowmedia).setEnabled(isClassroom && (modifyRight || operatorRight)).setVisible(isClassroom && (modifyRight || operatorRight));
+            channelActions.getMenu().findItem(R.id.action_allowmedia).setTitle(Utils.isTransmitAllowed(everyone, this.selectedChannel, StreamType.STREAMTYPE_MEDIAFILE) ? R.string.action_disallowmedia : R.string.action_allowmedia);
+            channelActions.getMenu().findItem(R.id.action_allowchanmsg).setEnabled(isClassroom && (modifyRight || operatorRight)).setVisible(isClassroom && (modifyRight || operatorRight));
+            channelActions.getMenu().findItem(R.id.action_allowchanmsg).setTitle(Utils.isTransmitAllowed(everyone, this.selectedChannel, StreamType.STREAMTYPE_CHANNELMSG) ? R.string.action_disallowchanmsg : R.string.action_allowchanmsg);
+        }
         channelActions.show();
         return true;
     }
@@ -2485,6 +2679,36 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             });
             alert.setNegativeButton(android.R.string.no, (DialogInterface.OnClickListener) null);
             alert.show();
+        } else if (itemId == R.id.action_allowvoice) {
+            User everyone2 = new User();
+            everyone2.nUserID = Constants.TT_CLASSROOM_FREEFORALL;
+            boolean allowed = Utils.isTransmitAllowed(everyone2, this.selectedChannel, StreamType.STREAMTYPE_VOICE);
+            Utils.toggleTransmitUsers(everyone2, this.selectedChannel, StreamType.STREAMTYPE_VOICE, !allowed);
+            getClient().doUpdateChannel(this.selectedChannel);
+        } else if (itemId == R.id.action_allowvideo) {
+            User everyone2 = new User();
+            everyone2.nUserID = Constants.TT_CLASSROOM_FREEFORALL;
+            boolean allowed = Utils.isTransmitAllowed(everyone2, this.selectedChannel, StreamType.STREAMTYPE_VIDEOCAPTURE);
+            Utils.toggleTransmitUsers(everyone2, this.selectedChannel, StreamType.STREAMTYPE_VIDEOCAPTURE, !allowed);
+            getClient().doUpdateChannel(this.selectedChannel);
+        } else if (itemId == R.id.action_allowdesktop) {
+            User everyone2 = new User();
+            everyone2.nUserID = Constants.TT_CLASSROOM_FREEFORALL;
+            boolean allowed = Utils.isTransmitAllowed(everyone2, this.selectedChannel, StreamType.STREAMTYPE_DESKTOP);
+            Utils.toggleTransmitUsers(everyone2, this.selectedChannel, StreamType.STREAMTYPE_DESKTOP, !allowed);
+            getClient().doUpdateChannel(this.selectedChannel);
+        } else if (itemId == R.id.action_allowmedia) {
+            User everyone2 = new User();
+            everyone2.nUserID = Constants.TT_CLASSROOM_FREEFORALL;
+            boolean allowed = Utils.isTransmitAllowed(everyone2, this.selectedChannel, StreamType.STREAMTYPE_MEDIAFILE);
+            Utils.toggleTransmitUsers(everyone2, this.selectedChannel, StreamType.STREAMTYPE_MEDIAFILE, !allowed);
+            getClient().doUpdateChannel(this.selectedChannel);
+        } else if (itemId == R.id.action_allowchanmsg) {
+            User everyone2 = new User();
+            everyone2.nUserID = Constants.TT_CLASSROOM_FREEFORALL;
+            boolean allowed = Utils.isTransmitAllowed(everyone2, this.selectedChannel, StreamType.STREAMTYPE_CHANNELMSG);
+            Utils.toggleTransmitUsers(everyone2, this.selectedChannel, StreamType.STREAMTYPE_CHANNELMSG, !allowed);
+            getClient().doUpdateChannel(this.selectedChannel);
         } else {
             if (itemId != R.id.action_banned_users) {
                 return false;
@@ -3066,6 +3290,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.textmsgAdapter.notifyDataSetChanged();
             this.channelsAdapter.notifyDataSetChanged();
             return;
+        } else if (user.nUserID != getClient().getMyUserID() && this.ttsWrapper != null && ((Boolean) this.prefs.get("all_channel_join_checkbox", false)).booleanValue()) {
+            String name = Utils.getDisplayName(getBaseContext(), user);
+            Channel targetChan = getService() != null ? getService().getChannels().get(Integer.valueOf(user.nChannelID)) : null;
+            String chanName = (targetChan != null && targetChan.nParentID == 0) ? getString(R.string.text_cmd_joinroot) : (targetChan != null ? targetChan.szName : "");
+            this.ttsWrapper.speak(getString(R.string.text_tts_user_joined_other_channel, name, chanName));
         }
         if (isVisibleChannel(user.nChannelID)) {
             this.accessibilityAssistant.lockEvents();
@@ -3111,6 +3340,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
             this.accessibilityAssistant.unlockEvents();
             return;
+        } else if (user.nUserID != getClient().getMyUserID() && this.ttsWrapper != null && ((Boolean) this.prefs.get("all_channel_leave_checkbox", false)).booleanValue()) {
+            String name = Utils.getDisplayName(getBaseContext(), user);
+            Channel targetChan = getService() != null ? getService().getChannels().get(Integer.valueOf(channelid)) : null;
+            String chanName = (targetChan != null && targetChan.nParentID == 0) ? getString(R.string.text_cmd_leftroot) : (targetChan != null ? targetChan.szName : "");
+            this.ttsWrapper.speak(getString(R.string.text_tts_user_left_other_channel, name, chanName));
         }
         if (isVisibleChannel(channelid)) {
             this.accessibilityAssistant.lockEvents();
@@ -3121,15 +3355,37 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
     @Override
     public void onCmdUserTextMessage(TextMessage textmessage) {
-        switch (textmessage.nMsgType) {
+        if (textmessage.nMsgType == TextMsgType.MSGTYPE_CUSTOM) {
+            if (textmessage.szMessage != null && textmessage.szMessage.startsWith("typing\r\n")) {
+                boolean typing = textmessage.szMessage.endsWith("1");
+                if (typing) {
+                    if (this.sounds.get(SOUND_TYPING) != 0) {
+                        this.audioIcons.play(this.sounds.get(SOUND_TYPING), 1.0f, 1.0f, 0, 0, 1.0f);
+                    }
+                    if (this.ttsWrapper != null && ((Boolean) this.prefs.get("pref_tts_typing", true)).booleanValue()) {
+                        User sender = getService() != null ? getService().getUsers().get(Integer.valueOf(textmessage.nFromUserID)) : null;
+                        String name = sender != null ? Utils.getDisplayName(getBaseContext(), sender) : "";
+                        this.ttsWrapper.speak(getString(R.string.text_tts_user_typing, name));
+                    }
+                }
+            }
+            return;
+        }
+
+        MyTextMessage completemsg = MyTextMessage.mergeMessage(this.txtmsgMergeBuffer, new MyTextMessage(textmessage, ""));
+        if (completemsg == null) {
+            return;
+        }
+
+        switch (completemsg.nMsgType) {
             case 1:
                 if (this.sounds.get(3) != 0) {
                     this.audioIcons.play(this.sounds.get(3), 1.0f, 1.0f, 0, 0, 1.0f);
                 }
-                User sender = getService().getUsers().get(Integer.valueOf(textmessage.nFromUserID));
+                User sender = getService() != null ? getService().getUsers().get(Integer.valueOf(completemsg.nFromUserID)) : null;
                 String name = Utils.getDisplayName(getBaseContext(), sender);
                 if (this.ttsWrapper != null && ((Boolean) this.prefs.get("private_message_checkbox", false)).booleanValue()) {
-                    this.ttsWrapper.speak(getString(R.string.text_tts_private_message, new Object[]{name, textmessage.szMessage}));
+                    this.ttsWrapper.speak(getString(R.string.text_tts_private_message, new Object[]{name, completemsg.szMessage}));
                 }
                 Intent action = new Intent(this, (Class<?>) TextMessageActivity.class);
                 if (Build.VERSION.SDK_INT >= 26) {
@@ -3140,27 +3396,33 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     mChannel.setSound(null, null);
                     this.notificationManager.createNotificationChannel(mChannel);
                 }
-                Notification notification = new NotificationCompat.Builder(this, MSG_NOTIFICATION_CHANNEL_ID).setSmallIcon(R.drawable.message).setContentTitle(getString(R.string.private_message_notification, new Object[]{name})).setContentText(getString(R.string.private_message_notification_hint)).setContentIntent(PendingIntent.getActivity(this, textmessage.nFromUserID, action.putExtra("userid", textmessage.nFromUserID), AccessibilityEventCompat.TYPE_VIEW_TARGETED_BY_SCROLL)).setAutoCancel(true).build();
-                this.notificationManager.notify(MESSAGE_NOTIFICATION_TAG, textmessage.nFromUserID, notification);
+                Notification notification = new NotificationCompat.Builder(this, MSG_NOTIFICATION_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.message)
+                        .setContentTitle(getString(R.string.private_message_notification, new Object[]{name}))
+                        .setContentText(getString(R.string.private_message_notification_hint))
+                        .setContentIntent(PendingIntent.getActivity(this, completemsg.nFromUserID, action.putExtra("userid", completemsg.nFromUserID), AccessibilityEventCompat.TYPE_VIEW_TARGETED_BY_SCROLL))
+                        .setAutoCancel(true)
+                        .build();
+                this.notificationManager.notify(MESSAGE_NOTIFICATION_TAG, completemsg.nFromUserID, notification);
                 return;
             case 2:
                 this.accessibilityAssistant.lockEvents();
                 this.textmsgAdapter.notifyDataSetChanged();
                 this.accessibilityAssistant.unlockEvents();
-                if (textmessage.nFromUserID != getService().getTTInstance().getMyUserID()) {
+                if (completemsg.nFromUserID != getService().getTTInstance().getMyUserID()) {
                     if (this.sounds.get(4) != 0) {
                         this.audioIcons.play(this.sounds.get(4), 1.0f, 1.0f, 0, 0, 1.0f);
                     }
                     if (this.ttsWrapper != null && ((Boolean) this.prefs.get("channel_message_checkbox", false)).booleanValue()) {
-                        User sender2 = getService().getUsers().get(Integer.valueOf(textmessage.nFromUserID));
-                        this.ttsWrapper.speak(getString(R.string.text_tts_channel_message, new Object[]{Utils.getDisplayName(getBaseContext(), sender2), textmessage.szMessage}));
+                        User sender2 = getService() != null ? getService().getUsers().get(Integer.valueOf(completemsg.nFromUserID)) : null;
+                        this.ttsWrapper.speak(getString(R.string.text_tts_channel_message, new Object[]{Utils.getDisplayName(getBaseContext(), sender2), completemsg.szMessage}));
                     }
-                } else if (textmessage.nFromUserID == getService().getTTInstance().getMyUserID()) {
+                } else if (completemsg.nFromUserID == getService().getTTInstance().getMyUserID()) {
                     if (this.sounds.get(20) != 0) {
                         this.audioIcons.play(this.sounds.get(20), 1.0f, 1.0f, 0, 0, 1.0f);
                     }
                     if (this.ttsWrapper != null && ((Boolean) this.prefs.get("channel_message_sent_checkbox", false)).booleanValue()) {
-                        this.ttsWrapper.speak(getString(R.string.text_tts_channel_message_sent, new Object[]{textmessage.szMessage}));
+                        this.ttsWrapper.speak(getString(R.string.text_tts_channel_message_sent, new Object[]{completemsg.szMessage}));
                     }
                 }
                 Log.d("bearware", "Channel message in " + hashCode());
@@ -3173,8 +3435,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     this.audioIcons.play(this.sounds.get(5), 1.0f, 1.0f, 0, 0, 1.0f);
                 }
                 if (this.ttsWrapper != null && ((Boolean) this.prefs.get("broadcast_message_checkbox", false)).booleanValue()) {
-                    User sender3 = getService().getUsers().get(Integer.valueOf(textmessage.nFromUserID));
-                    this.ttsWrapper.speak(getString(R.string.text_tts_broadcast_message, new Object[]{Utils.getDisplayName(getBaseContext(), sender3), textmessage.szMessage}));
+                    User sender3 = getService() != null ? getService().getUsers().get(Integer.valueOf(completemsg.nFromUserID)) : null;
+                    this.ttsWrapper.speak(getString(R.string.text_tts_broadcast_message, new Object[]{Utils.getDisplayName(getBaseContext(), sender3), completemsg.szMessage}));
                 }
                 Log.d("bearware", "Broadcast message in " + hashCode());
                 return;

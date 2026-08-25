@@ -19,4 +19,5 @@
     <CheckBoxPreference android:title="@string/pref_sound_myself_join" android:key="pref_sound_myself_join" android:defaultValue="true" />
     <CheckBoxPreference android:title="@string/pref_sound_myself_leave" android:key="pref_sound_myself_leave" android:defaultValue="true" />
     <CheckBoxPreference android:title="@string/pref_sound_app_open" android:key="pref_sound_app_open" android:defaultValue="true" />
+    <CheckBoxPreference android:title="@string/pref_title_typing_icon" android:key="typing_icon" android:defaultValue="true" />
 </PreferenceScreen>

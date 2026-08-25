@@ -19,6 +19,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import dk.bearware.MediaFileInfo;
 import dk.bearware.MediaFilePlayback;
+import dk.bearware.MediaFilePlaybackConstants;
+import dk.bearware.MediaFileStatus;
 import dk.bearware.TeamTalkBase;
 import dk.bearware.VideoCodec;
 import dk.bearware.events.ClientEventListener;
@@ -68,7 +70,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         return service != null ? service.getTTInstance() : null;
     }
 
-        @Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
@@ -107,15 +109,16 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                     return;
                 }
                 int offset = (int) ((StreamMediaActivity.this.mMediaFileInfo.uDurationMSec * seekBar.getProgress()) / seekBar.getMax());
+                if (StreamMediaActivity.this.mPlayback == null) {
+                    StreamMediaActivity.this.mPlayback = new MediaFilePlayback();
+                }
                 StreamMediaActivity.this.mPlayback.uOffsetMSec = offset;
                 StreamMediaActivity.this.mPlayback.bPaused = false;
-                int i = StreamMediaActivity.this.localPlaybackId;
-                StreamMediaActivity streamMediaActivity = StreamMediaActivity.this;
-                if (i > 0) {
-                    streamMediaActivity.getClient().updateLocalPlayback(StreamMediaActivity.this.localPlaybackId, StreamMediaActivity.this.mPlayback);
-                } else if (streamMediaActivity.isStreaming) {
+                if (StreamMediaActivity.this.localPlaybackId > 0) {
+                    StreamMediaActivity.this.getClient().updateLocalPlayback(StreamMediaActivity.this.localPlaybackId, StreamMediaActivity.this.mPlayback);
+                } else if (StreamMediaActivity.this.isStreaming) {
                     VideoCodec vc = new VideoCodec();
-                    vc.nCodec = 0;
+                    vc.nCodec = (StreamMediaActivity.this.mMediaFileInfo.videoFmt != null && StreamMediaActivity.this.mMediaFileInfo.videoFmt.picFourCC != 0) ? 128 : 0;
                     StreamMediaActivity.this.getClient().updateStreamingMediaFileToChannel(StreamMediaActivity.this.mPlayback, vc);
                 }
             }
@@ -486,12 +489,17 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             getClient().stopStreamingMediaFileToChannel();
             this.isStreaming = false;
             this.btnStream.setText(R.string.button_stream_media_file);
-            Toast.makeText(this, R.string.msg_stream_stopped, 0).show();
+            this.btnPlayPause.setText(R.string.action_play);
+            if (this.localPlaybackId <= 0) {
+                this.btnStop.setEnabled(false);
+                this.handler.removeCallbacks(this.progressUpdater);
+            }
+            Toast.makeText(this, R.string.msg_stream_stopped, Toast.LENGTH_SHORT).show();
             if (getService() != null) {
                 getService().setStreamingMedia(false);
                 getService().setCurrentStreamPath("");
                 getService().setCurrentMediaFileInfo(null);
-                return;
+                getService().setCurrentPlayback(null);
             }
             return;
         }
@@ -508,16 +516,23 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             videocodec.nCodec = 128;
         }
         if (!getClient().startStreamingMediaFileToChannel(path, videocodec)) {
-            Toast.makeText(this, R.string.err_stream_media, 1).show();
+            Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
             return;
         }
+        this.mPlayback = new MediaFilePlayback();
+        this.mPlayback.bPaused = false;
+        this.mPlayback.uOffsetMSec = 0;
         this.isStreaming = true;
         this.btnStream.setText(R.string.action_stop);
-        Toast.makeText(this, R.string.msg_stream_started, 0).show();
+        this.btnPlayPause.setText(R.string.action_pause);
+        this.btnStop.setEnabled(true);
+        startProgressUpdater();
+        Toast.makeText(this, R.string.msg_stream_started, Toast.LENGTH_SHORT).show();
         if (getService() != null) {
             getService().setStreamingMedia(true);
             getService().setCurrentStreamPath(path);
             getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
+            getService().setCurrentPlayback(this.mPlayback);
         }
     }
 
@@ -526,16 +541,30 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         if (path.isEmpty()) {
             return;
         }
+        if (this.isStreaming) {
+            if (this.mPlayback == null) {
+                this.mPlayback = new MediaFilePlayback();
+            }
+            this.mPlayback.bPaused = !this.mPlayback.bPaused;
+            this.mPlayback.uOffsetMSec = MediaFilePlaybackConstants.TT_MEDIAPLAYBACK_OFFSET_IGNORE;
+            VideoCodec vc = new VideoCodec();
+            vc.nCodec = (this.mMediaFileInfo != null && this.mMediaFileInfo.videoFmt != null && this.mMediaFileInfo.videoFmt.picFourCC != 0) ? 128 : 0;
+            if (getClient().updateStreamingMediaFileToChannel(this.mPlayback, vc)) {
+                this.btnPlayPause.setText(this.mPlayback.bPaused ? R.string.action_resume : R.string.action_pause);
+                if (getService() != null) {
+                    getService().setCurrentPlayback(this.mPlayback);
+                }
+            }
+            return;
+        }
         if (this.localPlaybackId > 0) {
-            this.mPlayback.bPaused = true ^ this.mPlayback.bPaused;
+            this.mPlayback.bPaused = !this.mPlayback.bPaused;
             this.mPlayback.uOffsetMSec = -1;
             if (getClient().updateLocalPlayback(this.localPlaybackId, this.mPlayback)) {
                 this.btnPlayPause.setText(this.mPlayback.bPaused ? R.string.action_play : R.string.action_pause);
                 if (getService() != null) {
                     getService().setCurrentPlayback(this.mPlayback);
-                    return;
                 }
-                return;
             }
             return;
         }
@@ -544,12 +573,10 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         }
         this.mPlayback = new MediaFilePlayback();
         this.mPlayback.bPaused = false;
-        MediaFileInfo mediaFileInfo = this.mMediaFileInfo;
-        MediaFilePlayback mediaFilePlayback = this.mPlayback;
-        if (mediaFileInfo != null) {
-            mediaFilePlayback.uOffsetMSec = (int) ((this.mMediaFileInfo.uDurationMSec * this.seekBar.getProgress()) / this.seekBar.getMax());
+        if (this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0 && this.seekBar.getMax() > 0) {
+            this.mPlayback.uOffsetMSec = (int) ((this.mMediaFileInfo.uDurationMSec * this.seekBar.getProgress()) / this.seekBar.getMax());
         } else {
-            mediaFilePlayback.uOffsetMSec = 0;
+            this.mPlayback.uOffsetMSec = 0;
         }
         this.localPlaybackId = getClient().initLocalPlayback(path, this.mPlayback);
         if (this.localPlaybackId > 0) {
@@ -561,14 +588,16 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 getService().setCurrentStreamPath(path);
                 getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
                 getService().setCurrentPlayback(this.mPlayback);
-                return;
             }
             return;
         }
-        Toast.makeText(this, R.string.err_play_media, 1).show();
+        Toast.makeText(this, R.string.err_play_media, Toast.LENGTH_LONG).show();
     }
 
     private void stopLocalPlayback() {
+        if (this.isStreaming) {
+            toggleStreaming();
+        }
         if (this.localPlaybackId > 0) {
             getClient().stopLocalPlayback(this.localPlaybackId);
             this.localPlaybackId = 0;
@@ -598,15 +627,21 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             }
         }
         switch (mfi.nStatus) {
-            case 1:
-            case 3:
-            case 4:
+            case MediaFileStatus.MFS_CLOSED:
+            case MediaFileStatus.MFS_FINISHED:
+            case MediaFileStatus.MFS_ERROR:
                 this.isStreaming = false;
                 this.btnStream.setText(R.string.button_stream_media_file);
+                this.btnPlayPause.setText(R.string.action_play);
+                if (this.localPlaybackId <= 0) {
+                    this.btnStop.setEnabled(false);
+                    this.handler.removeCallbacks(this.progressUpdater);
+                }
                 if (getService() != null) {
                     getService().setStreamingMedia(false);
                     getService().setCurrentStreamPath("");
                     getService().setCurrentMediaFileInfo(null);
+                    getService().setCurrentPlayback(null);
                 }
                 if (!this.playlistUris.isEmpty() && this.playlistIndex < this.playlistUris.size() - 1) {
                     this.playlistIndex++;
@@ -614,11 +649,17 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                     return;
                 }
                 return;
-            case 2:
-            case 6:
+            case MediaFileStatus.MFS_PLAYING:
+            case MediaFileStatus.MFS_BUFFERING:
+                this.isStreaming = true;
                 this.btnStream.setText(R.string.action_stop);
+                this.btnPlayPause.setText(R.string.action_pause);
+                this.btnStop.setEnabled(true);
+                startProgressUpdater();
                 return;
-            case 5:
+            case MediaFileStatus.MFS_PAUSED:
+                this.btnPlayPause.setText(R.string.action_resume);
+                return;
             default:
                 return;
         }
@@ -669,7 +710,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.progressUpdater = new Runnable() { 
             @Override
             public void run() {
-                if (StreamMediaActivity.this.localPlaybackId > 0 && !StreamMediaActivity.this.seekBarTouching && StreamMediaActivity.this.mMediaFileInfo != null) {
+                if ((StreamMediaActivity.this.localPlaybackId > 0 || StreamMediaActivity.this.isStreaming) && !StreamMediaActivity.this.seekBarTouching && StreamMediaActivity.this.mMediaFileInfo != null) {
                     StreamMediaActivity.this.updateSeekBarPosition(StreamMediaActivity.this.mMediaFileInfo.uElapsedMSec);
                 }
                 StreamMediaActivity.this.handler.postDelayed(this, 250L);

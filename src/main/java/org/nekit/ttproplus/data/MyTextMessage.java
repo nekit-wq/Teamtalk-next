@@ -98,6 +98,58 @@ public class MyTextMessage extends TextMessage {
         result.addAll(newmsg.split());
         return result;
     }
+
+    public static MyTextMessage mergeMessage(java.util.Map<Integer, Vector<MyTextMessage>> pending, MyTextMessage msg) {
+        int key = (msg.nMsgType << 16) | msg.nFromUserID;
+        Vector<MyTextMessage> parts = pending.get(key);
+        if (msg.bMore) {
+            if (parts == null) {
+                parts = new Vector<>();
+                pending.put(key, parts);
+            }
+            parts.add(msg);
+            if (parts.size() > 1000)
+                pending.remove(key);
+            return null;
+        }
+        if (parts != null) {
+            StringBuilder content = new StringBuilder();
+            for (MyTextMessage part : parts)
+                content.append(part.szMessage);
+            content.append(msg.szMessage);
+            msg.szMessage = content.toString();
+            pending.remove(key);
+        }
+        return msg;
+    }
+
+    public static void merge(Vector<MyTextMessage> msgs) {
+        java.util.Map<Integer, Vector<MyTextMessage>> mergemsgs = new java.util.HashMap<>();
+        Vector<MyTextMessage> removemsgs = new Vector<>();
+        for (MyTextMessage m : msgs) {
+            int key = (m.nMsgType << 16) | m.nFromUserID;
+            Vector<MyTextMessage> moremessages = mergemsgs.get(key);
+            if (m.bMore) {
+                if (moremessages == null) {
+                    moremessages = new Vector<>();
+                    mergemsgs.put(key, moremessages);
+                }
+                moremessages.add(m);
+            }
+            else if (moremessages != null) {
+                StringBuilder content = new StringBuilder();
+                for (MyTextMessage moremessage : moremessages) {
+                    content.append(moremessage.szMessage);
+                    removemsgs.add(moremessage);
+                }
+                m.szMessage = content.toString() + m.szMessage;
+                mergemsgs.remove(key);
+            }
+        }
+        for (MyTextMessage m : removemsgs) {
+            msgs.remove(m);
+        }
+    }
     
     public static final int MSGTYPE_LOG_INFO    = 0x80000000;
     public static final int MSGTYPE_LOG_ERROR   = 0x40000000;

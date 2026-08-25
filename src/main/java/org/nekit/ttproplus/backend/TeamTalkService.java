@@ -225,40 +225,45 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 return;
             }
             switch (state) {
-                case 0:
-                    boolean z = TeamTalkService.this.voxSuspended;
-                    TeamTalkService teamTalkService = TeamTalkService.this;
-                    if (z) {
-                        teamTalkService.enableVoiceActivation(true);
-                    } else if (teamTalkService.txSuspended) {
-                        TeamTalkService.this.enableVoiceTransmission(true);
+                case TelephonyManager.CALL_STATE_IDLE:
+                    if (TeamTalkService.this.inPhoneCall) {
+                        boolean z = TeamTalkService.this.voxSuspended;
+                        TeamTalkService teamTalkService = TeamTalkService.this;
+                        if (z) {
+                            teamTalkService.enableVoiceActivation(true);
+                        } else if (teamTalkService.txSuspended) {
+                            TeamTalkService.this.enableVoiceTransmission(true);
+                        }
+                        TeamTalkService.this.setMute(TeamTalkService.this.permanentMuteState);
+                        if (myself != null && (1 & this.myStatus) == 0) {
+                            TeamTalkService.this.ttclient.doChangeStatus(myself.nStatusMode & (-2), myself.szStatusMsg);
+                        }
+                        TeamTalkService.this.inPhoneCall = false;
+                        TeamTalkService.this.scheduleReconnectBluetoothScoAfterCall();
                     }
-                    TeamTalkService.this.setMute(TeamTalkService.this.permanentMuteState);
-                    if (myself != null && (1 & this.myStatus) == 0) {
-                        TeamTalkService.this.ttclient.doChangeStatus(myself.nStatusMode & (-2), myself.szStatusMsg);
-                    }
-                    TeamTalkService.this.inPhoneCall = false;
-                    TeamTalkService.this.scheduleReconnectBluetoothScoAfterCall();
                     return;
-                case 1:
-                    TeamTalkService.this.inPhoneCall = true;
-                    if (!TeamTalkService.this.isMute()) {
-                        TeamTalkService.this.ttclient.setSoundOutputMute(true);
-                        TeamTalkService.this.currentMuteState = true;
-                    }
-                    boolean isVoiceActivationEnabled = TeamTalkService.this.isVoiceActivationEnabled();
-                    TeamTalkService teamTalkService2 = TeamTalkService.this;
-                    if (isVoiceActivationEnabled) {
-                        teamTalkService2.voxSuspended = true;
-                        TeamTalkService.this.enableVoiceActivation(false);
-                    } else if (teamTalkService2.isVoiceTransmissionEnabled()) {
-                        TeamTalkService.this.txSuspended = true;
-                        TeamTalkService.this.enableVoiceTransmission(false);
-                    }
-                    this.myStatus = myself.nStatusMode;
-                    if ((this.myStatus & 1) == 0) {
-                        TeamTalkService.this.ttclient.doChangeStatus(1 | this.myStatus, myself.szStatusMsg);
-                        return;
+                case TelephonyManager.CALL_STATE_RINGING:
+                case TelephonyManager.CALL_STATE_OFFHOOK:
+                    if (!TeamTalkService.this.inPhoneCall) {
+                        TeamTalkService.this.inPhoneCall = true;
+                        if (!TeamTalkService.this.isMute()) {
+                            TeamTalkService.this.ttclient.setSoundOutputMute(true);
+                            TeamTalkService.this.currentMuteState = true;
+                        }
+                        boolean isVoiceActivationEnabled = TeamTalkService.this.isVoiceActivationEnabled();
+                        TeamTalkService teamTalkService2 = TeamTalkService.this;
+                        if (isVoiceActivationEnabled) {
+                            teamTalkService2.voxSuspended = true;
+                            TeamTalkService.this.enableVoiceActivation(false);
+                        } else if (teamTalkService2.isVoiceTransmissionEnabled()) {
+                            TeamTalkService.this.txSuspended = true;
+                            TeamTalkService.this.enableVoiceTransmission(false);
+                        }
+                        this.myStatus = myself.nStatusMode;
+                        if ((this.myStatus & 1) == 0) {
+                            TeamTalkService.this.ttclient.doChangeStatus(1 | this.myStatus, myself.szStatusMsg);
+                            return;
+                        }
                     }
                     return;
                 default:
@@ -1753,6 +1758,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onCmdUserUpdate(User user) {
+        User olduser = this.users.get(Integer.valueOf(user.nUserID));
+        if (olduser != null) {
+            Utils.subscriptionLogChanged(getBaseContext(), olduser, user)
+                .ifPresent(text -> getChatLogTextMsgs().add(MyTextMessage.createLogMsg(MyTextMessage.MSGTYPE_LOG_INFO, text)));
+        }
         this.users.put(Integer.valueOf(user.nUserID), user);
         updateFloatingWindow();
     }
@@ -1894,6 +1904,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onCmdChannelUpdate(Channel channel) {
+        Channel oldchannel = this.channels.get(Integer.valueOf(channel.nChannelID));
+        if (oldchannel != null && this.mychannel != null && this.mychannel.nChannelID == channel.nChannelID) {
+            Utils.transmitUsersLogChanged(getBaseContext(), oldchannel, channel, getUsers())
+                .ifPresent(text -> getChatLogTextMsgs().add(MyTextMessage.createLogMsg(MyTextMessage.MSGTYPE_LOG_INFO, text)));
+        }
         this.channels.put(Integer.valueOf(channel.nChannelID), channel);
         if (this.mychannel != null && this.mychannel.nChannelID == channel.nChannelID) {
             setMyChannel(channel);
@@ -1952,6 +1967,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onStreamMediaFile(MediaFileInfo mediafileinfo) {
+        this.currentMediaFileInfo = mediafileinfo;
         User myself = this.users.get(Integer.valueOf(this.ttclient.getMyUserID()));
         if (myself == null) {
             return;

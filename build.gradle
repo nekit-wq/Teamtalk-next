@@ -15,8 +15,8 @@ android {
         applicationId = 'org.nekit.ttproplus'
         minSdk = 21
         targetSdk = 36
-        versionCode = 410
-        versionName = '5.27.10'
+        versionCode = 411
+        versionName = '5.27.11'
 
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     }
