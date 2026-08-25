@@ -138,7 +138,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             return true;
         }
         if (id == 16908332) {
-            stopLocalPlayback();
             finish();
             return true;
         }
@@ -147,7 +146,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
 
     @Override
     public boolean onSupportNavigateUp() {
-        stopLocalPlayback();
         finish();
         return true;
     }
@@ -185,7 +183,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
 
         @Override
     public void onDestroy() {
-        stopLocalPlayback();
         super.onDestroy();
     }
 
@@ -229,12 +226,17 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         };
         getService().getEventHandler().registerOnStreamMediaFile(this.streamMediaFileListener, true);
         getService().getEventHandler().registerOnLocalMediaFile(this.localMediaFileListener, true);
-        if ((service.isStreamingMedia() || service.getLocalPlaybackId() > 0) && (path = service.getCurrentStreamPath()) != null && !path.isEmpty()) {
-            this.file_path.setText(path);
+        int clientFlags = getClient() != null ? getClient().getFlags() : 0;
+        boolean clientIsStreaming = (clientFlags & ClientFlag.CLIENT_STREAM_AUDIO) != 0 || (clientFlags & ClientFlag.CLIENT_STREAM_VIDEO) != 0;
+        if (service.isStreamingMedia() || clientIsStreaming || service.getLocalPlaybackId() > 0) {
+            path = service.getCurrentStreamPath();
+            if (path != null && !path.isEmpty()) {
+                this.file_path.setText(path);
+            }
             this.mMediaFileInfo = service.getCurrentMediaFileInfo();
             this.mPlayback = service.getCurrentPlayback();
             this.localPlaybackId = service.getLocalPlaybackId();
-            this.isStreaming = service.isStreamingMedia();
+            this.isStreaming = service.isStreamingMedia() || clientIsStreaming;
             if (this.mMediaFileInfo != null) {
                 showMediaFileInfo(this.mMediaFileInfo);
                 updateSeekBar();
@@ -242,8 +244,15 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             }
             if (this.isStreaming) {
                 this.btnStream.setText(R.string.action_stop);
-            }
-            if (this.localPlaybackId > 0) {
+                this.btnStop.setEnabled(true);
+                this.btnPlayPause.setEnabled(true);
+                if (this.mPlayback != null) {
+                    this.btnPlayPause.setText(this.mPlayback.bPaused ? R.string.action_resume : R.string.action_pause);
+                } else {
+                    this.btnPlayPause.setText(R.string.action_pause);
+                }
+                startProgressUpdater();
+            } else if (this.localPlaybackId > 0) {
                 this.btnStop.setEnabled(true);
                 if (this.mPlayback != null) {
                     this.btnPlayPause.setText(this.mPlayback.bPaused ? R.string.action_play : R.string.action_pause);

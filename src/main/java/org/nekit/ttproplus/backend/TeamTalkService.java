@@ -1969,17 +1969,22 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void onStreamMediaFile(MediaFileInfo mediafileinfo) {
         this.currentMediaFileInfo = mediafileinfo;
         User myself = this.users.get(Integer.valueOf(this.ttclient.getMyUserID()));
-        if (myself == null) {
-            return;
-        }
         switch (mediafileinfo.nStatus) {
             case 1:
             case 3:
             case 4:
-                this.ttclient.doChangeStatus(myself.nStatusMode & (-2049), myself.szStatusMsg);
+                this.isStreamingMedia = false;
+                this.currentStreamPath = "";
+                this.currentPlayback = null;
+                if (myself != null) {
+                    this.ttclient.doChangeStatus(myself.nStatusMode & (-2049), myself.szStatusMsg);
+                }
                 return;
             case 2:
-                this.ttclient.doChangeStatus(myself.nStatusMode | 2048, myself.szStatusMsg);
+                this.isStreamingMedia = true;
+                if (myself != null) {
+                    this.ttclient.doChangeStatus(myself.nStatusMode | 2048, myself.szStatusMsg);
+                }
                 return;
             default:
                 return;

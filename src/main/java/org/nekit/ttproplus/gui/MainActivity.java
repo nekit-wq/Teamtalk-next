@@ -524,11 +524,6 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return true;
         }
         if (itemId == R.id.action_stream) {
-            int flags = getClient().getFlags();
-            if ((flags & 65536) == 65536 || (flags & 131072) == 131072) {
-                getClient().stopStreamingMediaFileToChannel();
-                return true;
-            }
             Intent intent = new Intent(this, (Class<?>) StreamMediaActivity.class);
             startActivity(intent);
             return true;
