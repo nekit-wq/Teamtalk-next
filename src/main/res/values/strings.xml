@@ -1207,4 +1207,7 @@ By: %3$s"</string>
     <string name="dialog_new_tab_new_profile">➕ Create New Clean Profile</string>
     <string name="dialog_new_tab_clone_profile">📋 Clone Current Profile</string>
     <string name="dialog_new_tab_existing_profile">🌐 Open Other Profile</string>
+    <string name="profile_clone_postfix">Copy</string>
+    <string name="button_close">Close</string>
+    <string name="button_cancel">Cancel</string>
 </resources>

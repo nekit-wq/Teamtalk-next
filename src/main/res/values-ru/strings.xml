@@ -1209,4 +1209,7 @@
     <string name="dialog_new_tab_new_profile">➕ Создать новый чистый профиль</string>
     <string name="dialog_new_tab_clone_profile">📋 Клонировать текущий профиль</string>
     <string name="dialog_new_tab_existing_profile">🌐 Открыть другой профиль</string>
+    <string name="profile_clone_postfix">Копия</string>
+    <string name="button_close">Закрыть</string>
+    <string name="button_cancel">Отмена</string>
 </resources>
