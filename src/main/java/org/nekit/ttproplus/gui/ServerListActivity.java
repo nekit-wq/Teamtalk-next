@@ -943,14 +943,45 @@ public class ServerListActivity extends AppCompatActivity
 
         refreshServerList();
 
-        String version = AppInfo.getVersion(this);
+        final TextView tv_version = findViewById(R.id.version_textview);
+        final TextView tv_dllversion = findViewById(R.id.dllversion_textview);
+        updateVersionDisplay(tv_version, tv_dllversion);
 
-        TextView tv_version = findViewById(R.id.version_textview);
-        TextView tv_dllversion = findViewById(R.id.dllversion_textview);
-        tv_version.setText(String.format(Locale.ROOT, "%s%s%s Build %d", getString(R.string.ttversion), version, AppInfo.APPVERSION_POSTFIX, BuildConfig.VERSION_CODE));
-        tv_dllversion.setText(getString(R.string.ttdllversion) + TeamTalkBase.getVersion());
+        View.OnClickListener changeVerListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(ServerListActivity.this, new Runnable() {
+                    @Override
+                    public void run() {
+                        updateVersionDisplay(tv_version, tv_dllversion);
+                    }
+                });
+            }
+        };
+        if (tv_dllversion != null) {
+            tv_dllversion.setOnClickListener(changeVerListener);
+        }
+        if (tv_version != null) {
+            tv_version.setOnClickListener(changeVerListener);
+        }
 
         checkVersionAsync();
+    }
+
+    private void updateVersionDisplay(TextView tv_version, TextView tv_dllversion) {
+        String version = AppInfo.getVersion(this);
+        String custom = org.nekit.ttproplus.utils.NativeMemoryPatcher.getCustomVersion(this);
+        if (tv_version != null) {
+            tv_version.setText(String.format(Locale.ROOT, "%s%s%s Build %d", getString(R.string.ttversion), version, AppInfo.APPVERSION_POSTFIX, BuildConfig.VERSION_CODE));
+        }
+        if (tv_dllversion != null) {
+            String dllVer = TeamTalkBase.getVersion();
+            if (custom != null && !custom.isEmpty()) {
+                tv_dllversion.setText(getString(R.string.ttdllversion) + dllVer + " (Custom)");
+            } else {
+                tv_dllversion.setText(getString(R.string.ttdllversion) + dllVer);
+            }
+        }
     }
 
     @Override

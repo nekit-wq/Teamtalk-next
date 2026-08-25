@@ -1132,4 +1132,11 @@ By: %3$s"</string>
     <string name="user_prop_title_mute_media_right">Mute Right Media File</string>
     <string name="user_prop_title_mute_voice_left">Mute Left Voice</string>
     <string name="user_prop_title_mute_voice_right">Mute Right Voice</string>
+    <string name="pref_custom_version_title">Change Client Version</string>
+    <string name="pref_custom_version_summary">Change client version in RAM (emulate any version for server)</string>
+    <string name="pref_custom_version_dialog_msg">Enter the version string the client will report to the TeamTalk server:</string>
+    <string name="msg_custom_version_applied">Client version changed to %s</string>
+    <string name="msg_custom_version_reset">Client version reset to default (%s)</string>
+    <string name="button_save">Save</string>
+    <string name="button_reset">Default</string>
 </resources>

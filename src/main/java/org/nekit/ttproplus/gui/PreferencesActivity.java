@@ -644,6 +644,33 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_about);
+            final Preference customVerPref = findPreference("pref_custom_version");
+            if (customVerPref != null) {
+                updateCustomVerSummary(customVerPref);
+                customVerPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(getActivity(), new Runnable() {
+                            @Override
+                            public void run() {
+                                updateCustomVerSummary(customVerPref);
+                            }
+                        });
+                        return true;
+                    }
+                });
+            }
+        }
+
+        private void updateCustomVerSummary(Preference pref) {
+            if (getActivity() == null) return;
+            String custom = org.nekit.ttproplus.utils.NativeMemoryPatcher.getCustomVersion(getActivity());
+            String current = dk.bearware.TeamTalkBase.getVersion();
+            if (custom != null && !custom.isEmpty()) {
+                pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current + " (Custom)");
+            } else {
+                pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current);
+            }
         }
     }
 

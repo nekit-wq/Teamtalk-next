@@ -3,6 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/pref_cat_about" android:key="about_def">
         <Preference android:enabled="false" android:title="@string/pref_fork_desc_title" android:summary="@string/pref_fork_desc_summary" />
+        <Preference android:key="pref_custom_version" android:title="@string/pref_custom_version_title" android:summary="@string/pref_custom_version_summary" />
         <Preference android:title="@string/pref_source_code_title" android:summary="https://github.com/nekit-wq/Teamtalk-pro-android-code">
             <intent android:action="android.intent.action.VIEW" android:data="https://github.com/nekit-wq/Teamtalk-pro-android-code" />
         </Preference>
