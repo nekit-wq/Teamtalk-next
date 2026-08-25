@@ -1086,15 +1086,12 @@
     <string name="recordings_play_error">Не удалось воспроизвести аудиофайл</string>
 
     <!-- Новые строки TeamTalk 5.23 -->
-    <string name="action_stop">Остановить трансляцию</string>
-    <string name="action_pause">Приостановить трансляцию</string>
     <string name="action_resume">Возобновить трансляцию</string>
     <string name="action_statusnick">Изменить ник и статус</string>
     <string name="user_state_streaming">Транслирует медиафайл</string>
     <string name="user_state_female">Женский</string>
     <string name="user_state_neutral">Нейтральный</string>
     <string name="user_state_male">Мужской</string>
-    <string name="user_state_operator">Оператор канала</string>
     <string name="user_state_admin">Администратор</string>
     <string name="pref_title_typing_icon">Пользователь печатает</string>
     <string name="pref_title_all_channel_join">Вход в другой канал</string>
