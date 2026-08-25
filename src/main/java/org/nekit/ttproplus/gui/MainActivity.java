@@ -95,6 +95,7 @@ import dk.bearware.TextMsgType;
 import dk.bearware.User;
 import dk.bearware.UserAccount;
 import dk.bearware.UserRight;
+import dk.bearware.UserType;
 import dk.bearware.VideoCodec;
 import dk.bearware.events.ClientEventListener;
 import android.widget.RadioButton;
@@ -382,7 +383,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         MenuItem bcastItem = menu.findItem(R.id.action_broadcast);
         if (bcastItem != null) bcastItem.setEnabled(broadcastRight).setVisible(broadcastRight);
         MenuItem streamItem = menu.findItem(R.id.action_stream);
-        MediaFileInfo mfi = getService() != null ? getService().currentMediaFileInfo : null;
+        MediaFileInfo mfi = getService() != null ? getService().getCurrentMediaFileInfo() : null;
         int flags = getClient().getFlags();
         boolean isPaused = (mfi != null && mfi.nStatus == MediaFileStatus.MFS_PAUSED);
         boolean isStreaming = (flags & ClientFlag.CLIENT_STREAM_AUDIO) == ClientFlag.CLIENT_STREAM_AUDIO || (flags & ClientFlag.CLIENT_STREAM_VIDEO) == ClientFlag.CLIENT_STREAM_VIDEO;
@@ -436,7 +437,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return true;
         }
         if (itemId == R.id.action_pause) {
-            MediaFileInfo currentMfi = getService() != null ? getService().currentMediaFileInfo : null;
+            MediaFileInfo currentMfi = getService() != null ? getService().getCurrentMediaFileInfo() : null;
             MediaFilePlayback pb = new MediaFilePlayback();
             VideoCodec vc = new VideoCodec();
             pb.uOffsetMSec = MediaFilePlaybackConstants.TT_MEDIAPLAYBACK_OFFSET_IGNORE;
@@ -2132,7 +2133,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 boolean neutral2 = (user.nStatusMode & 4096) != 0;
                 boolean isAway = (user.nStatusMode & 1) != 0;
                 boolean isStreaming = (user.nStatusMode & 2048) != 0;
-                boolean isAdmin = (user.uUserRights & UserRight.USERRIGHT_ADMIN) != 0;
+                boolean isAdmin = (user.uUserType & UserType.USERTYPE_ADMIN) != 0;
                 int icon_resource;
                 if (MainActivity.this.getService() != null && MainActivity.this.getClient() != null && user.nUserID == MainActivity.this.getClient().getMyUserID()) {
                     talking = MainActivity.this.getService().isVoiceTransmitting();

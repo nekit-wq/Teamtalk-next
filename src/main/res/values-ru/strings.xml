@@ -1100,4 +1100,9 @@
     <string name="text_tts_user_typing">%s печатает сообщение</string>
     <string name="text_tts_user_joined_other_channel">%1$s вошел в канал %2$s</string>
     <string name="text_tts_user_left_other_channel">%1$s вышел из канала %2$s</string>
+    <string name="text_status_message">Статусное сообщение</string>
+    <string name="text_status_mode">Режим статуса</string>
+    <string name="status_mode_available">Доступен</string>
+    <string name="status_mode_away">Отошел</string>
+    <string name="status_mode_question">Есть вопрос</string>
 </resources>

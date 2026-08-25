@@ -1098,4 +1098,9 @@ By: %3$s"</string>
     <string name="text_tts_user_typing">%s is typing a message</string>
     <string name="text_tts_user_joined_other_channel">%1$s joined %2$s</string>
     <string name="text_tts_user_left_other_channel">%1$s left %2$s</string>
+    <string name="text_status_message">Status message</string>
+    <string name="text_status_mode">Status mode</string>
+    <string name="status_mode_available">Available</string>
+    <string name="status_mode_away">Away</string>
+    <string name="status_mode_question">Question</string>
 </resources>
