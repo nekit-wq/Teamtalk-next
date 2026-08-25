@@ -296,26 +296,47 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         });
     }
 
-        public void lambda$onServiceConnected$4(View v) {
-        if (Build.VERSION.SDK_INT >= 33) {
-            if (!requestMediaPermissions()) {
-                return;
+    public static final int REQUEST_CUSTOM_FILE_PICKER = 2;
+
+    public void lambda$onServiceConnected$4(View v) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.choose_file_picker_title);
+        String[] options = new String[]{
+                getString(R.string.file_picker_internal),
+                getString(R.string.file_picker_system)
+        };
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == 0) {
+                    Intent intent = new Intent(StreamMediaActivity.this, CustomFilePickerActivity.class);
+                    intent.putExtra(CustomFilePickerActivity.EXTRA_FOLDER_MODE, false);
+                    startActivityForResult(intent, REQUEST_CUSTOM_FILE_PICKER);
+                } else {
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        if (!requestMediaPermissions()) {
+                            return;
+                        }
+                    } else if (!Permissions.READ_EXTERNAL_STORAGE.request(StreamMediaActivity.this)) {
+                        return;
+                    }
+                    mediaSelectionStart();
+                }
             }
-        } else if (!Permissions.READ_EXTERNAL_STORAGE.request(this)) {
-            return;
-        }
-        mediaSelectionStart();
+        });
+        builder.setNegativeButton(android.R.string.cancel, null);
+        builder.show();
     }
 
-        public void lambda$onServiceConnected$5(View v) {
+    public void lambda$onServiceConnected$5(View v) {
         toggleStreaming();
     }
 
-        public void lambda$onServiceConnected$6(View v) {
+    public void lambda$onServiceConnected$6(View v) {
         togglePlayPause();
     }
 
-        public void lambda$onServiceConnected$7(View v) {
+    public void lambda$onServiceConnected$7(View v) {
         stopLocalPlayback();
     }
 
@@ -331,8 +352,24 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         }
     }
 
-        @Override
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CUSTOM_FILE_PICKER && resultCode == RESULT_OK && data != null) {
+            String selectedPath = data.getStringExtra(CustomFilePickerActivity.EXTRA_FILE_PATH);
+            if (selectedPath != null && !selectedPath.isEmpty()) {
+                this.file_path.setText(selectedPath);
+                PreferenceManager.getDefaultSharedPreferences(getBaseContext())
+                        .edit().putString(lastMedia, selectedPath).apply();
+                loadMediaFileInfo(selectedPath);
+                this.playlistUris.clear();
+                this.playlistIndex = 0;
+                this.playlistUris.add(Uri.fromFile(new File(selectedPath)));
+                if (this.btnPlayPause != null) {
+                    this.btnPlayPause.setEnabled(true);
+                }
+                return;
+            }
+        }
         if (requestCode == 1 && resultCode == -1) {
             if (data == null) {
                 return;

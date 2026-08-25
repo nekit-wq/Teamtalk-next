@@ -1134,4 +1134,67 @@
     <string name="user_prop_title_mute_media_right">Выключить Проигрывание Медиафайлов в Правом Канале</string>
     <string name="user_prop_title_mute_voice_left">Выключить Голос в Левом Канале</string>
     <string name="user_prop_title_mute_voice_right">Выключить Голос в Правом Канале</string>
+
+    <!-- Profiles -->
+    <string name="profile_manager_title">Управление профилями</string>
+    <string name="profile_default_name">Основной профиль</string>
+    <string name="profile_active_label">Активен</string>
+    <string name="profile_action_new">Новый профиль</string>
+    <string name="profile_action_manage">Управление</string>
+    <string name="profile_create_title">Создать профиль</string>
+    <string name="profile_name_hint">Название профиля</string>
+    <string name="button_create_clean">Чистый профиль</string>
+    <string name="button_clone_current">Клонировать текущий</string>
+    <string name="profile_unnamed">Профиль</string>
+    <string name="profile_created_toast">Создан профиль: %1$s</string>
+    <string name="profile_cloned_toast">Клонирован профиль: %1$s</string>
+    <string name="profile_switched_toast">Выбран профиль: %1$s</string>
+    <string name="profile_manage_title">Управление профилями</string>
+    <string name="profile_action_rename">Переименовать</string>
+    <string name="profile_action_clone">Клонировать</string>
+    <string name="profile_action_delete">Удалить</string>
+    <string name="profile_rename_title">Переименовать профиль</string>
+    <string name="profile_renamed_toast">Профиль переименован</string>
+    <string name="profile_delete_confirm_title">Удалить профиль?</string>
+    <string name="profile_delete_confirm_msg">Вы уверены, что хотите удалить профиль \"%1$s\"?</string>
+    <string name="profile_deleted_toast">Профиль удален</string>
+    <string name="action_profiles">Профили</string>
+
+    <!-- File Picker -->
+    <string name="btn_create_folder">Новая папка</string>
+    <string name="btn_create_folder_desc">Создать новую папку</string>
+    <string name="dialog_create_folder_title">Создать папку</string>
+    <string name="hint_folder_name">Имя папки</string>
+    <string name="folder_created">Папка создана</string>
+    <string name="folder_create_error">Не удалось создать папку</string>
+    <string name="btn_sort">Сортировка</string>
+    <string name="sort_name_asc">По имени (А-Я)</string>
+    <string name="sort_name_desc">По имени (Я-А)</string>
+    <string name="sort_date_desc">Сначала новые</string>
+    <string name="sort_date_asc">Сначала старые</string>
+    <string name="sort_size_desc">Сначала большие</string>
+    <string name="sort_size_asc">Сначала маленькие</string>
+    <string name="choose_file_picker_title">Выбор проводника</string>
+    <string name="file_picker_internal">Проводник TeamTalk</string>
+    <string name="file_picker_system">Системный проводник</string>
+
+    <!-- Performance -->
+    <string name="pref_header_performance">Производительность и стабильность</string>
+    <string name="pref_category_battery_shield">Энергосбережение и защита фона</string>
+    <string name="pref_title_ignore_battery">Игнорировать оптимизацию батареи</string>
+    <string name="pref_summary_ignore_battery">Защищает TeamTalk от принудительного закрытия системой при блокировке экрана</string>
+    <string name="pref_title_cpu_wakelock">Блокировка сна CPU (WakeLock)</string>
+    <string name="pref_summary_cpu_wakelock">Удерживает процессор активным при выключенном экране для кристальной связи</string>
+    <string name="pref_title_wifi_lock">Высокопроизводительный Wi-Fi Lock</string>
+    <string name="pref_summary_wifi_lock">Запрещает Wi-Fi чипу переходить в режим энергосбережения и рвать связь</string>
+    <string name="pref_title_high_priority_process">Максимальный приоритет процесса</string>
+    <string name="pref_summary_high_priority_process">Постоянное высокоприоритетное уведомление для защиты от выгрузки из ОЗУ</string>
+    <string name="pref_title_auto_reconnect_enhanced">Умный авто-реконнект</string>
+    <string name="pref_summary_auto_reconnect_enhanced">Мгновенное переподключение при смене сети (Wi-Fi ⇄ Мобильная)</string>
+
+    <!-- Stream & Async Connect -->
+    <string name="action_stream_control">Управление стримом</string>
+    <string name="stream_active_status">Идёт трансляция: %1$s</string>
+    <string name="connecting_to_server_async">Подключение к серверу...</string>
+    <string name="btn_cancel_connection">Отмена</string>
 </resources>

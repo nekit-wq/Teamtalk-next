@@ -447,22 +447,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return true;
         }
         if (itemId == R.id.action_stream) {
-            int currentFlags = getClient() != null ? getClient().getFlags() : 0;
-            boolean currentlyStreaming = (currentFlags & ClientFlag.CLIENT_STREAM_AUDIO) == ClientFlag.CLIENT_STREAM_AUDIO || (currentFlags & ClientFlag.CLIENT_STREAM_VIDEO) == ClientFlag.CLIENT_STREAM_VIDEO;
-            if (currentlyStreaming) {
-                getClient().stopStreamingMediaFileToChannel();
-                if (getService() != null) {
-                    getService().setStreamingMedia(false);
-                    getService().setCurrentStreamPath("");
-                    getService().setCurrentMediaFileInfo(null);
-                    getService().setCurrentPlayback(null);
-                }
-                Toast.makeText(this, R.string.msg_stream_stopped, Toast.LENGTH_SHORT).show();
-                invalidateOptionsMenu();
-            } else {
-                Intent intent = new Intent(MainActivity.this, StreamMediaActivity.class);
-                startActivity(intent);
-            }
+            Intent intent = new Intent(this, (Class<?>) StreamMediaActivity.class);
+            startActivity(intent);
             return true;
         }
         if (itemId == R.id.action_mute_tts) {

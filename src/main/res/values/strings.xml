@@ -1132,4 +1132,67 @@ By: %3$s"</string>
     <string name="user_prop_title_mute_media_right">Mute Right Media File</string>
     <string name="user_prop_title_mute_voice_left">Mute Left Voice</string>
     <string name="user_prop_title_mute_voice_right">Mute Right Voice</string>
+
+    <!-- Profiles -->
+    <string name="profile_manager_title">Profile Manager</string>
+    <string name="profile_default_name">Default Profile</string>
+    <string name="profile_active_label">Active</string>
+    <string name="profile_action_new">New Profile</string>
+    <string name="profile_action_manage">Manage</string>
+    <string name="profile_create_title">Create Profile</string>
+    <string name="profile_name_hint">Profile Name</string>
+    <string name="button_create_clean">Clean Profile</string>
+    <string name="button_clone_current">Clone Current</string>
+    <string name="profile_unnamed">Profile</string>
+    <string name="profile_created_toast">Profile created: %1$s</string>
+    <string name="profile_cloned_toast">Profile cloned: %1$s</string>
+    <string name="profile_switched_toast">Switched to profile: %1$s</string>
+    <string name="profile_manage_title">Manage Profiles</string>
+    <string name="profile_action_rename">Rename</string>
+    <string name="profile_action_clone">Clone</string>
+    <string name="profile_action_delete">Delete</string>
+    <string name="profile_rename_title">Rename Profile</string>
+    <string name="profile_renamed_toast">Profile renamed</string>
+    <string name="profile_delete_confirm_title">Delete Profile?</string>
+    <string name="profile_delete_confirm_msg">Are you sure you want to delete profile \"%1$s\"?</string>
+    <string name="profile_deleted_toast">Profile deleted</string>
+    <string name="action_profiles">Profiles</string>
+
+    <!-- File Picker -->
+    <string name="btn_create_folder">New Folder</string>
+    <string name="btn_create_folder_desc">Create new folder</string>
+    <string name="dialog_create_folder_title">Create New Folder</string>
+    <string name="hint_folder_name">Folder Name</string>
+    <string name="folder_created">Folder created</string>
+    <string name="folder_create_error">Failed to create folder</string>
+    <string name="btn_sort">Sort</string>
+    <string name="sort_name_asc">By Name (A-Z)</string>
+    <string name="sort_name_desc">By Name (Z-A)</string>
+    <string name="sort_date_desc">Newest First</string>
+    <string name="sort_date_asc">Oldest First</string>
+    <string name="sort_size_desc">Largest First</string>
+    <string name="sort_size_asc">Smallest First</string>
+    <string name="choose_file_picker_title">Choose File Browser</string>
+    <string name="file_picker_internal">TeamTalk Explorer</string>
+    <string name="file_picker_system">System File Picker</string>
+
+    <!-- Performance -->
+    <string name="pref_header_performance">Performance &amp; Stability</string>
+    <string name="pref_category_battery_shield">Battery &amp; Background Shield</string>
+    <string name="pref_title_ignore_battery">Disable Battery Optimization</string>
+    <string name="pref_summary_ignore_battery">Protects TeamTalk from aggressive background task termination</string>
+    <string name="pref_title_cpu_wakelock">CPU WakeLock (Prevent Sleep)</string>
+    <string name="pref_summary_cpu_wakelock">Keeps CPU active while screen is off for crystal-clear connection</string>
+    <string name="pref_title_wifi_lock">High-Performance Wi-Fi Lock</string>
+    <string name="pref_summary_wifi_lock">Prevents Wi-Fi chip from entering low-power sleep mode</string>
+    <string name="pref_title_high_priority_process">Foreground Process Priority</string>
+    <string name="pref_summary_high_priority_process">High-priority persistent notification preventing RAM reclamation</string>
+    <string name="pref_title_auto_reconnect_enhanced">Smart Auto-Reconnect</string>
+    <string name="pref_summary_auto_reconnect_enhanced">Seamless reconnect on network changes</string>
+
+    <!-- Stream & Async Connect -->
+    <string name="action_stream_control">Stream Controls</string>
+    <string name="stream_active_status">Streaming: %1$s</string>
+    <string name="connecting_to_server_async">Connecting to server...</string>
+    <string name="btn_cancel_connection">Cancel</string>
 </resources>

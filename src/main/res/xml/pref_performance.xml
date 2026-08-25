@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_category_battery_shield">
+        <Preference
+            android:key="pref_btn_ignore_battery"
+            android:title="@string/pref_title_ignore_battery"
+            android:summary="@string/pref_summary_ignore_battery" />
+
+        <CheckBoxPreference
+            android:key="pref_performance_cpu_wakelock"
+            android:title="@string/pref_title_cpu_wakelock"
+            android:summary="@string/pref_summary_cpu_wakelock"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="pref_performance_wifi_lock"
+            android:title="@string/pref_title_wifi_lock"
+            android:summary="@string/pref_summary_wifi_lock"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="pref_performance_high_priority"
+            android:title="@string/pref_title_high_priority_process"
+            android:summary="@string/pref_summary_high_priority_process"
+            android:defaultValue="true" />
+
+        <CheckBoxPreference
+            android:key="pref_performance_smart_reconnect"
+            android:title="@string/pref_title_auto_reconnect_enhanced"
+            android:summary="@string/pref_summary_auto_reconnect_enhanced"
+            android:defaultValue="true" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

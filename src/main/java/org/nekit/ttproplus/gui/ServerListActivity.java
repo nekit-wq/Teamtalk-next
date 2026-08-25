@@ -92,8 +92,10 @@ import org.nekit.ttproplus.backend.TeamTalkService;
 import org.nekit.ttproplus.data.AppInfo;
 import org.nekit.ttproplus.data.Permissions;
 import org.nekit.ttproplus.data.Preferences;
+import org.nekit.ttproplus.data.ProfileManager;
 import org.nekit.ttproplus.data.ServerEntry;
 import dk.bearware.events.ClientEventListener;
+import android.app.ProgressDialog;
 
 public class ServerListActivity extends AppCompatActivity
         implements TeamTalkConnectionListener,
@@ -108,6 +110,7 @@ public class ServerListActivity extends AppCompatActivity
     private EditText searchEditText;
     private TextView emptyView;
     private ExecutorService executorService;
+    private ProgressDialog connectingDialog;
     
     private final Vector<ServerEntry> servers = new Vector<>();
 
@@ -197,6 +200,8 @@ public class ServerListActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
 
+        updateProfileTitle();
+
         String currentTheme = PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.THEME_PREF_KEY, "dark");
         if (this.appliedTheme != null && !this.appliedTheme.equals(currentTheme)) {
             this.appliedTheme = currentTheme;
@@ -216,12 +221,15 @@ public class ServerListActivity extends AppCompatActivity
             // Connect to server if 'serverentry' is specified.
             // Connection to server is either started here or in onServiceConnected()
             if (this.serverentry != null) {
-                getService().setServerEntry(this.serverentry);
-
-                if (!getService().reconnect()) {
-                    showToast(getString(R.string.err_connection));
-                }
+                connectToServerAsync(this.serverentry);
             }
+        }
+    }
+
+    private void updateProfileTitle() {
+        if (getSupportActionBar() != null) {
+            ProfileManager.Profile p = ProfileManager.getActiveProfile(this);
+            getSupportActionBar().setSubtitle(getString(R.string.profile_active_label) + ": " + p.name);
         }
     }
 
@@ -423,6 +431,15 @@ public class ServerListActivity extends AppCompatActivity
             }
         } else if (itemId == R.id.action_enter_joincode) {
             enterJoinCode();
+        } else if (itemId == R.id.action_profiles) {
+            ProfileManager.showProfileSwitcher(this, new Runnable() {
+                @Override
+                public void run() {
+                    servers.clear();
+                    refreshServerList();
+                    updateProfileTitle();
+                }
+            });
         } else if (itemId == R.id.action_settings) {
             Intent intent = new Intent(ServerListActivity.this, PreferencesActivity.class);
             startActivity(intent);
@@ -438,11 +455,41 @@ public class ServerListActivity extends AppCompatActivity
 
     private void onServerClick(ServerEntry entry) {
         this.serverentry = entry;
-        getService().setServerEntry(this.serverentry);
+        connectToServerAsync(entry);
+    }
 
-        if (!getService().reconnect()) {
-            showToast(getString(R.string.err_connection));
+    private void connectToServerAsync(final ServerEntry entry) {
+        if (entry == null || getService() == null) return;
+        getService().setServerEntry(entry);
+
+        if (connectingDialog != null && connectingDialog.isShowing()) {
+            try { connectingDialog.dismiss(); } catch (Exception ignored) {}
         }
+
+        connectingDialog = new ProgressDialog(this);
+        connectingDialog.setMessage(getString(R.string.connecting_to_server_async) + "\n" + entry.servername);
+        connectingDialog.setCancelable(true);
+        connectingDialog.setOnCancelListener(dialog -> {
+            if (getService() != null) {
+                getService().disconnect();
+            }
+        });
+        try {
+            connectingDialog.show();
+        } catch (Exception ignored) {}
+
+        getService().reconnectAsync(new TeamTalkService.ConnectionCallback() {
+            @Override
+            public void onConnectionResult(boolean success) {
+                if (isFinishing() || isDestroyed()) return;
+                if (!success) {
+                    if (connectingDialog != null && connectingDialog.isShowing()) {
+                        try { connectingDialog.dismiss(); } catch (Exception ignored) {}
+                    }
+                    showToast(getString(R.string.err_connection));
+                }
+            }
+        });
     }
 
     private void onServerLongClick(View view, ServerEntry entry, int position) {
@@ -740,8 +787,16 @@ public class ServerListActivity extends AppCompatActivity
         }
     }
 
+    private SharedPreferences getServerListSharedPreferences() {
+        String activeProfile = ProfileManager.getActiveProfileId(this);
+        if (ProfileManager.DEFAULT_PROFILE_ID.equals(activeProfile)) {
+            return getSharedPreferences(SERVERLIST_NAME, MODE_PRIVATE);
+        }
+        return getSharedPreferences(SERVERLIST_NAME + "_" + activeProfile, MODE_PRIVATE);
+    }
+
     private void saveServers() {
-        SharedPreferences pref = getSharedPreferences(SERVERLIST_NAME, MODE_PRIVATE);
+        SharedPreferences pref = getServerListSharedPreferences();
         SharedPreferences.Editor edit = pref.edit();
 
         clearExistingServerPreferences(pref, edit);
@@ -796,7 +851,7 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     private void loadLocalServers() {
-        SharedPreferences pref = getSharedPreferences(SERVERLIST_NAME, MODE_PRIVATE);
+        SharedPreferences pref = getServerListSharedPreferences();
         int i = 0;
         while (!pref.getString(i + ServerEntry.KEY_SERVERNAME, "").isEmpty()) {
             ServerEntry entry = loadServerFromPreferences(pref, i);
@@ -934,11 +989,7 @@ public class ServerListActivity extends AppCompatActivity
         // Connect to server if 'serverentry' is specified.
         // Connection to server is either started here or in onResume()
         if (serverentry != null) {
-            service.setServerEntry(serverentry);
-
-            if (!service.reconnect()) {
-                showToast(getString(R.string.err_connection));
-            }
+            connectToServerAsync(serverentry);
         }
 
         refreshServerList();
@@ -964,6 +1015,9 @@ public class ServerListActivity extends AppCompatActivity
 
     @Override
     public void onCmdMyselfLoggedIn(int my_userid, UserAccount useraccount) {
+        if (connectingDialog != null && connectingDialog.isShowing()) {
+            try { connectingDialog.dismiss(); } catch (Exception ignored) {}
+        }
         if (serverentry != null) {
             Intent intent = new Intent(getBaseContext(), MainActivity.class);
             startActivity(intent.putExtra(ServerEntry.KEY_SERVERNAME, serverentry.servername));

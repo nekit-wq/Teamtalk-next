@@ -12,5 +12,6 @@
     <header android:title="@string/pref_header_connection" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$ConnectionPreferenceFragment" />
     <header android:title="@string/pref_header_soundsystem" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$SoundSystemPreferenceFragment" />
     <header android:title="@string/pref_header_recording" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$RecordingPreferenceFragment" />
+    <header android:title="@string/pref_header_performance" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$PerformancePreferenceFragment" />
     <header android:title="@string/pref_cat_about" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$AboutPreferenceFragment" />
 </preference-headers>

@@ -1,15 +1,21 @@
 package org.nekit.ttproplus.gui;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,8 +48,16 @@ public class CustomFilePickerActivity extends AppCompatActivity {
 
     public static final String EXTRA_FILE_PATH = "file_path";
     public static final String EXTRA_FOLDER_MODE = "folder_mode";
+    private static final String PREF_SORT_MODE = "custom_file_picker_sort_mode";
     private static final int PERMISSION_REQUEST_CODE = 1200;
     private static final int MANAGE_STORAGE_REQUEST_CODE = 1201;
+
+    private static final int SORT_NAME_ASC = 0;
+    private static final int SORT_NAME_DESC = 1;
+    private static final int SORT_DATE_DESC = 2;
+    private static final int SORT_DATE_ASC = 3;
+    private static final int SORT_SIZE_DESC = 4;
+    private static final int SORT_SIZE_ASC = 5;
 
     private TextView txtCurrentPath;
     private ListView fileListView;
@@ -51,6 +65,8 @@ public class CustomFilePickerActivity extends AppCompatActivity {
     private Button btnSearchTt;
     private Button btnSelectFolder;
     private ImageButton btnBack;
+    private ImageButton btnCreateFolder;
+    private ImageButton btnSort;
     private ProgressBar searchProgress;
     private TextView txtSearchStatus;
     private File currentDir;
@@ -58,6 +74,7 @@ public class CustomFilePickerActivity extends AppCompatActivity {
     private List<FileItem> filesList = new ArrayList<>();
     private boolean isShowingSearchResults = false;
     private boolean isFolderMode = false;
+    private int currentSortMode = SORT_NAME_ASC;
 
     /** Wraps a File with optional display metadata for search results. */
     private static class FileItem {
@@ -81,11 +98,16 @@ public class CustomFilePickerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_custom_file_picker);
         EdgeToEdgeHelper.enableEdgeToEdge(this);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        currentSortMode = prefs.getInt(PREF_SORT_MODE, SORT_NAME_ASC);
+
         txtCurrentPath = findViewById(R.id.txt_current_path);
         fileListView = findViewById(R.id.file_list_view);
         btnSearchTt = findViewById(R.id.btn_search_tt);
         btnSelectFolder = findViewById(R.id.btn_select_folder);
         btnBack = findViewById(R.id.btn_back);
+        btnCreateFolder = findViewById(R.id.btn_create_folder);
+        btnSort = findViewById(R.id.btn_sort);
         searchEditText = findViewById(R.id.search_edit_text);
         searchProgress = findViewById(R.id.search_progress);
         txtSearchStatus = findViewById(R.id.txt_search_status);
@@ -98,6 +120,8 @@ public class CustomFilePickerActivity extends AppCompatActivity {
         }
 
         btnSearchTt.setOnClickListener(v -> searchTtFiles());
+        btnCreateFolder.setOnClickListener(v -> showCreateFolderDialog());
+        btnSort.setOnClickListener(v -> showSortDialog());
 
         btnBack.setOnClickListener(v -> {
             if (isShowingSearchResults) {
@@ -164,6 +188,74 @@ public class CustomFilePickerActivity extends AppCompatActivity {
         }
     }
 
+    private void showCreateFolderDialog() {
+        if (currentDir == null || !currentDir.canWrite()) {
+            Toast.makeText(this, R.string.folder_create_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.dialog_create_folder_title);
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setHint(R.string.hint_folder_name);
+        builder.setView(input);
+
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String folderName = input.getText().toString().trim();
+                if (!folderName.isEmpty()) {
+                    File newFolder = new File(currentDir, folderName);
+                    if (newFolder.exists() || newFolder.mkdirs()) {
+                        Toast.makeText(CustomFilePickerActivity.this, R.string.folder_created, Toast.LENGTH_SHORT).show();
+                        loadDir();
+                    } else {
+                        Toast.makeText(CustomFilePickerActivity.this, R.string.folder_create_error, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, null);
+        builder.show();
+    }
+
+    private void showSortDialog() {
+        String[] options = new String[]{
+                getString(R.string.sort_name_asc),
+                getString(R.string.sort_name_desc),
+                getString(R.string.sort_date_desc),
+                getString(R.string.sort_date_asc),
+                getString(R.string.sort_size_desc),
+                getString(R.string.sort_size_asc)
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.btn_sort);
+        builder.setSingleChoiceItems(options, currentSortMode, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                currentSortMode = which;
+                PreferenceManager.getDefaultSharedPreferences(CustomFilePickerActivity.this)
+                        .edit()
+                        .putInt(PREF_SORT_MODE, currentSortMode)
+                        .apply();
+                dialog.dismiss();
+                if (isShowingSearchResults) {
+                    if (lastSearchResults != null) {
+                        sortFileList(lastSearchResults);
+                        filterSearchResults(searchEditText.getText().toString());
+                    }
+                } else {
+                    loadDir();
+                }
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, null);
+        builder.show();
+    }
+
     private boolean checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return Environment.isExternalStorageManager();
@@ -174,7 +266,6 @@ public class CustomFilePickerActivity extends AppCompatActivity {
 
     private void requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // On Android 11+, request MANAGE_EXTERNAL_STORAGE via Settings
             try {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                 intent.setData(Uri.parse("package:" + getPackageName()));
@@ -184,7 +275,7 @@ public class CustomFilePickerActivity extends AppCompatActivity {
                 startActivityForResult(intent, MANAGE_STORAGE_REQUEST_CODE);
             }
         } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
         }
     }
 
@@ -216,6 +307,29 @@ public class CustomFilePickerActivity extends AppCompatActivity {
         }
     }
 
+    private Comparator<File> getFileComparator() {
+        switch (currentSortMode) {
+            case SORT_NAME_DESC:
+                return (f1, f2) -> f2.getName().compareToIgnoreCase(f1.getName());
+            case SORT_DATE_DESC:
+                return (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified());
+            case SORT_DATE_ASC:
+                return (f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified());
+            case SORT_SIZE_DESC:
+                return (f1, f2) -> Long.compare(f2.length(), f1.length());
+            case SORT_SIZE_ASC:
+                return (f1, f2) -> Long.compare(f1.length(), f2.length());
+            case SORT_NAME_ASC:
+            default:
+                return (f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName());
+        }
+    }
+
+    private void sortFileList(List<FileItem> list) {
+        Comparator<File> comp = getFileComparator();
+        Collections.sort(list, (i1, i2) -> comp.compare(i1.file, i2.file));
+    }
+
     private void loadDir() {
         isShowingSearchResults = false;
         txtCurrentPath.setText(currentDir.getAbsolutePath());
@@ -244,9 +358,9 @@ public class CustomFilePickerActivity extends AppCompatActivity {
             }
         }
 
-        Comparator<File> fileComparator = (f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName());
-        Collections.sort(dirs, fileComparator);
-        Collections.sort(normalFiles, fileComparator);
+        Comparator<File> comp = getFileComparator();
+        Collections.sort(dirs, comp);
+        Collections.sort(normalFiles, comp);
 
         for (File d : dirs) filesList.add(new FileItem(d));
         for (File f : normalFiles) filesList.add(new FileItem(f));
@@ -287,7 +401,7 @@ public class CustomFilePickerActivity extends AppCompatActivity {
             String lowerQuery = query.toLowerCase();
             for (FileItem item : lastSearchResults) {
                 if (item.file.getName().toLowerCase().contains(lowerQuery) ||
-                    item.file.getParent().toLowerCase().contains(lowerQuery)) {
+                        (item.file.getParent() != null && item.file.getParent().toLowerCase().contains(lowerQuery))) {
                     filesList.add(item);
                 }
             }
@@ -325,16 +439,14 @@ public class CustomFilePickerActivity extends AppCompatActivity {
         protected List<File> doInBackground(Void... voids) {
             List<File> found = new ArrayList<>();
 
-            // Search external storage
             File extStorage = Environment.getExternalStorageDirectory();
             if (extStorage != null && extStorage.exists()) {
                 scanDir(extStorage, found);
             }
 
-            // Also search common additional storage paths
             File[] additionalRoots = {
-                new File("/storage"),
-                new File("/sdcard"),
+                    new File("/storage"),
+                    new File("/sdcard"),
             };
             for (File root : additionalRoots) {
                 if (root.exists() && root.isDirectory() && !root.equals(extStorage)) {
@@ -349,7 +461,6 @@ public class CustomFilePickerActivity extends AppCompatActivity {
             if (dir == null || !dir.exists() || !dir.isDirectory()) return;
 
             String name = dir.getName().toLowerCase();
-            // Skip system/hidden/cache directories
             if (name.startsWith(".") || name.equals("android") || name.equals("obb") || name.equals("data") || name.equals("cache")) {
                 return;
             }
@@ -377,10 +488,6 @@ public class CustomFilePickerActivity extends AppCompatActivity {
                 return;
             }
 
-            // Sort by name
-            Collections.sort(files, (f1, f2) -> f1.getName().compareToIgnoreCase(f2.getName()));
-
-            // Show results in the list
             isShowingSearchResults = true;
             txtCurrentPath.setVisibility(View.GONE);
             searchEditText.setVisibility(View.VISIBLE);
@@ -390,6 +497,8 @@ public class CustomFilePickerActivity extends AppCompatActivity {
             for (File f : files) {
                 lastSearchResults.add(new FileItem(f, true));
             }
+
+            sortFileList(lastSearchResults);
 
             filesList.clear();
             filesList.addAll(lastSearchResults);
@@ -457,7 +566,6 @@ public class CustomFilePickerActivity extends AppCompatActivity {
                     convertView.setContentDescription(name + ", " + getString(R.string.cd_file));
                 }
 
-                // Show file size and parent path for search results
                 if (item.isSearchResult) {
                     String details = formatFileSize(file.length()) + "  •  " + file.getParent();
                     txtDetails.setText(details);

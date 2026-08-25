@@ -9,6 +9,11 @@
         android:title="@string/action_new_server">
     </item>
     <item
+        android:id="@+id/action_profiles"
+        app:showAsAction="ifRoom|withText"
+        android:orderInCategory="15"
+        android:title="@string/action_profiles"/>
+    <item
         android:id="@+id/action_enter_joincode"
         app:showAsAction="never"
         android:orderInCategory="20"

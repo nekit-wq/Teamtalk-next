@@ -215,7 +215,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
 
     @Override
     protected boolean isValidFragment(String fragmentName) {
-        return GeneralPreferenceFragment.class.getName().equals(fragmentName) || BackgroundMgmtPreferenceFragment.class.getName().equals(fragmentName) || SoundEventsPreferenceFragment.class.getName().equals(fragmentName) || ConnectionPreferenceFragment.class.getName().equals(fragmentName) || ServerListPreferenceFragment.class.getName().equals(fragmentName) || TtsPreferenceFragment.class.getName().equals(fragmentName) || SoundSystemPreferenceFragment.class.getName().equals(fragmentName) || AntiSpamPreferenceFragment.class.getName().equals(fragmentName) || AboutPreferenceFragment.class.getName().equals(fragmentName) || SoundPacksPreferenceFragment.class.getName().equals(fragmentName) || RecordingPreferenceFragment.class.getName().equals(fragmentName) || DisplayPreferenceFragment.class.getName().equals(fragmentName);
+        return GeneralPreferenceFragment.class.getName().equals(fragmentName) || BackgroundMgmtPreferenceFragment.class.getName().equals(fragmentName) || SoundEventsPreferenceFragment.class.getName().equals(fragmentName) || ConnectionPreferenceFragment.class.getName().equals(fragmentName) || ServerListPreferenceFragment.class.getName().equals(fragmentName) || TtsPreferenceFragment.class.getName().equals(fragmentName) || SoundSystemPreferenceFragment.class.getName().equals(fragmentName) || AntiSpamPreferenceFragment.class.getName().equals(fragmentName) || AboutPreferenceFragment.class.getName().equals(fragmentName) || SoundPacksPreferenceFragment.class.getName().equals(fragmentName) || RecordingPreferenceFragment.class.getName().equals(fragmentName) || DisplayPreferenceFragment.class.getName().equals(fragmentName) || PerformancePreferenceFragment.class.getName().equals(fragmentName);
     }
 
     @Override
@@ -815,6 +815,68 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                     }
                     return true;
                 });
+            }
+        }
+    }
+
+    public static class PerformancePreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_performance);
+
+            Preference ignoreBattery = findPreference("pref_btn_ignore_battery");
+            if (ignoreBattery != null) {
+                updateBatterySummary(ignoreBattery);
+                ignoreBattery.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                try {
+                                    PowerManager pm = (PowerManager) activity.getSystemService(Context.POWER_SERVICE);
+                                    if (pm != null && !pm.isIgnoringBatteryOptimizations(activity.getPackageName())) {
+                                        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                                        intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                                        startActivity(intent);
+                                    } else {
+                                        Toast.makeText(activity, R.string.pref_summary_ignore_battery, Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (Exception e) {
+                                    try {
+                                        Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                                        startActivity(intent);
+                                    } catch (Exception ignored) {}
+                                }
+                            } else {
+                                Toast.makeText(activity, R.string.pref_summary_ignore_battery, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        return true;
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            Preference ignoreBattery = findPreference("pref_btn_ignore_battery");
+            if (ignoreBattery != null) {
+                updateBatterySummary(ignoreBattery);
+            }
+        }
+
+        private void updateBatterySummary(Preference pref) {
+            Activity activity = getActivity();
+            if (activity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PowerManager pm = (PowerManager) activity.getSystemService(Context.POWER_SERVICE);
+                if (pm != null && pm.isIgnoringBatteryOptimizations(activity.getPackageName())) {
+                    pref.setSummary(getString(R.string.profile_active_label) + " (OK)");
+                } else {
+                    pref.setSummary(R.string.pref_summary_ignore_battery);
+                }
             }
         }
     }

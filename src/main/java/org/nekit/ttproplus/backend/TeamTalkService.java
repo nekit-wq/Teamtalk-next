@@ -520,11 +520,38 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                     mChannel.setSound(null, null);
                     this.notificationManager.createNotificationChannel(mChannel);
                 }
-                this.widget = new NotificationCompat.Builder(this, UI_CHANNEL_ID).setSmallIcon(R.drawable.teamtalk_green).setContentTitle(getString(R.string.app_name)).setContentIntent(PendingIntent.getActivity(this, 0, ui, 201326592)).setOngoing(true).setAutoCancel(false).setContentText(getNotificationText()).setShowWhen(false).build();
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, UI_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.teamtalk_green)
+                        .setContentTitle(getString(R.string.app_name))
+                        .setContentIntent(PendingIntent.getActivity(this, 0, ui, 201326592))
+                        .setOngoing(true)
+                        .setAutoCancel(false)
+                        .setContentText(getNotificationText())
+                        .setShowWhen(false);
+
+                if (isStreamingMedia()) {
+                    Intent streamIntent = new Intent(this, org.nekit.ttproplus.gui.StreamMediaActivity.class);
+                    PendingIntent streamPi = PendingIntent.getActivity(this, 101, streamIntent, PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
+                    builder.addAction(R.drawable.teamtalk_green, getString(R.string.action_stream_control), streamPi);
+                }
+
+                SharedPreferences pPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                if (pPrefs.getBoolean("pref_performance_high_priority", true)) {
+                    builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+                }
+
+                this.widget = builder.build();
                 ServiceCompat.startForeground(this, 1, this.widget, getMyForegroundServiceType());
                 return;
             }
-            this.widget = new NotificationCompat.Builder(this, this.widget).setContentText(getNotificationText()).build();
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, this.widget)
+                    .setContentText(getNotificationText());
+            if (isStreamingMedia()) {
+                Intent streamIntent = new Intent(this, org.nekit.ttproplus.gui.StreamMediaActivity.class);
+                PendingIntent streamPi = PendingIntent.getActivity(this, 101, streamIntent, PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
+                builder.addAction(R.drawable.teamtalk_green, getString(R.string.action_stream_control), streamPi);
+            }
+            this.widget = builder.build();
             this.notificationManager.notify(1, this.widget);
             return;
         }
@@ -548,26 +575,34 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public synchronized void acquireServiceLocks() {
         try {
-            if (this.mServiceWakeLock == null) {
-                PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-                if (pm != null) {
-                    this.mServiceWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ttproplus:ServiceWakeLock");
-                    this.mServiceWakeLock.setReferenceCounted(false);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            boolean enableWakelock = prefs.getBoolean("pref_performance_cpu_wakelock", true);
+            boolean enableWifiLock = prefs.getBoolean("pref_performance_wifi_lock", true);
+
+            if (enableWakelock) {
+                if (this.mServiceWakeLock == null) {
+                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                    if (pm != null) {
+                        this.mServiceWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ttproplus:ServiceWakeLock");
+                        this.mServiceWakeLock.setReferenceCounted(false);
+                    }
                 }
-            }
-            if (this.mServiceWakeLock != null && !this.mServiceWakeLock.isHeld()) {
-                this.mServiceWakeLock.acquire();
+                if (this.mServiceWakeLock != null && !this.mServiceWakeLock.isHeld()) {
+                    this.mServiceWakeLock.acquire();
+                }
             }
 
-            if (this.mServiceWifiLock == null) {
-                WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                if (wm != null) {
-                    this.mServiceWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "ttproplus:ServiceWifiLock");
-                    this.mServiceWifiLock.setReferenceCounted(false);
+            if (enableWifiLock) {
+                if (this.mServiceWifiLock == null) {
+                    WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                    if (wm != null) {
+                        this.mServiceWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "ttproplus:ServiceWifiLock");
+                        this.mServiceWifiLock.setReferenceCounted(false);
+                    }
                 }
-            }
-            if (this.mServiceWifiLock != null && !this.mServiceWifiLock.isHeld()) {
-                this.mServiceWifiLock.acquire();
+                if (this.mServiceWifiLock != null && !this.mServiceWifiLock.isHeld()) {
+                    this.mServiceWifiLock.acquire();
+                }
             }
         } catch (Exception e) {
             Log.w("bearware", "Failed to acquire service locks", e);
@@ -1303,6 +1338,29 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (!cacheid.isEmpty() && (userprop = this.usercache.get(cacheid)) != null) {
             userprop.sync(this.ttclient, user);
         }
+    }
+
+    public interface ConnectionCallback {
+        void onConnectionResult(boolean success);
+    }
+
+    private final java.util.concurrent.ExecutorService connectionExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+
+    public void reconnectAsync(final ConnectionCallback callback) {
+        connectionExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                final boolean success = reconnect();
+                if (callback != null) {
+                    reconnectHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onConnectionResult(success);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     public boolean reconnect() {
