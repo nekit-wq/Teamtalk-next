@@ -77,27 +77,29 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.23-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.24-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.23' }}
-          name: "TeamTalk Next v5.27.23"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.24' }}
+          name: "TeamTalk Next v5.27.24"
           body: |
-            ### TeamTalk Next v5.27.23 — Исправление свойств пользователя и повышенная стабильность
+            ### TeamTalk Next v5.27.24 — Исправление синтезатора речи (TTS) и оповещений каналов
 
             #### 🛠 Исправления и улучшения:
-            - **🐛 Исправлен краш при открытии свойств пользователя (`UserPropActivity`):**
-              - Устранено `NullPointerException` при обращении к списку каналов до завершения фонового связывания со службой.
-              - Добавлен надёжный фоллбек на активный инстанс службы `TeamTalkService` и полная проверка `null-safety` во всех переключателях и обработчиках.
-            - **⚡️ Мгновенный отклик при нажатии на пользователя:**
-              - Карточка пользователя открывается без задержек.
+            - **🗣 Стабильная и точная озвучка синтезатором речи (TTS):**
+              - Исправлены пропуски и заикания озвучки событий входа/выхода из каналов.
+              - Устранена рассинхронизация текущего канала, из-за которой перемещения пользователей в текущий канал могли не озвучиваться.
+              - Добавлена гарантированная подгрузка названий каналов напрямую из движка при озвучке переходов в другие каналы.
+              - Реализовано авто-восстановление движка TTS при системных сбоях и надёжная потокобезопасная очередь фраз.
+            - **🎙 Оповещения о собственном входе/выходе:**
+              - Включена поддержка озвучки собственного подключения и отключения от каналов согласно настройкам.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.23-source.zip
+            TeamTalkNext-5.27.24-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

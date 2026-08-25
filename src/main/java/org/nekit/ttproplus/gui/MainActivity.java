@@ -3239,44 +3239,69 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     @Override
     public void onCmdUserJoinedChannel(User user) {
         this.users.put(Integer.valueOf(user.nUserID), user);
-        if (user.nUserID == getClient().getMyUserID()) {
-            Channel chan = getService().getChannels().get(Integer.valueOf(user.nChannelID));
+
+        int myUserId = getClient() != null ? getClient().getMyUserID() : 0;
+        int myChannelId = getClient() != null ? getClient().getMyChannelID() : (this.mychannel != null ? this.mychannel.nChannelID : 0);
+
+        if (user.nUserID == myUserId) {
+            Channel chan = null;
+            if (getService() != null && getService().getChannels() != null) {
+                chan = getService().getChannels().get(Integer.valueOf(user.nChannelID));
+            }
+            if (chan == null && getClient() != null) {
+                Channel c = new Channel();
+                if (getClient().getChannel(user.nChannelID, c)) {
+                    chan = c;
+                }
+            }
             setCurrentChannel(chan);
             this.filesAdapter.update(this.curchannel);
             setMyChannel(chan);
             this.accessibilityAssistant.lockEvents();
             this.channelsAdapter.notifyDataSetChanged();
             this.accessibilityAssistant.unlockEvents();
-        } else if (this.curchannel != null) {
-            int i = this.curchannel.nChannelID;
-            int i2 = user.nChannelID;
-        }
-        if (this.mychannel != null && this.mychannel.nChannelID == user.nChannelID) {
-            if (user.nUserID != getClient().getMyUserID()) {
-                this.accessibilityAssistant.lockEvents();
-                this.textmsgAdapter.notifyDataSetChanged();
-                this.channelsAdapter.notifyDataSetChanged();
-                if (getClient().getMyChannelID() == user.nChannelID) {
-                    if (this.sounds.get(14) != 0) {
-                        this.audioIcons.play(this.sounds.get(14), 1.0f, 1.0f, 0, 0, 1.0f);
-                    }
-                    if (this.ttsWrapper != null && ((Boolean) this.prefs.get("channel_join_checkbox", false)).booleanValue()) {
-                        String name = Utils.getDisplayName(getBaseContext(), user);
-                        this.ttsWrapper.speak(name + " " + getResources().getString(R.string.text_tts_joined_chan));
-                    }
+
+            if (this.ttsWrapper != null && ((Boolean) this.prefs.get("pref_tts_myself_join", true)).booleanValue()) {
+                if (chan != null && chan.nParentID == 0) {
+                    this.ttsWrapper.speak(getString(R.string.text_cmd_joinroot));
+                } else if (chan != null && chan.szName != null && !chan.szName.isEmpty()) {
+                    this.ttsWrapper.speak(getString(R.string.text_cmd_joinchan) + " " + chan.szName);
                 }
-                this.accessibilityAssistant.unlockEvents();
-                return;
             }
+            return;
+        }
+
+        boolean isMyChannel = (myChannelId > 0 && myChannelId == user.nChannelID);
+
+        if (isMyChannel) {
+            this.accessibilityAssistant.lockEvents();
             this.textmsgAdapter.notifyDataSetChanged();
             this.channelsAdapter.notifyDataSetChanged();
+            if (this.sounds.get(14) != 0) {
+                this.audioIcons.play(this.sounds.get(14), 1.0f, 1.0f, 0, 0, 1.0f);
+            }
+            if (this.ttsWrapper != null && ((Boolean) this.prefs.get("channel_join_checkbox", false)).booleanValue()) {
+                String name = Utils.getDisplayName(getBaseContext(), user);
+                this.ttsWrapper.speak(name + " " + getResources().getString(R.string.text_tts_joined_chan));
+            }
+            this.accessibilityAssistant.unlockEvents();
             return;
-        } else if (user.nUserID != getClient().getMyUserID() && this.ttsWrapper != null && ((Boolean) this.prefs.get("all_channel_join_checkbox", false)).booleanValue()) {
+        } else if (this.ttsWrapper != null && (((Boolean) this.prefs.get("all_channel_join_checkbox", false)).booleanValue() || ((Boolean) this.prefs.get("all_users_channel_movement_checkbox", false)).booleanValue())) {
             String name = Utils.getDisplayName(getBaseContext(), user);
-            Channel targetChan = getService() != null ? getService().getChannels().get(Integer.valueOf(user.nChannelID)) : null;
-            String chanName = (targetChan != null && targetChan.nParentID == 0) ? getString(R.string.text_cmd_joinroot) : (targetChan != null ? targetChan.szName : "");
+            Channel targetChan = null;
+            if (getService() != null && getService().getChannels() != null) {
+                targetChan = getService().getChannels().get(Integer.valueOf(user.nChannelID));
+            }
+            if (targetChan == null && getClient() != null) {
+                Channel c = new Channel();
+                if (getClient().getChannel(user.nChannelID, c)) {
+                    targetChan = c;
+                }
+            }
+            String chanName = (targetChan != null && targetChan.nParentID == 0) ? getString(R.string.text_cmd_joinroot) : (targetChan != null && targetChan.szName != null ? targetChan.szName : "");
             this.ttsWrapper.speak(getString(R.string.text_tts_user_joined_other_channel, name, chanName));
         }
+
         if (isVisibleChannel(user.nChannelID)) {
             this.accessibilityAssistant.lockEvents();
             this.channelsAdapter.notifyDataSetChanged();
@@ -3287,46 +3312,79 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     @Override
     public void onCmdUserLeftChannel(int channelid, User user) {
         this.users.put(Integer.valueOf(user.nUserID), user);
-        if (user.nUserID == getClient().getMyUserID()) {
+
+        int myUserId = getClient() != null ? getClient().getMyUserID() : 0;
+        int myChannelId = getClient() != null ? getClient().getMyChannelID() : (this.mychannel != null ? this.mychannel.nChannelID : 0);
+
+        if (user.nUserID == myUserId) {
             this.textmsgAdapter.notifyDataSetChanged();
             setMyChannel(null);
-            if (this.curchannel == null && getService() != null) {
-                Channel chan = getService().getChannels().get(Integer.valueOf(channelid));
-                if (chan != null) {
-                    setCurrentChannel(chan);
+            Channel chan = null;
+            if (getService() != null && getService().getChannels() != null) {
+                chan = getService().getChannels().get(Integer.valueOf(channelid));
+            }
+            if (chan == null && getClient() != null) {
+                Channel c = new Channel();
+                if (getClient().getChannel(channelid, c)) {
+                    chan = c;
                 }
+            }
+            if (this.curchannel == null && chan != null) {
+                setCurrentChannel(chan);
             }
             if (this.channelsAdapter != null) {
                 this.accessibilityAssistant.lockEvents();
                 this.channelsAdapter.notifyDataSetChanged();
                 this.accessibilityAssistant.unlockEvents();
             }
-        } else if (this.curchannel != null && channelid == this.curchannel.nChannelID) {
+
+            if (this.ttsWrapper != null && ((Boolean) this.prefs.get("pref_tts_myself_leave", true)).booleanValue()) {
+                if (chan != null && chan.nParentID == 0) {
+                    this.ttsWrapper.speak(getString(R.string.text_cmd_leftroot));
+                } else if (chan != null && chan.szName != null && !chan.szName.isEmpty()) {
+                    this.ttsWrapper.speak(getString(R.string.text_cmd_leftchan) + " " + chan.szName);
+                }
+            }
+            return;
+        }
+
+        if (this.curchannel != null && channelid == this.curchannel.nChannelID) {
             this.accessibilityAssistant.lockEvents();
             this.textmsgAdapter.notifyDataSetChanged();
             this.accessibilityAssistant.unlockEvents();
         }
-        if (this.mychannel != null && this.mychannel.nChannelID == channelid) {
+
+        boolean isMyChannel = (myChannelId > 0 && myChannelId == channelid);
+
+        if (isMyChannel) {
             this.accessibilityAssistant.lockEvents();
             this.textmsgAdapter.notifyDataSetChanged();
             this.channelsAdapter.notifyDataSetChanged();
-            if (getClient().getMyChannelID() == channelid) {
-                if (this.sounds.get(15) != 0) {
-                    this.audioIcons.play(this.sounds.get(15), 1.0f, 1.0f, 0, 0, 1.0f);
-                }
-                if (this.ttsWrapper != null && ((Boolean) this.prefs.get("channel_leave_checkbox", false)).booleanValue()) {
-                    String name = Utils.getDisplayName(getBaseContext(), user);
-                    this.ttsWrapper.speak(name + " " + getResources().getString(R.string.text_tts_left_chan));
-                }
+            if (this.sounds.get(15) != 0) {
+                this.audioIcons.play(this.sounds.get(15), 1.0f, 1.0f, 0, 0, 1.0f);
+            }
+            if (this.ttsWrapper != null && ((Boolean) this.prefs.get("channel_leave_checkbox", false)).booleanValue()) {
+                String name = Utils.getDisplayName(getBaseContext(), user);
+                this.ttsWrapper.speak(name + " " + getResources().getString(R.string.text_tts_left_chan));
             }
             this.accessibilityAssistant.unlockEvents();
             return;
-        } else if (user.nUserID != getClient().getMyUserID() && this.ttsWrapper != null && ((Boolean) this.prefs.get("all_channel_leave_checkbox", false)).booleanValue()) {
+        } else if (this.ttsWrapper != null && (((Boolean) this.prefs.get("all_channel_leave_checkbox", false)).booleanValue() || ((Boolean) this.prefs.get("all_users_channel_movement_checkbox", false)).booleanValue())) {
             String name = Utils.getDisplayName(getBaseContext(), user);
-            Channel targetChan = getService() != null ? getService().getChannels().get(Integer.valueOf(channelid)) : null;
-            String chanName = (targetChan != null && targetChan.nParentID == 0) ? getString(R.string.text_cmd_leftroot) : (targetChan != null ? targetChan.szName : "");
+            Channel targetChan = null;
+            if (getService() != null && getService().getChannels() != null) {
+                targetChan = getService().getChannels().get(Integer.valueOf(channelid));
+            }
+            if (targetChan == null && getClient() != null) {
+                Channel c = new Channel();
+                if (getClient().getChannel(channelid, c)) {
+                    targetChan = c;
+                }
+            }
+            String chanName = (targetChan != null && targetChan.nParentID == 0) ? getString(R.string.text_cmd_leftroot) : (targetChan != null && targetChan.szName != null ? targetChan.szName : "");
             this.ttsWrapper.speak(getString(R.string.text_tts_user_left_other_channel, name, chanName));
         }
+
         if (isVisibleChannel(channelid)) {
             this.accessibilityAssistant.lockEvents();
             this.channelsAdapter.notifyDataSetChanged();
