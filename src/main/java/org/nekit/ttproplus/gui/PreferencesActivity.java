@@ -347,6 +347,17 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 });
             }
 
+            Preference customVerPref = findPreference("pref_custom_version");
+            if (customVerPref != null) {
+                updateCustomVerSummary(customVerPref);
+                customVerPref.setOnPreferenceClickListener(pref -> {
+                    org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(getActivity(), () -> {
+                        updateCustomVerSummary(customVerPref);
+                    });
+                    return true;
+                });
+            }
+
             Preference bearwareLogin = findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
             if (bearwareLogin != null) {
                 bearwareLogin.setOnPreferenceChangeListener((preference, o) -> {
@@ -366,6 +377,17 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 CheckBoxPreference preference = (CheckBoxPreference) findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
                 if (preference != null) {
                     preference.setChecked(username.length() > 0);
+                }
+            }
+
+            private void updateCustomVerSummary(Preference pref) {
+                if (getActivity() == null || pref == null) return;
+                String custom = org.nekit.ttproplus.utils.NativeMemoryPatcher.getCustomVersion(getActivity());
+                String current = dk.bearware.TeamTalkBase.getVersion();
+                if (custom != null && !custom.isEmpty()) {
+                    pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current + " (Custom)");
+                } else {
+                    pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current);
                 }
             }
         }

@@ -574,6 +574,10 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             startActivity(intentNet);
             return true;
         }
+        if (itemId == R.id.action_change_version) {
+            org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(this, null);
+            return true;
+        }
         if (itemId == R.id.action_settings) {
             Intent intent7 = new Intent(this, (Class<?>) PreferencesActivity.class);
             startActivity(intent7);

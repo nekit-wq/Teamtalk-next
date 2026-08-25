@@ -428,6 +428,15 @@ public class ServerListActivity extends AppCompatActivity
             startActivity(intent);
         } else if (itemId == R.id.action_check_updates) {
             AppUpdateManager.checkUpdate(this, true);
+        } else if (itemId == R.id.action_change_version) {
+            final TextView tv_version = findViewById(R.id.version_textview);
+            final TextView tv_dllversion = findViewById(R.id.dllversion_textview);
+            org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(this, new Runnable() {
+                @Override
+                public void run() {
+                    updateVersionDisplay(tv_version, tv_dllversion);
+                }
+            });
         } else if (itemId == R.id.action_exit) {
             finish();
         } else {

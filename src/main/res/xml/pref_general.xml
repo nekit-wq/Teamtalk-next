@@ -15,5 +15,6 @@
     <EditTextPreference android:singleLine="true" android:selectAllOnFocus="true" android:title="@string/pref_title_clientname" android:key="clientname_text" android:summary="@string/pref_summary_clientname" />
     <ListPreference android:entries="@array/default_file_manager_entries" android:title="@string/pref_title_default_file_manager" android:key="default_file_manager" android:summary="@string/pref_summary_default_file_manager" android:defaultValue="ask" android:entryValues="@array/default_file_manager_values" />
     <Preference android:title="@string/pref_title_battery_optimization" android:key="battery_optimization" android:summary="@string/pref_summary_battery_optimization" />
+    <Preference android:title="@string/pref_custom_version_title" android:key="pref_custom_version" android:summary="@string/pref_custom_version_summary" />
     <Preference android:title="@string/pref_check_updates" android:key="check_updates" android:summary="@string/pref_summary_check_updates" />
 </PreferenceScreen>

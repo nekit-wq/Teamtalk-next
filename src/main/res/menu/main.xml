@@ -112,6 +112,12 @@
         android:title="@string/action_publishsrv"/>
 
     <item
+        android:id="@+id/action_change_version"
+        android:orderInCategory="990"
+        app:showAsAction="never"
+        android:title="@string/pref_custom_version_title"/>
+
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="999"
         app:showAsAction="never"
