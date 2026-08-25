@@ -17,6 +17,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import dk.bearware.ClientFlag;
 import dk.bearware.MediaFileInfo;
 import dk.bearware.MediaFilePlayback;
 import dk.bearware.MediaFilePlaybackConstants;
