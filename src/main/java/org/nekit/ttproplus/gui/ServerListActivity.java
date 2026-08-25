@@ -212,15 +212,20 @@ public class ServerListActivity extends AppCompatActivity
         handleIncomingIntent(getIntent());
 
         if (mConnection.isBound()) {
-            // reset state since we're creating a new connection
-            getService().resetState();
-            getClient().closeSoundInputDevice();
-            getClient().closeSoundOutputDevice();
-            getService().getEventHandler().registerOnCmdMyselfLoggedIn(this, true);
+            if (getService() != null && getService().getEventHandler() != null) {
+                getService().getEventHandler().registerOnCmdMyselfLoggedIn(this, true);
+            }
 
             // Connect to server if 'serverentry' is specified.
             // Connection to server is either started here or in onServiceConnected()
             if (this.serverentry != null) {
+                if (getService() != null) {
+                    getService().resetState();
+                }
+                if (getClient() != null) {
+                    getClient().closeSoundInputDevice();
+                    getClient().closeSoundOutputDevice();
+                }
                 connectToServerAsync(this.serverentry);
             }
         }

@@ -35,6 +35,7 @@ public class ProfileManager {
     private static final String PREF_GLOBAL_ACTIVE_PROFILE = "global_active_profile_id";
     private static final String PREF_GLOBAL_PROFILES_JSON = "global_profiles_list_json";
     private static final String PREF_GLOBAL_OPEN_TABS_JSON = "global_open_tabs_json";
+    public static final String PREF_SHOW_PROFILE_TABS = "pref_show_profile_tabs";
     public static final String DEFAULT_PROFILE_ID = "default";
     private static final String SERVERLIST_NAME = "serverlist";
 
@@ -325,7 +326,14 @@ public class ProfileManager {
 
         final LinearLayout tabsContainer = activity.findViewById(R.id.profile_tabs_container);
         final HorizontalScrollView scrollView = activity.findViewById(R.id.profile_tabs_scroll);
-        if (tabsContainer == null) return;
+        if (tabsContainer == null || scrollView == null) return;
+
+        boolean showTabs = PreferenceManager.getDefaultSharedPreferences(activity).getBoolean(PREF_SHOW_PROFILE_TABS, true);
+        if (!showTabs) {
+            scrollView.setVisibility(View.GONE);
+            return;
+        }
+        scrollView.setVisibility(View.VISIBLE);
 
         tabsContainer.removeAllViews();
 
@@ -344,7 +352,6 @@ public class ProfileManager {
 
             View tabView = inflater.inflate(R.layout.item_profile_tab, tabsContainer, false);
             TextView tabTitle = tabView.findViewById(R.id.tab_title);
-            TextView tabIcon = tabView.findViewById(R.id.tab_icon);
             ImageButton btnClose = tabView.findViewById(R.id.tab_btn_close);
 
             tabTitle.setText(profile.name);
@@ -353,12 +360,10 @@ public class ProfileManager {
                 tabView.setBackgroundResource(R.drawable.tab_profile_active);
                 tabTitle.setTypeface(null, Typeface.BOLD);
                 tabTitle.setTextColor(Color.WHITE);
-                tabIcon.setText("🌐");
                 activeView = tabView;
             } else {
                 tabView.setBackgroundResource(R.drawable.tab_profile_inactive);
                 tabTitle.setTypeface(null, Typeface.NORMAL);
-                tabIcon.setText("👤");
             }
 
             tabView.setOnClickListener(v -> {
@@ -397,13 +402,13 @@ public class ProfileManager {
         addTabBtn.setPadding(24, 8, 24, 8);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                (int) (36 * activity.getResources().getDisplayMetrics().density)
+                (int) (34 * activity.getResources().getDisplayMetrics().density)
         );
-        params.setMargins(8, 8, 8, 8);
+        params.setMargins(6, 4, 6, 4);
         addTabBtn.setLayoutParams(params);
 
         TextView addText = new TextView(activity);
-        addText.setText("➕ " + activity.getString(R.string.tab_new_profile));
+        addText.setText("+ " + activity.getString(R.string.tab_new_profile));
         addText.setTextSize(12);
         addText.setTypeface(null, Typeface.BOLD);
         addTabBtn.addView(addText);
@@ -414,7 +419,7 @@ public class ProfileManager {
 
         tabsContainer.addView(addTabBtn);
 
-        if (scrollView != null && activeView != null) {
+        if (activeView != null) {
             final View targetView = activeView;
             scrollView.post(() -> {
                 int scrollX = targetView.getLeft() - (scrollView.getWidth() / 4);

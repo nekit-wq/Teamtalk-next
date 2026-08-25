@@ -344,8 +344,14 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     private void onProfileTabSwitched() {
+        if (getClient() != null) {
+            try {
+                getClient().disconnect();
+            } catch (Exception ignored) {}
+        }
+        finish();
         Intent intent = new Intent(this, ServerListActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
 
