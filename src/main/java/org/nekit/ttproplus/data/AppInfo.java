@@ -58,8 +58,8 @@ public class AppInfo {
     }
 
     public static String getDefautlUrlArgs(Context context) {
-        final String TEAMTALK_VERSION = TeamTalkBase.getVersion();
-        String appversion = getVersion(context);
+        final String TEAMTALK_VERSION = org.nekit.ttproplus.utils.VersionManager.getEffectiveDllVersion(context);
+        String appversion = org.nekit.ttproplus.utils.VersionManager.getEffectiveVersion(context);
         return "client=" + APPNAME_SHORT + "&version="
                 + appversion + "&dllversion=" + TEAMTALK_VERSION + "&os=" + OSTYPE;
     }

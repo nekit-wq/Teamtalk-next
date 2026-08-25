@@ -382,8 +382,8 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
 
             private void updateCustomVerSummary(Preference pref) {
                 if (getActivity() == null || pref == null) return;
-                String custom = org.nekit.ttproplus.utils.NativeMemoryPatcher.getCustomVersion(getActivity());
-                String current = dk.bearware.TeamTalkBase.getVersion();
+                String custom = org.nekit.ttproplus.utils.VersionManager.getCustomVersion(getActivity());
+                String current = org.nekit.ttproplus.utils.VersionManager.getEffectiveDllVersion(getActivity());
                 if (custom != null && !custom.isEmpty()) {
                     pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current + " (Custom)");
                 } else {
@@ -686,8 +686,8 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
 
         private void updateCustomVerSummary(Preference pref) {
             if (getActivity() == null) return;
-            String custom = org.nekit.ttproplus.utils.NativeMemoryPatcher.getCustomVersion(getActivity());
-            String current = dk.bearware.TeamTalkBase.getVersion();
+            String custom = org.nekit.ttproplus.utils.VersionManager.getCustomVersion(getActivity());
+            String current = org.nekit.ttproplus.utils.VersionManager.getEffectiveDllVersion(getActivity());
             if (custom != null && !custom.isEmpty()) {
                 pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current + " (Custom)");
             } else {

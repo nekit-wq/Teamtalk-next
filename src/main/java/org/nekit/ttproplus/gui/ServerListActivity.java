@@ -952,12 +952,12 @@ public class ServerListActivity extends AppCompatActivity
 
     private void updateVersionDisplay(TextView tv_version, TextView tv_dllversion) {
         String version = AppInfo.getVersion(this);
-        String custom = org.nekit.ttproplus.utils.NativeMemoryPatcher.getCustomVersion(this);
+        String custom = org.nekit.ttproplus.utils.VersionManager.getCustomVersion(this);
         if (tv_version != null) {
             tv_version.setText(String.format(Locale.ROOT, "%s%s%s Build %d", getString(R.string.ttversion), version, AppInfo.APPVERSION_POSTFIX, BuildConfig.VERSION_CODE));
         }
         if (tv_dllversion != null) {
-            String dllVer = TeamTalkBase.getVersion();
+            String dllVer = org.nekit.ttproplus.utils.VersionManager.getEffectiveDllVersion(this);
             if (custom != null && !custom.isEmpty()) {
                 tv_dllversion.setText(getString(R.string.ttdllversion) + dllVer + " (Custom)");
             } else {
