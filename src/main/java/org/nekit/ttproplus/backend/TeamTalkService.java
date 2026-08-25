@@ -131,6 +131,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     ServerEntry ttserver;
     private boolean txSuspended;
     private boolean voxSuspended;
+    private boolean pendingAutoRecord = false;
     private static volatile TeamTalkService sInstance;
 
     public static TeamTalkService getInstance() {

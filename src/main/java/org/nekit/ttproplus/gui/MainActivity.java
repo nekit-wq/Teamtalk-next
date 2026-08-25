@@ -13,7 +13,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import org.nekit.ttproplus.data.AppInfo;
-import org.nekit.ttproplus.data.ProfileManager;
 import org.nekit.ttproplus.data.ServerEntry;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;

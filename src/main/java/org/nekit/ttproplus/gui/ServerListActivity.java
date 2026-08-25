@@ -92,7 +92,6 @@ import org.nekit.ttproplus.backend.TeamTalkService;
 import org.nekit.ttproplus.data.AppInfo;
 import org.nekit.ttproplus.data.Permissions;
 import org.nekit.ttproplus.data.Preferences;
-import org.nekit.ttproplus.data.ProfileManager;
 import org.nekit.ttproplus.data.ServerEntry;
 import dk.bearware.events.ClientEventListener;
 import android.app.ProgressDialog;
@@ -427,15 +426,6 @@ public class ServerListActivity extends AppCompatActivity
             }
         } else if (itemId == R.id.action_enter_joincode) {
             enterJoinCode();
-        } else if (itemId == R.id.action_profiles) {
-            ProfileManager.showProfileSwitcher(this, new Runnable() {
-                @Override
-                public void run() {
-                    servers.clear();
-                    refreshServerList();
-                    updateProfileTitle();
-                }
-            });
         } else if (itemId == R.id.action_settings) {
             Intent intent = new Intent(ServerListActivity.this, PreferencesActivity.class);
             startActivity(intent);
@@ -784,11 +774,7 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     private SharedPreferences getServerListSharedPreferences() {
-        String activeProfile = ProfileManager.getActiveProfileId(this);
-        if (ProfileManager.DEFAULT_PROFILE_ID.equals(activeProfile)) {
-            return getSharedPreferences(SERVERLIST_NAME, MODE_PRIVATE);
-        }
-        return getSharedPreferences(SERVERLIST_NAME + "_" + activeProfile, MODE_PRIVATE);
+        return getSharedPreferences(SERVERLIST_NAME, MODE_PRIVATE);
     }
 
     private void saveServers() {
