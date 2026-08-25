@@ -96,3 +96,19 @@ dependencies {
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.rules
 }
+
+tasks.register('syncNativeLibraryVersion') {
+    doLast {
+        def ver = android.defaultConfig.versionName
+        println "Syncing native .so library version to: ${ver}"
+        exec {
+            commandLine 'python3', "${rootDir}/tools/update_native_version.py", ver
+        }
+    }
+}
+
+tasks.matching { it.name.startsWith('merge') && it.name.contains('JniLibFolders') }.configureEach {
+    dependsOn 'syncNativeLibraryVersion'
+}
+preBuild.dependsOn 'syncNativeLibraryVersion'
+
