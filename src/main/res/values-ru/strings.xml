@@ -1197,4 +1197,16 @@
     <string name="stream_active_status">Идёт трансляция: %1$s</string>
     <string name="connecting_to_server_async">Подключение к серверу...</string>
     <string name="btn_cancel_connection">Отмена</string>
+
+    <!-- Browser-style Profile Tabs -->
+    <string name="tab_new_profile">Новая вкладка / Профиль</string>
+    <string name="tab_close_confirm_title">Закрыть вкладку</string>
+    <string name="tab_close_confirm_msg">Закрыть вкладку профиля «%1$s»?</string>
+    <string name="action_open_new_tab">Новая вкладка профиля</string>
+    <string name="action_clone_tab">Дублировать вкладку</string>
+    <string name="action_profile_tabs">Вкладки и профили</string>
+    <string name="dialog_new_tab_title">Новая вкладка</string>
+    <string name="dialog_new_tab_new_profile">➕ Создать новый чистый профиль</string>
+    <string name="dialog_new_tab_clone_profile">📋 Клонировать текущий профиль</string>
+    <string name="dialog_new_tab_existing_profile">🌐 Открыть другой профиль</string>
 </resources>

@@ -1195,4 +1195,16 @@ By: %3$s"</string>
     <string name="stream_active_status">Streaming: %1$s</string>
     <string name="connecting_to_server_async">Connecting to server...</string>
     <string name="btn_cancel_connection">Cancel</string>
+
+    <!-- Browser-style Profile Tabs -->
+    <string name="tab_new_profile">New Tab / Profile</string>
+    <string name="tab_close_confirm_title">Close Tab</string>
+    <string name="tab_close_confirm_msg">Close tab for profile \"%1$s\"?</string>
+    <string name="action_open_new_tab">New Profile Tab</string>
+    <string name="action_clone_tab">Duplicate Tab</string>
+    <string name="action_profile_tabs">Tabs &amp; Profiles</string>
+    <string name="dialog_new_tab_title">New Tab</string>
+    <string name="dialog_new_tab_new_profile">➕ Create New Clean Profile</string>
+    <string name="dialog_new_tab_clone_profile">📋 Clone Current Profile</string>
+    <string name="dialog_new_tab_existing_profile">🌐 Open Other Profile</string>
 </resources>

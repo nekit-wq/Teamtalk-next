@@ -226,11 +226,18 @@ public class ServerListActivity extends AppCompatActivity
         }
     }
 
+    private void onProfileChanged() {
+        servers.clear();
+        refreshServerList();
+        updateProfileTitle();
+    }
+
     private void updateProfileTitle() {
         if (getSupportActionBar() != null) {
             ProfileManager.Profile p = ProfileManager.getActiveProfile(this);
             getSupportActionBar().setSubtitle(getString(R.string.profile_active_label) + ": " + p.name);
         }
+        ProfileManager.setupProfileTabsBar(this, this::onProfileChanged);
     }
 
     @Override

@@ -13,6 +13,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import org.nekit.ttproplus.data.AppInfo;
+import org.nekit.ttproplus.data.ProfileManager;
 import org.nekit.ttproplus.data.ServerEntry;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
@@ -334,6 +335,18 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 startActivity(intent);
             });
         }
+
+        setupProfileTabsBar();
+    }
+
+    private void setupProfileTabsBar() {
+        ProfileManager.setupProfileTabsBar(this, this::onProfileTabSwitched);
+    }
+
+    private void onProfileTabSwitched() {
+        Intent intent = new Intent(this, ServerListActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
     }
 
     @Override
@@ -432,6 +445,10 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         File recordedFile;
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         int itemId = item.getItemId();
+        if (itemId == R.id.action_profile_tabs) {
+            ProfileManager.showNewTabDialog(this, this::onProfileTabSwitched);
+            return true;
+        }
         if (itemId == R.id.action_statusnick) {
             showChangeNicknameStatusDialog();
             return true;
@@ -875,6 +892,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     @Override
     protected void onResume() {
         super.onResume();
+        setupProfileTabsBar();
         String currentTheme = (String) this.prefs.get(ThemeHelper.THEME_PREF_KEY, "dark");
         if (this.appliedTheme != null && !this.appliedTheme.equals(currentTheme)) {
             this.appliedTheme = currentTheme;

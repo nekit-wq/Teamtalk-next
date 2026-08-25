@@ -3,6 +3,12 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_profile_tabs"
+        android:orderInCategory="70"
+        app:showAsAction="ifRoom|withText"
+        android:title="@string/action_profile_tabs"/>
+
+    <item
         android:id="@+id/action_mute_tts"
         android:orderInCategory="80"
         app:showAsAction="always"
