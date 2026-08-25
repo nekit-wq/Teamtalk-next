@@ -1134,11 +1134,4 @@
     <string name="user_prop_title_mute_media_right">Выключить Проигрывание Медиафайлов в Правом Канале</string>
     <string name="user_prop_title_mute_voice_left">Выключить Голос в Левом Канале</string>
     <string name="user_prop_title_mute_voice_right">Выключить Голос в Правом Канале</string>
-    <string name="pref_custom_version_title">Сменить версию клиента</string>
-    <string name="pref_custom_version_summary">Изменение версии клиента в оперативной памяти (эмуляция любой версии для сервера)</string>
-    <string name="pref_custom_version_dialog_msg">Укажите версию, которую клиент будет сообщать серверу TeamTalk при подключении:</string>
-    <string name="msg_custom_version_applied">Версия клиента изменена на %s</string>
-    <string name="msg_custom_version_reset">Версия клиента сброшена на стандартную (%s)</string>
-    <string name="button_save">Сохранить</string>
-    <string name="button_reset">По умолчанию</string>
 </resources>

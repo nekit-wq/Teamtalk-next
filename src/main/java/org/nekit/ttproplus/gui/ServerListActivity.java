@@ -943,27 +943,18 @@ public class ServerListActivity extends AppCompatActivity
 
         refreshServerList();
 
-        final TextView tv_version = findViewById(R.id.version_textview);
-        final TextView tv_dllversion = findViewById(R.id.dllversion_textview);
-        updateVersionDisplay(tv_version, tv_dllversion);
-
-        checkVersionAsync();
-    }
-
-    private void updateVersionDisplay(TextView tv_version, TextView tv_dllversion) {
         String version = AppInfo.getVersion(this);
-        String custom = org.nekit.ttproplus.utils.VersionManager.getCustomVersion(this);
+
+        TextView tv_version = findViewById(R.id.version_textview);
+        TextView tv_dllversion = findViewById(R.id.dllversion_textview);
         if (tv_version != null) {
             tv_version.setText(String.format(Locale.ROOT, "%s%s%s Build %d", getString(R.string.ttversion), version, AppInfo.APPVERSION_POSTFIX, BuildConfig.VERSION_CODE));
         }
         if (tv_dllversion != null) {
-            String dllVer = org.nekit.ttproplus.utils.VersionManager.getEffectiveDllVersion(this);
-            if (custom != null && !custom.isEmpty()) {
-                tv_dllversion.setText(getString(R.string.ttdllversion) + dllVer + " (Custom)");
-            } else {
-                tv_dllversion.setText(getString(R.string.ttdllversion) + dllVer);
-            }
+            tv_dllversion.setText(getString(R.string.ttdllversion) + TeamTalkBase.getVersion());
         }
+
+        checkVersionAsync();
     }
 
     @Override

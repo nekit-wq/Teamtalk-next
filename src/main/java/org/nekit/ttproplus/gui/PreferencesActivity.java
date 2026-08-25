@@ -347,17 +347,6 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 });
             }
 
-            Preference customVerPref = findPreference("pref_custom_version");
-            if (customVerPref != null) {
-                updateCustomVerSummary(customVerPref);
-                customVerPref.setOnPreferenceClickListener(pref -> {
-                    org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(getActivity(), () -> {
-                        updateCustomVerSummary(customVerPref);
-                    });
-                    return true;
-                });
-            }
-
             Preference bearwareLogin = findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
             if (bearwareLogin != null) {
                 bearwareLogin.setOnPreferenceChangeListener((preference, o) -> {
@@ -377,17 +366,6 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 CheckBoxPreference preference = (CheckBoxPreference) findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
                 if (preference != null) {
                     preference.setChecked(username.length() > 0);
-                }
-            }
-
-            private void updateCustomVerSummary(Preference pref) {
-                if (getActivity() == null || pref == null) return;
-                String custom = org.nekit.ttproplus.utils.VersionManager.getCustomVersion(getActivity());
-                String current = org.nekit.ttproplus.utils.VersionManager.getEffectiveDllVersion(getActivity());
-                if (custom != null && !custom.isEmpty()) {
-                    pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current + " (Custom)");
-                } else {
-                    pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current);
                 }
             }
         }
@@ -666,33 +644,6 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_about);
-            final Preference customVerPref = findPreference("pref_custom_version");
-            if (customVerPref != null) {
-                updateCustomVerSummary(customVerPref);
-                customVerPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                    @Override
-                    public boolean onPreferenceClick(Preference preference) {
-                        org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(getActivity(), new Runnable() {
-                            @Override
-                            public void run() {
-                                updateCustomVerSummary(customVerPref);
-                            }
-                        });
-                        return true;
-                    }
-                });
-            }
-        }
-
-        private void updateCustomVerSummary(Preference pref) {
-            if (getActivity() == null) return;
-            String custom = org.nekit.ttproplus.utils.VersionManager.getCustomVersion(getActivity());
-            String current = org.nekit.ttproplus.utils.VersionManager.getEffectiveDllVersion(getActivity());
-            if (custom != null && !custom.isEmpty()) {
-                pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current + " (Custom)");
-            } else {
-                pref.setSummary(getString(R.string.pref_custom_version_summary) + "\n" + getString(R.string.ttdllversion) + current);
-            }
         }
     }
 

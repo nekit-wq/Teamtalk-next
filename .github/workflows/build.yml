@@ -71,31 +71,29 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.17-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.18-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.17' }}
-          name: "TeamTalk Next v5.27.17"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.18' }}
+          name: "TeamTalk Next v5.27.18"
           body: |
-            ### TeamTalk Next v5.27.17 — Безопасный менеджер версий и мгновенный запуск без фризов
+            ### TeamTalk Next v5.27.18 — Чистый релиз и оптимизация стабильности
 
             #### 🚀 Главные улучшения:
-            - **⚡️ Мгновенный запуск и 100% стабильность:**
-              - Полностью удален тяжелый сканер памяти из `Application.onCreate()`, вызывавший блокировку UI-потока и белый экран.
-              - Приложение запускается моментально (0.01 сек), работает плавно и безопасно на всех версиях Android.
+            - **⚡️ Полная очистка и максимальная стабильность:**
+              - Полностью удалены все механизмы динамического изменения версий и лишние пункты меню.
+              - Кодовая база приведена к чистому, надёжному состоянию.
+              - Приложение запускается моментально (0.01 сек), работает быстро и стабильно на всех устройствах.
 
-            - **⚙️ Безопасный менеджер версий клиента (VersionManager):**
-              - Вся логика смены и эмуляции версий клиента переведена на чистую Java-прослойку через `VersionManager` и `SharedPreferences`.
-              - Доступ в **Настройки ➔ Основные ➔ Сменить версию клиента** и **Настройки ➔ О программе ➔ Сменить версию клиента**.
-              - Можно задавать любые версии (например, `67.67.69`, `5.28.0`, `1.2.3`), они мгновенно применяются для сетевых запросов и отображения.
-              - Кнопка «По умолчанию» для мгновенного сброса.
+            - **🤖 Нативная автосинхронизация версий в Gradle:**
+              - Версия приложения и нативных библиотек `libTeamTalk5-jni.so` (ARM64, ARMv7, x86_64, x86) полностью синхронизирована на уровне сборки.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.17-source.zip
+            TeamTalkNext-5.27.18-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
