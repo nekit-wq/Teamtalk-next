@@ -2134,12 +2134,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 boolean isAway = (user.nStatusMode & 1) != 0;
                 boolean isStreaming = (user.nStatusMode & 2048) != 0;
                 boolean isAdmin = (user.uUserType & UserType.USERTYPE_ADMIN) != 0;
-                int icon_resource;
                 if (MainActivity.this.getService() != null && MainActivity.this.getClient() != null && user.nUserID == MainActivity.this.getClient().getMyUserID()) {
                     talking = MainActivity.this.getService().isVoiceTransmitting();
                 }
                 String move = selected ? MainActivity.this.getString(R.string.user_state_selected) : "";
-                String speaking = talking ? MainActivity.this.getString(R.string.user_state_now_speaking, new Object[]{name2}) : name2;
+                speaking = talking ? MainActivity.this.getString(R.string.user_state_now_speaking, new Object[]{name2}) : name2;
                 String gender = female ? MainActivity.this.getString(R.string.user_state_female) : neutral2 ? MainActivity.this.getString(R.string.user_state_neutral) : MainActivity.this.getString(R.string.user_state_male);
                 String op = isOperator2 ? MainActivity.this.getString(R.string.user_state_operator) : "";
                 String admin = isAdmin ? MainActivity.this.getString(R.string.user_state_admin) : "";
