@@ -25,9 +25,15 @@ import org.nekit.ttproplus.R;
 public class NativeMemoryPatcher {
     public static final String TAG = "NativeMemoryPatcher";
     public static final String PREF_CUSTOM_VERSION = "custom_client_version";
-    private static final int MAX_VERSION_BUFFER_LEN = 16;
+    private static final int MAX_VERSION_CHARS = 11; // 12-byte buffer with \0
+
+    private static volatile long cachedTargetAddress = 0;
+
+    private static final byte[] ANCHOR_ARM64 = "abusePrevent\0".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] ANCHOR_OTHER = "webm_vp8\0".getBytes(StandardCharsets.US_ASCII);
 
     public static String getCustomVersion(Context context) {
+        if (context == null) return null;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getString(PREF_CUSTOM_VERSION, null);
     }
@@ -37,21 +43,29 @@ public class NativeMemoryPatcher {
         newVersion = newVersion.trim();
         if (newVersion.isEmpty()) return false;
 
+        if (newVersion.length() > MAX_VERSION_CHARS) {
+            newVersion = newVersion.substring(0, MAX_VERSION_CHARS);
+        }
+
         boolean success = patchMemory(newVersion);
-        PreferenceManager.getDefaultSharedPreferences(context)
-                .edit()
-                .putString(PREF_CUSTOM_VERSION, newVersion)
-                .apply();
+        if (context != null) {
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .putString(PREF_CUSTOM_VERSION, newVersion)
+                    .apply();
+        }
         return success;
     }
 
     public static boolean resetToDefault(Context context) {
         String defaultVer = BuildConfig.VERSION_NAME;
         boolean success = patchMemory(defaultVer);
-        PreferenceManager.getDefaultSharedPreferences(context)
-                .edit()
-                .remove(PREF_CUSTOM_VERSION)
-                .apply();
+        if (context != null) {
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .remove(PREF_CUSTOM_VERSION)
+                    .apply();
+        }
         return success;
     }
 
@@ -67,20 +81,50 @@ public class NativeMemoryPatcher {
             return false;
         }
 
+        if (newVersion.length() > MAX_VERSION_CHARS) {
+            newVersion = newVersion.substring(0, MAX_VERSION_CHARS);
+        }
+
         byte[] newVerBytes = newVersion.getBytes(StandardCharsets.US_ASCII);
-        if (newVerBytes.length > MAX_VERSION_BUFFER_LEN - 1) {
-            Log.e(TAG, "Version string too long: " + newVersion);
+        byte[] writeBuf = new byte[12];
+        Arrays.fill(writeBuf, (byte) 0);
+        System.arraycopy(newVerBytes, 0, writeBuf, 0, newVerBytes.length);
+
+        File memFile = new File("/proc/self/mem");
+        if (!memFile.exists()) {
+            Log.e(TAG, "/proc/self/mem does not exist");
             return false;
         }
 
+        // 1. Try fast path if address is already cached in this process
+        if (cachedTargetAddress > 0) {
+            try (RandomAccessFile memRaf = new RandomAccessFile(memFile, "rw")) {
+                memRaf.seek(cachedTargetAddress);
+                memRaf.write(writeBuf);
+                String current = TeamTalkBase.getVersion();
+                if (newVersion.equals(current)) {
+                    Log.i(TAG, "Cached memory write verified: " + current);
+                    return true;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Cached write failed, falling back to full scan: " + e.getMessage());
+                cachedTargetAddress = 0;
+            }
+        }
+
+        // 2. Full memory scan via /proc/self/maps
         File mapsFile = new File("/proc/self/maps");
-        File memFile = new File("/proc/self/mem");
-        if (!mapsFile.exists() || !memFile.exists()) {
-            Log.e(TAG, "/proc/self/maps or mem not accessible");
+        if (!mapsFile.exists()) {
+            Log.e(TAG, "/proc/self/maps does not exist");
             return false;
         }
 
         boolean patched = false;
+        String currentDllVersion = null;
+        try {
+            currentDllVersion = TeamTalkBase.getVersion();
+        } catch (Throwable ignored) {}
+
         try (BufferedReader mapsReader = new BufferedReader(new FileReader(mapsFile));
              RandomAccessFile memRaf = new RandomAccessFile(memFile, "rw")) {
 
@@ -88,7 +132,7 @@ public class NativeMemoryPatcher {
             Pattern mapPattern = Pattern.compile("^([0-9a-fA-F]+)-([0-9a-fA-F]+)\\s+([rwxsp-]+)\\s+");
 
             while ((line = mapsReader.readLine()) != null) {
-                // Look for libTeamTalk5-jni mappings or writable/readable app mappings
+                // Focus on libTeamTalk5-jni.so mappings or anonymous readable regions
                 if (!line.contains("libTeamTalk5-jni.so") && !line.contains("rw-p") && !line.contains("r--p")) {
                     continue;
                 }
@@ -108,23 +152,22 @@ public class NativeMemoryPatcher {
                         memRaf.seek(start);
                         memRaf.readFully(buffer);
 
-                        int foundIndex = findVersionPattern(buffer);
+                        int foundIndex = findVersionOffset(buffer, currentDllVersion);
                         if (foundIndex != -1) {
                             long targetAddr = start + foundIndex;
-                            Log.i(TAG, "Found target version pattern at offset: 0x" + Long.toHexString(targetAddr));
-
-                            // Pad with null bytes up to 12 bytes
-                            byte[] writeBuf = new byte[12];
-                            Arrays.fill(writeBuf, (byte) 0);
-                            System.arraycopy(newVerBytes, 0, writeBuf, 0, newVerBytes.length);
+                            Log.i(TAG, "Found target version offset at 0x" + Long.toHexString(targetAddr));
 
                             memRaf.seek(targetAddr);
                             memRaf.write(writeBuf);
+                            cachedTargetAddress = targetAddr;
                             patched = true;
-                            Log.i(TAG, "Successfully patched native memory to version: " + newVersion);
+
+                            String updated = TeamTalkBase.getVersion();
+                            Log.i(TAG, "Successfully patched native memory! TeamTalkBase.getVersion() is now: " + updated);
+                            break;
                         }
-                    } catch (Exception e) {
-                        // Skip unreadable memory pages silently
+                    } catch (Exception ignored) {
+                        // Skip unreadable memory pages
                     }
                 }
             }
@@ -135,14 +178,49 @@ public class NativeMemoryPatcher {
         return patched;
     }
 
-    private static int findVersionPattern(byte[] data) {
-        // Find 5.XX.XX pattern
-        for (int i = 0; i < data.length - 8; i++) {
-            if (data[i] == '5' && data[i + 1] == '.' && data[i + 2] == '2') {
-                if (Character.isDigit(data[i + 3]) && data[i + 4] == '.') {
-                    return i;
+    private static int findVersionOffset(byte[] data, String currentVersion) {
+        // Priority 1: Check ARM64 anchor "abusePrevent\0"
+        int idx = indexOf(data, ANCHOR_ARM64);
+        if (idx != -1) {
+            int verOffset = idx + ANCHOR_ARM64.length;
+            if (verOffset + 12 <= data.length) {
+                return verOffset;
+            }
+        }
+
+        // Priority 2: Check ARM32/x86 anchor "webm_vp8\0"
+        idx = indexOf(data, ANCHOR_OTHER);
+        if (idx != -1) {
+            int verOffset = idx + ANCHOR_OTHER.length;
+            if (verOffset + 12 <= data.length) {
+                return verOffset;
+            }
+        }
+
+        // Priority 3: Search for currentVersion string in memory
+        if (currentVersion != null && !currentVersion.isEmpty()) {
+            byte[] curBytes = (currentVersion + "\0").getBytes(StandardCharsets.US_ASCII);
+            idx = indexOf(data, curBytes);
+            if (idx != -1) {
+                return idx;
+            }
+        }
+
+        return -1;
+    }
+
+    private static int indexOf(byte[] array, byte[] target) {
+        if (target.length == 0 || array.length < target.length) return -1;
+        int limit = array.length - target.length;
+        for (int i = 0; i <= limit; i++) {
+            boolean match = true;
+            for (int j = 0; j < target.length; j++) {
+                if (array[i + j] != target[j]) {
+                    match = false;
+                    break;
                 }
             }
+            if (match) return i;
         }
         return -1;
     }
@@ -168,7 +246,8 @@ public class NativeMemoryPatcher {
                 String newVer = input.getText().toString().trim();
                 if (!newVer.isEmpty()) {
                     setCustomVersion(activity, newVer);
-                    Toast.makeText(activity, activity.getString(R.string.msg_custom_version_applied, newVer), Toast.LENGTH_SHORT).show();
+                    String applied = TeamTalkBase.getVersion();
+                    Toast.makeText(activity, activity.getString(R.string.msg_custom_version_applied, applied), Toast.LENGTH_SHORT).show();
                     if (onVersionChanged != null) {
                         onVersionChanged.run();
                     }
@@ -180,7 +259,7 @@ public class NativeMemoryPatcher {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 resetToDefault(activity);
-                String defVer = BuildConfig.VERSION_NAME;
+                String defVer = TeamTalkBase.getVersion();
                 Toast.makeText(activity, activity.getString(R.string.msg_custom_version_reset, defVer), Toast.LENGTH_SHORT).show();
                 if (onVersionChanged != null) {
                     onVersionChanged.run();
