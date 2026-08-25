@@ -428,15 +428,6 @@ public class ServerListActivity extends AppCompatActivity
             startActivity(intent);
         } else if (itemId == R.id.action_check_updates) {
             AppUpdateManager.checkUpdate(this, true);
-        } else if (itemId == R.id.action_change_version) {
-            final TextView tv_version = findViewById(R.id.version_textview);
-            final TextView tv_dllversion = findViewById(R.id.dllversion_textview);
-            org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(this, new Runnable() {
-                @Override
-                public void run() {
-                    updateVersionDisplay(tv_version, tv_dllversion);
-                }
-            });
         } else if (itemId == R.id.action_exit) {
             finish();
         } else {
@@ -955,24 +946,6 @@ public class ServerListActivity extends AppCompatActivity
         final TextView tv_version = findViewById(R.id.version_textview);
         final TextView tv_dllversion = findViewById(R.id.dllversion_textview);
         updateVersionDisplay(tv_version, tv_dllversion);
-
-        View.OnClickListener changeVerListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                org.nekit.ttproplus.utils.NativeMemoryPatcher.showChangeVersionDialog(ServerListActivity.this, new Runnable() {
-                    @Override
-                    public void run() {
-                        updateVersionDisplay(tv_version, tv_dllversion);
-                    }
-                });
-            }
-        };
-        if (tv_dllversion != null) {
-            tv_dllversion.setOnClickListener(changeVerListener);
-        }
-        if (tv_version != null) {
-            tv_version.setOnClickListener(changeVerListener);
-        }
 
         checkVersionAsync();
     }

@@ -37,11 +37,6 @@
         app:showAsAction="never"
         android:title="@string/action_check_updates"/>
     <item
-        android:id="@+id/action_change_version"
-        android:orderInCategory="910"
-        app:showAsAction="never"
-        android:title="@string/pref_custom_version_title"/>
-    <item
         android:id="@+id/action_settings"
         android:orderInCategory="998"
         app:showAsAction="never"
