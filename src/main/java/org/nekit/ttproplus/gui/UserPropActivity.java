@@ -148,6 +148,7 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
     }
 
     void showUser() {
+        if (getClient() == null) return;
         TextView nickname = findViewById(R.id.user_nickname);
         TextView username = findViewById(R.id.user_username);
         TextView userid = findViewById(R.id.user_userid);

@@ -51,6 +51,7 @@ jobs:
           tag_name: build-failure-log
           name: "Build Failure Log"
           files: gradle_err.log
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
