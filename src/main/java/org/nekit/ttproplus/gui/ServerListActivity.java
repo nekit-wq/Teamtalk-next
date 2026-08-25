@@ -470,8 +470,8 @@ public class ServerListActivity extends AppCompatActivity
         connectingDialog.setMessage(getString(R.string.connecting_to_server_async) + "\n" + entry.servername);
         connectingDialog.setCancelable(true);
         connectingDialog.setOnCancelListener(dialog -> {
-            if (getService() != null) {
-                getService().disconnect();
+            if (getClient() != null) {
+                getClient().disconnect();
             }
         });
         try {

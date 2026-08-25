@@ -347,7 +347,7 @@ public class ProfileManager {
                     AlertDialog.Builder dBuilder = new AlertDialog.Builder(activity);
                     dBuilder.setTitle(R.string.profile_delete_confirm_title);
                     dBuilder.setMessage(activity.getString(R.string.profile_delete_confirm_msg, profile.name));
-                    dBuilder.setPositiveButton(R.string.button_delete, (d, w) -> {
+                    dBuilder.setPositiveButton(R.string.action_delete, (d, w) -> {
                         deleteProfile(activity, profile.id);
                         Toast.makeText(activity, R.string.profile_deleted_toast, Toast.LENGTH_SHORT).show();
                         if (onProfileSwitched != null) onProfileSwitched.run();
