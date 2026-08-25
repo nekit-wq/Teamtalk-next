@@ -77,34 +77,27 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.22-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.23-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.22' }}
-          name: "TeamTalk Next v5.27.22"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.23' }}
+          name: "TeamTalk Next v5.27.23"
           body: |
-            ### TeamTalk Next v5.27.22 — Категории меню «Ещё», мгновенный отклик и кэш сборки CI
+            ### TeamTalk Next v5.27.23 — Исправление свойств пользователя и повышенная стабильность
 
-            #### 🚀 Главные улучшения:
-            - **📑 Структурированное меню «Ещё» по разделам (SubMenus):**
-              - Перегруженное длинное меню полностью переработано в аккуратные сворачиваемые категории:
-                - 🎙 **Канал и трансляция:** Сменить статус/ник, создать канал, редактировать канал, стрим медиа, пауза, загрузка файлов, трансляция на весь сервер.
-                - ⏺ **Запись звука:** Начать запись, остановить запись, мои записи.
-                - 👥 **Сервер и управление:** Онлайн пользователи, аккаунты, бан-лист, свойства сервера, статистика, монитор сети, история чатов.
-                - ⚙️ **Настройки.**
-
+            #### 🛠 Исправления и улучшения:
+            - **🐛 Исправлен краш при открытии свойств пользователя (`UserPropActivity`):**
+              - Устранено `NullPointerException` при обращении к списку каналов до завершения фонового связывания со службой.
+              - Добавлен надёжный фоллбек на активный инстанс службы `TeamTalkService` и полная проверка `null-safety` во всех переключателях и обработчиках.
             - **⚡️ Мгновенный отклик при нажатии на пользователя:**
-              - Устранена задержка при открытии профиля/свойств пользователя (`UserPropActivity`). Данные теперь подтягиваются мгновенно без ожидания IPC привязки к службе.
-
-            - **🚀 Высокоскоростной кэш сборки в GitHub Actions CI:**
-              - Включено полное кэширование Gradle Cache и Daemon для ускорения последующих сборок релизов.
+              - Карточка пользователя открывается без задержек.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.22-source.zip
+            TeamTalkNext-5.27.23-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

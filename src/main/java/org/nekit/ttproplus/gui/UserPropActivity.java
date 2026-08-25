@@ -65,16 +65,16 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
     User user = new User();
 
     TeamTalkService getService() {
-        return mConnection != null ? mConnection.getService() : null;
+        TeamTalkService service = mConnection != null ? mConnection.getService() : null;
+        if (service == null) {
+            service = TeamTalkService.getInstance();
+        }
+        return service;
     }
 
     TeamTalkBase getClient() {
         TeamTalkService service = getService();
-        if (service != null && service.getTTInstance() != null) {
-            return service.getTTInstance();
-        }
-        TeamTalkService direct = TeamTalkService.getInstance();
-        return direct != null ? direct.getTTInstance() : null;
+        return service != null ? service.getTTInstance() : null;
     }
 
     @Override
@@ -126,13 +126,16 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
                 Log.e(TAG, "Failed to bind to TeamTalk service");
         }
         else {
-            int userid = getIntent().getExtras().getInt(EXTRA_USERID);
-            if(!getClient().getUser(userid, user)) {
-                setResult(RESULT_CANCELED);
-                finish();
+            if (getIntent() != null && getIntent().getExtras() != null) {
+                int userid = getIntent().getExtras().getInt(EXTRA_USERID);
+                TeamTalkBase client = getClient();
+                if (client == null || !client.getUser(userid, user)) {
+                    setResult(RESULT_CANCELED);
+                    finish();
+                }
+                else
+                    showUser();
             }
-            else
-                showUser();
         }
     }
 
@@ -148,7 +151,8 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
     }
 
     void showUser() {
-        if (getClient() == null) return;
+        TeamTalkBase client = getClient();
+        if (client == null) return;
         TextView nickname = findViewById(R.id.user_nickname);
         TextView username = findViewById(R.id.user_username);
         TextView userid = findViewById(R.id.user_userid);
@@ -215,7 +219,7 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         ipaddress.setText(getString(R.string.user_prop_title_ipaddress) + " " + user.szIPAddress);
 
         UserAccount myAccount = new UserAccount();
-        if (getClient().getMyUserAccount(myAccount) &&
+        if (client.getMyUserAccount(myAccount) &&
             (myAccount.uUserRights & UserRight.USERRIGHT_VIEW_ALL_USERS) != 0 &&
             !user.szIPAddress.isEmpty()) {
             final TextView location = findViewById(R.id.user_location);
@@ -248,27 +252,35 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         mediaRightSpeakerSwitch.setChecked(mediaR);
 
         voiceLeftSpeakerSwitch.setOnCheckedChangeListener((btn, checked) -> {
+            TeamTalkBase c = getClient();
+            if (c == null) return;
             boolean right = voiceRightSpeakerSwitch.isChecked();
-            getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_VOICE, checked, right);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
+            c.setUserStereo(user.nUserID, StreamType.STREAMTYPE_VOICE, checked, right);
+            c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
         });
 
         voiceRightSpeakerSwitch.setOnCheckedChangeListener((btn, checked) -> {
+            TeamTalkBase c = getClient();
+            if (c == null) return;
             boolean left = voiceLeftSpeakerSwitch.isChecked();
-            getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_VOICE, left, checked);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
+            c.setUserStereo(user.nUserID, StreamType.STREAMTYPE_VOICE, left, checked);
+            c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
         });
 
         mediaLeftSpeakerSwitch.setOnCheckedChangeListener((btn, checked) -> {
+            TeamTalkBase c = getClient();
+            if (c == null) return;
             boolean right = mediaRightSpeakerSwitch.isChecked();
-            getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, checked, right);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
+            c.setUserStereo(user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, checked, right);
+            c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
         });
 
         mediaRightSpeakerSwitch.setOnCheckedChangeListener((btn, checked) -> {
+            TeamTalkBase c = getClient();
+            if (c == null) return;
             boolean left = mediaLeftSpeakerSwitch.isChecked();
-            getClient().setUserStereo(user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, left, checked);
-            getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
+            c.setUserStereo(user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, left, checked);
+            c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
         });
 
         subscribeTxtmsg.setChecked((user.uLocalSubscriptions & Subscription.SUBSCRIBE_USER_MSG) != 0);
@@ -285,7 +297,8 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         subscribeInterceptdesk.setChecked((user.uLocalSubscriptions & Subscription.SUBSCRIBE_INTERCEPT_DESKTOP) != 0);
         subscribeInterceptmedia.setChecked((user.uLocalSubscriptions & Subscription.SUBSCRIBE_INTERCEPT_MEDIAFILE) != 0);
 
-        Channel chan = getService().getChannels().get(user.nChannelID);
+        TeamTalkService srv = getService();
+        Channel chan = (srv != null && srv.getChannels() != null) ? srv.getChannels().get(user.nChannelID) : null;
         if (chan != null) {
             transmitVoice.setChecked(Utils.isTransmitAllowed(user, chan, StreamType.STREAMTYPE_VOICE));
             transmitVid.setChecked(Utils.isTransmitAllowed(user, chan, StreamType.STREAMTYPE_VIDEOCAPTURE));
@@ -298,16 +311,18 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress,
                 boolean fromUser) {
+                TeamTalkBase c = getClient();
+                if (c == null) return;
                 if(seekBar == voiceVol) {
-                    getClient().setUserVolume(user.nUserID,
+                    c.setUserVolume(user.nUserID,
                         StreamType.STREAMTYPE_VOICE, Utils.refVolume(progress));
                 }
                 else if(seekBar == mediaVol) {
-                    getClient().setUserVolume(user.nUserID,
+                    c.setUserVolume(user.nUserID,
                         StreamType.STREAMTYPE_MEDIAFILE_AUDIO,
                         Utils.refVolume(progress));
                 }
-                getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
+                c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
             }
 
             @Override
@@ -334,61 +349,63 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         defMfBtn.setOnClickListener(defListener);
 
         CompoundButton.OnCheckedChangeListener muteListener = (btn, checked) -> {
+            TeamTalkBase c = getClient();
+            if (c == null) return;
             if(btn == voiceMute) {
-                getClient().setUserMute(user.nUserID, StreamType.STREAMTYPE_VOICE, checked);
-                getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
+                c.setUserMute(user.nUserID, StreamType.STREAMTYPE_VOICE, checked);
+                c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
             }
             else if(btn == mediaMute) {
-                getClient().setUserMute(user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, checked);
-                getClient().pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
+                c.setUserMute(user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, checked);
+                c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, user.nUserID);
             }
             else if(btn == subscribeTxtmsg)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_USER_MSG, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_USER_MSG, checked);
             else if(btn == subscribeChanmsg)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_CHANNEL_MSG, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_CHANNEL_MSG, checked);
             else if(btn == subscribeBcastmsg)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_BROADCAST_MSG, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_BROADCAST_MSG, checked);
             else if(btn == subscribeVoice)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_VOICE, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_VOICE, checked);
             else if(btn == subscribeVid)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_VIDEOCAPTURE, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_VIDEOCAPTURE, checked);
             else if(btn == subscribeDesk)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_DESKTOP, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_DESKTOP, checked);
             else if(btn == subscribeMedia)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_MEDIAFILE, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_MEDIAFILE, checked);
             else if(btn == subscribeIntercepttxtmsg)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_INTERCEPT_USER_MSG, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_INTERCEPT_USER_MSG, checked);
             else if(btn == subscribeInterceptchanmsg)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_INTERCEPT_CHANNEL_MSG, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_INTERCEPT_CHANNEL_MSG, checked);
             else if(btn == subscribeInterceptvoice)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_INTERCEPT_VOICE, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_INTERCEPT_VOICE, checked);
             else if(btn == subscribeInterceptvid)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_INTERCEPT_VIDEOCAPTURE, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_INTERCEPT_VIDEOCAPTURE, checked);
             else if(btn == subscribeInterceptdesk)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_INTERCEPT_DESKTOP, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_INTERCEPT_DESKTOP, checked);
             else if(btn == subscribeInterceptmedia)
-                Utils.toggleSubscription(getClient(), user, Subscription.SUBSCRIBE_INTERCEPT_MEDIAFILE, checked);
+                Utils.toggleSubscription(c, user, Subscription.SUBSCRIBE_INTERCEPT_MEDIAFILE, checked);
 
             if (chan != null) {
                 if(btn == transmitVoice) {
                     Utils.toggleTransmitUsers(user, chan, StreamType.STREAMTYPE_VOICE, checked);
-                    getClient().doUpdateChannel(chan);
+                    c.doUpdateChannel(chan);
                 }
                 else if(btn == transmitVid) {
                     Utils.toggleTransmitUsers(user, chan, StreamType.STREAMTYPE_VIDEOCAPTURE, checked);
-                    getClient().doUpdateChannel(chan);
+                    c.doUpdateChannel(chan);
                 }
                 else if(btn == transmitDesk) {
                     Utils.toggleTransmitUsers(user, chan, StreamType.STREAMTYPE_DESKTOP, checked);
-                    getClient().doUpdateChannel(chan);
+                    c.doUpdateChannel(chan);
                 }
                 else if(btn == transmitMedia) {
                     Utils.toggleTransmitUsers(user, chan, StreamType.STREAMTYPE_MEDIAFILE, checked);
-                    getClient().doUpdateChannel(chan);
+                    c.doUpdateChannel(chan);
                 }
                 else if(btn == transmitChanmsg) {
                     Utils.toggleTransmitUsers(user, chan, StreamType.STREAMTYPE_CHANNELMSG, checked);
-                    getClient().doUpdateChannel(chan);
+                    c.doUpdateChannel(chan);
                 }
             }
         };
@@ -416,13 +433,15 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
 
     @Override
     public void onServiceConnected(TeamTalkService service) {
-        int userid = getIntent().getExtras().getInt(EXTRA_USERID);
-        if (!service.getTTInstance().getUser(userid, user)) {
-            setResult(RESULT_CANCELED);
-            finish();
+        if (getIntent() != null && getIntent().getExtras() != null && service != null && service.getTTInstance() != null) {
+            int userid = getIntent().getExtras().getInt(EXTRA_USERID);
+            if (!service.getTTInstance().getUser(userid, user)) {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+            else
+                showUser();
         }
-        else
-            showUser();
     }
 
     @Override

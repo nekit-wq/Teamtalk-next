@@ -68,7 +68,11 @@ implements TeamTalkConnectionListener, ClientEventListener.OnCmdErrorListener, C
     Channel channel;
 
     TeamTalkService getService() {
-        return mConnection != null ? mConnection.getService() : null;
+        TeamTalkService service = mConnection != null ? mConnection.getService() : null;
+        if (service == null) {
+            service = TeamTalkService.getInstance();
+        }
+        return service;
     }
 
     TeamTalkBase getClient() {
