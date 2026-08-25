@@ -650,7 +650,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 }
                 return;
             case MediaFileStatus.MFS_PLAYING:
-            case MediaFileStatus.MFS_BUFFERING:
                 this.isStreaming = true;
                 this.btnStream.setText(R.string.action_stop);
                 this.btnPlayPause.setText(R.string.action_pause);
