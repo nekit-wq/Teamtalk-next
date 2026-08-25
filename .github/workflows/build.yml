@@ -71,21 +71,21 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.9-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.10-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.9' }}
-          name: "TeamTalk Next v5.27.9"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.10' }}
+          name: "TeamTalk Next v5.27.10"
           body: |
-            ### TeamTalk Next v5.27.9
+            ### TeamTalk Next v5.27.10
 
             #### Список изменений и нововведений:
-            - **Гибкая настройка папок для каждого сервера и комнаты:**
-              - Добавлены раздельные переключатели «Создавать папку для сервера» и «Создавать папку для комнаты».
-              - Если опции отключены, записи сохраняются в общую папку записей, как обычно.
+            - **Оптимизация папок записей:**
+              - Удалено разделение по комнатам для полной совместимости со сквозной сессионной записью (Continuous Session).
+              - Сохранена опция «Создавать папку для каждого сервера» — при включении файлы аккуратно группируются по серверам (`TT Recordings / [ИмяСервера] / [ИмяКомнаты]_[Дата].ogg`), а при выключении пишутся прямо в общую папку записей.
             - **Встроенный менеджер и плеер записей:**
               - Экран «Записи» с поиском в реальном времени, фильтрацией, аудиоплеером (Play/Pause, перемотка +-5 сек, SeekBar) и кнопками «Поделиться», «Переименовать», «Удалить».
             - **Непрерывная сквозная запись всей сессии:**
@@ -98,6 +98,6 @@ jobs:
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.9-source.zip
+            TeamTalkNext-5.27.10-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

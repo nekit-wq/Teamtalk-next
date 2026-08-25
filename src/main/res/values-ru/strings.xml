@@ -1052,10 +1052,8 @@
     <string name="pref_recording_category_notifications">Уведомления и диалоги</string>
     <string name="pref_open_recordings_manager_title">Открыть менеджер записей</string>
     <string name="pref_open_recordings_manager_summary">Просмотр, прослушивание, отправка и управление аудиозаписями</string>
-    <string name="pref_recording_create_server_folder_title">Создавать папку для сервера</string>
-    <string name="pref_recording_create_server_folder_summary">Сохранять записи каждого сервера в отдельную папку с его именем</string>
-    <string name="pref_recording_create_channel_folder_title">Создавать папку для комнаты</string>
-    <string name="pref_recording_create_channel_folder_summary">Сохранять записи каждой комнаты в отдельную подпапку</string>
+    <string name="pref_recording_create_server_folder_title">Создавать папку для каждого сервера</string>
+    <string name="pref_recording_create_server_folder_summary">Сохранять записи в отдельную папку с названием сервера</string>
     <string name="pref_recording_session_mode_title">Режим записи при смене комнат</string>
     <string name="pref_recording_session_mode_summary">Поведение записи при переходе между каналами</string>
     <string name="pref_recording_silence_pause_title">Авто-пауза при тишине</string>

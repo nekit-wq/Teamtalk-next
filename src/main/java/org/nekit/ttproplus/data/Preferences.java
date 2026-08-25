@@ -81,7 +81,6 @@ public class Preferences {
             PREF_RECORDING_MP3_BITRATE = "recording_mp3_bitrate",
             PREF_RECORDING_PATH = "recording_path",
             PREF_RECORDING_CREATE_SERVER_FOLDER = "recording_create_server_folder",
-            PREF_RECORDING_CREATE_CHANNEL_FOLDER = "recording_create_channel_folder",
             PREF_RECORDING_SESSION_MODE = "recording_session_mode",
             PREF_RECORDING_SILENCE_PAUSE = "recording_silence_pause",
             PREF_RECORDING_MULTITRACK = "recording_multitrack",

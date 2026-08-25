@@ -1037,16 +1037,11 @@ public class Utils {
         }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean createServerFolder = prefs.getBoolean(Preferences.PREF_RECORDING_CREATE_SERVER_FOLDER, false);
-        boolean createChannelFolder = prefs.getBoolean(Preferences.PREF_RECORDING_CREATE_CHANNEL_FOLDER, false);
 
         File targetDir = baseDir;
         if (createServerFolder && !TextUtils.isEmpty(serverName)) {
             String safeServer = sanitizeFilename(serverName);
             targetDir = new File(targetDir, safeServer);
-        }
-        if (createChannelFolder && !TextUtils.isEmpty(channelName)) {
-            String safeChannel = sanitizeFilename(channelName);
-            targetDir = new File(targetDir, safeChannel);
         }
 
         if (!targetDir.exists()) {
