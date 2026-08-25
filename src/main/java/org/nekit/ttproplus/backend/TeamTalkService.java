@@ -810,7 +810,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.isManualRecordingActive = true;
         this.pendingAutoRecord = false;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        this.isContinuousSessionActive = "continuous".equals(prefs.getString(Preferences.PREF_RECORDING_SESSION_MODE, "channel_split"));
+        this.isContinuousSessionActive = "continuous".equals(prefs.getString(Preferences.PREF_RECORDING_SESSION_MODE, "stop"));
         this.lastVoiceActivityTime = SystemClock.elapsedRealtime();
         this.isRecordingPausedDueToSilence = false;
         startRecordingFileInternal(true);
@@ -908,8 +908,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.mychannel = chan;
         setupAudioPreprocessor();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String sessionMode = prefs.getString(Preferences.PREF_RECORDING_SESSION_MODE, "stop");
+        boolean isAutoContinue = "continuous".equals(sessionMode);
+
         if (chan != null) {
-            if (this.isContinuousSessionActive && this.isManualRecordingActive) {
+            if (this.isContinuousSessionActive && this.isManualRecordingActive && isAutoContinue) {
                 this.isRecordingPausedDueToSilence = false;
                 startRecordingFileInternal(false);
                 showRecordingToast(getString(R.string.recording_session_resumed, chan.szName));
@@ -930,12 +933,15 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                     this.pendingAutoRecord = true;
                 }
             } else {
+                this.isManualRecordingActive = false;
+                this.isContinuousSessionActive = false;
                 this.pendingAutoRecord = false;
             }
             return;
         }
+
         this.pendingAutoRecord = false;
-        if (this.isContinuousSessionActive && this.isManualRecordingActive) {
+        if (this.isContinuousSessionActive && this.isManualRecordingActive && isAutoContinue) {
             if (this.isRecording) {
                 this.ttclient.stopRecordingMuxedAudioFile();
                 this.isRecording = false;

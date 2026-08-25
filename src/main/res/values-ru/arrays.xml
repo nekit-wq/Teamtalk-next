@@ -67,8 +67,12 @@
         <item>Системная (как в телефоне)</item>
     </string-array>
     <string-array name="pref_recording_session_mode_entries">
-        <item>По комнатам (новый файл для каждого канала)</item>
-        <item>Непрерывная сессия (автопродолжение при переходах)</item>
+        <item>Останавливать запись при смене комнат (не начинать новую)</item>
+        <item>Автопродолжение записи при переходах между комнатами</item>
+    </string-array>
+    <string-array name="pref_recording_session_mode_values">
+        <item>stop</item>
+        <item>continuous</item>
     </string-array>
     <string-array name="pref_recording_silence_pause_entries">
         <item>Выключено (писать непрерывно)</item>

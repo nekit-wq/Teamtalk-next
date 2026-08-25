@@ -24,7 +24,7 @@
             android:summary="@string/pref_recording_session_mode_summary"
             android:entries="@array/pref_recording_session_mode_entries"
             android:entryValues="@array/pref_recording_session_mode_values"
-            android:defaultValue="channel_split" />
+            android:defaultValue="stop" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_recording_category_automation">

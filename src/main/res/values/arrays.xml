@@ -113,11 +113,11 @@
         <item>auto</item>
     </string-array>
     <string-array name="pref_recording_session_mode_entries">
-        <item>Per-channel (separate file per room)</item>
-        <item>Continuous session (auto-resume across rooms)</item>
+        <item>Stop recording on room switch (do not start new)</item>
+        <item>Auto-continue recording across rooms</item>
     </string-array>
     <string-array name="pref_recording_session_mode_values">
-        <item>channel_split</item>
+        <item>stop</item>
         <item>continuous</item>
     </string-array>
     <string-array name="pref_recording_silence_pause_entries">
