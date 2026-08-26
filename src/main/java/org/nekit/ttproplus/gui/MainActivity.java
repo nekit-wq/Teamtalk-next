@@ -1050,8 +1050,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.mViewPager.setCurrentItem(0);
             return;
         }
-        if (this.curchannel != null) {
-            Channel parentChannel = (this.curchannel.nParentID > 0 && getService() != null)
+        if (this.curchannel != null && this.curchannel.nParentID > 0) {
+            Channel parentChannel = (getService() != null && getService().getChannels() != null)
                     ? getService().getChannels().get(Integer.valueOf(this.curchannel.nParentID))
                     : null;
             setCurrentChannel(parentChannel);
@@ -2843,55 +2843,41 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         OnButtonInteractionListener txButtonListener = new OnButtonInteractionListener() { 
             boolean tx_state = false;
-            long tx_down_start = 0;
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                boolean tx = event.getAction() != 1;
-                if (tx != this.tx_state) {
-                    if (!tx) {
-                        if (System.currentTimeMillis() - this.tx_down_start < 800) {
-                            tx = true;
-                            this.tx_down_start = 0L;
-                        } else {
-                            this.tx_down_start = System.currentTimeMillis();
-                        }
-                    }
-                    TeamTalkService service = MainActivity.this.getService();
-                    if (service != null) {
-                        if (service.isVoiceActivationEnabled()) {
-                            service.enableVoiceActivation(false);
-                        }
-                        service.enableVoiceTransmission(tx);
-                    }
+                int action = event.getAction();
+                if (action == MotionEvent.ACTION_DOWN) {
+                    this.tx_state = true;
+                    updateTx(true);
+                    return true;
+                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    this.tx_state = false;
+                    updateTx(false);
+                    return true;
                 }
-                this.tx_state = tx;
-                return true;
+                return false;
             }
 
             @Override
             public void onClick(View v) {
-                if (System.currentTimeMillis() - this.tx_down_start < 800) {
-                    this.tx_state = true;
-                    this.tx_down_start = 0L;
-                } else {
-                    this.tx_state = false;
-                    this.tx_down_start = System.currentTimeMillis();
-                }
+                this.tx_state = !this.tx_state;
+                updateTx(this.tx_state);
+            }
+
+            private void updateTx(boolean tx) {
                 TeamTalkService service = MainActivity.this.getService();
                 if (service != null) {
                     if (service.isVoiceActivationEnabled()) {
                         service.enableVoiceActivation(false);
                     }
-                    service.enableVoiceTransmission(this.tx_state);
+                    service.enableVoiceTransmission(tx);
                 }
             }
         };
         if (tx_btn != null) {
             tx_btn.setOnTouchListener(txButtonListener);
-            if (Build.VERSION.SDK_INT >= 26 && this.accessibilityAssistant != null && this.accessibilityAssistant.isServiceActive()) {
-                tx_btn.setOnClickListener(txButtonListener);
-            }
+            tx_btn.setOnClickListener(txButtonListener);
         }
         final SeekBar masterSeekBar = (SeekBar) findViewById(R.id.master_volSeekBar);
         final SeekBar micSeekBar = (SeekBar) findViewById(R.id.mic_gainSeekBar);

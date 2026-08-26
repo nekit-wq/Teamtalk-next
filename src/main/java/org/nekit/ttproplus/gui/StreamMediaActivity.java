@@ -114,6 +114,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     private LinearLayout containerSeekBar;
 
     private boolean isStreaming;
+    private volatile boolean stoppingStream = false;
     private int localPlaybackId;
     private MediaPlayer localMediaPlayer;
     private boolean isLocalMediaPlaying = false;
@@ -591,33 +592,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     }
 
     private void chooseFilePicker() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.choose_file_picker_title);
-        String[] options = new String[]{
-                getString(R.string.file_picker_internal),
-                getString(R.string.file_picker_system)
-        };
-        builder.setItems(options, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == 0) {
-                    Intent intent = new Intent(StreamMediaActivity.this, CustomFilePickerActivity.class);
-                    intent.putExtra(CustomFilePickerActivity.EXTRA_FOLDER_MODE, false);
-                    startActivityForResult(intent, REQUEST_CUSTOM_FILE_PICKER);
-                } else {
-                    if (Build.VERSION.SDK_INT >= 33) {
-                        if (!requestMediaPermissions()) {
-                            return;
-                        }
-                    } else if (!Permissions.READ_EXTERNAL_STORAGE.request(StreamMediaActivity.this)) {
-                        return;
-                    }
-                    mediaSelectionStart();
-                }
-            }
-        });
-        builder.setNegativeButton(android.R.string.cancel, null);
-        builder.show();
+        Utils.showFilePicker(this, REQUEST_STREAM_MEDIA, REQUEST_CUSTOM_FILE_PICKER, false, "*/*");
     }
 
     private boolean requestMediaPermissions() {
@@ -974,11 +949,12 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
 
     // Мгновенная остановка ВСЕГО (и локального плеера, и стрима в канал) с 1 нажатия
     private void stopAll() {
+        this.stoppingStream = true;
+        this.isStreaming = false;
         stopLocalRadio();
 
-        if (this.isStreaming && getClient() != null) {
+        if (getClient() != null) {
             getClient().stopStreamingMediaFileToChannel();
-            this.isStreaming = false;
         }
 
         if (this.localPlaybackId > 0 && getClient() != null) {
@@ -1003,6 +979,17 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     }
 
     private void handleStreamMediaFile(MediaFileInfo mfi) {
+        if (this.stoppingStream) {
+            if (mfi.nStatus == MediaFileStatus.MFS_CLOSED || mfi.nStatus == MediaFileStatus.MFS_FINISHED || mfi.nStatus == MediaFileStatus.MFS_ERROR) {
+                this.stoppingStream = false;
+            }
+            this.isStreaming = false;
+            this.btnStream.setText(R.string.button_stream_media_file);
+            this.btnPlayPause.setText(R.string.action_play);
+            this.btnStop.setEnabled(false);
+            return;
+        }
+
         this.mMediaFileInfo = mfi;
         if (getService() != null) {
             getService().setCurrentMediaFileInfo(mfi);
@@ -1021,6 +1008,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             case MediaFileStatus.MFS_FINISHED:
             case MediaFileStatus.MFS_ERROR:
                 this.isStreaming = false;
+                this.stoppingStream = false;
                 this.btnStream.setText(R.string.button_stream_media_file);
                 this.btnPlayPause.setText(R.string.action_play);
                 if (this.localPlaybackId <= 0 && !this.isLocalMediaPlaying) {
