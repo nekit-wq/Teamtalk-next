@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,7 +26,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -224,7 +222,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser && StreamMediaActivity.this.mMediaFileInfo != null && StreamMediaActivity.this.mMediaFileInfo.uDurationMSec > 0) {
-                    int pos = (int) ((StreamMediaActivity.this.mMediaFileInfo.uDurationMSec * progress) / seekBar.getMax());
+                    int pos = (int) ((StreamMediaActivity.this.mMediaFileInfo.uDurationMSec * (long) progress) / seekBar.getMax());
                     StreamMediaActivity.this.txtPosition.setText(StreamMediaActivity.this.formatDuration(pos));
                 }
             }
@@ -240,7 +238,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 if (StreamMediaActivity.this.mMediaFileInfo == null || StreamMediaActivity.this.mMediaFileInfo.uDurationMSec <= 0) {
                     return;
                 }
-                int offset = (int) ((StreamMediaActivity.this.mMediaFileInfo.uDurationMSec * seekBar.getProgress()) / seekBar.getMax());
+                int offset = (int) ((StreamMediaActivity.this.mMediaFileInfo.uDurationMSec * (long) seekBar.getProgress()) / seekBar.getMax());
                 if (StreamMediaActivity.this.mPlayback == null) {
                     StreamMediaActivity.this.mPlayback = new MediaFilePlayback();
                 }
@@ -306,20 +304,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
-        });
-
-        this.spinnerRadioStations.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                if (position >= 0 && position < StreamMediaActivity.this.allStations.size()) {
-                    RadioStation st = StreamMediaActivity.this.allStations.get(position);
-                    if (st.isCustom) {
-                        showDeleteStationDialog(st, position);
-                        return true;
-                    }
-                }
-                return false;
-            }
         });
     }
 
@@ -404,7 +388,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         layout.addView(genreInput);
 
         builder.setView(layout);
-        builder.setPositiveButton(R.string.action_save, new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String name = nameInput.getText().toString().trim();
@@ -428,25 +412,8 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 Toast.makeText(StreamMediaActivity.this, R.string.msg_station_saved, Toast.LENGTH_SHORT).show();
             }
         });
-        builder.setNegativeButton(R.string.button_cancel, null);
+        builder.setNegativeButton(android.R.string.cancel, null);
         builder.show();
-    }
-
-    private void showDeleteStationDialog(final RadioStation station, final int position) {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.dialog_delete_station_confirm)
-                .setMessage(getString(R.string.dialog_delete_station_confirm, station.name))
-                .setPositiveButton(R.string.action_remove, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        StreamMediaActivity.this.allStations.remove(position);
-                        StreamMediaActivity.this.stationsAdapter.notifyDataSetChanged();
-                        saveCustomStations();
-                        Toast.makeText(StreamMediaActivity.this, R.string.msg_station_deleted, Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton(R.string.button_cancel, null)
-                .show();
     }
 
     private String getActiveStreamPath() {
@@ -893,7 +860,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.mPlayback = new MediaFilePlayback();
         this.mPlayback.bPaused = false;
         if (!isWeb && this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0 && this.seekBar.getMax() > 0) {
-            this.mPlayback.uOffsetMSec = (int) ((this.mMediaFileInfo.uDurationMSec * this.seekBar.getProgress()) / this.seekBar.getMax());
+            this.mPlayback.uOffsetMSec = (int) ((this.mMediaFileInfo.uDurationMSec * (long) this.seekBar.getProgress()) / this.seekBar.getMax());
         } else {
             this.mPlayback.uOffsetMSec = 0;
         }
