@@ -644,7 +644,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         intent.putExtra("android.intent.extra.MIME_TYPES", new String[]{"audio/*", "video/*"});
         intent.putExtra("android.intent.extra.ALLOW_MULTIPLE", true);
         intent.addCategory("android.intent.category.OPENABLE");
-        startActivityForResult(Intent.createChooser(intent, getString(R.string.title_select_media_file)), REQUEST_STREAM_MEDIA);
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.button_select_media_file)), REQUEST_STREAM_MEDIA);
     }
 
     @Override
