@@ -77,29 +77,30 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.26-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.27-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.26' }}
-          name: "TeamTalk Next v5.27.26"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.27' }}
+          name: "TeamTalk Next v5.27.27"
           body: |
-            ### TeamTalk Next v5.27.26 — Встроенный плеер интернет-радио и аудиопотоков
+            ### TeamTalk Next v5.27.27 — Исправление воспроизведения радио и локального предпрослушивания
 
-            #### 🛠 Новые возможности и улучшения:
-            - **📻 Полноценный интерфейс интернет-радио и трансляции стримов в канал:**
-              - Добавлен удобный переключатель между режимами «📁 Файл с устройства» и «📻 Интернет-радио».
-              - Встроен каталог из 14 популярных радиостанций (Radio Record, Record Remix, Record Russian Mix, Record Deep, Superdiskoteka 90-х, Chill-Out, Europa Plus, DFM, Новое Радио, Наше Радио, Ретро FM, Studio 21, Relax FM).
-              - Добавлена кнопка быстрой вставки ссылки на поток из буфера обмена (📋 «Вставить ссылку»).
-              - Добавлена возможность сохранять свои радиостанции в избранное (➕ «Добавить свою») и удалять их долгим нажатием.
-              - Реализован режим «🔴 ПРЯМОЙ ЭФИР (LIVE STREAM)» с таймером трансляции в реальном времени.
-              - Поддержка предпрослушивания потока локально перед запуском в канал.
+            #### 🛠 Исправления и улучшения:
+            - **⚡️ Устранены зависания приложения при локальном воспроизведении (Play):**
+              - Для предпрослушивания интернет-радио внедрен асинхронный `MediaPlayer`, исключающий блокировку главного UI-потока.
+            - **📻 Актуализирован и расширен список 100% рабочих радиостанций (31 станция):**
+              - Все станции Record (Главный, Remix, Rus Mix, Deep, Superdiskoteka 90-х, Chill-Out, Megamix, VIP House, Trancemission, Pirate Station, Techno, Dubstep, Trap, Rock, Rave, Minimal).
+              - DFM, DFM Дискач 90-х, DFM Russian Dance, Европа Плюс, Ретро FM, Русское Радио, Радио Ваня, Наше Радио, Radio Ultra, Rock FM, Radio Jazz, Спокойное радио, Радио 7, Дорожное радио, Радио Шансон.
+              - Переход на прямые стабильные `http://` потоки без SSL-блокировок.
+            - **🚀 Фоновый запуск трансляции в канал:**
+              - Трансляция стартует без малейших задержек интерфейса.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.26-source.zip
+            TeamTalkNext-5.27.27-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

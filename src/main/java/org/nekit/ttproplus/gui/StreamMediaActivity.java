@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -86,20 +88,37 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     }
 
     private static final RadioStation[] PRESET_STATIONS = new RadioStation[]{
-            new RadioStation("Radio Record (Главный)", "https://radiorecord.hostingradio.ru/rr_main96.aacp", "Dance / EDM"),
-            new RadioStation("Record Remix (Ремиксы)", "https://radiorecord.hostingradio.ru/rmx96.aacp", "Club Remixes"),
-            new RadioStation("Record Russian Mix", "https://radiorecord.hostingradio.ru/rus96.aacp", "Russian Dance"),
-            new RadioStation("Record Deep (Дип Хаус)", "https://radiorecord.hostingradio.ru/deep96.aacp", "Deep House"),
-            new RadioStation("Record Superdiskoteka 90-х", "https://radiorecord.hostingradio.ru/sd9096.aacp", "90s Dance"),
-            new RadioStation("Record Chill-Out", "https://radiorecord.hostingradio.ru/chil96.aacp", "Lounge / Relax"),
-            new RadioStation("Record Megamix", "https://radiorecord.hostingradio.ru/mix96.aacp", "Megamix"),
-            new RadioStation("Европа Плюс (Europa Plus)", "http://ep128.hostingradio.ru:8030/ep128.mp3", "Top 40 / Pop"),
-            new RadioStation("DFM (Dance FM)", "http://dfm.hostingradio.ru/dfm96.aacp", "Club / Dance"),
-            new RadioStation("Новое Радио", "http://icecast-novoe.cdnvideo.ru/novoe.mp3", "Russian Hits"),
-            new RadioStation("Наше Радио", "http://nashe1.hostingradio.ru/nashe-128.mp3", "Rock"),
-            new RadioStation("Ретро FM", "http://retro128.hostingradio.ru:8014/retro128.mp3", "Retro 80-90s"),
-            new RadioStation("Studio 21", "http://icecast-studio21.cdnvideo.ru/studio21_128.mp3", "Hip-Hop / Rap"),
-            new RadioStation("Relax FM", "http://pub0302.101.ru:8000/stream/trust/mp3/128/101_relaxfm", "Relax / Ambient")
+            new RadioStation("Radio Record (Главный)", "http://radiorecord.hostingradio.ru/rr_main96.aacp", "Dance / Club"),
+            new RadioStation("Record Remix (Ремиксы)", "http://radiorecord.hostingradio.ru/rmx96.aacp", "Club Remixes"),
+            new RadioStation("Record Russian Mix", "http://radiorecord.hostingradio.ru/rus96.aacp", "Russian Dance"),
+            new RadioStation("Record Deep (Дип Хаус)", "http://radiorecord.hostingradio.ru/deep96.aacp", "Deep House"),
+            new RadioStation("Record Superdiskoteka 90-х", "http://radiorecord.hostingradio.ru/sd9096.aacp", "90s & 2000s"),
+            new RadioStation("Record Chill-Out", "http://radiorecord.hostingradio.ru/chil96.aacp", "Lounge / Relax"),
+            new RadioStation("Record Megamix", "http://radiorecord.hostingradio.ru/mix96.aacp", "Non-Stop Mix"),
+            new RadioStation("Record VIP House", "http://radiorecord.hostingradio.ru/vip96.aacp", "House & Electro"),
+            new RadioStation("Record Trancemission", "http://radiorecord.hostingradio.ru/tm96.aacp", "Trance"),
+            new RadioStation("Record Pirate Station", "http://radiorecord.hostingradio.ru/ps96.aacp", "Drum & Bass"),
+            new RadioStation("Record Techno", "http://radiorecord.hostingradio.ru/techno96.aacp", "Techno"),
+            new RadioStation("Record Dubstep", "http://radiorecord.hostingradio.ru/dub96.aacp", "Dubstep / Bass"),
+            new RadioStation("Record Trap", "http://radiorecord.hostingradio.ru/trap96.aacp", "Trap"),
+            new RadioStation("Record Rock", "http://radiorecord.hostingradio.ru/rock96.aacp", "Rock"),
+            new RadioStation("Record Rave", "http://radiorecord.hostingradio.ru/rave96.aacp", "Hardcore / Rave"),
+            new RadioStation("Record Minimal", "http://radiorecord.hostingradio.ru/mini96.aacp", "Minimal"),
+            new RadioStation("DFM (Dance FM)", "http://dfm.hostingradio.ru/dfm96.aacp", "Dance Hits"),
+            new RadioStation("DFM Дискач 90-х", "http://dfm-disc90.hostingradio.ru/disc9096.aacp", "90s Dance"),
+            new RadioStation("DFM Russian Dance", "http://dfm-dfmrusdance.hostingradio.ru/dfmrusdance96.aacp", "Russian Dance"),
+            new RadioStation("Европа Плюс (Europa Plus)", "http://ep256.hostingradio.ru:8052/europaplus256.mp3", "Top 40 / Pop"),
+            new RadioStation("Ретро FM", "http://retroserver.streamr.ru:8043/retro256.mp3", "Retro 80-90s"),
+            new RadioStation("Русское Радио", "http://rusradio.hostingradio.ru/rusradio96.aacp", "Russian Pop"),
+            new RadioStation("Радио Ваня", "http://icecast-radiovanya.cdnvideo.ru/radiovanya", "Популярные хиты"),
+            new RadioStation("Наше Радио", "http://nashe1.hostingradio.ru/nashe-128.mp3", "Русский рок"),
+            new RadioStation("Radio Ultra", "http://nashe1.hostingradio.ru/ultra-128.mp3", "Альтернативный рок"),
+            new RadioStation("Rock FM", "http://nashe1.hostingradio.ru/rock-128.mp3", "Классический рок"),
+            new RadioStation("Radio Jazz", "http://nashe1.hostingradio.ru/jazz-128.mp3", "Джаз и блюз"),
+            new RadioStation("Спокойное радио (Relax / Chill)", "http://listen1.myradio24.com/6262", "Релакс и лаунж"),
+            new RadioStation("Радио 7 на семи холмах", "http://radio7server.streamr.ru:8040/radio7256.mp3", "Легкая музыка"),
+            new RadioStation("Дорожное радио", "http://dorognoe.hostingradio.ru:8000/radio", "Душевная музыка"),
+            new RadioStation("Радио Шансон", "http://chanson.hostingradio.ru:8041/chanson128.mp3", "Шансон")
     };
 
     private RadioGroup modeRadioGroup;
@@ -124,6 +143,8 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
 
     private boolean isStreaming;
     private int localPlaybackId;
+    private MediaPlayer localMediaPlayer;
+    private boolean isLocalMediaPlaying = false;
     private TeamTalkConnection mConnection;
     private MediaFileInfo mMediaFileInfo;
     private MediaFilePlayback mPlayback;
@@ -262,7 +283,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setTitle(R.string.stream_mode_radio);
             }
-            if (!this.isStreaming && this.localPlaybackId <= 0) {
+            if (!this.isStreaming && this.localPlaybackId <= 0 && !this.isLocalMediaPlaying) {
                 this.containerSeekBar.setVisibility(View.GONE);
             }
         } else {
@@ -475,6 +496,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     @Override
     public void onStop() {
         super.onStop();
+        stopLocalRadio();
         if (this.mConnection.isBound()) {
             onServiceDisconnected(getService());
             unbindService(this.mConnection);
@@ -747,6 +769,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             return;
         }
         if (this.isStreaming) {
+            stopLocalRadio();
             getClient().stopStreamingMediaFileToChannel();
             this.isStreaming = false;
             this.btnStream.setText(R.string.button_stream_media_file);
@@ -765,66 +788,84 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             return;
         }
 
-        String path = getActiveStreamPath();
+        final String path = getActiveStreamPath();
         if (path.isEmpty()) {
             Toast.makeText(this, R.string.msg_invalid_url, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        boolean isWeb = isNetworkStream(path);
+        final boolean isWeb = isNetworkStream(path);
         if (!isWeb && this.mMediaFileInfo == null) {
             loadMediaFileInfo(path);
         }
 
-        VideoCodec videocodec = new VideoCodec();
+        stopLocalRadio();
+
+        final VideoCodec videocodec = new VideoCodec();
         videocodec.nCodec = 0;
         if (this.mMediaFileInfo != null && this.mMediaFileInfo.videoFmt != null && this.mMediaFileInfo.videoFmt.picFourCC != 0) {
             videocodec.nCodec = 128;
         }
 
-        if (!getClient().startStreamingMediaFileToChannel(path, videocodec)) {
-            Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
-            return;
-        }
+        this.btnStream.setEnabled(false);
+        Toast.makeText(this, R.string.msg_stream_started, Toast.LENGTH_SHORT).show();
 
-        this.liveStreamStartTime = SystemClock.elapsedRealtime();
-        this.mPlayback = new MediaFilePlayback();
-        this.mPlayback.bPaused = false;
-        this.mPlayback.uOffsetMSec = 0;
-        this.isStreaming = true;
-        this.btnStream.setText(R.string.action_stop);
-        this.btnPlayPause.setText(R.string.action_pause);
-        this.btnStop.setEnabled(true);
-        startProgressUpdater();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final boolean success = getClient() != null && getClient().startStreamingMediaFileToChannel(path, videocodec);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        StreamMediaActivity.this.btnStream.setEnabled(true);
+                        if (!success) {
+                            Toast.makeText(StreamMediaActivity.this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
+                            StreamMediaActivity.this.isStreaming = false;
+                            StreamMediaActivity.this.btnStream.setText(R.string.button_stream_media_file);
+                            return;
+                        }
 
-        if (isWeb) {
-            this.txtMediaInfo.setText(getString(R.string.msg_stream_live_playing) + "\n" + path);
-            this.txtMediaInfo.setVisibility(View.VISIBLE);
-            this.txtDuration.setText("LIVE");
-            this.containerSeekBar.setVisibility(View.GONE);
-        } else if (this.mMediaFileInfo != null) {
-            showMediaFileInfo(this.mMediaFileInfo);
-            this.containerSeekBar.setVisibility(View.VISIBLE);
-        }
+                        StreamMediaActivity.this.liveStreamStartTime = SystemClock.elapsedRealtime();
+                        StreamMediaActivity.this.mPlayback = new MediaFilePlayback();
+                        StreamMediaActivity.this.mPlayback.bPaused = false;
+                        StreamMediaActivity.this.mPlayback.uOffsetMSec = 0;
+                        StreamMediaActivity.this.isStreaming = true;
+                        StreamMediaActivity.this.btnStream.setText(R.string.action_stop);
+                        StreamMediaActivity.this.btnPlayPause.setText(R.string.action_pause);
+                        StreamMediaActivity.this.btnStop.setEnabled(true);
+                        StreamMediaActivity.this.startProgressUpdater();
 
-        Toast.makeText(this, isWeb ? R.string.msg_stream_live_playing : R.string.msg_stream_started, Toast.LENGTH_SHORT).show();
-        if (getService() != null) {
-            getService().setStreamingMedia(true);
-            getService().setCurrentStreamPath(path);
-            getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
-            getService().setCurrentPlayback(this.mPlayback);
-        }
+                        if (isWeb) {
+                            StreamMediaActivity.this.txtMediaInfo.setText(getString(R.string.msg_stream_live_playing) + "\n" + path);
+                            StreamMediaActivity.this.txtMediaInfo.setVisibility(View.VISIBLE);
+                            StreamMediaActivity.this.txtDuration.setText("LIVE");
+                            StreamMediaActivity.this.containerSeekBar.setVisibility(View.GONE);
+                        } else if (StreamMediaActivity.this.mMediaFileInfo != null) {
+                            StreamMediaActivity.this.showMediaFileInfo(StreamMediaActivity.this.mMediaFileInfo);
+                            StreamMediaActivity.this.containerSeekBar.setVisibility(View.VISIBLE);
+                        }
+
+                        Toast.makeText(StreamMediaActivity.this, isWeb ? R.string.msg_stream_live_playing : R.string.msg_stream_started, Toast.LENGTH_SHORT).show();
+                        if (getService() != null) {
+                            getService().setStreamingMedia(true);
+                            getService().setCurrentStreamPath(path);
+                            getService().setCurrentMediaFileInfo(StreamMediaActivity.this.mMediaFileInfo);
+                            getService().setCurrentPlayback(StreamMediaActivity.this.mPlayback);
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 
     private void togglePlayPause() {
-        if (getClient() == null) {
-            return;
-        }
         String path = getActiveStreamPath();
         if (path.isEmpty()) {
             return;
         }
-        if (this.isStreaming) {
+
+        // Если активна трансляция в канал
+        if (this.isStreaming && getClient() != null) {
             if (this.mPlayback == null) {
                 this.mPlayback = new MediaFilePlayback();
             }
@@ -840,7 +881,25 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             }
             return;
         }
-        if (this.localPlaybackId > 0) {
+
+        // Если это интернет-радио / веб-поток — используем асинхронный Android MediaPlayer
+        if (isNetworkStream(path)) {
+            if (this.localMediaPlayer != null) {
+                if (this.localMediaPlayer.isPlaying()) {
+                    this.localMediaPlayer.pause();
+                    this.btnPlayPause.setText(R.string.action_play);
+                } else {
+                    this.localMediaPlayer.start();
+                    this.btnPlayPause.setText(R.string.action_pause);
+                }
+                return;
+            }
+            startLocalRadio(path);
+            return;
+        }
+
+        // Локальный файл на диске
+        if (this.localPlaybackId > 0 && getClient() != null) {
             this.mPlayback.bPaused = !this.mPlayback.bPaused;
             this.mPlayback.uOffsetMSec = MediaFilePlaybackConstants.TT_MEDIAPLAYBACK_OFFSET_IGNORE;
             if (getClient().updateLocalPlayback(this.localPlaybackId, this.mPlayback)) {
@@ -852,37 +911,106 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             return;
         }
 
-        boolean isWeb = isNetworkStream(path);
-        if (!isWeb && this.mMediaFileInfo == null) {
+        if (this.mMediaFileInfo == null) {
             loadMediaFileInfo(path);
         }
 
         this.mPlayback = new MediaFilePlayback();
         this.mPlayback.bPaused = false;
-        if (!isWeb && this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0 && this.seekBar.getMax() > 0) {
+        if (this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0 && this.seekBar.getMax() > 0) {
             this.mPlayback.uOffsetMSec = (int) ((this.mMediaFileInfo.uDurationMSec * (long) this.seekBar.getProgress()) / this.seekBar.getMax());
         } else {
             this.mPlayback.uOffsetMSec = 0;
         }
 
-        this.localPlaybackId = getClient().initLocalPlayback(path, this.mPlayback);
-        if (this.localPlaybackId > 0) {
-            this.liveStreamStartTime = SystemClock.elapsedRealtime();
-            this.btnPlayPause.setText(R.string.action_pause);
-            this.btnStop.setEnabled(true);
-            startProgressUpdater();
-            if (getService() != null) {
-                getService().setLocalPlaybackId(this.localPlaybackId);
-                getService().setCurrentStreamPath(path);
-                getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
-                getService().setCurrentPlayback(this.mPlayback);
+        if (getClient() != null) {
+            this.localPlaybackId = getClient().initLocalPlayback(path, this.mPlayback);
+            if (this.localPlaybackId > 0) {
+                this.liveStreamStartTime = SystemClock.elapsedRealtime();
+                this.btnPlayPause.setText(R.string.action_pause);
+                this.btnStop.setEnabled(true);
+                startProgressUpdater();
+                if (getService() != null) {
+                    getService().setLocalPlaybackId(this.localPlaybackId);
+                    getService().setCurrentStreamPath(path);
+                    getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
+                    getService().setCurrentPlayback(this.mPlayback);
+                }
+                return;
             }
-            return;
         }
         Toast.makeText(this, R.string.err_play_media, Toast.LENGTH_LONG).show();
     }
 
+    private void startLocalRadio(final String url) {
+        stopLocalRadio();
+        this.btnPlayPause.setEnabled(false);
+        this.txtPosition.setText("...");
+
+        try {
+            this.localMediaPlayer = new MediaPlayer();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                this.localMediaPlayer.setAudioAttributes(
+                        new AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                                .setUsage(AudioAttributes.USAGE_MEDIA)
+                                .build()
+                );
+            }
+            this.localMediaPlayer.setDataSource(url);
+            this.localMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    StreamMediaActivity.this.btnPlayPause.setEnabled(true);
+                    StreamMediaActivity.this.btnPlayPause.setText(R.string.action_pause);
+                    StreamMediaActivity.this.btnStop.setEnabled(true);
+                    StreamMediaActivity.this.isLocalMediaPlaying = true;
+                    StreamMediaActivity.this.liveStreamStartTime = SystemClock.elapsedRealtime();
+                    StreamMediaActivity.this.startProgressUpdater();
+                    mp.start();
+                    Toast.makeText(StreamMediaActivity.this, R.string.msg_stream_live_playing, Toast.LENGTH_SHORT).show();
+                }
+            });
+            this.localMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    Log.e(TAG, "MediaPlayer error: " + what + ", " + extra);
+                    StreamMediaActivity.this.btnPlayPause.setEnabled(true);
+                    StreamMediaActivity.this.stopLocalRadio();
+                    Toast.makeText(StreamMediaActivity.this, R.string.err_play_media, Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+            });
+            this.localMediaPlayer.prepareAsync();
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting local radio MediaPlayer", e);
+            this.btnPlayPause.setEnabled(true);
+            stopLocalRadio();
+            Toast.makeText(this, R.string.err_play_media, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void stopLocalRadio() {
+        if (this.localMediaPlayer != null) {
+            try {
+                if (this.localMediaPlayer.isPlaying()) {
+                    this.localMediaPlayer.stop();
+                }
+                this.localMediaPlayer.release();
+            } catch (Exception ignored) {}
+            this.localMediaPlayer = null;
+        }
+        this.isLocalMediaPlaying = false;
+        this.btnPlayPause.setText(R.string.action_play);
+        if (this.localPlaybackId <= 0 && !this.isStreaming) {
+            this.btnStop.setEnabled(false);
+            this.txtPosition.setText("00:00");
+            this.handler.removeCallbacks(this.progressUpdater);
+        }
+    }
+
     private void stopLocalPlayback() {
+        stopLocalRadio();
         if (this.isStreaming) {
             toggleStreaming();
         }
@@ -923,7 +1051,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 this.isStreaming = false;
                 this.btnStream.setText(R.string.button_stream_media_file);
                 this.btnPlayPause.setText(R.string.action_play);
-                if (this.localPlaybackId <= 0) {
+                if (this.localPlaybackId <= 0 && !this.isLocalMediaPlaying) {
                     this.btnStop.setEnabled(false);
                     this.handler.removeCallbacks(this.progressUpdater);
                 }
@@ -992,7 +1120,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.progressUpdater = new Runnable() {
             @Override
             public void run() {
-                if (StreamMediaActivity.this.localPlaybackId > 0 || StreamMediaActivity.this.isStreaming) {
+                if (StreamMediaActivity.this.localPlaybackId > 0 || StreamMediaActivity.this.isStreaming || StreamMediaActivity.this.isLocalMediaPlaying) {
                     if (StreamMediaActivity.this.mMediaFileInfo != null && StreamMediaActivity.this.mMediaFileInfo.uDurationMSec > 0) {
                         if (!StreamMediaActivity.this.seekBarTouching) {
                             StreamMediaActivity.this.updateSeekBarPosition(StreamMediaActivity.this.mMediaFileInfo.uElapsedMSec);
