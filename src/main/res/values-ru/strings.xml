@@ -1088,7 +1088,7 @@
     <!-- Новые строки TeamTalk 5.23 -->
     <string name="action_resume">Возобновить трансляцию</string>
     <string name="action_statusnick">Изменить ник и статус</string>
-    <string name="user_state_streaming">Транслирует медиафайл</string>
+    <string name="user_state_streaming">Транслирует</string>
     <string name="user_state_female">Женский</string>
     <string name="user_state_neutral">Нейтральный</string>
     <string name="user_state_male">Мужской</string>

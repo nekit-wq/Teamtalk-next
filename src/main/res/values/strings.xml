@@ -1086,7 +1086,7 @@ By: %3$s"</string>
     <!-- TeamTalk 5.23 Additions -->
     <string name="action_resume">Resume stream</string>
     <string name="action_statusnick">Change Nickname and Status</string>
-    <string name="user_state_streaming">Streaming media file</string>
+    <string name="user_state_streaming">Streaming</string>
     <string name="user_state_female">Female</string>
     <string name="user_state_neutral">Neutral</string>
     <string name="user_state_male">Male</string>

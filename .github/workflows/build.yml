@@ -77,30 +77,29 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.27-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.28-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.27' }}
-          name: "TeamTalk Next v5.27.27"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.28' }}
+          name: "TeamTalk Next v5.27.28"
           body: |
-            ### TeamTalk Next v5.27.27 — Исправление воспроизведения радио и локального предпрослушивания
+            ### TeamTalk Next v5.27.28 — Индикация трансляции, оптимизация TTS и радио
 
-            #### 🛠 Исправления и улучшения:
-            - **⚡️ Устранены зависания приложения при локальном воспроизведении (Play):**
-              - Для предпрослушивания интернет-радио внедрен асинхронный `MediaPlayer`, исключающий блокировку главного UI-потока.
-            - **📻 Актуализирован и расширен список 100% рабочих радиостанций (31 станция):**
-              - Все станции Record (Главный, Remix, Rus Mix, Deep, Superdiskoteka 90-х, Chill-Out, Megamix, VIP House, Trancemission, Pirate Station, Techno, Dubstep, Trap, Rock, Rave, Minimal).
-              - DFM, DFM Дискач 90-х, DFM Russian Dance, Европа Плюс, Ретро FM, Русское Радио, Радио Ваня, Наше Радио, Radio Ultra, Rock FM, Radio Jazz, Спокойное радио, Радио 7, Дорожное радио, Радио Шансон.
-              - Переход на прямые стабильные `http://` потоки без SSL-блокировок.
-            - **🚀 Фоновый запуск трансляции в канал:**
-              - Трансляция стартует без малейших задержек интерфейса.
+            #### 🛠 Новые возможности и исправления:
+            - **🔴 Отображение статуса трансляции у пользователя:**
+              - Когда пользователь транслирует медиа/радио, в его строке в списке канала отображается статус «🔴 Транслирует».
+            - **🔇 Отключение навязчивой озвучки перемещений по каналам:**
+              - Озвучка собственных входов/выходов из каналов («Вы вошли в канал...», «Вы вышли из канала...») и перемещений других пользователей теперь выключена по умолчанию (`false`) и легко настраивается в Настройки -> Озвучка.
+            - **📻 Упрощенный интерфейс интернет-радио и мгновенная остановка с 1 нажатия:**
+              - Убрана перегруженность списком станций (оставлены топовые пресеты + поле для ввода/вставки любой ссылки и добавления своих станций).
+              - Кнопка «Стоп» теперь мгновенно останавливает как локальный плеер, так и трансляцию в канал в одно нажатие.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.27-source.zip
+            TeamTalkNext-5.27.28-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

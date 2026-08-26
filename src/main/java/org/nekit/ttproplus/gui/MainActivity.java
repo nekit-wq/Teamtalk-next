@@ -2106,14 +2106,31 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 TextView status = (TextView) convertView3.findViewById(R.id.status);
                 String name2 = Utils.getDisplayName(MainActivity.this.getBaseContext(), user);
                 nickname.setText(name2);
-                status.setText(user.szStatusMsg);
+                boolean isMe = (MainActivity.this.getClient() != null && user.nUserID == MainActivity.this.getClient().getMyUserID());
+                boolean isStreaming = (user.nStatusMode & 2048) != 0 
+                        || (user.uUserState & UserState.USERSTATE_MEDIAFILE_AUDIO) != 0 
+                        || (user.uUserState & UserState.USERSTATE_MEDIAFILE_VIDEO) != 0;
+                if (isMe && MainActivity.this.getClient() != null) {
+                    int flags = MainActivity.this.getClient().getFlags();
+                    isStreaming = isStreaming || (flags & ClientFlag.CLIENT_STREAM_AUDIO) != 0 || (flags & ClientFlag.CLIENT_STREAM_VIDEO) != 0 || (MainActivity.this.getService() != null && MainActivity.this.getService().isStreamingMedia());
+                }
+
+                if (isStreaming) {
+                    if (user.szStatusMsg != null && !user.szStatusMsg.trim().isEmpty()) {
+                        status.setText("🔴 " + MainActivity.this.getString(R.string.user_state_streaming) + " | " + user.szStatusMsg);
+                    } else {
+                        status.setText("🔴 " + MainActivity.this.getString(R.string.user_state_streaming));
+                    }
+                } else {
+                    status.setText(user.szStatusMsg != null ? user.szStatusMsg : "");
+                }
+
                 boolean selected = MainActivity.this.userIDS.contains(Integer.valueOf(user.nUserID));
                 boolean isOperator2 = MainActivity.this.getClient() != null && MainActivity.this.getClient().isChannelOperator(user.nUserID, user.nChannelID);
                 boolean talking = (user.uUserState & 1) != 0;
                 boolean female = (user.nStatusMode & 256) != 0;
                 boolean neutral2 = (user.nStatusMode & 4096) != 0;
                 boolean isAway = (user.nStatusMode & 1) != 0;
-                boolean isStreaming = (user.nStatusMode & 2048) != 0;
                 boolean isAdmin = (user.uUserType & UserType.USERTYPE_ADMIN) != 0;
                 if (MainActivity.this.getService() != null && MainActivity.this.getClient() != null && user.nUserID == MainActivity.this.getClient().getMyUserID()) {
                     talking = MainActivity.this.getService().isVoiceTransmitting();
@@ -2124,8 +2141,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 String op = isOperator2 ? MainActivity.this.getString(R.string.user_state_operator) : "";
                 String admin = isAdmin ? MainActivity.this.getString(R.string.user_state_admin) : "";
                 String away = isAway ? MainActivity.this.getString(R.string.user_state_away) : "";
-                String streaming = isStreaming ? MainActivity.this.getString(R.string.user_state_streaming) : "";
-                nickname.setContentDescription(move + " " + speaking + " " + gender + " " + op + " " + admin);
+                String streaming = isStreaming ? (MainActivity.this.getString(R.string.user_state_streaming) + ". ") : "";
+                nickname.setContentDescription(move + " " + speaking + " " + gender + " " + op + " " + admin + (isStreaming ? (" " + streaming) : ""));
                 if (talking) {
                     if (female) {
                         icon_resource = R.drawable.woman_green;
@@ -2137,7 +2154,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 } else {
                     icon_resource = isAway ? R.drawable.man_orange : R.drawable.man_blue;
                 }
-                status.setContentDescription(away + " " + streaming + " " + (user.szStatusMsg != null ? user.szStatusMsg : ""));
+                status.setContentDescription(away + " " + streaming + (user.szStatusMsg != null ? user.szStatusMsg : ""));
                 usericon.setImageResource(icon_resource);
                 usericon.setImportantForAccessibility(2);
                 Button sndmsg = (Button) convertView3.findViewById(R.id.msg_btn);
@@ -3261,7 +3278,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.channelsAdapter.notifyDataSetChanged();
             this.accessibilityAssistant.unlockEvents();
 
-            if (this.ttsWrapper != null && ((Boolean) this.prefs.get("pref_tts_myself_join", true)).booleanValue()) {
+            if (this.ttsWrapper != null && ((Boolean) this.prefs.get("pref_tts_myself_join", false)).booleanValue()) {
                 if (chan != null && chan.nParentID == 0) {
                     this.ttsWrapper.speak(getString(R.string.text_cmd_joinroot));
                 } else if (chan != null && chan.szName != null && !chan.szName.isEmpty()) {
@@ -3338,7 +3355,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 this.accessibilityAssistant.unlockEvents();
             }
 
-            if (this.ttsWrapper != null && ((Boolean) this.prefs.get("pref_tts_myself_leave", true)).booleanValue()) {
+            if (this.ttsWrapper != null && ((Boolean) this.prefs.get("pref_tts_myself_leave", false)).booleanValue()) {
                 if (chan != null && chan.nParentID == 0) {
                     this.ttsWrapper.speak(getString(R.string.text_cmd_leftroot));
                 } else if (chan != null && chan.szName != null && !chan.szName.isEmpty()) {

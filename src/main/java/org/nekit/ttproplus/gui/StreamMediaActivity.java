@@ -87,38 +87,10 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         }
     }
 
-    private static final RadioStation[] PRESET_STATIONS = new RadioStation[]{
-            new RadioStation("Radio Record (Главный)", "http://radiorecord.hostingradio.ru/rr_main96.aacp", "Dance / Club"),
-            new RadioStation("Record Remix (Ремиксы)", "http://radiorecord.hostingradio.ru/rmx96.aacp", "Club Remixes"),
-            new RadioStation("Record Russian Mix", "http://radiorecord.hostingradio.ru/rus96.aacp", "Russian Dance"),
-            new RadioStation("Record Deep (Дип Хаус)", "http://radiorecord.hostingradio.ru/deep96.aacp", "Deep House"),
-            new RadioStation("Record Superdiskoteka 90-х", "http://radiorecord.hostingradio.ru/sd9096.aacp", "90s & 2000s"),
-            new RadioStation("Record Chill-Out", "http://radiorecord.hostingradio.ru/chil96.aacp", "Lounge / Relax"),
-            new RadioStation("Record Megamix", "http://radiorecord.hostingradio.ru/mix96.aacp", "Non-Stop Mix"),
-            new RadioStation("Record VIP House", "http://radiorecord.hostingradio.ru/vip96.aacp", "House & Electro"),
-            new RadioStation("Record Trancemission", "http://radiorecord.hostingradio.ru/tm96.aacp", "Trance"),
-            new RadioStation("Record Pirate Station", "http://radiorecord.hostingradio.ru/ps96.aacp", "Drum & Bass"),
-            new RadioStation("Record Techno", "http://radiorecord.hostingradio.ru/techno96.aacp", "Techno"),
-            new RadioStation("Record Dubstep", "http://radiorecord.hostingradio.ru/dub96.aacp", "Dubstep / Bass"),
-            new RadioStation("Record Trap", "http://radiorecord.hostingradio.ru/trap96.aacp", "Trap"),
-            new RadioStation("Record Rock", "http://radiorecord.hostingradio.ru/rock96.aacp", "Rock"),
-            new RadioStation("Record Rave", "http://radiorecord.hostingradio.ru/rave96.aacp", "Hardcore / Rave"),
-            new RadioStation("Record Minimal", "http://radiorecord.hostingradio.ru/mini96.aacp", "Minimal"),
-            new RadioStation("DFM (Dance FM)", "http://dfm.hostingradio.ru/dfm96.aacp", "Dance Hits"),
-            new RadioStation("DFM Дискач 90-х", "http://dfm-disc90.hostingradio.ru/disc9096.aacp", "90s Dance"),
-            new RadioStation("DFM Russian Dance", "http://dfm-dfmrusdance.hostingradio.ru/dfmrusdance96.aacp", "Russian Dance"),
-            new RadioStation("Европа Плюс (Europa Plus)", "http://ep256.hostingradio.ru:8052/europaplus256.mp3", "Top 40 / Pop"),
-            new RadioStation("Ретро FM", "http://retroserver.streamr.ru:8043/retro256.mp3", "Retro 80-90s"),
-            new RadioStation("Русское Радио", "http://rusradio.hostingradio.ru/rusradio96.aacp", "Russian Pop"),
-            new RadioStation("Радио Ваня", "http://icecast-radiovanya.cdnvideo.ru/radiovanya", "Популярные хиты"),
-            new RadioStation("Наше Радио", "http://nashe1.hostingradio.ru/nashe-128.mp3", "Русский рок"),
-            new RadioStation("Radio Ultra", "http://nashe1.hostingradio.ru/ultra-128.mp3", "Альтернативный рок"),
-            new RadioStation("Rock FM", "http://nashe1.hostingradio.ru/rock-128.mp3", "Классический рок"),
-            new RadioStation("Radio Jazz", "http://nashe1.hostingradio.ru/jazz-128.mp3", "Джаз и блюз"),
-            new RadioStation("Спокойное радио (Relax / Chill)", "http://listen1.myradio24.com/6262", "Релакс и лаунж"),
-            new RadioStation("Радио 7 на семи холмах", "http://radio7server.streamr.ru:8040/radio7256.mp3", "Легкая музыка"),
-            new RadioStation("Дорожное радио", "http://dorognoe.hostingradio.ru:8000/radio", "Душевная музыка"),
-            new RadioStation("Радио Шансон", "http://chanson.hostingradio.ru:8041/chanson128.mp3", "Шансон")
+    private static final RadioStation[] DEFAULT_PRESETS = new RadioStation[]{
+            new RadioStation("Radio Record (Главный)", "http://radiorecord.hostingradio.ru/rr_main96.aacp", "Dance / EDM"),
+            new RadioStation("Record Russian Mix", "http://radiorecord.hostingradio.ru/rus96.aacp", "Русский танцевальный"),
+            new RadioStation("Европа Плюс (Europa Plus)", "http://ep256.hostingradio.ru:8052/europaplus256.mp3", "Хиты / Pop")
     };
 
     private RadioGroup modeRadioGroup;
@@ -202,7 +174,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         this.file_path.setText(prefs.getString(PREF_LAST_MEDIA_FILE, ""));
-        this.webStreamUrlTxt.setText(prefs.getString(PREF_LAST_STREAM_URL, PRESET_STATIONS[0].url));
+        this.webStreamUrlTxt.setText(prefs.getString(PREF_LAST_STREAM_URL, DEFAULT_PRESETS[0].url));
 
         String savedMode = prefs.getString(PREF_LAST_STREAM_MODE, "radio");
         if ("file".equals(savedMode)) {
@@ -298,7 +270,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
 
     private void initRadioStations() {
         this.allStations.clear();
-        for (RadioStation st : PRESET_STATIONS) {
+        for (RadioStation st : DEFAULT_PRESETS) {
             this.allStations.add(st);
         }
         loadCustomStations();
@@ -601,7 +573,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopLocalPlayback();
+                stopAll();
             }
         });
     }
@@ -768,23 +740,11 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_SHORT).show();
             return;
         }
+
+        // Если стрим уже идет в канал — останавливаем его с одного нажатия
         if (this.isStreaming) {
-            stopLocalRadio();
-            getClient().stopStreamingMediaFileToChannel();
-            this.isStreaming = false;
-            this.btnStream.setText(R.string.button_stream_media_file);
-            this.btnPlayPause.setText(R.string.action_play);
-            if (this.localPlaybackId <= 0) {
-                this.btnStop.setEnabled(false);
-                this.handler.removeCallbacks(this.progressUpdater);
-            }
+            stopAll();
             Toast.makeText(this, R.string.msg_stream_stopped, Toast.LENGTH_SHORT).show();
-            if (getService() != null) {
-                getService().setStreamingMedia(false);
-                getService().setCurrentStreamPath("");
-                getService().setCurrentMediaFileInfo(null);
-                getService().setCurrentPlayback(null);
-            }
             return;
         }
 
@@ -799,7 +759,12 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             loadMediaFileInfo(path);
         }
 
+        // Глушим локальное предпрослушивание перед стартом в канал
         stopLocalRadio();
+        if (this.localPlaybackId > 0) {
+            getClient().stopLocalPlayback(this.localPlaybackId);
+            this.localPlaybackId = 0;
+        }
 
         final VideoCodec videocodec = new VideoCodec();
         videocodec.nCodec = 0;
@@ -864,7 +829,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             return;
         }
 
-        // Если активна трансляция в канал
+        // Если активна трансляция в канал — пауза / продолжение трансляции
         if (this.isStreaming && getClient() != null) {
             if (this.mPlayback == null) {
                 this.mPlayback = new MediaFilePlayback();
@@ -882,7 +847,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             return;
         }
 
-        // Если это интернет-радио / веб-поток — используем асинхронный Android MediaPlayer
+        // Интернет-радио / веб-поток — асинхронный локальный MediaPlayer
         if (isNetworkStream(path)) {
             if (this.localMediaPlayer != null) {
                 if (this.localMediaPlayer.isPlaying()) {
@@ -1001,33 +966,36 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             this.localMediaPlayer = null;
         }
         this.isLocalMediaPlaying = false;
-        this.btnPlayPause.setText(R.string.action_play);
-        if (this.localPlaybackId <= 0 && !this.isStreaming) {
-            this.btnStop.setEnabled(false);
-            this.txtPosition.setText("00:00");
-            this.handler.removeCallbacks(this.progressUpdater);
-        }
     }
 
-    private void stopLocalPlayback() {
+    // Мгновенная остановка ВСЕГО (и локального плеера, и стрима в канал) с 1 нажатия
+    private void stopAll() {
         stopLocalRadio();
-        if (this.isStreaming) {
-            toggleStreaming();
+
+        if (this.isStreaming && getClient() != null) {
+            getClient().stopStreamingMediaFileToChannel();
+            this.isStreaming = false;
         }
+
         if (this.localPlaybackId > 0 && getClient() != null) {
             getClient().stopLocalPlayback(this.localPlaybackId);
             this.localPlaybackId = 0;
-            if (getService() != null) {
-                getService().setLocalPlaybackId(0);
-                getService().setCurrentPlayback(null);
-                getService().setCurrentMediaFileInfo(null);
-            }
         }
+
+        this.btnStream.setText(R.string.button_stream_media_file);
         this.btnPlayPause.setText(R.string.action_play);
         this.btnStop.setEnabled(false);
         this.seekBar.setProgress(0);
         this.txtPosition.setText("00:00");
         this.handler.removeCallbacks(this.progressUpdater);
+
+        if (getService() != null) {
+            getService().setStreamingMedia(false);
+            getService().setLocalPlaybackId(0);
+            getService().setCurrentStreamPath("");
+            getService().setCurrentMediaFileInfo(null);
+            getService().setCurrentPlayback(null);
+        }
     }
 
     private void handleStreamMediaFile(MediaFileInfo mfi) {

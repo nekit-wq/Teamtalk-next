@@ -11,13 +11,13 @@
     <PreferenceCategory android:title="@string/pref_cat_tts_events" android:key="tts_events_def">
         <CheckBoxPreference android:title="@string/pref_title_server_login" android:key="server_login_checkbox" android:summary="@string/pref_summary_server_login" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_server_logout" android:key="server_logout_checkbox" android:summary="@string/pref_summary_server_logout" android:defaultValue="false" />
-        <CheckBoxPreference android:title="@string/pref_tts_myself_join" android:key="pref_tts_myself_join" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_tts_myself_leave" android:key="pref_tts_myself_leave" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/pref_tts_myself_join" android:key="pref_tts_myself_join" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_tts_myself_leave" android:key="pref_tts_myself_leave" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_channel_join" android:key="channel_join_checkbox" android:summary="@string/pref_summary_channel_join" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_channel_leave" android:key="channel_leave_checkbox" android:summary="@string/pref_summary_channel_leave" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_all_channel_join" android:key="all_channel_join_checkbox" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_all_channel_leave" android:key="all_channel_leave_checkbox" android:defaultValue="false" />
-        <CheckBoxPreference android:title="@string/all_users_channel_movement_title" android:key="all_users_channel_movement_checkbox" android:defaultValue="true" />
+        <CheckBoxPreference android:title="@string/all_users_channel_movement_title" android:key="all_users_channel_movement_checkbox" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_private_message" android:key="private_message_checkbox" android:summary="@string/pref_summary_private_message" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/private_message_sent_title" android:key="private_message_sent_checkbox" android:defaultValue="true" />
         <CheckBoxPreference android:title="@string/pref_title_channel_message" android:key="channel_message_checkbox" android:summary="@string/pref_summary_channel_message" android:defaultValue="false" />
