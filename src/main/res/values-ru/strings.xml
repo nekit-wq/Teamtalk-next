@@ -53,7 +53,7 @@
     <string name="action_start_recording">Начать запись</string>
     <string name="action_stop">Стоп</string>
     <string name="action_stop_recording">Остановить запись</string>
-    <string name="action_stream">Трансляция медиафайла</string>
+    <string name="action_stream">Трансляция (Медиа и Радио)</string>
     <string name="action_unban">Разбанить</string>
     <string name="action_updatechannel">Обновить</string>
     <string name="action_upload">Выложить файл</string>
@@ -1206,4 +1206,24 @@
     <string name="profile_clone_postfix">Копия</string>
     <string name="button_close">Закрыть</string>
     <string name="button_cancel">Отмена</string>
+
+    <!-- Web Radio and Media Streaming -->
+    <string name="stream_mode_file">Файл с устройства</string>
+    <string name="stream_mode_radio">Интернет-радио</string>
+    <string name="radio_stream_url_hint">Ссылка на поток (http://...)</string>
+    <string name="btn_paste_from_clipboard">Вставить ссылку</string>
+    <string name="btn_add_custom_station">Добавить свою</string>
+    <string name="radio_select_station">Популярные музыкальные станции:</string>
+    <string name="radio_live_indicator">🔴 ПРЯМОЙ ЭФИР</string>
+    <string name="radio_preset_stations">Популярные станции</string>
+    <string name="radio_custom_stations">Мои станции</string>
+    <string name="dialog_add_station_title">Добавить радиостанцию</string>
+    <string name="dialog_add_station_name">Название станции</string>
+    <string name="dialog_add_station_url">URL потока</string>
+    <string name="dialog_add_station_genre">Жанр (необязательно)</string>
+    <string name="dialog_delete_station_confirm">Удалить станцию «%1$s» из списка?</string>
+    <string name="msg_stream_live_playing">Идёт прямой эфир в канал</string>
+    <string name="msg_station_saved">Радиостанция сохранена</string>
+    <string name="msg_station_deleted">Радиостанция удалена</string>
+    <string name="msg_invalid_url">Укажите корректный URL потока (http:// или https://)</string>
 </resources>

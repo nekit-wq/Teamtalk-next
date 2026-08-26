@@ -1,21 +1,33 @@
 package org.nekit.ttproplus.gui;
 
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,6 +44,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
@@ -40,29 +54,91 @@ import org.nekit.ttproplus.data.Permissions;
 
 public class StreamMediaActivity extends AppCompatActivity implements TeamTalkConnectionListener {
     public static final int REQUEST_STREAM_MEDIA = 1;
+    public static final int REQUEST_CUSTOM_FILE_PICKER = 2;
     public static final String TAG = "bearware";
-    private static final String lastMedia = "last_media_file";
-    private Button btnPlayPause;
-    private Button btnSelectFile;
-    private Button btnStop;
-    private Button btnStream;
+    private static final String PREF_LAST_MEDIA_FILE = "last_media_file";
+    private static final String PREF_LAST_STREAM_URL = "last_stream_url";
+    private static final String PREF_LAST_STREAM_MODE = "last_stream_mode";
+    private static final String PREF_CUSTOM_STATIONS = "pref_custom_radio_stations_json";
+
+    public static class RadioStation {
+        public String name;
+        public String url;
+        public String genre;
+        public boolean isCustom;
+
+        public RadioStation(String name, String url, String genre) {
+            this(name, url, genre, false);
+        }
+
+        public RadioStation(String name, String url, String genre, boolean isCustom) {
+            this.name = name;
+            this.url = url;
+            this.genre = genre;
+            this.isCustom = isCustom;
+        }
+
+        @Override
+        public String toString() {
+            if (genre != null && !genre.isEmpty()) {
+                return name + " (" + genre + ")";
+            }
+            return name;
+        }
+    }
+
+    private static final RadioStation[] PRESET_STATIONS = new RadioStation[]{
+            new RadioStation("Radio Record (Главный)", "https://radiorecord.hostingradio.ru/rr_main96.aacp", "Dance / EDM"),
+            new RadioStation("Record Remix (Ремиксы)", "https://radiorecord.hostingradio.ru/rmx96.aacp", "Club Remixes"),
+            new RadioStation("Record Russian Mix", "https://radiorecord.hostingradio.ru/rus96.aacp", "Russian Dance"),
+            new RadioStation("Record Deep (Дип Хаус)", "https://radiorecord.hostingradio.ru/deep96.aacp", "Deep House"),
+            new RadioStation("Record Superdiskoteka 90-х", "https://radiorecord.hostingradio.ru/sd9096.aacp", "90s Dance"),
+            new RadioStation("Record Chill-Out", "https://radiorecord.hostingradio.ru/chil96.aacp", "Lounge / Relax"),
+            new RadioStation("Record Megamix", "https://radiorecord.hostingradio.ru/mix96.aacp", "Megamix"),
+            new RadioStation("Европа Плюс (Europa Plus)", "http://ep128.hostingradio.ru:8030/ep128.mp3", "Top 40 / Pop"),
+            new RadioStation("DFM (Dance FM)", "http://dfm.hostingradio.ru/dfm96.aacp", "Club / Dance"),
+            new RadioStation("Новое Радио", "http://icecast-novoe.cdnvideo.ru/novoe.mp3", "Russian Hits"),
+            new RadioStation("Наше Радио", "http://nashe1.hostingradio.ru/nashe-128.mp3", "Rock"),
+            new RadioStation("Ретро FM", "http://retro128.hostingradio.ru:8014/retro128.mp3", "Retro 80-90s"),
+            new RadioStation("Studio 21", "http://icecast-studio21.cdnvideo.ru/studio21_128.mp3", "Hip-Hop / Rap"),
+            new RadioStation("Relax FM", "http://pub0302.101.ru:8000/stream/trust/mp3/128/101_relaxfm", "Relax / Ambient")
+    };
+
+    private RadioGroup modeRadioGroup;
+    private RadioButton rbModeFile;
+    private RadioButton rbModeRadio;
+    private LinearLayout containerFileMode;
+    private LinearLayout containerRadioMode;
     private EditText file_path;
+    private EditText webStreamUrlTxt;
+    private Spinner spinnerRadioStations;
+    private Button btnPasteUrl;
+    private Button btnAddStation;
+    private Button btnSelectFile;
+    private Button btnStream;
+    private Button btnPlayPause;
+    private Button btnStop;
+    private TextView txtMediaInfo;
+    private TextView txtPosition;
+    private TextView txtDuration;
+    private SeekBar seekBar;
+    private LinearLayout containerSeekBar;
+
     private boolean isStreaming;
-    private ClientEventListener.OnLocalMediaFileListener localMediaFileListener;
     private int localPlaybackId;
-    TeamTalkConnection mConnection;
+    private TeamTalkConnection mConnection;
     private MediaFileInfo mMediaFileInfo;
     private MediaFilePlayback mPlayback;
     private Runnable progressUpdater;
-    private SeekBar seekBar;
     private boolean seekBarTouching;
     private ClientEventListener.OnStreamMediaFileListener streamMediaFileListener;
-    private TextView txtDuration;
-    private TextView txtMediaInfo;
-    private TextView txtPosition;
+    private ClientEventListener.OnLocalMediaFileListener localMediaFileListener;
     private Handler handler = new Handler();
-    private List<Uri> playlistUris = new ArrayList();
+    private List<Uri> playlistUris = new ArrayList<>();
     private int playlistIndex = 0;
+    private List<RadioStation> allStations = new ArrayList<>();
+    private ArrayAdapter<RadioStation> stationsAdapter;
+    private long liveStreamStartTime = 0;
 
     TeamTalkService getService() {
         return this.mConnection != null ? this.mConnection.getService() : null;
@@ -80,18 +156,71 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.mConnection = new TeamTalkConnection(this);
         setContentView(R.layout.activity_stream_media);
         EdgeToEdgeHelper.enableEdgeToEdge(this);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        this.file_path = (EditText) findViewById(R.id.file_path_txt);
-        this.file_path.setText(PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getString(lastMedia, ""));
-        this.btnSelectFile = (Button) findViewById(R.id.media_file_select_btn);
-        this.btnStream = (Button) findViewById(R.id.btn_stream);
-        this.btnPlayPause = (Button) findViewById(R.id.btn_play_pause);
-        this.btnStop = (Button) findViewById(R.id.btn_stop);
-        this.txtMediaInfo = (TextView) findViewById(R.id.media_info);
-        this.txtPosition = (TextView) findViewById(R.id.txt_position);
-        this.txtDuration = (TextView) findViewById(R.id.txt_duration);
-        this.seekBar = (SeekBar) findViewById(R.id.seek_bar);
-        this.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() { 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(R.string.stream_mode_radio);
+        }
+
+        this.modeRadioGroup = findViewById(R.id.mode_radio_group);
+        this.rbModeFile = findViewById(R.id.rb_mode_file);
+        this.rbModeRadio = findViewById(R.id.rb_mode_radio);
+        this.containerFileMode = findViewById(R.id.container_file_mode);
+        this.containerRadioMode = findViewById(R.id.container_radio_mode);
+        this.file_path = findViewById(R.id.file_path_txt);
+        this.webStreamUrlTxt = findViewById(R.id.web_stream_url_txt);
+        this.spinnerRadioStations = findViewById(R.id.spinner_radio_stations);
+        this.btnPasteUrl = findViewById(R.id.btn_paste_url);
+        this.btnAddStation = findViewById(R.id.btn_add_station);
+        this.btnSelectFile = findViewById(R.id.media_file_select_btn);
+        this.btnStream = findViewById(R.id.btn_stream);
+        this.btnPlayPause = findViewById(R.id.btn_play_pause);
+        this.btnStop = findViewById(R.id.btn_stop);
+        this.txtMediaInfo = findViewById(R.id.media_info);
+        this.txtPosition = findViewById(R.id.txt_position);
+        this.txtDuration = findViewById(R.id.txt_duration);
+        this.seekBar = findViewById(R.id.seek_bar);
+        this.containerSeekBar = findViewById(R.id.container_seek_bar);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        this.file_path.setText(prefs.getString(PREF_LAST_MEDIA_FILE, ""));
+        this.webStreamUrlTxt.setText(prefs.getString(PREF_LAST_STREAM_URL, PRESET_STATIONS[0].url));
+
+        String savedMode = prefs.getString(PREF_LAST_STREAM_MODE, "radio");
+        if ("file".equals(savedMode)) {
+            this.rbModeFile.setChecked(true);
+            switchMode(false);
+        } else {
+            this.rbModeRadio.setChecked(true);
+            switchMode(true);
+        }
+
+        this.modeRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                boolean isRadio = (checkedId == R.id.rb_mode_radio);
+                switchMode(isRadio);
+                PreferenceManager.getDefaultSharedPreferences(getBaseContext())
+                        .edit().putString(PREF_LAST_STREAM_MODE, isRadio ? "radio" : "file").apply();
+            }
+        });
+
+        initRadioStations();
+
+        this.btnPasteUrl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pasteUrlFromClipboard();
+            }
+        });
+
+        this.btnAddStation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAddStationDialog();
+            }
+        });
+
+        this.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser && StreamMediaActivity.this.mMediaFileInfo != null && StreamMediaActivity.this.mMediaFileInfo.uDurationMSec > 0) {
@@ -117,15 +246,219 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 }
                 StreamMediaActivity.this.mPlayback.uOffsetMSec = offset;
                 StreamMediaActivity.this.mPlayback.bPaused = false;
-                if (StreamMediaActivity.this.localPlaybackId > 0) {
-                    StreamMediaActivity.this.getClient().updateLocalPlayback(StreamMediaActivity.this.localPlaybackId, StreamMediaActivity.this.mPlayback);
-                } else if (StreamMediaActivity.this.isStreaming) {
+                if (StreamMediaActivity.this.localPlaybackId > 0 && getClient() != null) {
+                    getClient().updateLocalPlayback(StreamMediaActivity.this.localPlaybackId, StreamMediaActivity.this.mPlayback);
+                } else if (StreamMediaActivity.this.isStreaming && getClient() != null) {
                     VideoCodec vc = new VideoCodec();
                     vc.nCodec = (StreamMediaActivity.this.mMediaFileInfo.videoFmt != null && StreamMediaActivity.this.mMediaFileInfo.videoFmt.picFourCC != 0) ? 128 : 0;
-                    StreamMediaActivity.this.getClient().updateStreamingMediaFileToChannel(StreamMediaActivity.this.mPlayback, vc);
+                    getClient().updateStreamingMediaFileToChannel(StreamMediaActivity.this.mPlayback, vc);
                 }
             }
         });
+    }
+
+    private void switchMode(boolean isRadio) {
+        if (isRadio) {
+            this.containerFileMode.setVisibility(View.GONE);
+            this.containerRadioMode.setVisibility(View.VISIBLE);
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle(R.string.stream_mode_radio);
+            }
+            if (!this.isStreaming && this.localPlaybackId <= 0) {
+                this.containerSeekBar.setVisibility(View.GONE);
+            }
+        } else {
+            this.containerFileMode.setVisibility(View.VISIBLE);
+            this.containerRadioMode.setVisibility(View.GONE);
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle(R.string.action_stream);
+            }
+            this.containerSeekBar.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void initRadioStations() {
+        this.allStations.clear();
+        for (RadioStation st : PRESET_STATIONS) {
+            this.allStations.add(st);
+        }
+        loadCustomStations();
+
+        this.stationsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, this.allStations);
+        this.spinnerRadioStations.setAdapter(this.stationsAdapter);
+
+        String currentUrl = this.webStreamUrlTxt.getText().toString();
+        for (int i = 0; i < this.allStations.size(); i++) {
+            if (this.allStations.get(i).url.equalsIgnoreCase(currentUrl)) {
+                this.spinnerRadioStations.setSelection(i);
+                break;
+            }
+        }
+
+        this.spinnerRadioStations.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position >= 0 && position < StreamMediaActivity.this.allStations.size()) {
+                    RadioStation st = StreamMediaActivity.this.allStations.get(position);
+                    StreamMediaActivity.this.webStreamUrlTxt.setText(st.url);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        this.spinnerRadioStations.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position >= 0 && position < StreamMediaActivity.this.allStations.size()) {
+                    RadioStation st = StreamMediaActivity.this.allStations.get(position);
+                    if (st.isCustom) {
+                        showDeleteStationDialog(st, position);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+    }
+
+    private void loadCustomStations() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String json = prefs.getString(PREF_CUSTOM_STATIONS, "");
+        if (!json.isEmpty()) {
+            try {
+                JSONArray arr = new JSONArray(json);
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject obj = arr.getJSONObject(i);
+                    this.allStations.add(new RadioStation(
+                            obj.optString("name", "Custom Station"),
+                            obj.optString("url", ""),
+                            obj.optString("genre", "Custom"),
+                            true
+                    ));
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to parse custom stations", e);
+            }
+        }
+    }
+
+    private void saveCustomStations() {
+        JSONArray arr = new JSONArray();
+        for (RadioStation st : this.allStations) {
+            if (st.isCustom) {
+                try {
+                    JSONObject obj = new JSONObject();
+                    obj.put("name", st.name);
+                    obj.put("url", st.url);
+                    obj.put("genre", st.genre);
+                    arr.put(obj);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error serializing station", e);
+                }
+            }
+        }
+        PreferenceManager.getDefaultSharedPreferences(getBaseContext())
+                .edit().putString(PREF_CUSTOM_STATIONS, arr.toString()).apply();
+    }
+
+    private void pasteUrlFromClipboard() {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null && clipboard.hasPrimaryClip() && clipboard.getPrimaryClip() != null) {
+            ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
+            if (item != null && item.getText() != null) {
+                String text = item.getText().toString().trim();
+                if (text.startsWith("http://") || text.startsWith("https://") || text.startsWith("rtsp://")) {
+                    this.webStreamUrlTxt.setText(text);
+                    Toast.makeText(this, R.string.btn_paste_from_clipboard, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+        }
+        Toast.makeText(this, R.string.msg_invalid_url, Toast.LENGTH_SHORT).show();
+    }
+
+    private void showAddStationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.dialog_add_station_title);
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(32, 16, 32, 16);
+
+        final EditText nameInput = new EditText(this);
+        nameInput.setHint(R.string.dialog_add_station_name);
+        layout.addView(nameInput);
+
+        final EditText urlInput = new EditText(this);
+        urlInput.setHint(R.string.dialog_add_station_url);
+        String currentUrl = this.webStreamUrlTxt.getText().toString().trim();
+        if (currentUrl.startsWith("http://") || currentUrl.startsWith("https://")) {
+            urlInput.setText(currentUrl);
+        }
+        layout.addView(urlInput);
+
+        final EditText genreInput = new EditText(this);
+        genreInput.setHint(R.string.dialog_add_station_genre);
+        layout.addView(genreInput);
+
+        builder.setView(layout);
+        builder.setPositiveButton(R.string.action_save, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String name = nameInput.getText().toString().trim();
+                String url = urlInput.getText().toString().trim();
+                String genre = genreInput.getText().toString().trim();
+
+                if (name.isEmpty()) {
+                    name = "Radio " + (StreamMediaActivity.this.allStations.size() + 1);
+                }
+                if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("rtsp://")) {
+                    Toast.makeText(StreamMediaActivity.this, R.string.msg_invalid_url, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                RadioStation newStation = new RadioStation(name, url, genre.isEmpty() ? "User" : genre, true);
+                StreamMediaActivity.this.allStations.add(newStation);
+                StreamMediaActivity.this.stationsAdapter.notifyDataSetChanged();
+                StreamMediaActivity.this.spinnerRadioStations.setSelection(StreamMediaActivity.this.allStations.size() - 1);
+                StreamMediaActivity.this.webStreamUrlTxt.setText(url);
+                saveCustomStations();
+                Toast.makeText(StreamMediaActivity.this, R.string.msg_station_saved, Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton(R.string.button_cancel, null);
+        builder.show();
+    }
+
+    private void showDeleteStationDialog(final RadioStation station, final int position) {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.dialog_delete_station_confirm)
+                .setMessage(getString(R.string.dialog_delete_station_confirm, station.name))
+                .setPositiveButton(R.string.action_remove, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        StreamMediaActivity.this.allStations.remove(position);
+                        StreamMediaActivity.this.stationsAdapter.notifyDataSetChanged();
+                        saveCustomStations();
+                        Toast.makeText(StreamMediaActivity.this, R.string.msg_station_deleted, Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(R.string.button_cancel, null)
+                .show();
+    }
+
+    private String getActiveStreamPath() {
+        if (this.rbModeRadio.isChecked()) {
+            return this.webStreamUrlTxt.getText().toString().trim();
+        } else {
+            return this.file_path.getText().toString().trim();
+        }
+    }
+
+    private boolean isNetworkStream(String path) {
+        return path != null && (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("rtsp://") || path.startsWith("mms://"));
     }
 
     @Override
@@ -137,10 +470,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        if (id == 16908332) {
+        if (id == android.R.id.home) {
             finish();
             return true;
         }
@@ -153,27 +483,29 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         return true;
     }
 
-        @Override
+    @Override
     public void onStart() {
         super.onStart();
         if (!this.mConnection.isBound()) {
-            Intent intent = new Intent(getApplicationContext(), (Class<?>) TeamTalkService.class);
-            if (!bindService(intent, this.mConnection, 1)) {
-                Log.e("bearware", "Failed to bind to TeamTalk service");
+            Intent intent = new Intent(getApplicationContext(), TeamTalkService.class);
+            if (!bindService(intent, this.mConnection, Context.BIND_AUTO_CREATE)) {
+                Log.e(TAG, "Failed to bind to TeamTalk service");
             }
         }
     }
 
-        @Override
+    @Override
     public void onPause() {
         super.onPause();
-        if (this.file_path != null) {
-            String path = this.file_path.getText().toString();
-            PreferenceManager.getDefaultSharedPreferences(getBaseContext()).edit().putString(lastMedia, path).apply();
-        }
+        String filePath = this.file_path.getText().toString();
+        String webUrl = this.webStreamUrlTxt.getText().toString();
+        PreferenceManager.getDefaultSharedPreferences(getBaseContext()).edit()
+                .putString(PREF_LAST_MEDIA_FILE, filePath)
+                .putString(PREF_LAST_STREAM_URL, webUrl)
+                .apply();
     }
 
-        @Override
+    @Override
     public void onStop() {
         super.onStop();
         if (this.mConnection.isBound()) {
@@ -184,75 +516,61 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.handler.removeCallbacks(this.progressUpdater);
     }
 
-        @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Permissions granted = Permissions.onRequestResult(this, requestCode, grantResults);
-        if (granted == null) {
-            return;
-        }
-        if (granted == Permissions.READ_EXTERNAL_STORAGE || granted == Permissions.READ_MEDIA_VIDEO || granted == Permissions.READ_MEDIA_AUDIO) {
-            if (Build.VERSION.SDK_INT < 33 || areMediaPermissionsComplete()) {
-                mediaSelectionStart();
-            }
-        }
-    }
-
-        public void lambda$onServiceConnected$1(final MediaFileInfo mfi) {
-        runOnUiThread(new Runnable() { 
-            @Override
-            public final void run() {
-                StreamMediaActivity.this.lambda$onServiceConnected$0(mfi);
-            }
-        });
-    }
-
     @Override
     public void onServiceConnected(TeamTalkService service) {
-        String path;
-        this.streamMediaFileListener = new ClientEventListener.OnStreamMediaFileListener() { 
+        this.streamMediaFileListener = new ClientEventListener.OnStreamMediaFileListener() {
             @Override
             public final void onStreamMediaFile(MediaFileInfo mediaFileInfo) {
-                StreamMediaActivity.this.lambda$onServiceConnected$1(mediaFileInfo);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        StreamMediaActivity.this.handleStreamMediaFile(mediaFileInfo);
+                    }
+                });
             }
         };
-        this.localMediaFileListener = new ClientEventListener.OnLocalMediaFileListener() { 
+        this.localMediaFileListener = new ClientEventListener.OnLocalMediaFileListener() {
             @Override
             public final void onLocalMediaFile(MediaFileInfo mediaFileInfo) {
-                StreamMediaActivity.this.lambda$onServiceConnected$3(mediaFileInfo);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        StreamMediaActivity.this.handleLocalMediaFile(mediaFileInfo);
+                    }
+                });
             }
         };
-        getService().getEventHandler().registerOnStreamMediaFile(this.streamMediaFileListener, true);
-        getService().getEventHandler().registerOnLocalMediaFile(this.localMediaFileListener, true);
+        if (service != null && service.getEventHandler() != null) {
+            service.getEventHandler().registerOnStreamMediaFile(this.streamMediaFileListener, true);
+            service.getEventHandler().registerOnLocalMediaFile(this.localMediaFileListener, true);
+        }
+
         int clientFlags = getClient() != null ? getClient().getFlags() : 0;
         boolean clientIsStreaming = (clientFlags & ClientFlag.CLIENT_STREAM_AUDIO) != 0 || (clientFlags & ClientFlag.CLIENT_STREAM_VIDEO) != 0;
-        if (service.isStreamingMedia() || clientIsStreaming || service.getLocalPlaybackId() > 0) {
-            path = service.getCurrentStreamPath();
+        if (service != null && (service.isStreamingMedia() || clientIsStreaming || service.getLocalPlaybackId() > 0)) {
+            String path = service.getCurrentStreamPath();
             if (path != null && !path.isEmpty()) {
-                this.file_path.setText(path);
+                if (isNetworkStream(path)) {
+                    this.rbModeRadio.setChecked(true);
+                    this.webStreamUrlTxt.setText(path);
+                    switchMode(true);
+                } else {
+                    this.rbModeFile.setChecked(true);
+                    this.file_path.setText(path);
+                    switchMode(false);
+                }
             }
             this.mMediaFileInfo = service.getCurrentMediaFileInfo();
             this.mPlayback = service.getCurrentPlayback();
             this.localPlaybackId = service.getLocalPlaybackId();
             this.isStreaming = service.isStreamingMedia() || clientIsStreaming;
-            if (this.mMediaFileInfo != null) {
-                showMediaFileInfo(this.mMediaFileInfo);
-                updateSeekBar();
-                updateSeekBarPosition(this.mMediaFileInfo.uElapsedMSec);
-            }
+
             if (this.isStreaming) {
                 this.btnStream.setText(R.string.action_stop);
                 this.btnStop.setEnabled(true);
                 this.btnPlayPause.setEnabled(true);
                 if (this.mPlayback != null) {
                     this.btnPlayPause.setText(this.mPlayback.bPaused ? R.string.action_resume : R.string.action_pause);
-                } else {
-                    this.btnPlayPause.setText(R.string.action_pause);
                 }
                 startProgressUpdater();
             } else if (this.localPlaybackId > 0) {
@@ -262,45 +580,56 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 }
                 startProgressUpdater();
             }
+
+            if (this.mMediaFileInfo != null) {
+                showMediaFileInfo(this.mMediaFileInfo);
+                updateSeekBar();
+                updateSeekBarPosition(this.mMediaFileInfo.uElapsedMSec);
+            }
         }
-        this.btnSelectFile.setOnClickListener(new View.OnClickListener() { 
+
+        this.btnSelectFile.setOnClickListener(new View.OnClickListener() {
             @Override
-            public final void onClick(View view) {
-                StreamMediaActivity.this.lambda$onServiceConnected$4(view);
+            public void onClick(View v) {
+                chooseFilePicker();
             }
         });
-        this.btnStream.setOnClickListener(new View.OnClickListener() { 
+
+        this.btnStream.setOnClickListener(new View.OnClickListener() {
             @Override
-            public final void onClick(View view) {
-                StreamMediaActivity.this.lambda$onServiceConnected$5(view);
+            public void onClick(View v) {
+                toggleStreaming();
             }
         });
-        this.btnPlayPause.setOnClickListener(new View.OnClickListener() { 
+
+        this.btnPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
-            public final void onClick(View view) {
-                StreamMediaActivity.this.lambda$onServiceConnected$6(view);
+            public void onClick(View v) {
+                togglePlayPause();
             }
         });
-        this.btnStop.setOnClickListener(new View.OnClickListener() { 
+
+        this.btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
-            public final void onClick(View view) {
-                StreamMediaActivity.this.lambda$onServiceConnected$7(view);
+            public void onClick(View v) {
+                stopLocalPlayback();
             }
         });
     }
 
-        public void lambda$onServiceConnected$3(final MediaFileInfo mfi) {
-        runOnUiThread(new Runnable() { 
-            @Override
-            public final void run() {
-                StreamMediaActivity.this.lambda$onServiceConnected$2(mfi);
+    @Override
+    public void onServiceDisconnected(TeamTalkService service) {
+        if (service != null && service.getEventHandler() != null) {
+            if (this.streamMediaFileListener != null) {
+                service.getEventHandler().registerOnStreamMediaFile(this.streamMediaFileListener, false);
             }
-        });
+            if (this.localMediaFileListener != null) {
+                service.getEventHandler().registerOnLocalMediaFile(this.localMediaFileListener, false);
+            }
+        }
     }
 
-    public static final int REQUEST_CUSTOM_FILE_PICKER = 2;
-
-    public void lambda$onServiceConnected$4(View v) {
+    private void chooseFilePicker() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.choose_file_picker_title);
         String[] options = new String[]{
@@ -330,28 +659,25 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         builder.show();
     }
 
-    public void lambda$onServiceConnected$5(View v) {
-        toggleStreaming();
-    }
-
-    public void lambda$onServiceConnected$6(View v) {
-        togglePlayPause();
-    }
-
-    public void lambda$onServiceConnected$7(View v) {
-        stopLocalPlayback();
-    }
-
-    @Override
-    public void onServiceDisconnected(TeamTalkService service) {
-        if (service != null && service.getEventHandler() != null) {
-            if (this.streamMediaFileListener != null) {
-                service.getEventHandler().registerOnStreamMediaFile(this.streamMediaFileListener, false);
-            }
-            if (this.localMediaFileListener != null) {
-                service.getEventHandler().registerOnLocalMediaFile(this.localMediaFileListener, false);
+    private boolean requestMediaPermissions() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            boolean hasAudio = checkSelfPermission("android.permission.READ_MEDIA_AUDIO") == 0;
+            boolean hasVideo = checkSelfPermission("android.permission.READ_MEDIA_VIDEO") == 0;
+            if (!hasAudio || !hasVideo) {
+                requestPermissions(new String[]{"android.permission.READ_MEDIA_AUDIO", "android.permission.READ_MEDIA_VIDEO"}, 100);
+                return false;
             }
         }
+        return true;
+    }
+
+    private void mediaSelectionStart() {
+        Intent intent = new Intent("android.intent.action.GET_CONTENT");
+        intent.setType("*/*");
+        intent.putExtra("android.intent.extra.MIME_TYPES", new String[]{"audio/*", "video/*"});
+        intent.putExtra("android.intent.extra.ALLOW_MULTIPLE", true);
+        intent.addCategory("android.intent.category.OPENABLE");
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.title_select_media_file)), REQUEST_STREAM_MEDIA);
     }
 
     @Override
@@ -361,21 +687,16 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             if (selectedPath != null && !selectedPath.isEmpty()) {
                 this.file_path.setText(selectedPath);
                 PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-                        .edit().putString(lastMedia, selectedPath).apply();
+                        .edit().putString(PREF_LAST_MEDIA_FILE, selectedPath).apply();
                 loadMediaFileInfo(selectedPath);
                 this.playlistUris.clear();
                 this.playlistIndex = 0;
                 this.playlistUris.add(Uri.fromFile(new File(selectedPath)));
-                if (this.btnPlayPause != null) {
-                    this.btnPlayPause.setEnabled(true);
-                }
+                this.btnPlayPause.setEnabled(true);
                 return;
             }
         }
-        if (requestCode == 1 && resultCode == -1) {
-            if (data == null) {
-                return;
-            }
+        if (requestCode == REQUEST_STREAM_MEDIA && resultCode == RESULT_OK && data != null) {
             this.playlistUris.clear();
             this.playlistIndex = 0;
             if (data.getClipData() != null) {
@@ -391,128 +712,43 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 playPlaylistCurrent();
                 return;
             }
-            return;
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private String getFileNameAndExtension(Uri uri) {
-        Uri uri2;
-        int nameIndex;
-        int cut;
-        String result = null;
-        if (!"content".equals(uri.getScheme())) {
-            uri2 = uri;
-        } else {
-            try {
-                uri2 = uri;
-                try {
-                    Cursor cursor = getContentResolver().query(uri2, null, null, null, null);
-                    if (cursor != null) {
-                        try {
-                            if (cursor.moveToFirst() && (nameIndex = cursor.getColumnIndex("_display_name")) >= 0) {
-                                result = cursor.getString(nameIndex);
-                            }
-                        } finally {
-                        }
-                    }
-                    if (cursor != null) {
-                        cursor.close();
-                    }
-                } catch (Exception e) {
-                }
-            } catch (Exception e2) {
-                uri2 = uri;
-            }
-        }
-        if (result == null) {
-            String result2 = uri2.getPath();
-            if (result2 != null && (cut = result2.lastIndexOf(47)) != -1) {
-                return result2.substring(cut + 1);
-            }
-            return result2;
-        }
-        return result;
-    }
-
-    private String copyUriToCache(Uri uri) {
-        int dotIndex;
-        try {
-            InputStream is = getContentResolver().openInputStream(uri);
-            if (is == null) {
-                return null;
-            }
-            String fileName = getFileNameAndExtension(uri);
-            String extension = ".tmp";
-            String prefix = "media_";
-            if (fileName != null && (dotIndex = fileName.lastIndexOf(46)) != -1) {
-                extension = fileName.substring(dotIndex);
-                prefix = fileName.substring(0, dotIndex);
-                if (prefix.length() < 3) {
-                    prefix = "media_" + prefix;
-                }
-            }
-            File cacheDir = getCacheDir();
-            File tempFile = File.createTempFile(prefix + "_", extension, cacheDir);
-            FileOutputStream os = new FileOutputStream(tempFile);
-            byte[] buf = new byte[8192];
-            while (true) {
-                int len = is.read(buf);
-                if (len > 0) {
-                    os.write(buf, 0, len);
-                } else {
-                    os.close();
-                    is.close();
-                    return tempFile.getAbsolutePath();
-                }
-            }
-        } catch (Exception e) {
-            Log.e("bearware", "Failed to copy URI to cache", e);
-            return null;
-        }
-    }
-
-    private void mediaSelectionStart() {
-        Intent intent = new Intent("android.intent.action.GET_CONTENT");
-        intent.addCategory("android.intent.category.OPENABLE");
-        intent.setType("*/*");
-        intent.putExtra("android.intent.extra.ALLOW_MULTIPLE", true);
-        Intent i = Intent.createChooser(intent, "File");
-        startActivityForResult(i, 1);
-    }
-
-    private boolean requestMediaPermissions() {
-        boolean video = Permissions.READ_MEDIA_VIDEO.request(this);
-        boolean audio = Permissions.READ_MEDIA_AUDIO.request(this);
-        return areMediaPermissionsComplete() && (video || audio);
-    }
-
-    private boolean areMediaPermissionsComplete() {
-        return (Permissions.READ_MEDIA_VIDEO.isPending() || Permissions.READ_MEDIA_AUDIO.isPending()) ? false : true;
-    }
-
     private void loadMediaFileInfo(String path) {
-        if (path.startsWith("http://") || path.startsWith("https://")) {
+        if (path == null || path.isEmpty()) {
             this.mMediaFileInfo = null;
-            this.txtMediaInfo.setText(R.string.msg_streaming_url);
-            this.txtMediaInfo.setVisibility(0);
-            this.txtDuration.setText("--:--");
+            this.txtMediaInfo.setVisibility(View.GONE);
+            this.txtDuration.setText("00:00");
+            this.seekBar.setProgress(0);
             this.seekBar.setEnabled(false);
             return;
         }
+        if (isNetworkStream(path)) {
+            this.mMediaFileInfo = null;
+            this.txtMediaInfo.setText(getString(R.string.radio_live_indicator) + "\n" + path);
+            this.txtMediaInfo.setVisibility(View.VISIBLE);
+            this.txtDuration.setText("LIVE");
+            this.containerSeekBar.setVisibility(View.GONE);
+            return;
+        }
+
         MediaFileInfo info = new MediaFileInfo();
         if (TeamTalkBase.getMediaFileInfo(path, info)) {
             this.mMediaFileInfo = info;
             showMediaFileInfo(info);
             updateSeekBar();
+            this.containerSeekBar.setVisibility(View.VISIBLE);
         } else {
             this.mMediaFileInfo = null;
-            this.txtMediaInfo.setVisibility(8);
+            this.txtMediaInfo.setVisibility(View.GONE);
             this.txtDuration.setText("00:00");
         }
     }
 
     private void showMediaFileInfo(MediaFileInfo info) {
+        if (info == null) return;
         StringBuilder sb = new StringBuilder();
         sb.append(getString(R.string.label_audio)).append(": ");
         if (info.audioFmt != null && info.audioFmt.nAudioFmt > 0) {
@@ -527,13 +763,22 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         } else {
             sb.append(getString(R.string.msg_no_video));
         }
-        sb.append("\n").append(getString(R.string.label_duration)).append(": ").append(formatDuration(info.uDurationMSec));
+        if (info.uDurationMSec > 0) {
+            sb.append("\n").append(getString(R.string.label_duration)).append(": ").append(formatDuration(info.uDurationMSec));
+            this.txtDuration.setText(formatDuration(info.uDurationMSec));
+        } else {
+            sb.append("\n").append(getString(R.string.radio_live_indicator));
+            this.txtDuration.setText("LIVE");
+        }
         this.txtMediaInfo.setText(sb.toString());
-        this.txtMediaInfo.setVisibility(0);
-        this.txtDuration.setText(formatDuration(info.uDurationMSec));
+        this.txtMediaInfo.setVisibility(View.VISIBLE);
     }
 
     private void toggleStreaming() {
+        if (getClient() == null) {
+            Toast.makeText(this, R.string.err_not_connected, Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (this.isStreaming) {
             getClient().stopStreamingMediaFileToChannel();
             this.isStreaming = false;
@@ -552,22 +797,30 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             }
             return;
         }
-        String path = this.file_path.getText().toString();
+
+        String path = getActiveStreamPath();
         if (path.isEmpty()) {
+            Toast.makeText(this, R.string.msg_invalid_url, Toast.LENGTH_SHORT).show();
             return;
         }
-        if (this.mMediaFileInfo == null) {
+
+        boolean isWeb = isNetworkStream(path);
+        if (!isWeb && this.mMediaFileInfo == null) {
             loadMediaFileInfo(path);
         }
+
         VideoCodec videocodec = new VideoCodec();
         videocodec.nCodec = 0;
         if (this.mMediaFileInfo != null && this.mMediaFileInfo.videoFmt != null && this.mMediaFileInfo.videoFmt.picFourCC != 0) {
             videocodec.nCodec = 128;
         }
+
         if (!getClient().startStreamingMediaFileToChannel(path, videocodec)) {
             Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
             return;
         }
+
+        this.liveStreamStartTime = SystemClock.elapsedRealtime();
         this.mPlayback = new MediaFilePlayback();
         this.mPlayback.bPaused = false;
         this.mPlayback.uOffsetMSec = 0;
@@ -576,7 +829,18 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.btnPlayPause.setText(R.string.action_pause);
         this.btnStop.setEnabled(true);
         startProgressUpdater();
-        Toast.makeText(this, R.string.msg_stream_started, Toast.LENGTH_SHORT).show();
+
+        if (isWeb) {
+            this.txtMediaInfo.setText(getString(R.string.msg_stream_live_playing) + "\n" + path);
+            this.txtMediaInfo.setVisibility(View.VISIBLE);
+            this.txtDuration.setText("LIVE");
+            this.containerSeekBar.setVisibility(View.GONE);
+        } else if (this.mMediaFileInfo != null) {
+            showMediaFileInfo(this.mMediaFileInfo);
+            this.containerSeekBar.setVisibility(View.VISIBLE);
+        }
+
+        Toast.makeText(this, isWeb ? R.string.msg_stream_live_playing : R.string.msg_stream_started, Toast.LENGTH_SHORT).show();
         if (getService() != null) {
             getService().setStreamingMedia(true);
             getService().setCurrentStreamPath(path);
@@ -586,7 +850,10 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     }
 
     private void togglePlayPause() {
-        String path = this.file_path.getText().toString();
+        if (getClient() == null) {
+            return;
+        }
+        String path = getActiveStreamPath();
         if (path.isEmpty()) {
             return;
         }
@@ -608,7 +875,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         }
         if (this.localPlaybackId > 0) {
             this.mPlayback.bPaused = !this.mPlayback.bPaused;
-            this.mPlayback.uOffsetMSec = -1;
+            this.mPlayback.uOffsetMSec = MediaFilePlaybackConstants.TT_MEDIAPLAYBACK_OFFSET_IGNORE;
             if (getClient().updateLocalPlayback(this.localPlaybackId, this.mPlayback)) {
                 this.btnPlayPause.setText(this.mPlayback.bPaused ? R.string.action_play : R.string.action_pause);
                 if (getService() != null) {
@@ -617,18 +884,23 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             }
             return;
         }
-        if (this.mMediaFileInfo == null && !path.startsWith("http://") && !path.startsWith("https://")) {
+
+        boolean isWeb = isNetworkStream(path);
+        if (!isWeb && this.mMediaFileInfo == null) {
             loadMediaFileInfo(path);
         }
+
         this.mPlayback = new MediaFilePlayback();
         this.mPlayback.bPaused = false;
-        if (this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0 && this.seekBar.getMax() > 0) {
+        if (!isWeb && this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0 && this.seekBar.getMax() > 0) {
             this.mPlayback.uOffsetMSec = (int) ((this.mMediaFileInfo.uDurationMSec * this.seekBar.getProgress()) / this.seekBar.getMax());
         } else {
             this.mPlayback.uOffsetMSec = 0;
         }
+
         this.localPlaybackId = getClient().initLocalPlayback(path, this.mPlayback);
         if (this.localPlaybackId > 0) {
+            this.liveStreamStartTime = SystemClock.elapsedRealtime();
             this.btnPlayPause.setText(R.string.action_pause);
             this.btnStop.setEnabled(true);
             startProgressUpdater();
@@ -647,7 +919,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         if (this.isStreaming) {
             toggleStreaming();
         }
-        if (this.localPlaybackId > 0) {
+        if (this.localPlaybackId > 0 && getClient() != null) {
             getClient().stopLocalPlayback(this.localPlaybackId);
             this.localPlaybackId = 0;
             if (getService() != null) {
@@ -663,8 +935,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.handler.removeCallbacks(this.progressUpdater);
     }
 
-        /* renamed from: onStreamMediaFile, reason: merged with bridge method [inline-methods] */
-    public void lambda$onServiceConnected$0(MediaFileInfo mfi) {
+    private void handleStreamMediaFile(MediaFileInfo mfi) {
         this.mMediaFileInfo = mfi;
         if (getService() != null) {
             getService().setCurrentMediaFileInfo(mfi);
@@ -674,7 +945,10 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             if (!this.seekBarTouching) {
                 updateSeekBarPosition(mfi.uElapsedMSec);
             }
+        } else {
+            this.txtDuration.setText("LIVE");
         }
+
         switch (mfi.nStatus) {
             case MediaFileStatus.MFS_CLOSED:
             case MediaFileStatus.MFS_FINISHED:
@@ -695,26 +969,22 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                 if (!this.playlistUris.isEmpty() && this.playlistIndex < this.playlistUris.size() - 1) {
                     this.playlistIndex++;
                     playPlaylistCurrent();
-                    return;
                 }
-                return;
+                break;
             case MediaFileStatus.MFS_PLAYING:
                 this.isStreaming = true;
                 this.btnStream.setText(R.string.action_stop);
                 this.btnPlayPause.setText(R.string.action_pause);
                 this.btnStop.setEnabled(true);
                 startProgressUpdater();
-                return;
+                break;
             case MediaFileStatus.MFS_PAUSED:
                 this.btnPlayPause.setText(R.string.action_resume);
-                return;
-            default:
-                return;
+                break;
         }
     }
 
-        /* renamed from: onLocalMediaFile, reason: merged with bridge method [inline-methods] */
-    public void lambda$onServiceConnected$2(MediaFileInfo mfi) {
+    private void handleLocalMediaFile(MediaFileInfo mfi) {
         this.mMediaFileInfo = mfi;
         if (getService() != null) {
             getService().setCurrentMediaFileInfo(mfi);
@@ -722,10 +992,11 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         if (!this.seekBarTouching && mfi.uDurationMSec > 0) {
             updateSeekBarPosition(mfi.uElapsedMSec);
         }
+
         switch (mfi.nStatus) {
-            case 1:
-            case 3:
-            case 4:
+            case MediaFileStatus.MFS_CLOSED:
+            case MediaFileStatus.MFS_FINISHED:
+            case MediaFileStatus.MFS_ERROR:
                 this.localPlaybackId = 0;
                 this.btnPlayPause.setText(R.string.action_play);
                 this.btnStop.setEnabled(false);
@@ -738,39 +1009,42 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                     getService().setLocalPlaybackId(0);
                     getService().setCurrentPlayback(null);
                     getService().setCurrentMediaFileInfo(null);
-                    return;
                 }
-                return;
-            case 2:
-            case 6:
+                break;
+            case MediaFileStatus.MFS_PLAYING:
                 this.btnPlayPause.setText(R.string.action_pause);
-                return;
-            case 5:
+                break;
+            case MediaFileStatus.MFS_PAUSED:
                 this.btnPlayPause.setText(R.string.action_play);
-                return;
-            default:
-                return;
+                break;
         }
     }
 
     private void startProgressUpdater() {
         this.handler.removeCallbacks(this.progressUpdater);
-        this.progressUpdater = new Runnable() { 
+        this.progressUpdater = new Runnable() {
             @Override
             public void run() {
-                if ((StreamMediaActivity.this.localPlaybackId > 0 || StreamMediaActivity.this.isStreaming) && !StreamMediaActivity.this.seekBarTouching && StreamMediaActivity.this.mMediaFileInfo != null) {
-                    StreamMediaActivity.this.updateSeekBarPosition(StreamMediaActivity.this.mMediaFileInfo.uElapsedMSec);
+                if (StreamMediaActivity.this.localPlaybackId > 0 || StreamMediaActivity.this.isStreaming) {
+                    if (StreamMediaActivity.this.mMediaFileInfo != null && StreamMediaActivity.this.mMediaFileInfo.uDurationMSec > 0) {
+                        if (!StreamMediaActivity.this.seekBarTouching) {
+                            StreamMediaActivity.this.updateSeekBarPosition(StreamMediaActivity.this.mMediaFileInfo.uElapsedMSec);
+                        }
+                    } else if (StreamMediaActivity.this.liveStreamStartTime > 0) {
+                        long elapsed = SystemClock.elapsedRealtime() - StreamMediaActivity.this.liveStreamStartTime;
+                        StreamMediaActivity.this.txtPosition.setText(StreamMediaActivity.this.formatDuration((int) elapsed));
+                    }
                 }
-                StreamMediaActivity.this.handler.postDelayed(this, 250L);
+                StreamMediaActivity.this.handler.postDelayed(this, 500L);
             }
         };
-        this.handler.postDelayed(this.progressUpdater, 250L);
+        this.handler.postDelayed(this.progressUpdater, 500L);
     }
 
-        public void updateSeekBarPosition(int elapsed) {
+    public void updateSeekBarPosition(int elapsed) {
         this.txtPosition.setText(formatDuration(elapsed));
         if (this.mMediaFileInfo != null && this.mMediaFileInfo.uDurationMSec > 0) {
-            int progress = (int) ((elapsed * this.seekBar.getMax()) / this.mMediaFileInfo.uDurationMSec);
+            int progress = (int) ((elapsed * (long) this.seekBar.getMax()) / this.mMediaFileInfo.uDurationMSec);
             this.seekBar.setProgress(progress);
         }
     }
@@ -783,10 +1057,14 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         }
     }
 
-        public String formatDuration(int msec) {
+    public String formatDuration(int msec) {
         int sec = msec / 1000;
         int min = sec / 60;
-        return String.format("%02d:%02d", Integer.valueOf(min), Integer.valueOf(sec % 60));
+        int hours = min / 60;
+        if (hours > 0) {
+            return String.format("%02d:%02d:%02d", hours, min % 60, sec % 60);
+        }
+        return String.format("%02d:%02d", min, sec % 60);
     }
 
     private void playPlaylistCurrent() {
@@ -801,8 +1079,8 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         if (path != null) {
             this.file_path.setText(path);
             loadMediaFileInfo(path);
-            Toast.makeText(this, getString(R.string.msg_playlist_playing, new Object[]{Integer.valueOf(this.playlistIndex + 1), Integer.valueOf(this.playlistUris.size())}), 0).show();
-            if (this.isStreaming) {
+            Toast.makeText(this, getString(R.string.msg_playlist_playing, this.playlistIndex + 1, this.playlistUris.size()), Toast.LENGTH_SHORT).show();
+            if (this.isStreaming && getClient() != null) {
                 getClient().stopStreamingMediaFileToChannel();
                 VideoCodec videocodec = new VideoCodec();
                 videocodec.nCodec = 0;
@@ -810,7 +1088,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                     videocodec.nCodec = 128;
                 }
                 if (!getClient().startStreamingMediaFileToChannel(path, videocodec)) {
-                    Toast.makeText(this, R.string.err_stream_media, 1).show();
+                    Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_SHORT).show();
                     this.isStreaming = false;
                     this.btnStream.setText(R.string.button_stream_media_file);
                     return;
@@ -823,6 +1101,26 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                     getService().setCurrentMediaFileInfo(this.mMediaFileInfo);
                 }
             }
+        }
+    }
+
+    private String copyUriToCache(Uri uri) {
+        try {
+            InputStream in = getContentResolver().openInputStream(uri);
+            if (in == null) return null;
+            File outFile = new File(getCacheDir(), "stream_temp_" + System.currentTimeMillis() + ".dat");
+            FileOutputStream out = new FileOutputStream(outFile);
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            in.close();
+            out.close();
+            return outFile.getAbsolutePath();
+        } catch (Exception e) {
+            Log.e(TAG, "Error copying uri to cache", e);
+            return null;
         }
     }
 }

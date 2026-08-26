@@ -53,7 +53,7 @@
     <string name="action_start_recording">Start recording</string>
     <string name="action_stop">Stop</string>
     <string name="action_stop_recording">Stop recording</string>
-    <string name="action_stream">Stream a media file</string>
+    <string name="action_stream">Broadcast (Media &amp; Radio)</string>
     <string name="action_unban">Unban</string>
     <string name="action_updatechannel">Update</string>
     <string name="action_upload">Upload File</string>
@@ -1204,4 +1204,24 @@ By: %3$s"</string>
     <string name="profile_clone_postfix">Copy</string>
     <string name="button_close">Close</string>
     <string name="button_cancel">Cancel</string>
+
+    <!-- Web Radio and Media Streaming -->
+    <string name="stream_mode_file">Local File</string>
+    <string name="stream_mode_radio">Internet Radio</string>
+    <string name="radio_stream_url_hint">Stream URL (http://...)</string>
+    <string name="btn_paste_from_clipboard">Paste URL</string>
+    <string name="btn_add_custom_station">Add Custom</string>
+    <string name="radio_select_station">Popular Music Stations:</string>
+    <string name="radio_live_indicator">🔴 LIVE STREAM</string>
+    <string name="radio_preset_stations">Popular Stations</string>
+    <string name="radio_custom_stations">My Stations</string>
+    <string name="dialog_add_station_title">Add Radio Station</string>
+    <string name="dialog_add_station_name">Station Name</string>
+    <string name="dialog_add_station_url">Stream URL</string>
+    <string name="dialog_add_station_genre">Genre (optional)</string>
+    <string name="dialog_delete_station_confirm">Delete station \"%1$s\" from list?</string>
+    <string name="msg_stream_live_playing">Broadcasting live stream to channel</string>
+    <string name="msg_station_saved">Radio station saved</string>
+    <string name="msg_station_deleted">Radio station deleted</string>
+    <string name="msg_invalid_url">Please enter a valid stream URL (http:// or https://)</string>
 </resources>
