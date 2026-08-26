@@ -741,8 +741,12 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             return;
         }
 
+        int flags = getClient().getFlags();
+        boolean clientIsStreaming = (flags & ClientFlag.CLIENT_STREAM_AUDIO) != 0 || (flags & ClientFlag.CLIENT_STREAM_VIDEO) != 0;
+        boolean serviceStreaming = getService() != null && getService().isStreamingMedia();
+
         // Если стрим уже идет в канал — останавливаем его с одного нажатия
-        if (this.isStreaming) {
+        if (this.isStreaming || clientIsStreaming || serviceStreaming) {
             stopAll();
             Toast.makeText(this, R.string.msg_stream_stopped, Toast.LENGTH_SHORT).show();
             return;

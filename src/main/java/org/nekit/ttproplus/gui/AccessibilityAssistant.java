@@ -113,6 +113,18 @@ public class AccessibilityAssistant extends AccessibilityDelegate {
             super.sendAccessibilityEventUnchecked(host, event);
     }
 
+    @Override
+    public void onInitializeAccessibilityNodeInfo(View host, android.view.accessibility.AccessibilityNodeInfo info) {
+        super.onInitializeAccessibilityNodeInfo(host, info);
+        if (info != null && host != null && host.getId() == R.id.transmit_voice) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                info.removeAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
+                info.addAction(new android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(
+                        android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK, null));
+            }
+        }
+    }
+
     private void checkEvent(int eventType) {
         switch (eventType) {
         case AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED:
