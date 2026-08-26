@@ -95,6 +95,7 @@ import dk.bearware.TextMsgType;
 import dk.bearware.User;
 import dk.bearware.UserAccount;
 import dk.bearware.UserRight;
+import dk.bearware.UserState;
 import dk.bearware.UserType;
 import dk.bearware.VideoCodec;
 import dk.bearware.events.ClientEventListener;
