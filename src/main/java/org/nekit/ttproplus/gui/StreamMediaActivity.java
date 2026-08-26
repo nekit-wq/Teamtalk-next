@@ -743,7 +743,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
 
     private void toggleStreaming() {
         if (getClient() == null) {
-            Toast.makeText(this, R.string.err_not_connected, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_SHORT).show();
             return;
         }
         if (this.isStreaming) {
@@ -1029,9 +1029,9 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         int min = sec / 60;
         int hours = min / 60;
         if (hours > 0) {
-            return String.format("%02d:%02d:%02d", hours, min % 60, sec % 60);
+            return String.format("%02d:%02d:%02d", Integer.valueOf(hours), Integer.valueOf(min % 60), Integer.valueOf(sec % 60));
         }
-        return String.format("%02d:%02d", min, sec % 60);
+        return String.format("%02d:%02d", Integer.valueOf(min), Integer.valueOf(sec % 60));
     }
 
     private void playPlaylistCurrent() {
@@ -1046,7 +1046,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         if (path != null) {
             this.file_path.setText(path);
             loadMediaFileInfo(path);
-            Toast.makeText(this, getString(R.string.msg_playlist_playing, this.playlistIndex + 1, this.playlistUris.size()), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.msg_playlist_playing, new Object[]{Integer.valueOf(this.playlistIndex + 1), Integer.valueOf(this.playlistUris.size())}), Toast.LENGTH_SHORT).show();
             if (this.isStreaming && getClient() != null) {
                 getClient().stopStreamingMediaFileToChannel();
                 VideoCodec videocodec = new VideoCodec();
