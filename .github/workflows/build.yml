@@ -77,25 +77,26 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.27.31-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.27.32-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.31' }}
-          name: "TeamTalk Next v5.27.31"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.27.32' }}
+          name: "TeamTalk Next v5.27.32"
           body: |
-            ### TeamTalk Next v5.27.31 — Исправление кнопки передачи голоса (PTT / Toggle)
+            ### TeamTalk Next v5.27.32 — Возврат привычной кнопки передачи и исправление озвучки корневого канала
 
             #### 🛠 Исправления и улучшения:
-            - **🎙 Возвращена стабильная фиксация передачи голоса:**
-              - Восстановлена корректная фиксация микрофона: при нажатии на кнопку микрофон остаётся включённым и не выключается самопроизвольно при поднятии пальца.
-              - Сохранены оба режима: одиночное нажатие для фиксации микрофона (Toggle) и длинное удержание (Push-to-Talk).
+            - **🎙 Возврат оригинального поведения кнопки передачи голоса:**
+              - Восстановлена привычная оригинальная логика кнопки передачи со всеми таймингами.
+            - **🗣 Исправление TTS озвучки входа/выхода из каналов:**
+              - Устранена путаница в озвучке корневого канала (вместо фразы «вошёл в канал Подключен корневой канал» теперь корректно и грамотно произносится реальное имя канала или «корневой канал»).
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/debug/*.apk
-            TeamTalkNext-5.27.31-source.zip
+            TeamTalkNext-5.27.32-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

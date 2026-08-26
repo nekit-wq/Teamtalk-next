@@ -2847,10 +2847,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                boolean tx = event.getAction() != MotionEvent.ACTION_UP;
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    this.tx_down_start = System.currentTimeMillis();
-                }
+                boolean tx = event.getAction() != 1;
                 if (tx != this.tx_state) {
                     if (!tx) {
                         if (System.currentTimeMillis() - this.tx_down_start < 800) {
@@ -3316,7 +3313,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     targetChan = c;
                 }
             }
-            String chanName = (targetChan != null && targetChan.nParentID == 0) ? getString(R.string.text_cmd_joinroot) : (targetChan != null && targetChan.szName != null ? targetChan.szName : "");
+            String chanName = (targetChan != null && targetChan.szName != null && !targetChan.szName.isEmpty()) ? targetChan.szName : getString(R.string.text_root_chan);
             this.ttsWrapper.speak(getString(R.string.text_tts_user_joined_other_channel, name, chanName));
         }
 
@@ -3399,7 +3396,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     targetChan = c;
                 }
             }
-            String chanName = (targetChan != null && targetChan.nParentID == 0) ? getString(R.string.text_cmd_leftroot) : (targetChan != null && targetChan.szName != null ? targetChan.szName : "");
+            String chanName = (targetChan != null && targetChan.szName != null && !targetChan.szName.isEmpty()) ? targetChan.szName : getString(R.string.text_root_chan);
             this.ttsWrapper.speak(getString(R.string.text_tts_user_left_other_channel, name, chanName));
         }
 
