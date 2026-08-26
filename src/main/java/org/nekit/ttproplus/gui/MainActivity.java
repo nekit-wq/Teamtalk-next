@@ -2169,6 +2169,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     convertView2 = convertView3;
                 } else {
                     boolean showQuickActions = ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_USER_QUICK_ACTIONS, true)).booleanValue();
+                    boolean isMe = MainActivity.this.getClient() != null && user.nUserID == MainActivity.this.getClient().getMyUserID();
                     if (!showQuickActions || isMe) {
                         convertView2 = convertView3;
                         quickActionsContainer.setVisibility(8);
