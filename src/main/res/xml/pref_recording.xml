@@ -12,6 +12,22 @@
             android:title="@string/pref_recording_path_title"
             android:summary="@string/pref_recording_path_summary" />
 
+        <ListPreference
+            android:key="recording_format"
+            android:title="@string/pref_recording_format_title"
+            android:summary="@string/pref_recording_format_summary"
+            android:entries="@array/recording_format_entries"
+            android:entryValues="@array/recording_format_values"
+            android:defaultValue="wav" />
+
+        <ListPreference
+            android:key="recording_mp3_bitrate"
+            android:title="@string/pref_recording_mp3_bitrate_title"
+            android:summary="@string/pref_recording_mp3_bitrate_summary"
+            android:entries="@array/recording_mp3_bitrate_entries"
+            android:entryValues="@array/recording_mp3_bitrate_values"
+            android:defaultValue="128" />
+
         <CheckBoxPreference
             android:key="recording_create_server_folder"
             android:title="@string/pref_recording_create_server_folder_title"

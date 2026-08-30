@@ -780,7 +780,7 @@ public class FloatingWindowManager {
         }
     }
 
-            public class ChannelUserAdapter extends BaseAdapter {
+    public class ChannelUserAdapter extends BaseAdapter {
         private final Context context;
         private final LayoutInflater inflater;
         private final List<Object> items;
@@ -806,34 +806,45 @@ public class FloatingWindowManager {
             return position;
         }
 
+        private class ViewHolder {
+            ImageView itemIcon;
+            TextView itemText;
+        }
+
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             int iconRes;
+            ViewHolder holder;
             if (convertView == null) {
                 convertView = this.inflater.inflate(R.layout.item_dialog_channel_user, parent, false);
+                holder = new ViewHolder();
+                holder.itemIcon = convertView.findViewById(R.id.item_icon);
+                holder.itemText = convertView.findViewById(R.id.item_text);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
             }
-            ImageView itemIcon = (ImageView) convertView.findViewById(R.id.item_icon);
-            TextView itemText = (TextView) convertView.findViewById(R.id.item_text);
+
             Object item = this.items.get(position);
             if (item instanceof String) {
-                itemIcon.setVisibility(8);
-                itemText.setText((String) item);
+                holder.itemIcon.setVisibility(8);
+                holder.itemText.setText((String) item);
             } else if (item instanceof Channel) {
                 Channel c = (Channel) item;
                 if (c.nMaxUsers == 0) {
-                    itemIcon.setVisibility(8);
+                    holder.itemIcon.setVisibility(8);
                 } else {
-                    itemIcon.setVisibility(0);
+                    holder.itemIcon.setVisibility(0);
                     int iconRes2 = c.bPassword ? R.drawable.channel_pink : R.drawable.channel_orange;
-                    itemIcon.setImageResource(iconRes2);
+                    holder.itemIcon.setImageResource(iconRes2);
                 }
                 int iconRes3 = c.nChannelID;
                 int population = Utils.getUsers(iconRes3, FloatingWindowManager.this.service.getUsers()).size();
                 String popStr = population > 0 ? " (" + population + ")" : "";
-                itemText.setText(c.szName + popStr);
+                holder.itemText.setText(c.szName + popStr);
             } else if (item instanceof User) {
                 User user = (User) item;
-                itemIcon.setVisibility(0);
+                holder.itemIcon.setVisibility(0);
                 boolean female = (user.nStatusMode & 256) != 0;
                 boolean away = (user.nStatusMode & 1) != 0;
                 boolean talking = (user.uUserState & 1) != 0;
@@ -847,8 +858,8 @@ public class FloatingWindowManager {
                 } else {
                     iconRes = away ? R.drawable.man_orange : R.drawable.man_blue;
                 }
-                itemIcon.setImageResource(iconRes);
-                itemText.setText(Utils.getDisplayName(this.context, user));
+                holder.itemIcon.setImageResource(iconRes);
+                holder.itemText.setText(Utils.getDisplayName(this.context, user));
             }
             return convertView;
         }

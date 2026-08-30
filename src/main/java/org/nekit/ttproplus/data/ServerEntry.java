@@ -50,7 +50,8 @@ public class ServerEntry {
                                KEY_USERCOUNT = "usercount",
                                KEY_COUNTRY = "country",
                                KEY_PREFSCREEN = "serverentry_preferencescreen",
-                               KEY_SRVSTATUS = "srv_status";
+                               KEY_SRVSTATUS = "srv_status",
+                               KEY_STREAM_RESOLVER_URL = "stream_resolver_url";
     
     public String servername = "";
     public String ipaddr = "";
@@ -68,4 +69,6 @@ public class ServerEntry {
     public int stats_usercount = 0;
     public String stats_motd = "", stats_country = "";
     public String joincode = "";
+    /** Optional HTTP(S) endpoint which resolves YouTube URLs through yt-dlp. */
+    public String streamResolverUrl = "http://2.26.96.45:8080/resolve";
 }
