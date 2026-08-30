@@ -158,9 +158,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         updateSettings();
         if (this.mConnection.isBound()) {
             Log.d("bearware", "Unbinding TeamTalk service");
-            try {
-                unbindService(this.mConnection);
-            } catch (Exception ignored) {}
+            unbindService(this.mConnection);
             this.mConnection.setBound(false);
         }
     }
@@ -298,16 +296,6 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_NICKNAME));
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_STATUSMSG));
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_GENERAL_CLIENTNAME));
-
-            Preference recordingFormat = findPreference(Preferences.PREF_RECORDING_FORMAT);
-            if (recordingFormat != null) {
-                PreferencesActivity.bindPreferenceSummaryToValue(recordingFormat);
-            }
-            Preference recordingBitrate = findPreference(Preferences.PREF_RECORDING_MP3_BITRATE);
-            if (recordingBitrate != null) {
-                PreferencesActivity.bindPreferenceSummaryToValue(recordingBitrate);
-            }
-            PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_STREAM_RESOLVER_URL));
 
             Preference fileMgrPref = findPreference(Preferences.PREF_GENERAL_DEFAULT_FILE_MANAGER);
             if (fileMgrPref != null) {

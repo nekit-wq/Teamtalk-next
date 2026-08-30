@@ -38,8 +38,7 @@ public class Preferences {
             PREF_GENERAL_GENDER = "gender_checkbox",
             PREF_GENERAL_CLIENTNAME = "clientname_text",
             PREF_GENERAL_LANGUAGE = "app_language",
-            PREF_GENERAL_DEFAULT_FILE_MANAGER = "default_file_manager",
-            PREF_STREAM_RESOLVER_URL = "pref_stream_resolver_url";
+            PREF_GENERAL_DEFAULT_FILE_MANAGER = "default_file_manager";
     public static final String
             PREF_SOUNDSYSTEM_MEDIAFILE_VOLUME = "mediafilevolume_seekbar",
             PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL = "voice_activation_level",
@@ -49,27 +48,7 @@ public class Preferences {
             PREF_SOUNDSYSTEM_SPEAKERPHONE = "speakerphone_checkbox",
             PREF_SOUNDSYSTEM_BLUETOOTH_HEADSET = "bluetooth_headset_checkbox",
             PREF_SOUNDSYSTEM_VOICEPROCESSING = "voiceprocessing_checkbox",
-            PREF_SOUNDSYSTEM_INPUT_SOURCE = "audio_input_source",
-            PREF_EQ_ENABLED = "eq_enabled",
-            PREF_EQ_DSP_ENGINE = "eq_dsp_engine",
-            PREF_EQ_MIC_NS = "eq_mic_ns",
-            PREF_EQ_MIC_NS_LEVEL = "eq_mic_ns_level",
-            PREF_EQ_MIC_SPEEX_NS_DB = "eq_mic_speex_ns_db",
-            PREF_EQ_MIC_AEC = "eq_mic_aec",
-            PREF_EQ_MIC_SPEEX_AEC_DB = "eq_mic_speex_aec_db",
-            PREF_EQ_MIC_AGC = "eq_mic_agc",
-            PREF_EQ_MIC_AGC_MODE = "eq_mic_agc_mode",
-            PREF_EQ_MIC_AGC_FIXED_GAIN = "eq_mic_agc_fixed_gain",
-            PREF_EQ_MIC_AGC_MAX_GAIN = "eq_mic_agc_max_gain",
-            PREF_EQ_MIC_AGC_HEADROOM = "eq_mic_agc_headroom",
-            PREF_EQ_MIC_PREAMP_ENABLE = "eq_mic_preamp_enable",
-            PREF_EQ_MIC_PREAMP_GAIN = "eq_mic_preamp_gain",
-            PREF_EQ_MIC_HW_EFFECTS = "eq_mic_hw_effects",
-            PREF_EQ_MIC_SPEEX_AGC_LEVEL = "eq_mic_speex_agc_level",
-            PREF_EQ_MIC_SPEEX_AGC_MAX_GAIN = "eq_mic_speex_agc_max_gain",
-            PREF_EQ_MIC_HPF = "eq_mic_hpf",
-            PREF_EQ_MIC_BAND_COUNT = "eq_mic_band_count",
-            PREF_EQ_MIC_BAND_PREFIX = "eq_mic_band_";
+            PREF_SOUNDSYSTEM_INPUT_SOURCE = "audio_input_source";
     public static final String
             PREF_JOIN_ROOT_CHAN = "auto_join_root_checkbox",
             PREF_CONNECTION_SEAMLESS_RECONNECT = "seamless_reconnect",

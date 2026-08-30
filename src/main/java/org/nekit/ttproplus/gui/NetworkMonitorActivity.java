@@ -198,10 +198,7 @@ public class NetworkMonitorActivity extends AppCompatActivity implements TeamTal
     protected void onDestroy() {
         stopMonitoring();
         if (mConnection.isBound()) {
-            try {
-                unbindService(mConnection);
-            } catch (Exception ignored) {}
-            mConnection.setBound(false);
+            unbindService(mConnection);
         }
         super.onDestroy();
     }

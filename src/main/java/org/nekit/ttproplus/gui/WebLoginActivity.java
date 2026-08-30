@@ -124,7 +124,7 @@ public class WebLoginActivity extends AppCompatActivity {
 
             try {
                 InputSource src = new InputSource(new StringReader(xml));
-                DocumentBuilderFactory dbf = Utils.createSecureDocumentBuilderFactory();
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 Document document = db.parse(src);
                 XPathFactory factory = XPathFactory.newInstance();
@@ -150,9 +150,8 @@ public class WebLoginActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            if (isFinishing()) return;
 
-            if (token != null && token.length() > 0) {
+            if (token.length() > 0) {
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(WebLoginActivity.this.getBaseContext());
                 SharedPreferences.Editor editor = prefs.edit();
@@ -165,6 +164,7 @@ public class WebLoginActivity extends AppCompatActivity {
 
                 WebLoginActivity.this.setupUI();
                 setResult(RESULT_OK);
+                //finish();
             }
             else {
                 String msg = WebLoginActivity.this.getResources().getString(R.string.text_bearwarelogin_failed, this.nickname, this.username);

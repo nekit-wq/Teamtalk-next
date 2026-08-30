@@ -44,7 +44,7 @@ public class AppInfo {
     public static final String WEBLOGIN_BEARWARE_USERNAMEPOSTFIX = "@bearware.dk";
 
     // getUpdateUrl() response can override this
-    public static String BEARWARE_REGISTRATION_WEBSITE = "https://www.bearware.dk";
+    public static String BEARWARE_REGISTRATION_WEBSITE = "http://www.bearware.dk";
 
     public static String getVersion(Context context) {
         String version = "";
@@ -65,7 +65,7 @@ public class AppInfo {
     }
 
     public static String getServerListURL(Context context, boolean official, boolean unofficial) {
-        String urlToRead = "https://www.bearware.dk/teamtalk/tt5servers.php?" +
+        String urlToRead = "http://www.bearware.dk/teamtalk/tt5servers.php?" +
                 getDefautlUrlArgs(context) +
                 "&official=" + (official ? "1" : "0") +
                 "&unofficial=" + (unofficial ? "1" : "0");
@@ -73,7 +73,7 @@ public class AppInfo {
     }
 
     public static String getUpdateURL(Context context) {
-        String urlToRead = "https://www.bearware.dk/teamtalk/tt5update.php?" + getDefautlUrlArgs(context);
+        String urlToRead = "http://www.bearware.dk/teamtalk/tt5update.php?" + getDefautlUrlArgs(context);
         return urlToRead;
     }
 

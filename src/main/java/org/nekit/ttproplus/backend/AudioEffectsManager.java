@@ -31,12 +31,11 @@ public class AudioEffectsManager {
             this.equalizer = new Equalizer(0, 0);
             this.equalizer.setEnabled(this.prefs.getBoolean("eq_enabled", true));
             short bands = this.equalizer.getNumberOfBands();
-            short[] range = this.equalizer.getBandLevelRange();
-            short minLevel = (range != null && range.length >= 2) ? range[0] : -1500;
-            short maxLevel = (range != null && range.length >= 2) ? range[1] : 1500;
             for (short i = 0; i < bands; i++) {
                 int defaultLevel = this.equalizer.getBandLevel(i);
                 int savedLevel = this.prefs.getInt("eq_band_" + i, defaultLevel);
+                short minLevel = this.equalizer.getBandLevelRange()[0];
+                short maxLevel = this.equalizer.getBandLevelRange()[1];
                 if (savedLevel >= minLevel && savedLevel <= maxLevel) {
                     this.equalizer.setBandLevel(i, (short) savedLevel);
                 }
@@ -111,7 +110,7 @@ public class AudioEffectsManager {
         }
     }
 
-    public synchronized void release() {
+    public void release() {
         if (this.equalizer != null) {
             try {
                 this.equalizer.release();
@@ -126,6 +125,5 @@ public class AudioEffectsManager {
             }
             this.bassBoost = null;
         }
-        instance = null;
     }
 }

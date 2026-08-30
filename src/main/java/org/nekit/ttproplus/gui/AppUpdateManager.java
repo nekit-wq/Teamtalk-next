@@ -296,11 +296,7 @@ public class AppUpdateManager {
                     downloadsDir.mkdirs();
                 }
 
-                String safeApkName = Utils.sanitizeFilename(apkName);
-                if (safeApkName.isEmpty() || !safeApkName.toLowerCase().endsWith(".apk")) {
-                    safeApkName = "app_update_" + System.currentTimeMillis() + ".apk";
-                }
-                apkFile = new File(downloadsDir, safeApkName);
+                apkFile = new File(downloadsDir, apkName);
                 if (apkFile.exists()) {
                     apkFile.delete();
                 }
@@ -315,8 +311,8 @@ public class AppUpdateManager {
 
                 while ((count = input.read(data)) != -1) {
                     if (isCancelled.get()) {
-                        if (output != null) { try { output.close(); } catch (Exception ignored) {} output = null; }
-                        if (input != null) { try { input.close(); } catch (Exception ignored) {} input = null; }
+                        output.close();
+                        input.close();
                         if (apkFile.exists()) apkFile.delete();
                         return;
                     }
@@ -351,9 +347,7 @@ public class AppUpdateManager {
 
                 output.flush();
                 output.close();
-                output = null;
                 input.close();
-                input = null;
 
                 final File finalFile = apkFile;
                 mainHandler.post(() -> {
@@ -365,24 +359,23 @@ public class AppUpdateManager {
 
             } catch (Exception e) {
                 Log.e(TAG, "Error downloading update APK", e);
+                if (apkFile != null && apkFile.exists()) {
+                    apkFile.delete();
+                }
                 mainHandler.post(() -> {
                     if (progressDialog.isShowing()) {
                         progressDialog.dismiss();
                     }
-                    if (!isCancelled.get() && !activity.isFinishing()) {
-                        Toast.makeText(activity, R.string.update_download_failed, Toast.LENGTH_SHORT).show();
+                    if (!isCancelled.get()) {
+                        Toast.makeText(activity, R.string.update_download_failed, Toast.LENGTH_LONG).show();
                     }
                 });
             } finally {
-                if (output != null) {
-                    try { output.close(); } catch (Exception ignored) {}
-                }
-                if (input != null) {
-                    try { input.close(); } catch (Exception ignored) {}
-                }
-                if (connection != null) {
-                    try { connection.disconnect(); } catch (Exception ignored) {}
-                }
+                try {
+                    if (output != null) output.close();
+                    if (input != null) input.close();
+                } catch (Exception ignored) {}
+                if (connection != null) connection.disconnect();
             }
         });
     }

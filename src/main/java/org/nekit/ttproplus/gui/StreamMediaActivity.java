@@ -42,10 +42,6 @@ import dk.bearware.events.ClientEventListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URLEncoder;
-import java.net.URL;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
@@ -55,7 +51,6 @@ import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
 import org.nekit.ttproplus.data.Permissions;
-import org.nekit.ttproplus.data.Preferences;
 
 public class StreamMediaActivity extends AppCompatActivity implements TeamTalkConnectionListener {
     public static final int REQUEST_STREAM_MEDIA = 1;
@@ -65,8 +60,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     private static final String PREF_LAST_STREAM_URL = "last_stream_url";
     private static final String PREF_LAST_STREAM_MODE = "last_stream_mode";
     private static final String PREF_CUSTOM_STATIONS = "pref_custom_radio_stations_json";
-    private static final String PREF_STREAM_RESOLVER_URL = "pref_stream_resolver_url";
-    private static final String DEFAULT_STREAM_RESOLVER_URL = "http://2.26.96.45:8080/resolve";
 
     public static class RadioStation {
         public String name;
@@ -107,7 +100,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     private LinearLayout containerRadioMode;
     private EditText file_path;
     private EditText webStreamUrlTxt;
-    private EditText streamResolverUrlTxt;
     private Spinner spinnerRadioStations;
     private Button btnPasteUrl;
     private Button btnAddStation;
@@ -168,7 +160,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.containerRadioMode = findViewById(R.id.container_radio_mode);
         this.file_path = findViewById(R.id.file_path_txt);
         this.webStreamUrlTxt = findViewById(R.id.web_stream_url_txt);
-        this.streamResolverUrlTxt = findViewById(R.id.stream_resolver_url_txt);
         this.spinnerRadioStations = findViewById(R.id.spinner_radio_stations);
         this.btnPasteUrl = findViewById(R.id.btn_paste_url);
         this.btnAddStation = findViewById(R.id.btn_add_station);
@@ -185,7 +176,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         this.file_path.setText(prefs.getString(PREF_LAST_MEDIA_FILE, ""));
         this.webStreamUrlTxt.setText(prefs.getString(PREF_LAST_STREAM_URL, DEFAULT_PRESETS[0].url));
-        this.streamResolverUrlTxt.setText(prefs.getString(Preferences.PREF_STREAM_RESOLVER_URL, DEFAULT_STREAM_RESOLVER_URL));
 
         String savedMode = prefs.getString(PREF_LAST_STREAM_MODE, "radio");
         if ("file".equals(savedMode)) {
@@ -428,70 +418,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         }
     }
 
-    private boolean isYouTubeUrl(String path) {
-        if (path == null) return false;
-        try {
-            String host = Uri.parse(path).getHost();
-            return host != null && (host.equalsIgnoreCase("youtube.com")
-                    || host.equalsIgnoreCase("www.youtube.com")
-                    || host.equalsIgnoreCase("m.youtube.com")
-                    || host.equalsIgnoreCase("youtu.be")
-                    || host.equalsIgnoreCase("music.youtube.com"));
-        } catch (Exception ignored) {
-            return false;
-        }
-    }
-
-    private void resolveYouTubeAndStream(final String sourceUrl) {
-        final TeamTalkService service = getService();
-        if (service == null) {
-            Toast.makeText(this, R.string.err_stream_resolver_not_configured, Toast.LENGTH_LONG).show();
-            return;
-        }
-        final String configuredEndpoint = PreferenceManager.getDefaultSharedPreferences(getBaseContext())
-                .getString(Preferences.PREF_STREAM_RESOLVER_URL, this.streamResolverUrlTxt.getText().toString().trim());
-        final String endpoint = configuredEndpoint.isEmpty() ? DEFAULT_STREAM_RESOLVER_URL : configuredEndpoint;
-        service.getServerEntry().streamResolverUrl = endpoint;
-        PreferenceManager.getDefaultSharedPreferences(getBaseContext()).edit()
-                .putString(PREF_STREAM_RESOLVER_URL, endpoint).apply();
-        this.btnStream.setEnabled(false);
-        new Thread(() -> {
-            HttpURLConnection connection = null;
-            try {
-                String separator = endpoint.contains("?") ? "&" : "?";
-                URL url = new URL(endpoint + separator + "url=" + URLEncoder.encode(sourceUrl, "UTF-8"));
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setConnectTimeout(10000);
-                connection.setReadTimeout(20000);
-                connection.setRequestProperty("Accept", "application/json");
-                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) throw new IOException("HTTP " + connection.getResponseCode());
-                StringBuilder body = new StringBuilder();
-                try (InputStream input = connection.getInputStream(); java.util.Scanner scanner = new java.util.Scanner(input, "UTF-8")) {
-                    while (scanner.hasNextLine()) body.append(scanner.nextLine());
-                }
-                JSONObject response = new JSONObject(body.toString());
-                String resolved = response.getString("url");
-                Log.d(TAG, "Resolved stream URL received, length=" + resolved.length());
-                runOnUiThread(() -> startResolvedStream(sourceUrl, resolved));
-            } catch (Exception e) {
-                Log.e(TAG, "YouTube stream resolution failed", e);
-                runOnUiThread(() -> {
-                    btnStream.setEnabled(true);
-                    Toast.makeText(this, R.string.err_stream_resolve_failed, Toast.LENGTH_LONG).show();
-                });
-            } finally {
-                if (connection != null) connection.disconnect();
-            }
-        }).start();
-    }
-
-    private void startResolvedStream(String sourceUrl, String resolvedUrl) {
-        this.webStreamUrlTxt.setText(sourceUrl);
-        this.btnStream.setEnabled(true);
-        Toast.makeText(this, R.string.msg_stream_resolved, Toast.LENGTH_SHORT).show();
-        startStreamingPath(resolvedUrl, true);
-    }
-
     private boolean isNetworkStream(String path) {
         return path != null && (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("rtsp://") || path.startsWith("mms://"));
     }
@@ -534,11 +460,9 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         super.onPause();
         String filePath = this.file_path.getText().toString();
         String webUrl = this.webStreamUrlTxt.getText().toString();
-        String resolverUrl = this.streamResolverUrlTxt.getText().toString();
         PreferenceManager.getDefaultSharedPreferences(getBaseContext()).edit()
                 .putString(PREF_LAST_MEDIA_FILE, filePath)
                 .putString(PREF_LAST_STREAM_URL, webUrl)
-                .putString(PREF_STREAM_RESOLVER_URL, resolverUrl)
                 .apply();
     }
 
@@ -548,42 +472,10 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         stopLocalRadio();
         if (this.mConnection.isBound()) {
             onServiceDisconnected(getService());
-            try {
-                unbindService(this.mConnection);
-            } catch (Exception ignored) {}
+            unbindService(this.mConnection);
             this.mConnection.setBound(false);
         }
         this.handler.removeCallbacks(this.progressUpdater);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopLocalRadio();
-        if (this.mConnection.isBound()) {
-            try {
-                unbindService(this.mConnection);
-            } catch (Exception ignored) {}
-            this.mConnection.setBound(false);
-        }
-        if (this.handler != null) {
-            this.handler.removeCallbacksAndMessages(null);
-        }
-        cleanTempStreamFiles();
-    }
-
-    private void cleanTempStreamFiles() {
-        try {
-            File cacheDir = getCacheDir();
-            if (cacheDir != null && cacheDir.exists()) {
-                File[] files = cacheDir.listFiles((dir, name) -> name != null && name.startsWith("stream_temp_"));
-                if (files != null) {
-                    for (File f : files) {
-                        f.delete();
-                    }
-                }
-            }
-        } catch (Exception ignored) {}
     }
 
     @Override
@@ -842,10 +734,6 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         }
 
         final boolean isWeb = isNetworkStream(path);
-        if (isYouTubeUrl(path)) {
-            resolveYouTubeAndStream(path);
-            return;
-        }
         if (!isWeb && this.mMediaFileInfo == null) {
             loadMediaFileInfo(path);
         }
@@ -866,20 +754,10 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         this.btnStream.setEnabled(false);
         Toast.makeText(this, R.string.msg_stream_started, Toast.LENGTH_SHORT).show();
 
-        startStreamingPath(path, isWeb);
-    }
-
-    private void startStreamingPath(final String path, final boolean isWeb) {
-        final VideoCodec videocodec = new VideoCodec();
-        videocodec.nCodec = 0;
-        if (getClient() == null) {
-            Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
-            return;
-        }
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final boolean success = getClient().startStreamingMediaFileToChannel(path, videocodec);
+                final boolean success = getClient() != null && getClient().startStreamingMediaFileToChannel(path, videocodec);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

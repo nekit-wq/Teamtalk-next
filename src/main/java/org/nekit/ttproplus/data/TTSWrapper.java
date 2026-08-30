@@ -182,12 +182,7 @@ public class TTSWrapper {
         }
         if (!this.mTtsReady || this.tts == null) {
             Log.d(TAG, "TTS not ready, queuing: " + text);
-            synchronized (this.mPendingSpeeches) {
-                if (this.mPendingSpeeches.size() >= 50) {
-                    this.mPendingSpeeches.remove(0);
-                }
-                this.mPendingSpeeches.add(text);
-            }
+            this.mPendingSpeeches.add(text);
         } else {
             speakInternal(text);
         }

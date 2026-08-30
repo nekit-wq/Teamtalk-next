@@ -101,29 +101,19 @@ ClientEventListener.OnUserDesktopWindowListener {
 
     public void clearTeamTalkService(TeamTalkService service) {
         display_users.clear();
-        for (int i = 0; i < media_sessions.size(); i++) {
-            Bitmap b = media_sessions.valueAt(i);
-            if (b != null && !b.isRecycled()) {
-                b.recycle();
-            }
-        }
         media_sessions.clear();
 
         service.getEventHandler().unregisterListener(this);
         
         synchronized (updatequeue) {
             updatequeue.clear();
-            updatequeue.notifyAll();
+            updatequeue.notify();
         }
     }
 
     @Override
     public void onGroupCollapsed(int groupPosition) {
         int userid = (int) getGroupId(groupPosition);
-        Bitmap bmp = media_sessions.get(userid);
-        if (bmp != null && !bmp.isRecycled()) {
-            bmp.recycle();
-        }
         media_sessions.delete(userid);
 
         synchronized (updatequeue) {
@@ -135,6 +125,7 @@ ClientEventListener.OnUserDesktopWindowListener {
     @Override
     public void onGroupExpanded(int groupPosition) {
         int userid = (int) getGroupId(groupPosition);
+        // Bitmap bmp = extractUserBitmap(userid, bitmap_users.get(userid));
         String text = context.getResources()
                 .getString(R.string.text_waitstream);
         Bitmap bmp = Utils.drawTextToBitmap(context, 300, 20, text);
@@ -153,33 +144,18 @@ ClientEventListener.OnUserDesktopWindowListener {
         return getGroupId(groupPosition);
     }
 
-    private static class ChildViewHolder {
-        ImageView desktop;
-    }
-
-    private static class GroupViewHolder {
-        TextView nickname;
-        TextView wndinfo;
-        ImageView img;
-    }
-
     @Override
     public View getChildView(int groupPosition, int childPosition,
             boolean isLastChild, View convertView, ViewGroup parent) {
     	int userid = (int) getGroupId(groupPosition);
-        ChildViewHolder holder;
-        if (convertView == null || !(convertView.getTag() instanceof ChildViewHolder)) {
+        if (convertView == null)
             convertView = inflater.inflate(R.layout.item_media, parent, false);
-            holder = new ChildViewHolder();
-            holder.desktop = convertView.findViewById(R.id.user_desktop_image);
-            convertView.setTag(holder);
-        } else {
-            holder = (ChildViewHolder) convertView.getTag();
-        }
 
         Bitmap bmp = media_sessions.get(userid);
         if (bmp != null) {
-            holder.desktop.setImageBitmap(bmp);
+            ImageView desktop = convertView
+                    .findViewById(R.id.user_desktop_image);
+            desktop.setImageBitmap(bmp);
         }
         return convertView;
     }
@@ -209,46 +185,40 @@ ClientEventListener.OnUserDesktopWindowListener {
             View convertView, ViewGroup parent) {
         User user = (User) getGroup(groupPosition);
         int userid = (int) getGroupId(groupPosition);
-        GroupViewHolder holder;
 
-        if (convertView == null || !(convertView.getTag() instanceof GroupViewHolder)) {
+        if (convertView == null)
             convertView = inflater.inflate(R.layout.item_media_user, parent, false);
-            holder = new GroupViewHolder();
-            holder.nickname = convertView.findViewById(R.id.media_nickname_textview);
-            holder.wndinfo = convertView.findViewById(R.id.mediainfo_textview);
-            holder.img = convertView.findViewById(R.id.mediaicon);
-            convertView.setTag(holder);
-        } else {
-            holder = (GroupViewHolder) convertView.getTag();
-        }
 
+        TextView nickname = convertView
+                .findViewById(R.id.media_nickname_textview);
+        TextView wndinfo = convertView
+                .findViewById(R.id.mediainfo_textview);
         String name = Utils.getDisplayName(context, user);
-        holder.nickname.setText(name);
+        nickname.setText(name);
+        ImageView img = convertView.findViewById(R.id.mediaicon);
         int img_resource;
         switch(userid & ~USERID_MASK) {
         default :
         case DESKTOP_SESSION :
         	img_resource = R.drawable.board_blue;
-        	holder.img.setContentDescription(context.getString(R.string.text_desktop_session));
+        	img.setContentDescription(context.getString(R.string.text_desktop_session));
         	break;
         case WEBCAM_SESSION :
         	img_resource = R.drawable.webcam_pink;
-        	holder.img.setContentDescription(context.getString(R.string.text_webcam_session));
+        	img.setContentDescription(context.getString(R.string.text_webcam_session));
         	break;
         case MEDIAFILE_SESSION :
         	img_resource = R.drawable.camera_blue;
-        	holder.img.setContentDescription(context.getString(R.string.text_mediafile_session));
+        	img.setContentDescription(context.getString(R.string.text_mediafile_session));
         	break;
         }
-        holder.img.setImageResource(img_resource);
+        img.setImageResource(img_resource);
 
         Bitmap bmp = media_sessions.get(userid);
         if (bmp != null) {
-            holder.wndinfo.setText(String.format(Locale.ROOT, "%1$dx%2$d %3$d-bit", bmp.getWidth(),
+            wndinfo.setText(String.format(Locale.ROOT, "%1$dx%2$d %3$d-bit", bmp.getWidth(),
                     bmp.getHeight(),
                     (bmp.getConfig() == Bitmap.Config.ARGB_8888) ? 32 : 0));
-        } else {
-            holder.wndinfo.setText("");
         }
 
         return convertView;

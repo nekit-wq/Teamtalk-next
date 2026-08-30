@@ -247,9 +247,7 @@ implements Comparator<RemoteFile>, ClientEventListener.OnFileTransferListener {
                 if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) || Permissions.WRITE_EXTERNAL_STORAGE.request(activity)) {
                     File dlPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                     if (dlPath.mkdirs() || dlPath.isDirectory()) {
-                        String safeName = Utils.sanitizeFilename(remoteFile.szFileName);
-                        if (safeName.isEmpty()) safeName = "file_" + remoteFile.nFileID;
-                        final File localFile = new File(dlPath, safeName);
+                        final File localFile = new File(dlPath, remoteFile.szFileName);
                         if (localFile.exists()) {
                             AlertDialog.Builder alert = new AlertDialog.Builder(context);
                             alert.setMessage(context.getString(R.string.alert_file_override, localFile.getAbsolutePath()));
@@ -303,67 +301,35 @@ implements Comparator<RemoteFile>, ClientEventListener.OnFileTransferListener {
 
         switch (getItemViewType(position)) {
         case REMOTE_FILE_VIEW_TYPE: {
-            RemoteFileViewHolder holder;
-            if (convertView == null || !(convertView.getTag() instanceof RemoteFileViewHolder)) {
+            if((convertView == null) || (convertView.findViewById(R.id.fileinfo) == null))
                 convertView = inflater.inflate(R.layout.item_remote_file, parent, false);
-                holder = new RemoteFileViewHolder();
-                holder.filename = convertView.findViewById(R.id.filename);
-                holder.fileinfo = convertView.findViewById(R.id.fileinfo);
-                holder.downloadButton = convertView.findViewById(R.id.download_btn);
-                holder.removeButton = convertView.findViewById(R.id.remove_btn);
-                convertView.setTag(holder);
-            } else {
-                holder = (RemoteFileViewHolder) convertView.getTag();
-            }
-
             String fileSize = Formatter.formatFileSize(context, remoteFile.nFileSize);
             String fileinfo = String.format("%s (%s): %s", fileSize, remoteFile.szUsername, remoteFile.szUploadTime);
-            holder.filename.setText(remoteFile.szFileName);
-            holder.fileinfo.setText(fileinfo);
-            holder.downloadButton.setOnClickListener(buttonClickListener);
-            holder.downloadButton.setAccessibilityDelegate(accessibilityAssistant);
-            holder.removeButton.setOnClickListener(buttonClickListener);
-            holder.removeButton.setAccessibilityDelegate(accessibilityAssistant);
+            ((TextView)convertView.findViewById(R.id.fileinfo)).setText(fileinfo);
+            Button downloadButton = convertView.findViewById(R.id.download_btn);
+            Button removeButton = convertView.findViewById(R.id.remove_btn);
+            downloadButton.setOnClickListener(buttonClickListener);
+            downloadButton.setAccessibilityDelegate(accessibilityAssistant);
+            removeButton.setOnClickListener(buttonClickListener);
+            removeButton.setAccessibilityDelegate(accessibilityAssistant);
             break;
         }
         case FILE_TRANSFER_VIEW_TYPE: {
-            TransferViewHolder holder;
-            if (convertView == null || !(convertView.getTag() instanceof TransferViewHolder)) {
+            if((convertView == null) || (convertView.findViewById(R.id.progress) == null))
                 convertView = inflater.inflate(R.layout.item_file_transfer, parent, false);
-                holder = new TransferViewHolder();
-                holder.filename = convertView.findViewById(R.id.filename);
-                holder.progress = convertView.findViewById(R.id.progress);
-                holder.cancelButton = convertView.findViewById(R.id.cancel_btn);
-                convertView.setTag(holder);
-            } else {
-                holder = (TransferViewHolder) convertView.getTag();
-            }
-
             FileTransfer transferinfo = downloads.get(remoteFile.szFileName);
-            holder.filename.setText(remoteFile.szFileName);
-            holder.progress.setText(context.getString(R.string.download_progress, getPercentage(transferinfo)));
-            holder.cancelButton.setOnClickListener(buttonClickListener);
-            holder.cancelButton.setAccessibilityDelegate(accessibilityAssistant);
+            ((TextView)convertView.findViewById(R.id.progress)).setText(context.getString(R.string.download_progress, getPercentage(transferinfo)));
+            Button cancelButton = convertView.findViewById(R.id.cancel_btn);
+            cancelButton.setOnClickListener(buttonClickListener);
+            cancelButton.setAccessibilityDelegate(accessibilityAssistant);
             break;
         }
         default:
             break;
         }
+        ((TextView)convertView.findViewById(R.id.filename)).setText(remoteFile.szFileName);
         convertView.setAccessibilityDelegate(accessibilityAssistant);
         return convertView;
-    }
-
-    private static class RemoteFileViewHolder {
-        TextView filename;
-        TextView fileinfo;
-        Button downloadButton;
-        Button removeButton;
-    }
-
-    private static class TransferViewHolder {
-        TextView filename;
-        TextView progress;
-        Button cancelButton;
     }
 
     @SuppressLint("NewApi") @SuppressWarnings("fallthrough")
@@ -425,11 +391,7 @@ implements Comparator<RemoteFile>, ClientEventListener.OnFileTransferListener {
                 break;
             case FileTransferStatus.FILETRANSFER_ACTIVE:
                 if (progressNotification == null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        progressNotification = new Notification.Builder(context, "TeamtalkConnection");
-                    } else {
-                        progressNotification = new Notification.Builder(context);
-                    }
+                    progressNotification = new Notification.Builder(context);
                     Intent cancellationIntent = new Intent(context, TeamTalkService.class);
                     int id = transfer.nTransferID;
                     cancellationIntent.putExtra(TeamTalkService.CANCEL_TRANSFER, id);

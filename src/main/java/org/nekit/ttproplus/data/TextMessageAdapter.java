@@ -156,177 +156,102 @@ public class TextMessageAdapter extends BaseAdapter {
         return position;
     }
 
-    private static final int VIEW_TYPE_USER = 0;
-    private static final int VIEW_TYPE_SERVER = 1;
-    private static final int VIEW_TYPE_LOG = 2;
-    private static final int VIEW_TYPE_COUNT = 3;
-
-    private final View.OnLongClickListener itemLongClickListener = new View.OnLongClickListener() {
-        @Override
-        public boolean onLongClick(View v) {
-            Object tag = v.getTag();
-            if (tag instanceof BaseMsgViewHolder) {
-                MyTextMessage msg = ((BaseMsgViewHolder) tag).msg;
-                if (msg != null) {
-                    showMessageInteractionDialog(v.getContext(), msg);
-                    return true;
-                }
-            }
-            return false;
-        }
-    };
-
-    private static class BaseMsgViewHolder {
-        MyTextMessage msg;
-    }
-
-    private static class UserMsgViewHolder extends BaseMsgViewHolder {
-        TextView name;
-        TextView msgtext;
-        TextView msgdate;
-    }
-
-    private static class ServerMsgViewHolder extends BaseMsgViewHolder {
-        TextView logmsg;
-        TextView logmotd;
-        TextView logtm;
-    }
-
-    private static class LogMsgViewHolder extends BaseMsgViewHolder {
-        TextView logmsg;
-        TextView logtm;
-    }
-
-    @Override
-    public int getViewTypeCount() {
-        return VIEW_TYPE_COUNT;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        MyTextMessage txtmsg = (MyTextMessage) getItem(position);
-        if (txtmsg == null) return VIEW_TYPE_LOG;
-        switch (txtmsg.nMsgType) {
-            case TextMsgType.MSGTYPE_CHANNEL:
-            case TextMsgType.MSGTYPE_BROADCAST:
-            case TextMsgType.MSGTYPE_USER:
-                return VIEW_TYPE_USER;
-            case MyTextMessage.MSGTYPE_SERVERPROP:
-                return VIEW_TYPE_SERVER;
-            default:
-                return VIEW_TYPE_LOG;
-        }
-    }
-
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         MyTextMessage txtmsg = (MyTextMessage) getItem(position);
-        int viewType = getItemViewType(position);
+
         int bg_color = Color.BLACK, text_color = Color.WHITE;
 
-        switch (viewType) {
-            case VIEW_TYPE_USER: {
-                UserMsgViewHolder holder;
-                if (convertView == null) {
+        switch(txtmsg.nMsgType) {
+            case TextMsgType.MSGTYPE_CHANNEL :
+            case TextMsgType.MSGTYPE_BROADCAST :
+            case TextMsgType.MSGTYPE_USER : {
+                if(convertView == null ||
+                   convertView.findViewById(R.id.item_textmsg) == null)
                     convertView = inflater.inflate(R.layout.item_textmsg, parent, false);
-                    holder = new UserMsgViewHolder();
-                    holder.name = convertView.findViewById(R.id.name_text);
-                    holder.msgtext = convertView.findViewById(R.id.msg_text);
-                    holder.msgdate = convertView.findViewById(R.id.time_text);
-                    convertView.setTag(holder);
-                    convertView.setOnLongClickListener(itemLongClickListener);
-                } else {
-                    holder = (UserMsgViewHolder) convertView.getTag();
-                }
 
-                holder.msg = txtmsg;
-                if (txtmsg.nFromUserID == myuserid) {
+                if(txtmsg.nFromUserID == myuserid) {
                     bg_color = self_bg_color;
                     text_color = self_text_color;
-                } else {
+                }
+                else {
                     bg_color = user_bg_color;
                     text_color = user_text_color;
                 }
 
-                holder.name.setText(txtmsg.szNickName);
-                holder.msgdate.setText(txtmsg.time != null ? txtmsg.time.toString() : "");
-                holder.msgtext.setText(txtmsg.szMessage);
+                TextView name = convertView.findViewById(R.id.name_text);
+                TextView msgtext = convertView.findViewById(R.id.msg_text);
+                TextView msgdate = convertView.findViewById(R.id.time_text);
 
-                holder.name.setTextColor(text_color);
-                holder.msgdate.setTextColor(text_color);
-                holder.msgtext.setTextColor(text_color);
+                name.setText(txtmsg.szNickName);
+                msgdate.setText(txtmsg.time.toString());
+                msgtext.setText(txtmsg.szMessage);
+
+                name.setTextColor(text_color);
+                msgdate.setTextColor(text_color);
+                msgtext.setTextColor(text_color);
                 break;
             }
-            case VIEW_TYPE_SERVER: {
-                ServerMsgViewHolder holder;
-                if (convertView == null) {
+            case MyTextMessage.MSGTYPE_SERVERPROP : {
+                if(convertView == null ||
+                   convertView.findViewById(R.id.item_textmsg_srvinfo) == null) {
                     convertView = inflater.inflate(R.layout.item_textmsg_srvinfo, parent, false);
-                    holder = new ServerMsgViewHolder();
-                    holder.logmsg = convertView.findViewById(R.id.srvname_text);
-                    holder.logmotd = convertView.findViewById(R.id.srvmotd_text);
-                    holder.logtm = convertView.findViewById(R.id.logtime_text);
-                    convertView.setTag(holder);
-                    convertView.setOnLongClickListener(itemLongClickListener);
-                } else {
-                    holder = (ServerMsgViewHolder) convertView.getTag();
                 }
 
-                holder.msg = txtmsg;
                 bg_color = srvinfo_bg_color;
                 text_color = srvinfo_text_color;
 
-                if (txtmsg.userData instanceof ServerProperties) {
-                    ServerProperties p = (ServerProperties) txtmsg.userData;
-                    holder.logmsg.setText(p.szServerName);
-                    holder.logmotd.setText(p.szMOTD);
-                } else {
-                    holder.logmsg.setText("");
-                    holder.logmotd.setText("");
-                }
-                holder.logtm.setText(txtmsg.time != null ? txtmsg.time.toString() : "");
+                TextView logmsg = convertView.findViewById(R.id.srvname_text);
+                TextView logmotd = convertView.findViewById(R.id.srvmotd_text);
+                TextView logtm = convertView.findViewById(R.id.logtime_text);
 
-                holder.logmsg.setTextColor(text_color);
-                holder.logtm.setTextColor(text_color);
+                ServerProperties p = (ServerProperties)txtmsg.userData;
+                logmsg.setText(p.szServerName);
+                logmotd.setText(p.szMOTD);
+                logtm.setText(txtmsg.time.toString());
+
+                logmsg.setTextColor(text_color);
+                logtm.setTextColor(text_color);
                 break;
             }
-            case VIEW_TYPE_LOG:
-            default: {
-                LogMsgViewHolder holder;
-                if (convertView == null) {
+            case MyTextMessage.MSGTYPE_LOG_ERROR :
+            case MyTextMessage.MSGTYPE_LOG_INFO :
+            default : {
+                if(convertView == null ||
+                   convertView.findViewById(R.id.item_textmsg_logmsg) == null) {
                     convertView = inflater.inflate(R.layout.item_textmsg_logmsg, parent, false);
-                    holder = new LogMsgViewHolder();
-                    holder.logmsg = convertView.findViewById(R.id.logmsg_text);
-                    holder.logtm = convertView.findViewById(R.id.logtime_text);
-                    convertView.setTag(holder);
-                    convertView.setOnLongClickListener(itemLongClickListener);
-                } else {
-                    holder = (LogMsgViewHolder) convertView.getTag();
                 }
 
-                holder.msg = txtmsg;
-                switch (txtmsg.nMsgType) {
-                    case MyTextMessage.MSGTYPE_LOG_ERROR:
+                switch(txtmsg.nMsgType) {
+                    case MyTextMessage.MSGTYPE_LOG_ERROR :
                         bg_color = logerr_bg_color;
                         text_color = logerr_text_color;
                         break;
-                    case MyTextMessage.MSGTYPE_LOG_INFO:
-                        bg_color = loginfo_bg_color;
-                        text_color = loginfo_text_color;
-                        break;
-                    default:
+                    case MyTextMessage.MSGTYPE_LOG_INFO :
                         bg_color = loginfo_bg_color;
                         text_color = loginfo_text_color;
                         break;
                 }
 
-                holder.logmsg.setText(txtmsg.szMessage);
-                holder.logtm.setText(txtmsg.time != null ? txtmsg.time.toString() : "");
+                TextView logmsg = convertView.findViewById(R.id.logmsg_text);
+                TextView logtm = convertView.findViewById(R.id.logtime_text);
 
-                holder.logmsg.setTextColor(text_color);
-                holder.logtm.setTextColor(text_color);
+                logmsg.setText(txtmsg.szMessage);
+                logtm.setText(txtmsg.time.toString());
+
+                logmsg.setTextColor(text_color);
+                logtm.setTextColor(text_color);
                 break;
             }
         }
+
+        convertView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                showMessageInteractionDialog(v.getContext(), txtmsg);
+                return true;
+            }
+        });
 
         convertView.setBackgroundColor(bg_color);
         if (accessibilityAssistant != null) {

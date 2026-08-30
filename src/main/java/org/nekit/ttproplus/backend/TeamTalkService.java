@@ -13,7 +13,6 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioPlaybackCaptureConfiguration;
 import android.media.AudioRecord;
-import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
@@ -46,7 +45,6 @@ import androidx.core.app.ServiceCompat;
 import dk.bearware.AudioBlock;
 import dk.bearware.AudioFileFormat;
 import dk.bearware.AudioPreprocessor;
-import dk.bearware.AudioPreprocessorType;
 import dk.bearware.Channel;
 import dk.bearware.ClientErrorMsg;
 import dk.bearware.EncryptionContext;
@@ -56,7 +54,6 @@ import dk.bearware.MediaFilePlayback;
 import dk.bearware.OpusConstants;
 import dk.bearware.RemoteFile;
 import dk.bearware.ServerProperties;
-import dk.bearware.SoundDeviceEffects;
 import dk.bearware.SoundLevel;
 import dk.bearware.TeamTalk5;
 import dk.bearware.TeamTalkBase;
@@ -65,7 +62,6 @@ import dk.bearware.User;
 import dk.bearware.UserAccount;
 import dk.bearware.events.ClientEventListener;
 import dk.bearware.events.TeamTalkEventHandler;
-import org.nekit.ttproplus.BuildConfig;
 import org.nekit.ttproplus.data.ChatHistoryDbHelper;
 import org.nekit.ttproplus.data.ChatMessageEntry;
 import org.nekit.ttproplus.gui.Utils;
@@ -111,7 +107,6 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public static final String TAG = "bearware";
     private static final String UI_CHANNEL_ID = "TeamtalkConnection";
     private static final int UI_WIDGET_ID = 1;
-    private static final int[] MIC_EQ_FREQUENCIES = {60, 120, 250, 500, 1000, 2000, 4000, 8000, 16000};
     private BluetoothHeadsetHelper bluetoothHeadsetHelper;
     private boolean currentMuteState;
     CountDownTimer eventTimer;
@@ -179,7 +174,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             if ((Preferences.PREF_BG_MGMT_ENABLED.equals(key) || Preferences.PREF_BG_MGMT_SHOW_VOICE.equals(key) || Preferences.PREF_BG_MGMT_SHOW_MUTE.equals(key) || Preferences.PREF_BG_MGMT_SHOW_PING.equals(key) || Preferences.PREF_BG_MGMT_SHOW_CHAT.equals(key) || Preferences.PREF_BG_MGMT_SHOW_CHANNELS.equals(key)) && TeamTalkService.this.mFloatingWindowManager != null) {
                 TeamTalkService.this.mFloatingWindowManager.checkAndShow();
             }
-            if ("eq_mic_ns".equals(key) || "eq_mic_aec".equals(key) || "eq_mic_agc".equals(key) || key.startsWith(Preferences.PREF_EQ_MIC_BAND_PREFIX) || Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING.equals(key) || Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE.equals(key) || Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN.equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL.equals(key)) {
+            if ("eq_mic_ns".equals(key) || "eq_mic_aec".equals(key) || "eq_mic_agc".equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING.equals(key) || Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE.equals(key) || Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN.equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL.equals(key)) {
                 TeamTalkService.this.applyRealTimeAudioProcessing();
             }
             if (Preferences.PREF_GENERAL_CLIENTNAME.equals(key) || Preferences.PREF_GENERAL_NICKNAME.equals(key)) {
@@ -481,23 +476,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (sInstance == this) sInstance = null;
         this.manualDisconnect = true;
         this.isSeamlessReconnecting = false;
-        if (this.reconnectHandler != null) {
-            this.reconnectHandler.removeCallbacksAndMessages(null);
-        }
-        if (this.recordingSilenceHandler != null) {
-            this.recordingSilenceHandler.removeCallbacksAndMessages(null);
-        }
-        stopInternalAudioCapture();
-        stopRecording();
-        if (this.ttclient != null && this.isStreamingMedia) {
-            this.ttclient.stopStreamingMediaFileToChannel();
-            this.isStreamingMedia = false;
-        }
+        this.reconnectHandler.removeCallbacks(this.seamlessReconnectRunnable);
         unregisterNetworkCallback();
-        if (this.eventTimer != null) {
-            this.eventTimer.cancel();
-        }
+        this.eventTimer.cancel();
         this.mEventHandler.unregisterListener(this);
+        this.reconnectHandler.removeCallbacks(this.reconnectTimer);
         disablePhoneCallReaction();
         unwatchBluetoothHeadset();
         releaseServiceLocks();
@@ -507,7 +490,6 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.mFloatingWindowManager.hide();
             this.mFloatingWindowManager = null;
         }
-        AudioEffectsManager.getInstance(this).release();
         if (this.ttclient != null) {
             this.ttclient.closeSoundInputDevice();
             this.ttclient.closeSoundOutputDevice();
@@ -726,7 +708,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_BLUETOOTH_HEADSET, false) && this.bluetoothHeadsetHelper.isHeadsetConnected() && this.bluetoothHeadsetHelper.isOnHeadsetSco();
     }
 
-    public void reinitSoundInputDevice() {
+    private void reinitSoundInputDevice() {
         if (this.ttclient == null) {
             return;
         }
@@ -859,32 +841,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
         String prefix = multitrack ? "Master_" : (Utils.sanitizeFilename(chanName) + "_");
-        String recordingFormat = prefs.getString(Preferences.PREF_RECORDING_FORMAT, "wav");
-        int audioFileFormat = AudioFileFormat.AFF_WAVE_FORMAT;
-        String extension = ".wav";
-        if ("mp3".equals(recordingFormat)) {
-            int bitrate = 128;
-            try {
-                bitrate = Integer.parseInt(prefs.getString(Preferences.PREF_RECORDING_MP3_BITRATE, "128"));
-            } catch (NumberFormatException ignored) {}
-            switch (bitrate) {
-                case 16: audioFileFormat = AudioFileFormat.AFF_MP3_16KBIT_FORMAT; break;
-                case 32: audioFileFormat = AudioFileFormat.AFF_MP3_32KBIT_FORMAT; break;
-                case 64: audioFileFormat = AudioFileFormat.AFF_MP3_64KBIT_FORMAT; break;
-                case 256: audioFileFormat = AudioFileFormat.AFF_MP3_256KBIT_FORMAT; break;
-                case 320: audioFileFormat = AudioFileFormat.AFF_MP3_320KBIT_FORMAT; break;
-                default: audioFileFormat = AudioFileFormat.AFF_MP3_128KBIT_FORMAT; break;
-            }
-            extension = ".mp3";
-        } else if ("codec".equals(recordingFormat)) {
-            audioFileFormat = AudioFileFormat.AFF_CHANNELCODEC_FORMAT;
-            extension = ".ogg";
-        }
-        String name = prefix + sdf.format(new Date()) + extension;
+        String name = prefix + sdf.format(new Date()) + ".ogg";
         File file = new File(dir, name);
 
         this.currentRecordingFile = file;
-        this.isRecording = this.ttclient.startRecordingMuxedAudioFile(this.mychannel.audiocodec, file.getAbsolutePath(), audioFileFormat);
+        this.isRecording = this.ttclient.startRecordingMuxedAudioFile(this.mychannel.audiocodec, file.getAbsolutePath(), AudioFileFormat.AFF_CHANNELCODEC_FORMAT);
 
         if (this.isRecording) {
             Log.d("bearware", "Recording started: " + file.getAbsolutePath());
@@ -1185,13 +1146,6 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                             }
                             byte[] mixedBuffer = bArr;
                             int sampleIndex = 0;
-                            AudioBlock reusableBlock = new AudioBlock();
-                            reusableBlock.nStreamID = 0;
-                            reusableBlock.nSampleRate = OpusConstants.DEFAULT_OPUS_SAMPLERATE;
-                            reusableBlock.nChannels = 1;
-                            reusableBlock.uStreamTypes = 1;
-                            reusableBlock.lpRawAudio = new byte[960 * 2];
-
                             while (TeamTalkService.this.isInternalAudioRunning) {
                                 byte[] finalBuffer2 = null;
                                 int finalRead2 = 0;
@@ -1209,22 +1163,22 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                                 } else {
                                     projectionManager = projectionManager2;
                                     try {
-                                         int micRead = TeamTalkService.this.micAudioRecord.read(micBuffer, 0, micBuffer.length);
-                                         if (micRead <= 0) {
-                                             config = config2;
-                                         } else {
-                                             finalBuffer2 = micBuffer;
-                                             finalRead2 = micRead;
-                                             config = config2;
-                                             int intRead = TeamTalkService.this.internalAudioRecord.read(buffer, 0, micRead, 1);
-                                             if (intRead > 0) {
-                                                 int mixLen = Math.min(micRead, intRead);
-                                                 TeamTalkService.mixPcm(buffer, micBuffer, mixedBuffer, mixLen);
-                                                 finalBuffer2 = mixedBuffer;
-                                                 finalRead2 = mixLen;
-                                             }
-                                         }
-                                         finalBuffer = finalBuffer2;
+                                        int micRead = TeamTalkService.this.micAudioRecord.read(micBuffer, 0, micBuffer.length);
+                                        if (micRead <= 0) {
+                                            config = config2;
+                                        } else {
+                                            finalBuffer2 = micBuffer;
+                                            finalRead2 = micRead;
+                                            config = config2;
+                                            int intRead = TeamTalkService.this.internalAudioRecord.read(buffer, 0, micRead, 1);
+                                            if (intRead > 0) {
+                                                int mixLen = Math.min(micRead, intRead);
+                                                TeamTalkService.mixPcm(buffer, micBuffer, mixedBuffer, mixLen);
+                                                finalBuffer2 = mixedBuffer;
+                                                finalRead2 = mixLen;
+                                            }
+                                        }
+                                        finalBuffer = finalBuffer2;
                                         finalRead = finalRead2;
                                     } catch (IllegalArgumentException e) {
                                         Log.e("bearware", "Error recording internal audio", e);
@@ -1237,19 +1191,25 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                                     }
                                 }
                                 if (finalRead <= 0 || finalBuffer == null) {
+                                    int sampleIndex2 = sampleIndex;
                                     try {
                                         Thread.sleep(10L);
-                                    } catch (InterruptedException ignored) {
+                                        sampleIndex = sampleIndex2;
+                                    } catch (InterruptedException e7) {
                                     }
                                 } else {
-                                    if (reusableBlock.lpRawAudio == null || reusableBlock.lpRawAudio.length != finalRead) {
-                                        reusableBlock.lpRawAudio = new byte[finalRead];
-                                    }
-                                    System.arraycopy(finalBuffer, 0, reusableBlock.lpRawAudio, 0, finalRead);
-                                    reusableBlock.nSamples = finalRead / 2;
-                                    reusableBlock.uSampleIndex = sampleIndex;
-                                    TeamTalkService.this.ttclient.insertAudioBlock(reusableBlock);
-                                    sampleIndex += reusableBlock.nSamples;
+                                    AudioBlock block = new AudioBlock();
+                                    block.nStreamID = 0;
+                                    block.nSampleRate = OpusConstants.DEFAULT_OPUS_SAMPLERATE;
+                                    block.nChannels = 1;
+                                    block.lpRawAudio = new byte[finalRead];
+                                    System.arraycopy(finalBuffer, 0, block.lpRawAudio, 0, finalRead);
+                                    block.nSamples = finalRead / 2;
+                                    int sampleIndex3 = sampleIndex;
+                                    block.uSampleIndex = sampleIndex3;
+                                    block.uStreamTypes = 1;
+                                    TeamTalkService.this.ttclient.insertAudioBlock(block);
+                                    sampleIndex = sampleIndex3 + block.nSamples;
                                 }
                                 projectionManager2 = projectionManager;
                                 config2 = config;
@@ -1648,113 +1608,32 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             return;
         }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        int dspEngine = prefs.getInt(Preferences.PREF_EQ_DSP_ENGINE, 0);
-        boolean nsEnabled = prefs.getBoolean(Preferences.PREF_EQ_MIC_NS, false);
-        boolean aecEnabled = prefs.getBoolean(Preferences.PREF_EQ_MIC_AEC, false);
-        boolean agcEnabled = prefs.getBoolean(Preferences.PREF_EQ_MIC_AGC, false);
+        AudioPreprocessor ap = new AudioPreprocessor(4, true);
+        boolean nsEnabled = prefs.getBoolean("eq_mic_ns", false);
+        boolean aecEnabled = prefs.getBoolean("eq_mic_aec", false);
+        boolean agcEnabled = prefs.getBoolean("eq_mic_agc", false);
         boolean vpEnabled = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING, false);
         boolean speakerphone = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE, false);
-        boolean hwEffects = prefs.getBoolean(Preferences.PREF_EQ_MIC_HW_EFFECTS, false);
 
-        AudioPreprocessor ap;
-        if (dspEngine == 1) {
-            // SpeexDSP Engine
-            ap = new AudioPreprocessor(AudioPreprocessorType.SPEEXDSP_AUDIOPREPROCESSOR, true);
-            if (ap.speexdsp != null) {
-                ap.speexdsp.bEnableDenoise = nsEnabled || vpEnabled;
-                int speexNsDb = prefs.getInt(Preferences.PREF_EQ_MIC_SPEEX_NS_DB, -30);
-                ap.speexdsp.nMaxNoiseSuppressDB = speexNsDb;
+        ap.webrtc.noisesuppression.bEnable = nsEnabled || vpEnabled;
+        ap.webrtc.noisesuppression.nLevel = 2;
+        ap.webrtc.echocanceller.bEnable = aecEnabled || vpEnabled;
 
-                ap.speexdsp.bEnableEchoCancellation = aecEnabled || vpEnabled;
-                int speexAecDb = prefs.getInt(Preferences.PREF_EQ_MIC_SPEEX_AEC_DB, -40);
-                ap.speexdsp.nEchoSuppress = speexAecDb;
-                ap.speexdsp.nEchoSuppressActive = speexAecDb / 2;
+        if (ap.speexdsp != null) {
+            ap.speexdsp.bEnableDenoise = nsEnabled || vpEnabled;
+            ap.speexdsp.bEnableEchoCancellation = aecEnabled || vpEnabled;
+            ap.speexdsp.nEchoSuppress = -40;
+            ap.speexdsp.nEchoSuppressActive = -40;
+        }
 
-                if (this.mychannel != null && this.mychannel.audiocfg.bEnableAGC) {
-                    ap.speexdsp.bEnableAGC = true;
-                    ap.speexdsp.nGainLevel = this.mychannel.audiocfg.nGainLevel;
-                } else {
-                    ap.speexdsp.bEnableAGC = agcEnabled || vpEnabled;
-                    ap.speexdsp.nGainLevel = prefs.getInt(Preferences.PREF_EQ_MIC_SPEEX_AGC_LEVEL, 8000);
-                    ap.speexdsp.nMaxGainDB = prefs.getInt(Preferences.PREF_EQ_MIC_SPEEX_AGC_MAX_GAIN, 30);
-                    ap.speexdsp.nMaxIncDBSec = 12;
-                    ap.speexdsp.nMaxDecDBSec = -40;
-                }
-            }
-        } else if (dspEngine == 2) {
-            // Hardware direct / No software preprocessor
-            ap = new AudioPreprocessor(AudioPreprocessorType.NO_AUDIOPREPROCESSOR, false);
+        if (this.mychannel != null && this.mychannel.audiocfg.bEnableAGC) {
+            ap.webrtc.gaincontroller2.bEnable = true;
+            float gainPercent = this.mychannel.audiocfg.nGainLevel / 32000.0f;
+            ap.webrtc.gaincontroller2.fixeddigital.fGainDB = 49.9f * gainPercent;
         } else {
-            // WebRTC Audio Processing (Default & recommended)
-            ap = new AudioPreprocessor(AudioPreprocessorType.WEBRTC_AUDIOPREPROCESSOR, true);
-            if (ap.webrtc != null) {
-                ap.webrtc.noisesuppression.bEnable = nsEnabled || vpEnabled;
-                int nsLevel = prefs.getInt(Preferences.PREF_EQ_MIC_NS_LEVEL, 2);
-                ap.webrtc.noisesuppression.nLevel = Math.max(0, Math.min(3, nsLevel));
-
-                ap.webrtc.echocanceller.bEnable = aecEnabled || vpEnabled;
-
-                boolean preampEnable = prefs.getBoolean(Preferences.PREF_EQ_MIC_PREAMP_ENABLE, false);
-                int preampFactorRaw = prefs.getInt(Preferences.PREF_EQ_MIC_PREAMP_GAIN, 100);
-                if (ap.webrtc.preamplifier != null) {
-                    ap.webrtc.preamplifier.bEnable = preampEnable;
-                    ap.webrtc.preamplifier.fFixedGainFactor = Math.max(1.0f, preampFactorRaw / 100.0f);
-                }
-
-                if (ap.webrtc.gaincontroller2 != null) {
-                    if (this.mychannel != null && this.mychannel.audiocfg.bEnableAGC) {
-                        ap.webrtc.gaincontroller2.bEnable = true;
-                        float gainPercent = this.mychannel.audiocfg.nGainLevel / 32000.0f;
-                        if (ap.webrtc.gaincontroller2.fixeddigital != null) {
-                            ap.webrtc.gaincontroller2.fixeddigital.fGainDB = 49.9f * gainPercent;
-                        }
-                    } else {
-                        ap.webrtc.gaincontroller2.bEnable = agcEnabled || vpEnabled;
-                        int agcMode = prefs.getInt(Preferences.PREF_EQ_MIC_AGC_MODE, 0);
-                        if (agcMode == 1) {
-                            int fixedGain = prefs.getInt(Preferences.PREF_EQ_MIC_AGC_FIXED_GAIN, 15);
-                            if (ap.webrtc.gaincontroller2.fixeddigital != null) {
-                                ap.webrtc.gaincontroller2.fixeddigital.fGainDB = (float) fixedGain;
-                            }
-                            if (ap.webrtc.gaincontroller2.adaptivedigital != null) {
-                                ap.webrtc.gaincontroller2.adaptivedigital.bEnable = false;
-                            }
-                        } else {
-                            int maxGain = prefs.getInt(Preferences.PREF_EQ_MIC_AGC_MAX_GAIN, 30);
-                            int headroom = prefs.getInt(Preferences.PREF_EQ_MIC_AGC_HEADROOM, 5);
-                            if (ap.webrtc.gaincontroller2.adaptivedigital != null) {
-                                ap.webrtc.gaincontroller2.adaptivedigital.bEnable = agcEnabled || vpEnabled;
-                                ap.webrtc.gaincontroller2.adaptivedigital.fHeadRoomDB = (float) headroom;
-                                ap.webrtc.gaincontroller2.adaptivedigital.fMaxGainDB = (float) maxGain;
-                                ap.webrtc.gaincontroller2.adaptivedigital.fInitialGainDB = Math.min((float) maxGain, 15.0f);
-                                ap.webrtc.gaincontroller2.adaptivedigital.fMaxGainChangeDBPerSecond = 6.0f;
-                                ap.webrtc.gaincontroller2.adaptivedigital.fMaxOutputNoiseLevelDBFS = -50.0f;
-                            }
-                        }
-                    }
-                }
-            }
+            ap.webrtc.gaincontroller2.bEnable = agcEnabled || vpEnabled;
         }
 
-        SoundDeviceEffects sde = new SoundDeviceEffects();
-        sde.bEnableDenoise = hwEffects && (nsEnabled || vpEnabled);
-        sde.bEnableEchoCancellation = hwEffects && (aecEnabled || vpEnabled);
-        sde.bEnableAGC = hwEffects && (agcEnabled || vpEnabled);
-        try {
-            this.ttclient.setSoundDeviceEffects(sde);
-        } catch (Throwable ignored) {
-        }
-
-        float[] micEq = new float[MIC_EQ_FREQUENCIES.length];
-        for (int i = 0; i < micEq.length; i++) {
-            micEq[i] = prefs.getInt(Preferences.PREF_EQ_MIC_BAND_PREFIX + i, 0);
-        }
-        try {
-            java.lang.reflect.Method eqMethod = this.ttclient.getClass().getMethod("setMicrophoneEqualizer", float[].class);
-            eqMethod.invoke(this.ttclient, new Object[]{micEq});
-        } catch (Throwable ignored) {
-            // Supported after replacing the bundled TeamTalk JNI/JAR with the rebuilt version.
-        }
         this.ttclient.setSoundInputPreprocess(ap);
 
         try {
@@ -2115,8 +1994,6 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onCmdServerUpdate(ServerProperties serverproperties) {
-        if (serverproperties != null && !TextUtils.isEmpty(serverproperties.szServerVersion)) {
-        }
         MyTextMessage msg = MyTextMessage.createUserDefMsg(MyTextMessage.MSGTYPE_SERVERPROP, serverproperties);
         getChatLogTextMsgs().add(msg);
     }
@@ -2245,7 +2122,13 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             Log.d("bearware", xml);
             try {
                 InputSource src = new InputSource(new StringReader(xml));
-                DocumentBuilderFactory dbf = Utils.createSecureDocumentBuilderFactory();
+                DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                try {
+                    dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                    dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                    dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                } catch (Exception e) {
+                }
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 Document document = db.parse(src);
                 XPathFactory factory = XPathFactory.newInstance();
