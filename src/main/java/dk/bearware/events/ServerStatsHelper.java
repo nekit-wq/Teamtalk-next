@@ -15,7 +15,7 @@ public class ServerStatsHelper {
 
     public static void registerListener(TeamTalkEventHandler handler, OnServerStatisticsListener listener) {
         Objects.requireNonNull(handler);
-        TeamTalkEventHandler.ProcessTTMessage ptm = new TeamTalkEventHandler.ProcessTTMessage(listener) {
+        TeamTalkEventHandler.ProcessTTMessage ptm = handler.new ProcessTTMessage(listener) {
             @Override
             void processTTMessage(TTMessage msg) {
                 listener.onServerStatistics(msg.serverstatistics);

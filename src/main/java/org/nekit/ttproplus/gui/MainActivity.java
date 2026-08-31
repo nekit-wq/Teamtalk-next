@@ -218,6 +218,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     final int SOUND_CHANMSGSENT = 20;
     final int SOUND_TYPING = 21;
     SparseIntArray sounds = new SparseIntArray();
+    private String loadedSoundPack = null;
     List<Integer> userIDS = new ArrayList();
     final Map<Integer, Vector<MyTextMessage>> txtmsgMergeBuffer = new HashMap<>();
 
@@ -904,66 +905,69 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.mSensorManager.registerListener(this, this.mSensor, 3);
             this.isProximitySensorRegistered = true;
         }
-        if (this.audioIcons != null) {
-            this.audioIcons.release();
-        }
-        this.sounds.clear();
-        this.audioIcons = new SoundPool(1, 3, 0);
         String soundPack = (String) this.prefs.get("sound_pack_preference", "default");
         boolean isSilentPack = "silent".equals(soundPack);
-        if (!isSilentPack) {
-            if (((Boolean) this.prefs.get("server_lost_audio_icon", true)).booleanValue()) {
-                this.sounds.put(6, loadSound(this.prefs, this.ctx, soundPack, "serverlost", R.raw.serverlost));
+        if (this.audioIcons == null || !soundPack.equals(this.loadedSoundPack)) {
+            if (this.audioIcons != null) {
+                this.audioIcons.release();
             }
-            if (((Boolean) this.prefs.get("rx_tx_audio_icon", true)).booleanValue()) {
-                this.sounds.put(1, loadSound(this.prefs, this.ctx, soundPack, "on", R.raw.on));
-                this.sounds.put(2, loadSound(this.prefs, this.ctx, soundPack, "off", R.raw.off));
-            }
-            if (((Boolean) this.prefs.get("private_message_audio_icon", true)).booleanValue()) {
-                this.sounds.put(3, loadSound(this.prefs, this.ctx, soundPack, "user_message", R.raw.user_message));
-            }
-            if (((Boolean) this.prefs.get("channel_message_audio_icon", true)).booleanValue()) {
-                this.sounds.put(4, loadSound(this.prefs, this.ctx, soundPack, "channel_message", R.raw.channel_message));
-            }
-            if (((Boolean) this.prefs.get("channel_message_sent_audio_icon", true)).booleanValue()) {
-                this.sounds.put(20, loadSound(this.prefs, this.ctx, soundPack, "channel_message_sent", R.raw.channel_message_sent));
-            }
-            if (((Boolean) this.prefs.get("broadcast_message_audio_icon", true)).booleanValue()) {
-                this.sounds.put(5, loadSound(this.prefs, this.ctx, soundPack, "broadcast_message", R.raw.broadcast_message));
-            }
-            if (((Boolean) this.prefs.get("files_updated_audio_icon", true)).booleanValue()) {
-                this.sounds.put(7, loadSound(this.prefs, this.ctx, soundPack, "fileupdate", R.raw.fileupdate));
-            }
-            if (((Boolean) this.prefs.get("voiceact_audio_icon", true)).booleanValue()) {
-                this.sounds.put(8, loadSound(this.prefs, this.ctx, soundPack, "voiceact_enable", R.raw.voiceact_enable));
-                this.sounds.put(9, loadSound(this.prefs, this.ctx, soundPack, "voiceact_disable", R.raw.voiceact_disable));
-            }
-            if (((Boolean) this.prefs.get("voiceact_triggered_icon", true)).booleanValue()) {
-                this.sounds.put(10, loadSound(this.prefs, this.ctx, soundPack, "voiceact_on", R.raw.voiceact_on));
-                this.sounds.put(11, loadSound(this.prefs, this.ctx, soundPack, "voiceact_off", R.raw.voiceact_off));
-            }
-            if (((Boolean) this.prefs.get("intercept_audio_icon", true)).booleanValue()) {
-                this.sounds.put(18, loadSound(this.prefs, this.ctx, soundPack, "intercept", R.raw.intercept));
-                this.sounds.put(19, loadSound(this.prefs, this.ctx, soundPack, "interceptend", R.raw.interceptend));
-            }
-            if (((Boolean) this.prefs.get("transmitready_icon", true)).booleanValue()) {
-                this.sounds.put(12, loadSound(this.prefs, this.ctx, soundPack, "txqueue_start", R.raw.txqueue_start));
-                this.sounds.put(13, loadSound(this.prefs, this.ctx, soundPack, "txqueue_stop", R.raw.txqueue_stop));
-            }
-            if (((Boolean) this.prefs.get("userjoin_icon", true)).booleanValue()) {
-                this.sounds.put(14, loadSound(this.prefs, this.ctx, soundPack, "user_join", R.raw.user_join));
-            }
-            if (((Boolean) this.prefs.get("userleft_icon", true)).booleanValue()) {
-                this.sounds.put(15, loadSound(this.prefs, this.ctx, soundPack, "user_left", R.raw.user_left));
-            }
-            if (((Boolean) this.prefs.get("userloggedin_icon", true)).booleanValue()) {
-                this.sounds.put(16, loadSound(this.prefs, this.ctx, soundPack, "logged_on", R.raw.logged_on));
-            }
-            if (((Boolean) this.prefs.get("userloggedoff_icon", true)).booleanValue()) {
-                this.sounds.put(17, loadSound(this.prefs, this.ctx, soundPack, "logged_off", R.raw.logged_off));
-            }
-            if (((Boolean) this.prefs.get("typing_icon", true)).booleanValue()) {
-                this.sounds.put(SOUND_TYPING, loadSound(this.prefs, this.ctx, soundPack, "typing", R.raw.typing));
+            this.sounds.clear();
+            this.audioIcons = new SoundPool(1, 3, 0);
+            this.loadedSoundPack = soundPack;
+            if (!isSilentPack) {
+                if (((Boolean) this.prefs.get("server_lost_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(6, loadSound(this.prefs, this.ctx, soundPack, "serverlost", R.raw.serverlost));
+                }
+                if (((Boolean) this.prefs.get("rx_tx_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(1, loadSound(this.prefs, this.ctx, soundPack, "on", R.raw.on));
+                    this.sounds.put(2, loadSound(this.prefs, this.ctx, soundPack, "off", R.raw.off));
+                }
+                if (((Boolean) this.prefs.get("private_message_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(3, loadSound(this.prefs, this.ctx, soundPack, "user_message", R.raw.user_message));
+                }
+                if (((Boolean) this.prefs.get("channel_message_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(4, loadSound(this.prefs, this.ctx, soundPack, "channel_message", R.raw.channel_message));
+                }
+                if (((Boolean) this.prefs.get("channel_message_sent_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(20, loadSound(this.prefs, this.ctx, soundPack, "channel_message_sent", R.raw.channel_message_sent));
+                }
+                if (((Boolean) this.prefs.get("broadcast_message_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(5, loadSound(this.prefs, this.ctx, soundPack, "broadcast_message", R.raw.broadcast_message));
+                }
+                if (((Boolean) this.prefs.get("files_updated_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(7, loadSound(this.prefs, this.ctx, soundPack, "fileupdate", R.raw.fileupdate));
+                }
+                if (((Boolean) this.prefs.get("voiceact_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(8, loadSound(this.prefs, this.ctx, soundPack, "voiceact_enable", R.raw.voiceact_enable));
+                    this.sounds.put(9, loadSound(this.prefs, this.ctx, soundPack, "voiceact_disable", R.raw.voiceact_disable));
+                }
+                if (((Boolean) this.prefs.get("voiceact_triggered_icon", true)).booleanValue()) {
+                    this.sounds.put(10, loadSound(this.prefs, this.ctx, soundPack, "voiceact_on", R.raw.voiceact_on));
+                    this.sounds.put(11, loadSound(this.prefs, this.ctx, soundPack, "voiceact_off", R.raw.voiceact_off));
+                }
+                if (((Boolean) this.prefs.get("intercept_audio_icon", true)).booleanValue()) {
+                    this.sounds.put(18, loadSound(this.prefs, this.ctx, soundPack, "intercept", R.raw.intercept));
+                    this.sounds.put(19, loadSound(this.prefs, this.ctx, soundPack, "interceptend", R.raw.interceptend));
+                }
+                if (((Boolean) this.prefs.get("transmitready_icon", true)).booleanValue()) {
+                    this.sounds.put(12, loadSound(this.prefs, this.ctx, soundPack, "txqueue_start", R.raw.txqueue_start));
+                    this.sounds.put(13, loadSound(this.prefs, this.ctx, soundPack, "txqueue_stop", R.raw.txqueue_stop));
+                }
+                if (((Boolean) this.prefs.get("userjoin_icon", true)).booleanValue()) {
+                    this.sounds.put(14, loadSound(this.prefs, this.ctx, soundPack, "user_join", R.raw.user_join));
+                }
+                if (((Boolean) this.prefs.get("userleft_icon", true)).booleanValue()) {
+                    this.sounds.put(15, loadSound(this.prefs, this.ctx, soundPack, "user_left", R.raw.user_left));
+                }
+                if (((Boolean) this.prefs.get("userloggedin_icon", true)).booleanValue()) {
+                    this.sounds.put(16, loadSound(this.prefs, this.ctx, soundPack, "logged_on", R.raw.logged_on));
+                }
+                if (((Boolean) this.prefs.get("userloggedoff_icon", true)).booleanValue()) {
+                    this.sounds.put(17, loadSound(this.prefs, this.ctx, soundPack, "logged_off", R.raw.logged_off));
+                }
+                if (((Boolean) this.prefs.get("typing_icon", true)).booleanValue()) {
+                    this.sounds.put(SOUND_TYPING, loadSound(this.prefs, this.ctx, soundPack, "typing", R.raw.typing));
+                }
             }
         }
         if (getTextMessagesAdapter() != null) {
@@ -1115,10 +1119,24 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         if (this.isProximitySensorRegistered && this.mSensorManager != null) {
             this.mSensorManager.unregisterListener(this);
             this.isProximitySensorRegistered = false;
+        }
+        if (this.audioIcons != null) {
+            this.audioIcons.release();
+            this.audioIcons = null;
+        }
+        if (this.ttsWrapper != null) {
+            this.ttsWrapper.shutdown();
+            this.ttsWrapper = null;
+        }
+        if (this.micActivityHandler != null) {
+            this.micActivityHandler.removeCallbacksAndMessages(null);
+        }
+        if (this.stats_timer != null) {
+            this.stats_timer.cancel();
+            this.stats_timer = null;
         }
         if (this.mConnection != null && this.mConnection.isBound()) {
             Log.d("bearware", "Unbinding TeamTalk service");
@@ -1137,6 +1155,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
             this.mConnection.setBound(false);
         }
+        super.onDestroy();
         Log.d("bearware", "Activity destroyed " + hashCode());
     }
 
@@ -1180,51 +1199,48 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         private FileCopyingTask() {
         }
 
-                @Override
+        @Override
         public String doInBackground(Uri... uris) {
             Uri uri = uris[0];
-            Cursor cursor = MainActivity.this.getContentResolver().query(uri, null, null, null, null);
-            int columnIndex = (cursor == null || !cursor.moveToFirst()) ? -1 : cursor.getColumnIndex("_display_name");
-            if (columnIndex >= 0) {
-                File transitFile = new File(MainActivity.this.getCacheDir(), cursor.getString(columnIndex));
-                cursor.close();
-                try {
-                    if ((transitFile.exists() && !transitFile.delete()) || !transitFile.createNewFile()) {
-                        return null;
+            String rawFileName = null;
+            try (Cursor cursor = MainActivity.this.getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int columnIndex = cursor.getColumnIndex("_display_name");
+                    if (columnIndex >= 0) {
+                        rawFileName = cursor.getString(columnIndex);
                     }
-                    transitFile.deleteOnExit();
-                    try {
-                        InputStream src = MainActivity.this.getContentResolver().openInputStream(uri);
-                        try {
-                            FileOutputStream dest = new FileOutputStream(transitFile);
-                            try {
-                                byte[] buffer = new byte[1024];
-                                while (true) {
-                                    int read = src.read(buffer);
-                                    if (read <= 0) {
-                                        break;
-                                    }
-                                    dest.write(buffer, 0, read);
-                                }
-                                dest.close();
-                                if (src != null) {
-                                    src.close();
-                                }
-                                return transitFile.getPath();
-                            } finally {
-                            }
-                        } finally {
-                        }
-                    } catch (Exception e) {
-                        return null;
-                    }
-                } catch (Exception e2) {
+                }
+            } catch (Exception ignored) {}
+
+            String safeName = (rawFileName != null) ? Utils.sanitizeFilename(rawFileName) : "";
+            if (safeName.isEmpty()) {
+                safeName = "temp_upload_" + System.currentTimeMillis() + ".dat";
+            }
+
+            File transitFile = new File(MainActivity.this.getCacheDir(), safeName);
+            try {
+                if (transitFile.exists()) {
+                    transitFile.delete();
+                }
+                if (!transitFile.createNewFile()) {
                     return null;
                 }
-            } else {
-                if (cursor != null) {
-                    cursor.close();
+                transitFile.deleteOnExit();
+
+                try (InputStream src = MainActivity.this.getContentResolver().openInputStream(uri);
+                     FileOutputStream dest = new FileOutputStream(transitFile)) {
+                    if (src == null) return null;
+                    byte[] buffer = new byte[32768];
+                    int read;
+                    while ((read = src.read(buffer)) > 0) {
+                        dest.write(buffer, 0, read);
+                    }
+                    dest.flush();
+                    return transitFile.getPath();
                 }
+            } catch (Exception e) {
+                Log.e(TAG, "Error copying upload file", e);
+                if (transitFile.exists()) transitFile.delete();
                 return null;
             }
         }
@@ -3450,11 +3466,12 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     mChannel.setSound(null, null);
                     this.notificationManager.createNotificationChannel(mChannel);
                 }
+                int piFlags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
                 Notification notification = new NotificationCompat.Builder(this, MSG_NOTIFICATION_CHANNEL_ID)
                         .setSmallIcon(R.drawable.message)
                         .setContentTitle(getString(R.string.private_message_notification, new Object[]{name}))
                         .setContentText(getString(R.string.private_message_notification_hint))
-                        .setContentIntent(PendingIntent.getActivity(this, completemsg.nFromUserID, action.putExtra("userid", completemsg.nFromUserID), AccessibilityEventCompat.TYPE_VIEW_TARGETED_BY_SCROLL))
+                        .setContentIntent(PendingIntent.getActivity(this, completemsg.nFromUserID, action.putExtra("userid", completemsg.nFromUserID), piFlags))
                         .setAutoCancel(true)
                         .build();
                 this.notificationManager.notify(MESSAGE_NOTIFICATION_TAG, completemsg.nFromUserID, notification);
@@ -3639,7 +3656,10 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 if (newName.isEmpty()) {
                     newName = nameWithoutExt;
                 }
-                File newFile = new File(recordedFile.getParent(), newName + ".ogg");
+                String extension = recordedFile.getName().contains(".")
+                        ? recordedFile.getName().substring(recordedFile.getName().lastIndexOf('.'))
+                        : ".wav";
+                File newFile = new File(recordedFile.getParent(), newName + extension);
                 if (newFile.getAbsolutePath().equals(recordedFile.getAbsolutePath())) {
                     return;
                 }

@@ -392,9 +392,9 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
 
             String clientNameText = (user.szClientName != null && !user.szClientName.isEmpty()) ? user.szClientName : "TeamTalk";
             String fullDisplay;
-            if (user.uVersion > 0) {
+            if (user.uVersion > 0 && !clientNameText.matches(".*\\d+\\.\\d+.*")) {
                 String verText = ((user.uVersion >> 16) & 0xFF) + "." + ((user.uVersion >> 8) & 0xFF) + "." + (user.uVersion & 0xFF);
-                fullDisplay = clientNameText.contains(verText) ? clientNameText : (clientNameText + " " + verText);
+                fullDisplay = clientNameText + " " + verText;
             } else {
                 fullDisplay = clientNameText;
             }

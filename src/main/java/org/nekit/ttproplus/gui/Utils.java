@@ -644,6 +644,20 @@ public class Utils {
         return Optional.empty();
     }
 
+    public static DocumentBuilderFactory createSecureDocumentBuilderFactory() {
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        try {
+            dbFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            dbFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            dbFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            dbFactory.setXIncludeAware(false);
+            dbFactory.setExpandEntityReferences(false);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to set security features on DocumentBuilderFactory", e);
+        }
+        return dbFactory;
+    }
+
     public static String getURL(String urlToRead) {
         return postURL(urlToRead, null);
     }
@@ -655,6 +669,10 @@ public class Utils {
         try {
             URL url = new URL(urlString);
             conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(15000);
+            conn.setRequestProperty("User-Agent", "TeamTalkProPlus-Android/" + AppInfo.APPNAME_SHORT);
+
             if (body != null) {
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
@@ -667,8 +685,8 @@ public class Utils {
                 conn.setRequestMethod("GET");
             }
 
-            rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            char[] buff = new char[1024];
+            rd = new BufferedReader(new InputStreamReader(conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8), 8192);
+            char[] buff = new char[8192];
             int len;
             while((len = rd.read(buff)) > 0) {
                 result.append(buff, 0, len);
@@ -750,7 +768,7 @@ public class Utils {
     
     public static Vector<ServerEntry> getXmlServerEntries(String xml) {
         Vector<ServerEntry> servers = new Vector<>();
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory dbFactory = createSecureDocumentBuilderFactory();
         DocumentBuilder dBuilder;
         Document doc;
         try {
@@ -758,7 +776,7 @@ public class Utils {
             doc = dBuilder.parse(new InputSource(new StringReader(xml)));
         }
         catch(Exception e) {
-            Log.e(TAG, "Failed to parse server entries");
+            Log.e(TAG, "Failed to parse server entries", e);
             return servers;
         }
         

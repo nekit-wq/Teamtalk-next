@@ -134,6 +134,17 @@
                     android:layout_marginStart="4dp"
                     android:text="@string/btn_add_custom_station" />
             </LinearLayout>
+
+            <EditText
+                android:id="@+id/stream_resolver_url_txt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="@string/stream_resolver_url_hint"
+                android:inputType="textUri"
+                android:padding="10dp"
+                android:singleLine="true" />
         </LinearLayout>
 
         <!-- Stream to Channel Button -->

@@ -535,49 +535,59 @@ public class CustomFilePickerActivity extends AppCompatActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;
             if (convertView == null) {
                 convertView = LayoutInflater.from(CustomFilePickerActivity.this)
                         .inflate(R.layout.item_custom_file, parent, false);
+                holder = new ViewHolder();
+                holder.imgIcon = convertView.findViewById(R.id.item_icon);
+                holder.txtName = convertView.findViewById(R.id.item_name);
+                holder.txtDetails = convertView.findViewById(R.id.item_details);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
             }
-
-            ImageView imgIcon = convertView.findViewById(R.id.item_icon);
-            TextView txtName = convertView.findViewById(R.id.item_name);
-            TextView txtDetails = convertView.findViewById(R.id.item_details);
 
             FileItem item = filesList.get(position);
             File file = item.file;
             String name = file.getName();
-            txtName.setText(name);
+            holder.txtName.setText(name);
 
             if (name.equals("..")) {
-                imgIcon.setImageResource(R.drawable.ic_folder);
-                txtDetails.setVisibility(View.GONE);
+                holder.imgIcon.setImageResource(R.drawable.ic_folder);
+                holder.txtDetails.setVisibility(View.GONE);
                 convertView.setContentDescription(getString(R.string.cd_up_folder));
             } else if (file.isDirectory()) {
-                imgIcon.setImageResource(R.drawable.ic_folder);
-                txtDetails.setVisibility(View.GONE);
+                holder.imgIcon.setImageResource(R.drawable.ic_folder);
+                holder.txtDetails.setVisibility(View.GONE);
                 convertView.setContentDescription(name + ", " + getString(R.string.cd_folder));
             } else {
                 if (name.toLowerCase().endsWith(".tt")) {
-                    imgIcon.setImageResource(R.drawable.teamtalk_blue);
+                    holder.imgIcon.setImageResource(R.drawable.teamtalk_blue);
                     convertView.setContentDescription(name + ", " + getString(R.string.cd_tt_file));
                 } else {
-                    imgIcon.setImageResource(R.drawable.ic_file);
+                    holder.imgIcon.setImageResource(R.drawable.ic_file);
                     convertView.setContentDescription(name + ", " + getString(R.string.cd_file));
                 }
 
                 if (item.isSearchResult) {
-                    String details = formatFileSize(file.length()) + "  •  " + file.getParent();
-                    txtDetails.setText(details);
-                    txtDetails.setVisibility(View.VISIBLE);
+                    String details = formatFileSize(file.length()) + "  •  " + (file.getParent() != null ? file.getParent() : "");
+                    holder.txtDetails.setText(details);
+                    holder.txtDetails.setVisibility(View.VISIBLE);
                 } else {
                     String details = formatFileSize(file.length());
-                    txtDetails.setText(details);
-                    txtDetails.setVisibility(View.VISIBLE);
+                    holder.txtDetails.setText(details);
+                    holder.txtDetails.setVisibility(View.VISIBLE);
                 }
             }
 
             return convertView;
+        }
+
+        private class ViewHolder {
+            ImageView imgIcon;
+            TextView txtName;
+            TextView txtDetails;
         }
     }
 }

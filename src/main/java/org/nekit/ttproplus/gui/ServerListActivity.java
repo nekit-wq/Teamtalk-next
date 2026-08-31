@@ -613,7 +613,13 @@ public class ServerListActivity extends AppCompatActivity
 
     private int getIntParameterOrDefault(Uri uri, String parameter, int defaultValue) {
         String value = uri.getQueryParameter(parameter);
-        return value != null ? Integer.parseInt(value) : defaultValue;
+        if (value == null || value.trim().isEmpty()) return defaultValue;
+        try {
+            int val = Integer.parseInt(value.trim());
+            return (val > 0 && val <= 65535) ? val : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     private String getStringParameterOrDefault(Uri uri, String parameter, String defaultValue) {
@@ -916,7 +922,7 @@ public class ServerListActivity extends AppCompatActivity
 
             if (!xml.isEmpty()) {
                 try {
-                    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                    DocumentBuilderFactory dbFactory = Utils.createSecureDocumentBuilderFactory();
                     DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
                     Document doc = dBuilder.parse(new InputSource(new StringReader(xml)));
                     doc.getDocumentElement().normalize();

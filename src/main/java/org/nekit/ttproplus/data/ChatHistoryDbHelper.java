@@ -211,16 +211,17 @@ public class ChatHistoryDbHelper extends SQLiteOpenHelper {
             }
 
             String limitStr = limit > 0 ? String.valueOf(limit) : "100";
-            Cursor cursor = db.query(TABLE_HISTORY, null,
+            try (Cursor cursor = db.query(TABLE_HISTORY, null,
                     where.length() > 0 ? where.toString() : null,
                     args.toArray(new String[0]),
-                    null, null, COL_TIMESTAMP + " DESC", limitStr);
+                    null, null, COL_TIMESTAMP + " DESC", limitStr)) {
 
-            if (cursor != null) {
-                while (cursor.moveToNext()) {
-                    list.add(cursorToEntry(cursor));
+                if (cursor != null && cursor.moveToFirst()) {
+                    ColumnIndices indices = new ColumnIndices(cursor);
+                    do {
+                        list.add(cursorToEntry(cursor, indices));
+                    } while (cursor.moveToNext());
                 }
-                cursor.close();
             }
             Collections.reverse(list);
         } catch (Exception e) {
@@ -268,16 +269,17 @@ public class ChatHistoryDbHelper extends SQLiteOpenHelper {
             }
 
             String limitStr = (limit > 0 ? limit : 200) + (offset > 0 ? " OFFSET " + offset : "");
-            Cursor cursor = db.query(TABLE_HISTORY, null,
+            try (Cursor cursor = db.query(TABLE_HISTORY, null,
                     where.length() > 0 ? where.toString() : null,
                     args.toArray(new String[0]),
-                    null, null, COL_TIMESTAMP + " DESC", limitStr);
+                    null, null, COL_TIMESTAMP + " DESC", limitStr)) {
 
-            if (cursor != null) {
-                while (cursor.moveToNext()) {
-                    list.add(cursorToEntry(cursor));
+                if (cursor != null && cursor.moveToFirst()) {
+                    ColumnIndices indices = new ColumnIndices(cursor);
+                    do {
+                        list.add(cursorToEntry(cursor, indices));
+                    } while (cursor.moveToNext());
                 }
-                cursor.close();
             }
         } catch (Exception e) {
             Log.e(TAG, "Error querying history: " + e.getMessage());
@@ -355,22 +357,56 @@ public class ChatHistoryDbHelper extends SQLiteOpenHelper {
         return sb.toString();
     }
 
-    private ChatMessageEntry cursorToEntry(Cursor cursor) {
+    private static class ColumnIndices {
+        final int id;
+        final int serverKey;
+        final int msgType;
+        final int channelId;
+        final int channelName;
+        final int fromUserId;
+        final int fromUsername;
+        final int fromNickname;
+        final int toUserId;
+        final int toUsername;
+        final int toNickname;
+        final int messageText;
+        final int timestamp;
+        final int isOutgoing;
+
+        ColumnIndices(Cursor cursor) {
+            id = cursor.getColumnIndexOrThrow(COL_ID);
+            serverKey = cursor.getColumnIndexOrThrow(COL_SERVER_KEY);
+            msgType = cursor.getColumnIndexOrThrow(COL_MSG_TYPE);
+            channelId = cursor.getColumnIndexOrThrow(COL_CHANNEL_ID);
+            channelName = cursor.getColumnIndexOrThrow(COL_CHANNEL_NAME);
+            fromUserId = cursor.getColumnIndexOrThrow(COL_FROM_USER_ID);
+            fromUsername = cursor.getColumnIndexOrThrow(COL_FROM_USERNAME);
+            fromNickname = cursor.getColumnIndexOrThrow(COL_FROM_NICKNAME);
+            toUserId = cursor.getColumnIndexOrThrow(COL_TO_USER_ID);
+            toUsername = cursor.getColumnIndexOrThrow(COL_TO_USERNAME);
+            toNickname = cursor.getColumnIndexOrThrow(COL_TO_NICKNAME);
+            messageText = cursor.getColumnIndexOrThrow(COL_MESSAGE_TEXT);
+            timestamp = cursor.getColumnIndexOrThrow(COL_TIMESTAMP);
+            isOutgoing = cursor.getColumnIndexOrThrow(COL_IS_OUTGOING);
+        }
+    }
+
+    private ChatMessageEntry cursorToEntry(Cursor cursor, ColumnIndices idx) {
         ChatMessageEntry entry = new ChatMessageEntry();
-        entry.setId(cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)));
-        entry.setServerKey(cursor.getString(cursor.getColumnIndexOrThrow(COL_SERVER_KEY)));
-        entry.setMsgType(cursor.getInt(cursor.getColumnIndexOrThrow(COL_MSG_TYPE)));
-        entry.setChannelId(cursor.getInt(cursor.getColumnIndexOrThrow(COL_CHANNEL_ID)));
-        entry.setChannelName(cursor.getString(cursor.getColumnIndexOrThrow(COL_CHANNEL_NAME)));
-        entry.setFromUserId(cursor.getInt(cursor.getColumnIndexOrThrow(COL_FROM_USER_ID)));
-        entry.setFromUsername(cursor.getString(cursor.getColumnIndexOrThrow(COL_FROM_USERNAME)));
-        entry.setFromNickname(cursor.getString(cursor.getColumnIndexOrThrow(COL_FROM_NICKNAME)));
-        entry.setToUserId(cursor.getInt(cursor.getColumnIndexOrThrow(COL_TO_USER_ID)));
-        entry.setToUsername(cursor.getString(cursor.getColumnIndexOrThrow(COL_TO_USERNAME)));
-        entry.setToNickname(cursor.getString(cursor.getColumnIndexOrThrow(COL_TO_NICKNAME)));
-        entry.setMessageText(cursor.getString(cursor.getColumnIndexOrThrow(COL_MESSAGE_TEXT)));
-        entry.setTimestamp(cursor.getLong(cursor.getColumnIndexOrThrow(COL_TIMESTAMP)));
-        entry.setOutgoing(cursor.getInt(cursor.getColumnIndexOrThrow(COL_IS_OUTGOING)) == 1);
+        entry.setId(cursor.getLong(idx.id));
+        entry.setServerKey(cursor.getString(idx.serverKey));
+        entry.setMsgType(cursor.getInt(idx.msgType));
+        entry.setChannelId(cursor.getInt(idx.channelId));
+        entry.setChannelName(cursor.getString(idx.channelName));
+        entry.setFromUserId(cursor.getInt(idx.fromUserId));
+        entry.setFromUsername(cursor.getString(idx.fromUsername));
+        entry.setFromNickname(cursor.getString(idx.fromNickname));
+        entry.setToUserId(cursor.getInt(idx.toUserId));
+        entry.setToUsername(cursor.getString(idx.toUsername));
+        entry.setToNickname(cursor.getString(idx.toNickname));
+        entry.setMessageText(cursor.getString(idx.messageText));
+        entry.setTimestamp(cursor.getLong(idx.timestamp));
+        entry.setOutgoing(cursor.getInt(idx.isOutgoing) == 1);
         return entry;
     }
 }
