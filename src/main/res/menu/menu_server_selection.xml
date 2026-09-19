@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_cab_ping"
+        android:icon="@android:drawable/ic_menu_rotate"
+        android:title="@string/bulk_servers_ping"
+        android:contentDescription="@string/bulk_servers_ping"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_cab_edit"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="@string/action_editsrv"
+        android:contentDescription="@string/action_editsrv"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_cab_export"
+        android:icon="@android:drawable/ic_menu_save"
+        android:title="@string/action_export_serverlist"
+        android:contentDescription="@string/action_export_serverlist"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_cab_delete"
+        android:icon="@android:drawable/ic_menu_delete"
+        android:title="@string/action_removesrv"
+        android:contentDescription="@string/action_removesrv"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_cab_select_all"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="@string/bulk_servers_select_all"
+        android:contentDescription="@string/bulk_servers_select_all"
+        app:showAsAction="always" />
+
+</menu>

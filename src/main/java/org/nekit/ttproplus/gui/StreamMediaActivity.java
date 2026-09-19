@@ -57,7 +57,7 @@ import org.nekit.ttproplus.backend.TeamTalkService;
 import org.nekit.ttproplus.data.Permissions;
 import org.nekit.ttproplus.data.Preferences;
 
-public class StreamMediaActivity extends AppCompatActivity implements TeamTalkConnectionListener {
+public class StreamMediaActivity extends AppCompatActivity implements TeamTalkConnectionListener, TeamTalkService.AudioDuckingListener {
     public static final int REQUEST_STREAM_MEDIA = 1;
     public static final int REQUEST_CUSTOM_FILE_PICKER = 2;
     public static final String TAG = "bearware";
@@ -559,6 +559,9 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (getService() != null) {
+            getService().removeAudioDuckingListener(this);
+        }
         stopLocalRadio();
         if (this.mConnection.isBound()) {
             try {
@@ -570,6 +573,23 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
             this.handler.removeCallbacksAndMessages(null);
         }
         cleanTempStreamFiles();
+    }
+
+    @Override
+    public void onAudioDuckingChanged(final boolean ducked, final float duckFactor) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (localMediaPlayer != null) {
+                    try {
+                        float vol = ducked ? duckFactor : 1.0f;
+                        localMediaPlayer.setVolume(vol, vol);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error adjusting localMediaPlayer ducking volume", e);
+                    }
+                }
+            }
+        });
     }
 
     private void cleanTempStreamFiles() {
@@ -613,6 +633,9 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
         if (service != null && service.getEventHandler() != null) {
             service.getEventHandler().registerOnStreamMediaFile(this.streamMediaFileListener, true);
             service.getEventHandler().registerOnLocalMediaFile(this.localMediaFileListener, true);
+        }
+        if (service != null) {
+            service.addAudioDuckingListener(this);
         }
 
         int clientFlags = getClient() != null ? getClient().getFlags() : 0;
@@ -1033,6 +1056,10 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
                     StreamMediaActivity.this.isLocalMediaPlaying = true;
                     StreamMediaActivity.this.liveStreamStartTime = SystemClock.elapsedRealtime();
                     StreamMediaActivity.this.startProgressUpdater();
+                    if (StreamMediaActivity.this.getService() != null && StreamMediaActivity.this.getService().isAudioDucked()) {
+                        float f = StreamMediaActivity.this.getService().getAudioDuckingFactor();
+                        mp.setVolume(f, f);
+                    }
                     mp.start();
                     Toast.makeText(StreamMediaActivity.this, R.string.msg_stream_live_playing, Toast.LENGTH_SHORT).show();
                 }

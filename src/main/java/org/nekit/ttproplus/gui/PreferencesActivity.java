@@ -630,6 +630,8 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             }
         }
 
+
+
                 public boolean lambda$onCreate$0(Preference preference) {
             Intent intent = new Intent(getActivity(), (Class<?>) EqualizerActivity.class);
             startActivity(intent);

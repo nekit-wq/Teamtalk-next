@@ -4,21 +4,23 @@
 
     <item
         android:id="@+id/action_newserverentry"
-        app:showAsAction="always|withText"
+        android:icon="@drawable/ic_add"
         android:orderInCategory="10"
-        android:title="@string/action_new_server">
-    </item>
+        android:title="@string/action_new_server"
+        android:contentDescription="@string/action_new_server"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_refreshserverlist"
+        android:icon="@drawable/ic_refresh"
+        android:orderInCategory="15"
+        android:title="@string/action_refresh"
+        android:contentDescription="@string/action_refresh"
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_enter_joincode"
         app:showAsAction="never"
         android:orderInCategory="20"
         android:title="@string/action_enter_joincode"/>
-    <item
-        android:id="@+id/action_refreshserverlist"
-        android:title="@string/action_refresh"
-        android:orderInCategory="30"
-        app:showAsAction="ifRoom|withText">
-    </item>
     <item
         android:id="@+id/action_import_serverlist"
         app:showAsAction="ifRoom|withText"

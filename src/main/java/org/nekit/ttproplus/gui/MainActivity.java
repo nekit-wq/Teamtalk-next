@@ -120,6 +120,7 @@ import java.util.Vector;
 import java.util.function.Consumer;
 import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.backend.OnVoiceTransmissionToggleListener;
+
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
@@ -267,6 +268,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     private String appliedTheme;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -525,6 +529,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             alert.setNegativeButton(android.R.string.no, (DialogInterface.OnClickListener) null);
             alert.setView(input);
             alert.show();
+            return true;
+        }
+        if (itemId == R.id.action_select_users) {
+            Intent intent = new Intent(this, SelectUsersActivity.class);
+            startActivity(intent);
             return true;
         }
         if (itemId == R.id.action_stream) {

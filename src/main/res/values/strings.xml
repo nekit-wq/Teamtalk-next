@@ -1250,4 +1250,60 @@ By: %3$s"</string>
     <string name="msg_station_saved">Radio station saved</string>
     <string name="msg_station_deleted">Radio station deleted</string>
     <string name="msg_invalid_url">Please enter a valid stream URL (http:// or https://)</string>
+
+    <!-- Audio Ducking -->
+    <string name="pref_cat_audio_ducking">Audio Ducking (Stream Attenuation on Speech)</string>
+    <string name="pref_title_audio_ducking_enabled">Enable Audio Ducking</string>
+    <string name="pref_summary_audio_ducking_enabled">Automatically attenuates background stream when voice is active</string>
+    <string name="pref_title_audio_ducking_level">Ducking volume level</string>
+    <string name="pref_summary_audio_ducking_level">Volume percentage of background stream during speech</string>
+    <string name="pref_title_audio_ducking_trigger">Ducking trigger</string>
+    <string name="pref_summary_audio_ducking_trigger">Choose speech condition to trigger ducking</string>
+
+
+
+    <!-- Bulk Actions on Servers -->
+    <string name="action_bulk_servers">Bulk Server Actions...</string>
+    <string name="bulk_servers_title">Manage Servers</string>
+    <string name="bulk_servers_delete">Delete Selected (%1$d)</string>
+    <string name="bulk_servers_delete_confirm">Are you sure you want to delete %1$d selected servers?</string>
+    <string name="bulk_servers_export">Export Selected (%1$d)</string>
+    <string name="bulk_servers_ping">Check Availability / Ping</string>
+    <string name="bulk_servers_select_all">Select All</string>
+    <string name="bulk_servers_deselect_all">Deselect All</string>
+    <string name="bulk_servers_none_selected">No servers selected</string>
+    <string name="bulk_servers_exported_success">Exported %1$d servers to %2$s</string>
+
+    <!-- Bulk Actions on Users -->
+    <string name="action_select_users">Select Users</string>
+    <string name="bulk_users_title">Select Users</string>
+    <string name="bulk_users_filter_all">All Users</string>
+    <string name="bulk_users_filter_channel">Current Channel</string>
+    <string name="bulk_users_selected_count">Selected: %1$d</string>
+    <string name="bulk_users_select_all">Select All</string>
+    <string name="bulk_users_deselect_all">Deselect All</string>
+    <string name="bulk_users_btn_next">Next</string>
+    <string name="bulk_users_no_users_selected">Please select at least one user</string>
+    <string name="bulk_users_actions_title">Actions for %1$d users</string>
+    <string name="bulk_cat_messages">Messages</string>
+    <string name="bulk_action_send_pm">Send Private Message</string>
+    <string name="bulk_cat_audio">Audio &amp; Volume</string>
+    <string name="bulk_action_mute_voice">Mute Voice (Local)</string>
+    <string name="bulk_action_unmute_voice">Unmute Voice (Local)</string>
+    <string name="bulk_action_mute_media">Mute Media Stream (Local)</string>
+    <string name="bulk_action_set_volume">Set Volume for Selected</string>
+    <string name="bulk_cat_channel">Channel Moderation</string>
+    <string name="bulk_action_move_channel">Move to Channel...</string>
+    <string name="bulk_action_kick_channel">Kick from Channel</string>
+    <string name="bulk_cat_server">Server Administration</string>
+    <string name="bulk_action_kick_server">Kick from Server</string>
+    <string name="bulk_action_ban_server">Ban on Server</string>
+    <string name="bulk_cat_subscriptions">Subscriptions</string>
+    <string name="bulk_action_sub_all">Subscribe to All Streams</string>
+    <string name="bulk_action_unsub_all">Unsubscribe from All</string>
+    <string name="bulk_send_pm_title">Broadcast PM to %1$d users</string>
+    <string name="bulk_send_pm_hint">Enter message text...</string>
+    <string name="bulk_send_pm_sent">Message sent to %1$d users</string>
+    <string name="bulk_move_channel_title">Select Destination Channel</string>
+    <string name="bulk_action_completed">Action applied to %1$d users</string>
 </resources>

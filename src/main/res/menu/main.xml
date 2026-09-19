@@ -15,6 +15,12 @@
         app:showAsAction="always"
         android:title="@string/action_leave"/>
 
+    <item
+        android:id="@+id/action_select_users"
+        android:orderInCategory="95"
+        app:showAsAction="never"
+        android:title="@string/action_select_users"/>
+
     <!-- Section 1: Channel & Broadcast -->
     <item
         android:id="@+id/menu_section_channel"

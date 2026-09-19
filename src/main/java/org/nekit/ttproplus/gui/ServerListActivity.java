@@ -29,12 +29,15 @@ import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
+import android.widget.Button;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.InputType;
@@ -48,6 +51,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
@@ -56,6 +60,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -74,8 +79,10 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -122,6 +129,96 @@ public class ServerListActivity extends AppCompatActivity
     private static final String POSITION_NAME = "pos";
 
     private String appliedTheme;
+    private ActionMode mActionMode;
+
+    private void updateActionModeTitle() {
+        if (mActionMode != null && adapter != null) {
+            int count = adapter.getSelectedCount();
+            mActionMode.setTitle(getString(R.string.bulk_users_selected_count, count));
+        }
+    }
+
+    private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            mActionMode = mode;
+            mode.getMenuInflater().inflate(R.menu.menu_server_selection, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            if (adapter != null && menu != null) {
+                MenuItem editItem = menu.findItem(R.id.action_cab_edit);
+                if (editItem != null) {
+                    editItem.setVisible(adapter.getSelectedCount() == 1);
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            if (adapter == null) return false;
+            int itemId = item.getItemId();
+            List<ServerEntry> selected = adapter.getSelectedServers();
+
+            if (itemId == R.id.action_cab_ping) {
+                if (selected.isEmpty()) {
+                    Toast.makeText(ServerListActivity.this, R.string.bulk_servers_none_selected, Toast.LENGTH_SHORT).show();
+                } else {
+                    performBulkServerPing(selected);
+                }
+                return true;
+            } else if (itemId == R.id.action_cab_edit) {
+                if (selected.size() == 1) {
+                    ServerEntry entry = selected.get(0);
+                    int pos = servers.indexOf(entry);
+                    Intent intent = new Intent(ServerListActivity.this, ServerEntryActivity.class);
+                    startActivityForResult(Utils.putServerEntry(intent, entry).putExtra(POSITION_NAME, pos), REQUEST_EDITSERVER);
+                    mode.finish();
+                }
+                return true;
+            } else if (itemId == R.id.action_cab_export) {
+                if (selected.isEmpty()) {
+                    Toast.makeText(ServerListActivity.this, R.string.bulk_servers_none_selected, Toast.LENGTH_SHORT).show();
+                } else {
+                    performBulkServerExport(selected);
+                    mode.finish();
+                }
+                return true;
+            } else if (itemId == R.id.action_cab_delete) {
+                if (selected.isEmpty()) {
+                    Toast.makeText(ServerListActivity.this, R.string.bulk_servers_none_selected, Toast.LENGTH_SHORT).show();
+                } else {
+                    performBulkServerDelete(selected, mode);
+                }
+                return true;
+            } else if (itemId == R.id.action_cab_select_all) {
+                adapter.toggleSelectAll();
+                mode.invalidate();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            mActionMode = null;
+            if (adapter != null) {
+                adapter.exitSelectionMode();
+            }
+        }
+    };
+
+    @Override
+    public void onBackPressed() {
+        if (mActionMode != null) {
+            mActionMode.finish();
+            return;
+        }
+        super.onBackPressed();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -630,9 +727,71 @@ public class ServerListActivity extends AppCompatActivity
     private class ServerListAdapter extends RecyclerView.Adapter<ServerListAdapter.ServerViewHolder> {
         private final List<ServerEntry> filteredServers = new ArrayList<>();
         private String currentFilter = "";
+        private boolean isSelectionMode = false;
+        private final Set<Integer> selectedPositions = new HashSet<>();
 
         public ServerListAdapter() {
             updateFilteredList();
+        }
+
+        public boolean isSelectionMode() {
+            return isSelectionMode;
+        }
+
+        public int getSelectedCount() {
+            return selectedPositions.size();
+        }
+
+        public List<ServerEntry> getSelectedServers() {
+            List<ServerEntry> list = new ArrayList<>();
+            for (int pos : selectedPositions) {
+                if (pos >= 0 && pos < filteredServers.size()) {
+                    list.add(filteredServers.get(pos));
+                }
+            }
+            return list;
+        }
+
+        public void enterSelectionMode(int initialPosition) {
+            isSelectionMode = true;
+            selectedPositions.clear();
+            if (initialPosition >= 0 && initialPosition < filteredServers.size()) {
+                selectedPositions.add(initialPosition);
+            }
+            notifyDataSetChanged();
+            startSupportActionMode(actionModeCallback);
+            updateActionModeTitle();
+        }
+
+        public void exitSelectionMode() {
+            isSelectionMode = false;
+            selectedPositions.clear();
+            notifyDataSetChanged();
+        }
+
+        public void toggleSelection(int position) {
+            if (selectedPositions.contains(position)) {
+                selectedPositions.remove(position);
+            } else {
+                selectedPositions.add(position);
+            }
+            notifyItemChanged(position);
+            updateActionModeTitle();
+            if (mActionMode != null) {
+                mActionMode.invalidate();
+            }
+        }
+
+        public void toggleSelectAll() {
+            if (selectedPositions.size() == filteredServers.size()) {
+                selectedPositions.clear();
+            } else {
+                for (int i = 0; i < filteredServers.size(); i++) {
+                    selectedPositions.add(i);
+                }
+            }
+            notifyDataSetChanged();
+            updateActionModeTitle();
         }
 
         @NonNull
@@ -676,6 +835,15 @@ public class ServerListActivity extends AppCompatActivity
             
             filteredServers.clear();
             filteredServers.addAll(newFilteredList);
+            if (isSelectionMode) {
+                java.util.Iterator<Integer> it = selectedPositions.iterator();
+                while (it.hasNext()) {
+                    if (it.next() >= filteredServers.size()) {
+                        it.remove();
+                    }
+                }
+                updateActionModeTitle();
+            }
             notifyDataSetChanged();
             updateEmptyView();
         }
@@ -698,12 +866,14 @@ public class ServerListActivity extends AppCompatActivity
         }
 
         private class ServerViewHolder extends RecyclerView.ViewHolder {
+            private final CheckBox serverCheckbox;
             private final ImageView serverIcon;
             private final TextView serverName;
             private final TextView serverSummary;
 
             public ServerViewHolder(@NonNull View itemView) {
                 super(itemView);
+                serverCheckbox = itemView.findViewById(R.id.server_checkbox);
                 serverIcon = itemView.findViewById(R.id.servericon);
                 serverName = itemView.findViewById(R.id.server_name);
                 serverSummary = itemView.findViewById(R.id.server_summary);
@@ -715,13 +885,41 @@ public class ServerListActivity extends AppCompatActivity
                 serverSummary.setText(getString(R.string.text_server_summary, 
                     entry.ipaddr, entry.tcpport, entry.stats_usercount, entry.stats_country));
 
-                itemView.setOnClickListener(v -> onServerClick(entry));
+                if (isSelectionMode) {
+                    if (serverCheckbox != null) {
+                        serverCheckbox.setVisibility(View.VISIBLE);
+                        serverCheckbox.setChecked(selectedPositions.contains(position));
+                    }
+                    itemView.setSelected(selectedPositions.contains(position));
+                } else {
+                    if (serverCheckbox != null) {
+                        serverCheckbox.setVisibility(View.GONE);
+                        serverCheckbox.setChecked(false);
+                    }
+                    itemView.setSelected(false);
+                }
+
+                itemView.setOnClickListener(v -> {
+                    if (isSelectionMode) {
+                        toggleSelection(position);
+                    } else {
+                        onServerClick(entry);
+                    }
+                });
+
                 itemView.setOnLongClickListener(v -> {
-                    onServerLongClick(v, entry, position);
+                    if (!isSelectionMode) {
+                        v.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
+                        enterSelectionMode(position);
+                    } else {
+                        toggleSelection(position);
+                    }
                     return true;
                 });
                 
-                setupAccessibilityActions(entry, position);
+                if (!isSelectionMode) {
+                    setupAccessibilityActions(entry, position);
+                }
             }
 
             private void setupAccessibilityActions(ServerEntry entry, int position) {
@@ -1284,5 +1482,82 @@ public class ServerListActivity extends AppCompatActivity
                 }
             });
         });
+    }
+
+
+    private void performBulkServerPing(final List<ServerEntry> selected) {
+        final ProgressDialog pd = new ProgressDialog(this);
+        pd.setMessage(getString(R.string.net_quality_calculating));
+        pd.setCancelable(false);
+        pd.show();
+
+        new Thread(() -> {
+            final StringBuilder report = new StringBuilder();
+            for (ServerEntry se : selected) {
+                long start = SystemClock.elapsedRealtime();
+                boolean success = false;
+                String err = "";
+                try {
+                    java.net.Socket socket = new java.net.Socket();
+                    socket.connect(new java.net.InetSocketAddress(se.ipaddr, se.tcpport), 3000);
+                    socket.close();
+                    success = true;
+                } catch (Exception e) {
+                    err = (e.getMessage() != null && !e.getMessage().isEmpty()) ? e.getMessage() : "Timeout";
+                }
+                long duration = SystemClock.elapsedRealtime() - start;
+                report.append(se.servername).append(" (").append(se.ipaddr).append("):\n");
+                if (success) {
+                    report.append("  ✓ OK (").append(duration).append(" ms)\n\n");
+                } else {
+                    report.append("  ✗ ").append(err).append("\n\n");
+                }
+            }
+
+            runOnUiThread(() -> {
+                try { pd.dismiss(); } catch (Exception ignored) {}
+                new AlertDialog.Builder(ServerListActivity.this)
+                    .setTitle(R.string.bulk_servers_ping)
+                    .setMessage(report.toString().trim())
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            });
+        }).start();
+    }
+
+    private void performBulkServerExport(final List<ServerEntry> selected) {
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) || Permissions.WRITE_EXTERNAL_STORAGE.request(this)) {
+            File ttFile = createExportFile("servers_export_" + System.currentTimeMillis() + ".tt");
+            if (ttFile != null) {
+                exportToFile(new Vector<>(selected), ttFile, R.string.serverlist_export_confirmation);
+                Toast.makeText(this, getString(R.string.bulk_servers_exported_success, selected.size(), ttFile.getName()), Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void performBulkServerDelete(final List<ServerEntry> selected) {
+        performBulkServerDelete(selected, mActionMode);
+    }
+
+    private void performBulkServerDelete(final List<ServerEntry> selected, final ActionMode mode) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.action_removesrv)
+            .setMessage(getString(R.string.bulk_servers_delete_confirm, selected.size()))
+            .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                synchronized (servers) {
+                    for (ServerEntry se : selected) {
+                        servers.remove(se);
+                        adapter.removeServer(se);
+                    }
+                }
+                saveServers();
+                refreshServerList();
+                Toast.makeText(ServerListActivity.this, getString(R.string.bulk_action_completed, selected.size()), Toast.LENGTH_SHORT).show();
+                if (mode != null) {
+                    mode.finish();
+                }
+            })
+            .setNegativeButton(android.R.string.no, null)
+            .show();
     }
 }

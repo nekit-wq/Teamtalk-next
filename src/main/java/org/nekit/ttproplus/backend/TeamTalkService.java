@@ -80,7 +80,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -186,6 +188,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 if (TeamTalkService.this.ttclient != null && (TeamTalkService.this.ttclient.getFlags() & 2) != 0) {
                     TeamTalkService.this.login();
                 }
+            }
+            if (Preferences.PREF_SOUNDSYSTEM_DUCKING_ENABLED.equals(key) || Preferences.PREF_SOUNDSYSTEM_DUCKING_LEVEL.equals(key) || Preferences.PREF_SOUNDSYSTEM_DUCKING_TRIGGER.equals(key)) {
+                TeamTalkService.this.checkAudioDucking();
             }
         }
     };
@@ -318,6 +323,153 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return this.mFloatingWindowManager;
     }
 
+    public interface AudioDuckingListener {
+        void onAudioDuckingChanged(boolean ducked, float duckFactor);
+    }
+    private final List<AudioDuckingListener> audioDuckingListeners = new CopyOnWriteArrayList<>();
+    private final Set<Integer> talkingPeerUserIds = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final Map<Integer, Integer> originalMediaFileVolumes = new java.util.concurrent.ConcurrentHashMap<>();
+    private boolean isMyselfTalking = false;
+    private boolean isAudioDucked = false;
+    private final Handler duckingHandler = new Handler(Looper.getMainLooper());
+    private final Runnable unduckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setAudioDucked(false);
+        }
+    };
+    private final Runnable duckingWatchdogRunnable = new Runnable() {
+        @Override
+        public void run() {
+            checkAudioDucking();
+        }
+    };
+
+    public void addAudioDuckingListener(AudioDuckingListener listener) {
+        if (listener != null && !audioDuckingListeners.contains(listener)) {
+            audioDuckingListeners.add(listener);
+        }
+    }
+
+    public void removeAudioDuckingListener(AudioDuckingListener listener) {
+        audioDuckingListeners.remove(listener);
+    }
+
+    public boolean isAudioDucked() {
+        return isAudioDucked;
+    }
+
+    public float getAudioDuckingFactor() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int levelPercent = 20;
+        try {
+            levelPercent = Integer.parseInt(pref.getString(Preferences.PREF_SOUNDSYSTEM_DUCKING_LEVEL, "20"));
+        } catch (Exception ignored) {}
+        return levelPercent / 100.0f;
+    }
+
+    public synchronized void checkAudioDucking() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (!pref.getBoolean(Preferences.PREF_SOUNDSYSTEM_DUCKING_ENABLED, false)) {
+            if (isAudioDucked) {
+                duckingHandler.removeCallbacks(unduckRunnable);
+                duckingHandler.removeCallbacks(duckingWatchdogRunnable);
+                setAudioDucked(false);
+            }
+            return;
+        }
+
+        if (this.mychannel == null || this.ttclient == null) {
+            this.talkingPeerUserIds.clear();
+        } else {
+            this.talkingPeerUserIds.removeIf(uid -> {
+                User u = this.users.get(uid);
+                return u == null || u.nChannelID != this.mychannel.nChannelID || (u.uUserState & 1) == 0;
+            });
+        }
+
+        String trigger = pref.getString(Preferences.PREF_SOUNDSYSTEM_DUCKING_TRIGGER, "all");
+        boolean voiceActive = false;
+        boolean peerTalking = !talkingPeerUserIds.isEmpty();
+        if ("all".equals(trigger)) {
+            voiceActive = isMyselfTalking || peerTalking;
+        } else if ("tx".equals(trigger)) {
+            voiceActive = isMyselfTalking;
+        } else if ("rx".equals(trigger)) {
+            voiceActive = peerTalking;
+        }
+
+        if (voiceActive) {
+            duckingHandler.removeCallbacks(unduckRunnable);
+            if (!isAudioDucked) {
+                setAudioDucked(true);
+            }
+            duckingHandler.removeCallbacks(duckingWatchdogRunnable);
+            duckingHandler.postDelayed(duckingWatchdogRunnable, 3500);
+        } else {
+            duckingHandler.removeCallbacks(duckingWatchdogRunnable);
+            if (isAudioDucked) {
+                duckingHandler.removeCallbacks(unduckRunnable);
+                duckingHandler.postDelayed(unduckRunnable, 1000);
+            }
+        }
+    }
+
+    private synchronized void setAudioDucked(boolean duck) {
+        if (this.isAudioDucked == duck) {
+            return;
+        }
+        this.isAudioDucked = duck;
+        float factor = getAudioDuckingFactor();
+
+        for (AudioDuckingListener listener : audioDuckingListeners) {
+            try {
+                listener.onAudioDuckingChanged(duck, factor);
+            } catch (Exception e) {
+                Log.e("bearware", "Error notifying ducking listener", e);
+            }
+        }
+
+        if (this.ttclient != null) {
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            int defaultMf = pref.getInt(Preferences.PREF_SOUNDSYSTEM_MEDIAFILE_VOLUME, 50);
+            if (duck) {
+                if (this.mychannel != null) {
+                    for (User u : this.users.values()) {
+                        if (u.nChannelID == this.mychannel.nChannelID) {
+                            int basePercent;
+                            if (originalMediaFileVolumes.containsKey(u.nUserID)) {
+                                basePercent = originalMediaFileVolumes.get(u.nUserID);
+                            } else {
+                                basePercent = u.nVolumeMediaFile > 0 ? Utils.refVolumeToPercent(u.nVolumeMediaFile) : defaultMf;
+                                originalMediaFileVolumes.put(u.nUserID, basePercent);
+                            }
+                            int targetPercent = Math.max(0, Math.min(100, Math.round(basePercent * factor)));
+                            this.ttclient.setUserVolume(u.nUserID, 4, Utils.refVolume(targetPercent));
+                        }
+                    }
+                }
+            } else {
+                if (this.mychannel != null) {
+                    for (User u : this.users.values()) {
+                        if (u.nChannelID == this.mychannel.nChannelID) {
+                            int origVol = originalMediaFileVolumes.containsKey(u.nUserID)
+                                    ? originalMediaFileVolumes.get(u.nUserID)
+                                    : (u.nVolumeMediaFile > 0 ? Utils.refVolumeToPercent(u.nVolumeMediaFile) : defaultMf);
+                            this.ttclient.setUserVolume(u.nUserID, 4, Utils.refVolume(origVol));
+                        }
+                    }
+                }
+                for (Map.Entry<Integer, Integer> entry : originalMediaFileVolumes.entrySet()) {
+                    int uid = entry.getKey();
+                    int origVol = entry.getValue();
+                    this.ttclient.setUserVolume(uid, 4, Utils.refVolume(origVol));
+                }
+                originalMediaFileVolumes.clear();
+            }
+        }
+    }
+
     public void resetState() {
         this.manualDisconnect = true;
         this.isSeamlessReconnecting = false;
@@ -328,6 +480,14 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.antispam_window_start = 0L;
         this.antispam_blocked.clear();
         this.antispam_user_counts.clear();
+        this.talkingPeerUserIds.clear();
+        this.isMyselfTalking = false;
+        this.duckingHandler.removeCallbacks(this.unduckRunnable);
+        this.duckingHandler.removeCallbacks(this.duckingWatchdogRunnable);
+        if (this.isAudioDucked) {
+            setAudioDucked(false);
+        }
+        this.originalMediaFileVolumes.clear();
         disablePhoneCallReaction();
         unwatchBluetoothHeadset();
         if (isRecording()) {
@@ -369,6 +529,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public Map<Integer, User> getUsers() {
         return this.users;
     }
+
 
         public class LocalBinder extends Binder {
         public LocalBinder() {
@@ -945,6 +1106,8 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     private void setMyChannel(Channel chan) {
         this.mychannel = chan;
+        this.talkingPeerUserIds.clear();
+        checkAudioDucking();
         setupAudioPreprocessor();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String sessionMode = prefs.getString(Preferences.PREF_RECORDING_SESSION_MODE, "stop");
@@ -1075,6 +1238,8 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.ttclient.closeSoundInputDevice();
         }
         adjustMuteOnTx(enable);
+        this.isMyselfTalking = enable;
+        checkAudioDucking();
         updateFloatingWindow();
     }
 
@@ -1946,6 +2111,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     @Override
     public void onCmdUserLoggedOut(User user) {
         this.users.remove(Integer.valueOf(user.nUserID));
+        this.talkingPeerUserIds.remove(Integer.valueOf(user.nUserID));
+        this.originalMediaFileVolumes.remove(Integer.valueOf(user.nUserID));
+        checkAudioDucking();
         String name = Utils.getDisplayName(getBaseContext(), user);
         MyTextMessage msg = MyTextMessage.createLogMsg(Integer.MIN_VALUE, name + " " + getResources().getString(R.string.text_cmd_userloggedout));
         getChatLogTextMsgs().add(msg);
@@ -1987,7 +2155,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         int mf_volume = pref.getInt(Preferences.PREF_SOUNDSYSTEM_MEDIAFILE_VOLUME, 50);
-        this.ttclient.setUserVolume(user.nUserID, 4, Utils.refVolume(mf_volume));
+        if (this.isAudioDucked) {
+            this.originalMediaFileVolumes.put(user.nUserID, mf_volume);
+        }
+        int targetVol = (this.isAudioDucked) ? Math.round(mf_volume * getAudioDuckingFactor()) : mf_volume;
+        this.ttclient.setUserVolume(user.nUserID, 4, Utils.refVolume(targetVol));
         this.ttclient.pumpMessage(500, user.nUserID);
         if (!UserCached.getCacheID(user).isEmpty()) {
             UserAccount myaccount = new UserAccount();
@@ -2001,6 +2173,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void onCmdUserLeftChannel(int channelid, User user) {
         MyTextMessage msg;
         this.users.put(Integer.valueOf(user.nUserID), user);
+        this.talkingPeerUserIds.remove(Integer.valueOf(user.nUserID));
+        this.originalMediaFileVolumes.remove(Integer.valueOf(user.nUserID));
+        checkAudioDucking();
         if (this.mychannel != null && this.mychannel.nChannelID == channelid) {
             Channel chan = getChannels().get(Integer.valueOf(channelid));
             if (user.nUserID == this.ttclient.getMyUserID()) {
@@ -2138,8 +2313,22 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void onUserStateChange(User user) {
         this.users.put(Integer.valueOf(user.nUserID), user);
         updateFloatingWindow();
-        if (this.mychannel != null && user != null && user.nChannelID == this.mychannel.nChannelID && (user.uUserState & 1) != 0) {
-            onVoiceDetected();
+        if (this.mychannel != null && user != null && user.nChannelID == this.mychannel.nChannelID) {
+            if ((user.uUserState & 1) != 0) {
+                onVoiceDetected();
+                if (this.ttclient != null && user.nUserID != this.ttclient.getMyUserID()) {
+                    this.talkingPeerUserIds.add(Integer.valueOf(user.nUserID));
+                }
+            } else {
+                if (this.ttclient != null && user.nUserID != this.ttclient.getMyUserID()) {
+                    this.talkingPeerUserIds.remove(Integer.valueOf(user.nUserID));
+                }
+            }
+            checkAudioDucking();
+        } else if (user != null) {
+            if (this.talkingPeerUserIds.remove(Integer.valueOf(user.nUserID))) {
+                checkAudioDucking();
+            }
         }
     }
 
@@ -2147,6 +2336,8 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void onVoiceActivation(boolean bVoiceActive) {
         adjustMuteOnTx(bVoiceActive);
         updateFloatingWindow();
+        this.isMyselfTalking = bVoiceActive;
+        checkAudioDucking();
         if (bVoiceActive) {
             onVoiceDetected();
         }

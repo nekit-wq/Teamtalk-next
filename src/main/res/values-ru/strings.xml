@@ -1246,4 +1246,61 @@
     <string name="msg_station_saved">Радиостанция сохранена</string>
     <string name="msg_station_deleted">Радиостанция удалена</string>
     <string name="msg_invalid_url">Укажите корректный URL потока (http:// или https://)</string>
+    <string name="action_select_users">Выбрать пользователей</string>
+
+    <!-- Audio Ducking -->
+    <string name="pref_cat_audio_ducking">Audio Ducking (Приглушение фонового звука)</string>
+    <string name="pref_title_audio_ducking_enabled">Включить приглушение фонового звука</string>
+    <string name="pref_summary_audio_ducking_enabled">Автоматически снижает громкость музыки и радио при появлении голоса</string>
+    <string name="pref_title_audio_ducking_level">Уровень громкости при приглушении</string>
+    <string name="pref_summary_audio_ducking_level">Громкость фонового потока во время речи</string>
+    <string name="pref_title_audio_ducking_trigger">Условие приглушения</string>
+    <string name="pref_summary_audio_ducking_trigger">Когда активировать приглушение стрима</string>
+
+
+
+
+    <!-- Bulk Actions on Servers -->
+    <string name="action_bulk_servers">Массовые действия над серверами...</string>
+    <string name="bulk_servers_title">Управление серверами</string>
+    <string name="bulk_servers_delete">Удалить выбранные (%1$d)</string>
+    <string name="bulk_servers_delete_confirm">Вы уверены, что хотите удалить выбранные серверы (%1$d шт.)?</string>
+    <string name="bulk_servers_export">Экспортировать выбранные (%1$d)</string>
+    <string name="bulk_servers_ping">Проверить доступность / Пинг</string>
+    <string name="bulk_servers_select_all">Выбрать все</string>
+    <string name="bulk_servers_deselect_all">Снять выбор</string>
+    <string name="bulk_servers_none_selected">Ни один сервер не выбран</string>
+    <string name="bulk_servers_exported_success">Экспортировано серверов: %1$d в %2$s</string>
+
+    <!-- Bulk Actions on Users -->
+    <string name="bulk_users_title">Выбор пользователей</string>
+    <string name="bulk_users_filter_all">Все пользователи</string>
+    <string name="bulk_users_filter_channel">В моем канале</string>
+    <string name="bulk_users_selected_count">Выбрано: %1$d</string>
+    <string name="bulk_users_select_all">Выбрать всех</string>
+    <string name="bulk_users_deselect_all">Снять выбор</string>
+    <string name="bulk_users_btn_next">Далее</string>
+    <string name="bulk_users_no_users_selected">Пожалуйста, выберите хотя бы одного пользователя</string>
+    <string name="bulk_users_actions_title">Действия над пользователями (%1$d)</string>
+    <string name="bulk_cat_messages">Сообщения</string>
+    <string name="bulk_action_send_pm">Разослать личное сообщение (ЛС)</string>
+    <string name="bulk_cat_audio">Управление звуком</string>
+    <string name="bulk_action_mute_voice">Выключить звук (локально)</string>
+    <string name="bulk_action_unmute_voice">Включить звук (локально)</string>
+    <string name="bulk_action_mute_media">Выключить медиа-поток (локально)</string>
+    <string name="bulk_action_set_volume">Задать одинаковую громкость</string>
+    <string name="bulk_cat_channel">Модерация в канале</string>
+    <string name="bulk_action_move_channel">Переместить в канал...</string>
+    <string name="bulk_action_kick_channel">Кикнуть из канала</string>
+    <string name="bulk_cat_server">Администрирование сервера</string>
+    <string name="bulk_action_kick_server">Кикнуть с сервера</string>
+    <string name="bulk_action_ban_server">Забанить на сервере</string>
+    <string name="bulk_cat_subscriptions">Подписки</string>
+    <string name="bulk_action_sub_all">Подписаться на всё</string>
+    <string name="bulk_action_unsub_all">Отписаться от всего</string>
+    <string name="bulk_send_pm_title">Рассылка ЛС (%1$d польз.)</string>
+    <string name="bulk_send_pm_hint">Введите текст сообщения...</string>
+    <string name="bulk_send_pm_sent">Сообщение отправлено %1$d пользователям</string>
+    <string name="bulk_move_channel_title">Выберите целевой канал</string>
+    <string name="bulk_action_completed">Действие применено к %1$d пользователям</string>
 </resources>

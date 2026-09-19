@@ -164,6 +164,7 @@
             android:exported="false"
             android:stopWithTask="false" />
 
+
         <activity
             android:name=".gui.CustomFilePickerActivity"
             android:label="@string/custom_picker_title"
@@ -205,6 +206,11 @@
             android:label="@string/online_users"
             android:exported="false">
         </activity>
+
+        <activity
+            android:name=".gui.SelectUsersActivity"
+            android:label="@string/action_select_users"
+            android:exported="false" />
 
         <activity
             android:name=".gui.UserAccountsActivity"

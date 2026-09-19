@@ -69,7 +69,10 @@ public class Preferences {
             PREF_EQ_MIC_SPEEX_AGC_MAX_GAIN = "eq_mic_speex_agc_max_gain",
             PREF_EQ_MIC_HPF = "eq_mic_hpf",
             PREF_EQ_MIC_BAND_COUNT = "eq_mic_band_count",
-            PREF_EQ_MIC_BAND_PREFIX = "eq_mic_band_";
+            PREF_EQ_MIC_BAND_PREFIX = "eq_mic_band_",
+            PREF_SOUNDSYSTEM_DUCKING_ENABLED = "audio_ducking_enabled",
+            PREF_SOUNDSYSTEM_DUCKING_LEVEL = "audio_ducking_level",
+            PREF_SOUNDSYSTEM_DUCKING_TRIGGER = "audio_ducking_trigger";
     public static final String
             PREF_JOIN_ROOT_CHAN = "auto_join_root_checkbox",
             PREF_CONNECTION_SEAMLESS_RECONNECT = "seamless_reconnect",

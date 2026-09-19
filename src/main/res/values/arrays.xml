@@ -134,4 +134,26 @@
         <item>30</item>
         <item>60</item>
     </string-array>
+
+    <string-array name="audio_ducking_level_entries">
+        <item>10% (Strong attenuation)</item>
+        <item>20% (Recommended)</item>
+        <item>30% (Moderate)</item>
+        <item>50% (Soft)</item>
+    </string-array>
+    <string-array name="audio_ducking_level_values">
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+        <item>50</item>
+    </string-array>
+    <string-array name="audio_ducking_trigger_entries">
+        <item>When anyone in channel speaks</item>
+        <item>Only when I transmit</item>
+    </string-array>
+    <string-array name="audio_ducking_trigger_values">
+        <item>all</item>
+        <item>tx</item>
+    </string-array>
+
 </resources>

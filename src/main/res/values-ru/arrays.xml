@@ -81,4 +81,26 @@
         <item>Через 30 секунд тишины</item>
         <item>Через 60 секунд тишины</item>
     </string-array>
+
+    <string-array name="audio_ducking_level_entries">
+        <item>10% (Сильное приглушение)</item>
+        <item>20% (Рекомендуемое)</item>
+        <item>30% (Умеренное)</item>
+        <item>50% (Мягкое)</item>
+    </string-array>
+    <string-array name="audio_ducking_level_values">
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+        <item>50</item>
+    </string-array>
+    <string-array name="audio_ducking_trigger_entries">
+        <item>При любой речи в канале</item>
+        <item>Только когда говорю я</item>
+    </string-array>
+    <string-array name="audio_ducking_trigger_values">
+        <item>all</item>
+        <item>tx</item>
+    </string-array>
+
 </resources>

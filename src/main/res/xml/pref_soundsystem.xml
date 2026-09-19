@@ -7,4 +7,29 @@
     <CheckBoxPreference android:title="@string/pref_title_voice_processing_checkbox" android:key="voiceprocessing_checkbox" android:summary="@string/pref_summary_voice_processing_checkbox" android:defaultValue="false" />
     <CheckBoxPreference android:title="@string/pref_title_bluetooth_headset_checkbox" android:key="bluetooth_headset_checkbox" android:summary="@string/pref_summary_bluetooth_headset_checkbox" android:defaultValue="false" />
     <org.nekit.ttproplus.gui.SeekBarPreference android:title="@string/pref_title_mediafile_volume" android:key="mediafilevolume_seekbar" android:summary="@string/pref_summary_mediafile_volume" android:defaultValue="50" />
+
+    <PreferenceCategory android:title="@string/pref_cat_audio_ducking">
+        <CheckBoxPreference
+            android:title="@string/pref_title_audio_ducking_enabled"
+            android:key="audio_ducking_enabled"
+            android:summary="@string/pref_summary_audio_ducking_enabled"
+            android:defaultValue="false" />
+        <ListPreference
+            android:title="@string/pref_title_audio_ducking_level"
+            android:key="audio_ducking_level"
+            android:summary="@string/pref_summary_audio_ducking_level"
+            android:dependency="audio_ducking_enabled"
+            android:defaultValue="30"
+            android:entries="@array/audio_ducking_level_entries"
+            android:entryValues="@array/audio_ducking_level_values" />
+        <ListPreference
+            android:title="@string/pref_title_audio_ducking_trigger"
+            android:key="audio_ducking_trigger"
+            android:summary="@string/pref_summary_audio_ducking_trigger"
+            android:dependency="audio_ducking_enabled"
+            android:defaultValue="all"
+            android:entries="@array/audio_ducking_trigger_entries"
+            android:entryValues="@array/audio_ducking_trigger_values" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

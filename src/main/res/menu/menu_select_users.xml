@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_bulk_next"
+        android:title="@string/bulk_users_btn_next"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_bulk_select_all"
+        android:title="@string/bulk_users_select_all"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_bulk_deselect_all"
+        android:title="@string/bulk_users_deselect_all"
+        app:showAsAction="never" />
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/action_filter_all_users"
+            android:checked="true"
+            android:title="@string/bulk_users_filter_all"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/action_filter_channel_users"
+            android:checked="false"
+            android:title="@string/bulk_users_filter_channel"
+            app:showAsAction="never" />
+    </group>
+
+</menu>

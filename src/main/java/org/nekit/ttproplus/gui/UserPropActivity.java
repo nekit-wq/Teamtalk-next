@@ -185,6 +185,40 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         if (this.tvClientversion != null) this.tvClientversion.setVisibility(View.GONE);
     }
 
+    private void applyVoiceVolume(int progress) {
+        int refVol = Utils.refVolume(progress);
+        this.user.nVolumeVoice = refVol;
+        TeamTalkBase c = getClient();
+        if (c != null) {
+            c.setUserVolume(this.user.nUserID, StreamType.STREAMTYPE_VOICE, refVol);
+            c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, this.user.nUserID);
+        }
+        TeamTalkService srv = getService();
+        if (srv != null && srv.getUsers() != null) {
+            User cached = srv.getUsers().get(Integer.valueOf(this.user.nUserID));
+            if (cached != null) {
+                cached.nVolumeVoice = refVol;
+            }
+        }
+    }
+
+    private void applyMediaVolume(int progress) {
+        int refVol = Utils.refVolume(progress);
+        this.user.nVolumeMediaFile = refVol;
+        TeamTalkBase c = getClient();
+        if (c != null) {
+            c.setUserVolume(this.user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, refVol);
+            c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, this.user.nUserID);
+        }
+        TeamTalkService srv = getService();
+        if (srv != null && srv.getUsers() != null) {
+            User cached = srv.getUsers().get(Integer.valueOf(this.user.nUserID));
+            if (cached != null) {
+                cached.nVolumeMediaFile = refVol;
+            }
+        }
+    }
+
     private void setupListeners() {
         this.voiceLeftSpeakerSwitch.setOnCheckedChangeListener((btn, checked) -> {
             if (this.isUpdatingUi) return;
@@ -225,15 +259,12 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         SeekBar.OnSeekBarChangeListener volListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (UserPropActivity.this.isUpdatingUi || !fromUser) return;
-                TeamTalkBase c = getClient();
-                if (c == null) return;
+                if (UserPropActivity.this.isUpdatingUi) return;
                 if (seekBar == UserPropActivity.this.voiceVol) {
-                    c.setUserVolume(UserPropActivity.this.user.nUserID, StreamType.STREAMTYPE_VOICE, Utils.refVolume(progress));
+                    applyVoiceVolume(progress);
                 } else if (seekBar == UserPropActivity.this.mediaVol) {
-                    c.setUserVolume(UserPropActivity.this.user.nUserID, StreamType.STREAMTYPE_MEDIAFILE_AUDIO, Utils.refVolume(progress));
+                    applyMediaVolume(progress);
                 }
-                c.pumpMessage(ClientEvent.CLIENTEVENT_USER_STATECHANGE, UserPropActivity.this.user.nUserID);
             }
 
             @Override public void onStartTrackingTouch(SeekBar arg0) {}
@@ -242,8 +273,16 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         this.voiceVol.setOnSeekBarChangeListener(volListener);
         this.mediaVol.setOnSeekBarChangeListener(volListener);
 
-        this.defVoiceBtn.setOnClickListener(v -> this.voiceVol.setProgress(Utils.refVolumeToPercent(SoundLevel.SOUND_VOLUME_DEFAULT)));
-        this.defMfBtn.setOnClickListener(v -> this.mediaVol.setProgress(Utils.refVolumeToPercent(SoundLevel.SOUND_VOLUME_DEFAULT)));
+        this.defVoiceBtn.setOnClickListener(v -> {
+            int defPercent = Utils.refVolumeToPercent(SoundLevel.SOUND_VOLUME_DEFAULT);
+            this.voiceVol.setProgress(defPercent);
+            applyVoiceVolume(defPercent);
+        });
+        this.defMfBtn.setOnClickListener(v -> {
+            int defPercent = Utils.refVolumeToPercent(SoundLevel.SOUND_VOLUME_DEFAULT);
+            this.mediaVol.setProgress(defPercent);
+            applyMediaVolume(defPercent);
+        });
 
         CompoundButton.OnCheckedChangeListener muteListener = (btn, checked) -> {
             if (this.isUpdatingUi) return;
