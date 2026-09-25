@@ -1336,8 +1336,8 @@ By: %3$s"</string>
     <!-- Microphone & Capture Settings -->
     <string name="pref_title_experimental_capture_mode">Microphone mode</string>
     <string name="pref_summary_experimental_capture_mode">Choose how TeamTalk captures your microphone</string>
-    <string name="pref_experimental_capture_mode_disabled_title">Default</string>
-    <string name="pref_experimental_capture_mode_disabled_summary">Use device default microphone configuration</string>
+    <string name="pref_experimental_capture_mode_disabled_title">Default (Stereo / Mono)</string>
+    <string name="pref_experimental_capture_mode_disabled_summary">Prefer stereo by default, auto fallback to mono if unsupported</string>
     <string name="pref_experimental_capture_mode_mono_title">Mono</string>
     <string name="pref_experimental_capture_mode_mono_summary">Force mono capture</string>
     <string name="pref_experimental_capture_mode_stereo_title">Stereo preferred</string>

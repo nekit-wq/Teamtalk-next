@@ -1332,8 +1332,8 @@
     <!-- Microphone & Capture Settings -->
     <string name="pref_title_experimental_capture_mode">Режим захвата микрофона</string>
     <string name="pref_summary_experimental_capture_mode">Выберите режим захвата микрофона TeamTalk</string>
-    <string name="pref_experimental_capture_mode_disabled_title">По умолчанию</string>
-    <string name="pref_experimental_capture_mode_disabled_summary">Использовать стандартный захват устройства</string>
+    <string name="pref_experimental_capture_mode_disabled_title">По умолчанию (Стерео / Моно)</string>
+    <string name="pref_experimental_capture_mode_disabled_summary">Стерео по умолчанию, авто-откат на моно при отсутствии поддержки</string>
     <string name="pref_experimental_capture_mode_mono_title">Моно</string>
     <string name="pref_experimental_capture_mode_mono_summary">Принудительный захват в моно</string>
     <string name="pref_experimental_capture_mode_stereo_title">Стерео (приоритет)</string>

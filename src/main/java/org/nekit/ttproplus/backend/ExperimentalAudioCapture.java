@@ -208,7 +208,7 @@ public final class ExperimentalAudioCapture {
 
         public void applyPreprocessorsConfig(boolean enable) {
             if (preprocessors != null) {
-                if (enable) {
+                if (enable && this.channels == 1) {
                     preprocessors.enable();
                 } else {
                     preprocessors.disable();
@@ -709,48 +709,60 @@ public final class ExperimentalAudioCapture {
     }
 
     private CaptureSession openSessionForConfig(Config config) {
-        boolean stereoPreferred = config.captureMode == MicrophoneInputHelper.CAPTURE_MODE_STEREO;
         AudioDeviceInfo preferredDevice = findPreferredInputDevice(config.preferredInputDeviceId);
 
+        // If explicitly forced to MONO, skip stereo pass
+        if (config.captureMode == MicrophoneInputHelper.CAPTURE_MODE_MONO) {
+            return openSessionInternal(config, preferredDevice, false);
+        }
+
+        // For DEFAULT (0) and STEREO (2): ALWAYS try Stereo first!
+        CaptureSession stereoSession = openSessionInternal(config, preferredDevice, true);
+        if (stereoSession != null) {
+            Log.i(TAG, "Stereo microphone capture session initialized successfully (2 channels)");
+            return stereoSession;
+        }
+
+        // If stereo failed on this device, smoothly fall back to mono
+        Log.i(TAG, "Stereo microphone capture not supported by device, falling back to mono (1 channel)");
+        return openSessionInternal(config, preferredDevice, false);
+    }
+
+    private CaptureSession openSessionInternal(Config config, AudioDeviceInfo preferredDevice, boolean stereo) {
         LinkedHashSet<Integer> sampleRates = new LinkedHashSet<>();
-        if (stereoPreferred) {
+        if (stereo) {
             sampleRates.add(OpusConstants.DEFAULT_OPUS_SAMPLERATE);
             sampleRates.add(44100);
-            sampleRates.add(config.sampleRate);
+            if (config.sampleRate > 0) sampleRates.add(config.sampleRate);
             sampleRates.add(32000);
             sampleRates.add(16000);
             sampleRates.add(8000);
         } else {
-            sampleRates.add(config.sampleRate);
+            if (config.sampleRate > 0) sampleRates.add(config.sampleRate);
             sampleRates.add(16000);
             sampleRates.add(OpusConstants.DEFAULT_OPUS_SAMPLERATE);
             sampleRates.add(8000);
         }
 
         int[] sources;
-        int[] channelMasks;
-        if (stereoPreferred) {
+        int channelMask = stereo ? AudioFormat.CHANNEL_IN_STEREO : AudioFormat.CHANNEL_IN_MONO;
+        if (stereo) {
+            // Prioritize stereo-capable recording sources
             sources = new int[]{5, 9, 6, 1, 0}; // CAMCORDER, UNPROCESSED, VOICE_RECOGNITION, MIC, DEFAULT
-            channelMasks = new int[]{AudioFormat.CHANNEL_IN_STEREO};
-        } else if (config.captureMode == MicrophoneInputHelper.CAPTURE_MODE_MONO) {
-            sources = new int[]{9, 6, 1, 5, 0, 7}; // UNPROCESSED, VOICE_RECOGNITION, MIC, CAMCORDER, DEFAULT, VOICE_COMMUNICATION
-            channelMasks = new int[]{AudioFormat.CHANNEL_IN_MONO};
         } else {
-            sources = new int[]{7, 1, 6, 0}; // VOICE_COMMUNICATION, MIC, VOICE_RECOGNITION, DEFAULT
-            channelMasks = new int[]{AudioFormat.CHANNEL_IN_MONO};
+            // Mono sources
+            sources = new int[]{7, 1, 6, 0, 9, 5}; // VOICE_COMMUNICATION, MIC, VOICE_RECOGNITION, DEFAULT, UNPROCESSED, CAMCORDER
         }
 
         for (int sr : sampleRates) {
             if (sr <= 0) continue;
             for (int source : sources) {
-                for (int mask : channelMasks) {
-                    CaptureSession session = buildCaptureSession(config, preferredDevice, sr, source, mask);
-                    if (session != null) {
-                        if (startCaptureSession(session)) {
-                            return session;
-                        } else {
-                            session.release();
-                        }
+                CaptureSession session = buildCaptureSession(config, preferredDevice, sr, source, channelMask);
+                if (session != null) {
+                    if (startCaptureSession(session)) {
+                        return session;
+                    } else {
+                        session.release();
                     }
                 }
             }
