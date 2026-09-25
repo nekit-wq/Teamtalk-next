@@ -1260,8 +1260,6 @@ By: %3$s"</string>
     <string name="pref_title_audio_ducking_trigger">Ducking trigger</string>
     <string name="pref_summary_audio_ducking_trigger">Choose speech condition to trigger ducking</string>
 
-
-
     <!-- Bulk Actions on Servers -->
     <string name="action_bulk_servers">Bulk Server Actions...</string>
     <string name="bulk_servers_title">Manage Servers</string>
@@ -1306,4 +1304,115 @@ By: %3$s"</string>
     <string name="bulk_send_pm_sent">Message sent to %1$d users</string>
     <string name="bulk_move_channel_title">Select Destination Channel</string>
     <string name="bulk_action_completed">Action applied to %1$d users</string>
+
+    <!-- Voice Changer & Effects -->
+    <string name="voice_changer_title">Voice Effects</string>
+    <string name="voice_changer_active">Active voice effect: %s</string>
+    <string name="voice_effect_off">Normal</string>
+    <string name="voice_effect_echo">Echo &amp; Reverb</string>
+    <string name="voice_effect_deep">Deep Voice</string>
+    <string name="voice_effect_chipmunk">Chipmunk</string>
+    <string name="voice_effect_robot">Robot</string>
+    <string name="voice_effect_radio">Walkie-Talkie</string>
+    <string name="voice_effect_megaphone">Megaphone</string>
+    <string name="voice_effect_monster">Monster</string>
+    <string name="voice_effect_alien">Alien</string>
+    <string name="voice_effect_underwater">Underwater</string>
+    <string name="voice_effect_chorus">Chorus</string>
+    <string name="voice_effect_telephone">Telephone</string>
+    <string name="voice_effect_ghost">Ghost</string>
+
+    <!-- Echo & Reverb Settings Dialog -->
+    <string name="dialog_echo_reverb_title">Echo &amp; Reverb Parameters</string>
+    <string name="chk_echo_enable">Enable Echo</string>
+    <string name="label_echo_level">Echo: %d%%</string>
+    <string name="label_echo_level_default">Echo: 35%</string>
+    <string name="chk_reverb_enable">Enable Reverb</string>
+    <string name="label_reverb_level">Reverb: %d%%</string>
+    <string name="label_reverb_level_default">Reverb: 50%</string>
+    <string name="label_reverb_room">Room Size: %d%%</string>
+    <string name="label_reverb_room_default">Room Size: 60%</string>
+
+    <!-- Microphone & Capture Settings -->
+    <string name="pref_title_experimental_capture_mode">Microphone mode</string>
+    <string name="pref_summary_experimental_capture_mode">Choose how TeamTalk captures your microphone</string>
+    <string name="pref_experimental_capture_mode_disabled_title">Default</string>
+    <string name="pref_experimental_capture_mode_disabled_summary">Use device default microphone configuration</string>
+    <string name="pref_experimental_capture_mode_mono_title">Mono</string>
+    <string name="pref_experimental_capture_mode_mono_summary">Force mono capture</string>
+    <string name="pref_experimental_capture_mode_stereo_title">Stereo preferred</string>
+    <string name="pref_experimental_capture_mode_stereo_summary">Try stereo first, then use mono if needed</string>
+
+    <string name="pref_title_experimental_input_device">Preferred input device</string>
+    <string name="pref_summary_experimental_input_device">Choose which Android input device TeamTalk should prefer</string>
+    <string name="pref_experimental_input_device_default_title">System default</string>
+    <string name="pref_experimental_input_device_default_summary">Let Android choose the current input device automatically</string>
+    <string name="pref_microphone_device_builtin_title">Phone microphone</string>
+    <string name="pref_microphone_device_builtin_summary">Use device internal microphone</string>
+    <string name="pref_microphone_device_wired_title">Wired headset</string>
+    <string name="pref_microphone_device_wired_summary">Audio jack connection</string>
+    <string name="pref_microphone_device_usb_title">USB audio device</string>
+    <string name="pref_microphone_device_usb_summary">External USB audio device</string>
+    <string name="pref_microphone_device_bluetooth_title">Bluetooth headset</string>
+    <string name="pref_microphone_device_bluetooth_summary">Wireless Bluetooth audio</string>
+
+    <string name="pref_title_detected_microphones">Detected microphones</string>
+    <string name="pref_summary_detected_microphones">View the microphones Android reports on this device</string>
+    <string name="pref_summary_detected_microphones_count">%1$d microphones reported by Android</string>
+    <string name="pref_summary_detected_microphones_none">Android did not report any microphone details.</string>
+    <string name="pref_summary_detected_microphones_unsupported">Android microphone details need Android 9 or newer.</string>
+    <string name="pref_microphone_detected_report_intro">Android can report microphone hardware details here so you can inspect what the device exposes.</string>
+    <string name="pref_microphone_detected_report_limit">Physical microphone report:</string>
+    <string name="pref_microphone_unknown_name">Microphone %1$d</string>
+    <string name="pref_microphone_report_type">Type: %1$s</string>
+    <string name="pref_microphone_report_location">Location: %1$s</string>
+    <string name="pref_microphone_report_group">Group / index: %1$s</string>
+    <string name="pref_microphone_report_directionality">Directionality: %1$s</string>
+    <string name="pref_microphone_type_builtin">Built-in mic</string>
+    <string name="pref_microphone_type_wired_headset">Wired headset</string>
+    <string name="pref_microphone_type_wired_headphones">Wired headphones</string>
+    <string name="pref_microphone_type_bluetooth_sco">Bluetooth SCO</string>
+    <string name="pref_microphone_type_usb_device">USB device</string>
+    <string name="pref_microphone_type_usb_headset">USB headset</string>
+    <string name="pref_microphone_type_bluetooth_le">Bluetooth LE headset</string>
+    <string name="pref_microphone_type_unknown">Type %1$d</string>
+    <string name="pref_microphone_location_mainbody">Main body</string>
+    <string name="pref_microphone_location_movable">Main body (movable)</string>
+    <string name="pref_microphone_location_peripheral">Peripheral</string>
+    <string name="pref_microphone_location_unknown">Unknown</string>
+    <string name="pref_microphone_directionality_omni">Omni</string>
+    <string name="pref_microphone_directionality_bidirectional">Bi-directional</string>
+    <string name="pref_microphone_directionality_cardioid">Cardioid</string>
+    <string name="pref_microphone_directionality_hypercardioid">Hyper-cardioid</string>
+    <string name="pref_microphone_directionality_supercardioid">Super-cardioid</string>
+    <string name="pref_microphone_directionality_unknown">Unknown</string>
+
+    <string name="pref_title_mic_enhancements">Mic enhancements</string>
+    <string name="pref_summary_mic_enhancements">Enhance voice clarity using acoustic equalization profile.</string>
+
+    <!-- Screen Sharing & Streaming -->
+    <string name="text_screenshare_start">Start Screen Share</string>
+    <string name="text_screenshare_stop">Stop Screen Share</string>
+    <string name="text_screenshare_started">Screen sharing started</string>
+    <string name="text_screenshare_stopped">Screen sharing stopped</string>
+    <string name="pref_title_screenshare_audio_mode">Screen share audio source</string>
+    <string name="pref_summary_screenshare_audio_mode">Choose what audio is transmitted during screen share</string>
+    <string name="screenshare_audio_mode_both">Microphone and screen audio</string>
+    <string name="screenshare_audio_mode_both_summary">Transmit microphone voice and system audio together</string>
+    <string name="screenshare_audio_mode_screen_only">Screen audio only</string>
+    <string name="screenshare_audio_mode_screen_only_summary">Transmit system audio without microphone input</string>
+    <string name="screenshare_audio_mode_mic_only">Microphone only</string>
+    <string name="screenshare_audio_mode_mic_only_summary">Transmit microphone voice without system audio</string>
+    <string name="screenshare_audio_changed">Screen share audio set to %s</string>
+    <string name="pref_title_internal_audio_volume">Internal audio volume</string>
+    <string name="pref_summary_internal_audio_volume">Adjust system audio volume level during streaming</string>
+
+    <!-- Hear Myself -->
+    <string name="pref_title_hear_myself">Hear myself</string>
+    <string name="pref_summary_hear_myself">Automatically subscribe to your own voice when you join a channel</string>
+
+    <!-- Sound System Categories -->
+    <string name="pref_cat_soundsystem_input">Audio Input</string>
+    <string name="pref_cat_soundsystem_output">Audio Output</string>
+    <string name="pref_cat_soundsystem_levels">Audio Levels</string>
 </resources>

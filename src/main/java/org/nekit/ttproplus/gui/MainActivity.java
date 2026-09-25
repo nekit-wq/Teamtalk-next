@@ -24,7 +24,13 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
 import android.media.SoundPool;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
+import android.widget.CheckBox;
+import org.nekit.ttproplus.backend.VoiceChanger;
+import org.nekit.ttproplus.data.ScreenShareAudioHelper;
+import org.nekit.ttproplus.utils.ScreenShareManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -429,6 +435,24 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         MenuItem recItem = menu.findItem(R.id.action_recordings);
         if (recItem != null) recItem.setEnabled(true).setVisible(true);
+
+        MenuItem voiceChangerItem = menu.findItem(R.id.action_voice_changer);
+        if (voiceChangerItem != null) {
+            voiceChangerItem.setEnabled(true).setVisible(true);
+        }
+
+        MenuItem shareScreenItem = menu.findItem(R.id.action_share_screen);
+        if (shareScreenItem != null) {
+            boolean sharing = getService() != null && getService().isScreenSharingActive();
+            shareScreenItem.setEnabled(isLeaveable).setVisible(isLeaveable);
+            shareScreenItem.setTitle(sharing ? R.string.text_screenshare_stop : R.string.text_screenshare_start);
+        }
+
+        MenuItem shareAudioItem = menu.findItem(R.id.action_screenshare_audio);
+        if (shareAudioItem != null) {
+            shareAudioItem.setEnabled(true).setVisible(true);
+        }
+
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -438,6 +462,16 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         File recordedFile;
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         int itemId = item.getItemId();
+        if (itemId == R.id.action_voice_changer) {
+            showVoiceChangerDialog();
+            return true;
+        } else if (itemId == R.id.action_share_screen) {
+            handleScreenShareAction();
+            return true;
+        } else if (itemId == R.id.action_screenshare_audio) {
+            showScreenShareAudioModeDialog();
+            return true;
+        }
         if (itemId == R.id.action_statusnick) {
             showChangeNicknameStatusDialog();
             return true;
@@ -1186,7 +1220,199 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             new FileCopyingTask().execute(uri);
             return;
         }
+        if (requestCode == REQUEST_MEDIA_PROJECTION) {
+            if (resultCode == -1 && data != null && getService() != null) {
+                getService().setMediaProjectionData(resultCode, data);
+                MediaProjection mp = getService().getMediaProjection();
+                if (mp != null && getService().getScreenShareManager() != null) {
+                    getService().getScreenShareManager().startShare(mp);
+                    Toast.makeText(this, R.string.text_screenshare_started, Toast.LENGTH_SHORT).show();
+                    invalidateOptionsMenu();
+                }
+            } else {
+                Toast.makeText(this, R.string.pref_summary_detected_microphones_unsupported, Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private static final int REQUEST_MEDIA_PROJECTION = 2002;
+
+    private void handleScreenShareAction() {
+        if (getService() == null) return;
+        if (getService().isScreenSharingActive()) {
+            if (getService().getScreenShareManager() != null) {
+                getService().getScreenShareManager().stopShare();
+            }
+            Toast.makeText(this, R.string.text_screenshare_stopped, Toast.LENGTH_SHORT).show();
+            invalidateOptionsMenu();
+        } else {
+            if (Build.VERSION.SDK_INT >= 21) {
+                MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                if (mpm != null) {
+                    startActivityForResult(mpm.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
+                }
+            }
+        }
+    }
+
+    private void showVoiceChangerDialog() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int current = prefs.getInt(Preferences.PREF_VOICE_CHANGER_MODE, 0);
+
+        final String[] effectNames = new String[]{
+                getString(R.string.voice_effect_off),
+                getString(R.string.voice_effect_echo),
+                getString(R.string.voice_effect_deep),
+                getString(R.string.voice_effect_chipmunk),
+                getString(R.string.voice_effect_robot),
+                getString(R.string.voice_effect_radio),
+                getString(R.string.voice_effect_megaphone),
+                getString(R.string.voice_effect_monster),
+                getString(R.string.voice_effect_alien),
+                getString(R.string.voice_effect_underwater),
+                getString(R.string.voice_effect_chorus),
+                getString(R.string.voice_effect_telephone),
+                getString(R.string.voice_effect_ghost)
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.voice_changer_title);
+        builder.setSingleChoiceItems(effectNames, current, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                prefs.edit().putInt(Preferences.PREF_VOICE_CHANGER_MODE, which).apply();
+                VoiceChanger.setVoiceChangerMode(which);
+                if (getService() != null) {
+                    getService().reinitSoundInputDevice();
+                }
+                Toast.makeText(MainActivity.this, getString(R.string.voice_changer_active, effectNames[which]), Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
+        builder.setPositiveButton(R.string.dialog_echo_reverb_title, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                showEchoReverbSettingsDialog();
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, null);
+        builder.show();
+    }
+
+    private void showEchoReverbSettingsDialog() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View view = inflater.inflate(R.layout.dialog_echo_reverb, null);
+
+        final CheckBox chkEcho = view.findViewById(R.id.chk_echo);
+        final TextView tvEchoLevel = view.findViewById(R.id.tv_echo_level);
+        final SeekBar sbEchoLevel = view.findViewById(R.id.sb_echo_level);
+
+        final CheckBox chkReverb = view.findViewById(R.id.chk_reverb);
+        final TextView tvReverbLevel = view.findViewById(R.id.tv_reverb_level);
+        final SeekBar sbReverbLevel = view.findViewById(R.id.sb_reverb_level);
+
+        final TextView tvReverbRoom = view.findViewById(R.id.tv_reverb_room);
+        final SeekBar sbReverbRoom = view.findViewById(R.id.sb_reverb_room);
+
+        boolean echoOn = prefs.getBoolean(Preferences.PREF_VOICE_ECHO_ENABLED, true);
+        int echoVal = prefs.getInt(Preferences.PREF_VOICE_ECHO_LEVEL, 35);
+        boolean reverbOn = prefs.getBoolean(Preferences.PREF_VOICE_REVERB_ENABLED, true);
+        int reverbVal = prefs.getInt(Preferences.PREF_VOICE_REVERB_LEVEL, 50);
+        int roomVal = prefs.getInt(Preferences.PREF_VOICE_REVERB_ROOM_SIZE, 60);
+
+        chkEcho.setChecked(echoOn);
+        sbEchoLevel.setProgress(echoVal / 5);
+        tvEchoLevel.setText(getString(R.string.label_echo_level, echoVal));
+
+        chkReverb.setChecked(reverbOn);
+        sbReverbLevel.setProgress(reverbVal / 5);
+        tvReverbLevel.setText(getString(R.string.label_reverb_level, reverbVal));
+
+        sbReverbRoom.setProgress(roomVal / 5);
+        tvReverbRoom.setText(getString(R.string.label_reverb_room, roomVal));
+
+        sbEchoLevel.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvEchoLevel.setText(getString(R.string.label_echo_level, progress * 5));
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        sbReverbLevel.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvReverbLevel.setText(getString(R.string.label_reverb_level, progress * 5));
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        sbReverbRoom.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvReverbRoom.setText(getString(R.string.label_reverb_room, progress * 5));
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.dialog_echo_reverb_title)
+                .setView(view)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        boolean newEcho = chkEcho.isChecked();
+                        int newEchoLvl = sbEchoLevel.getProgress() * 5;
+                        boolean newReverb = chkReverb.isChecked();
+                        int newReverbLvl = sbReverbLevel.getProgress() * 5;
+                        int newRoomSize = sbReverbRoom.getProgress() * 5;
+
+                        prefs.edit()
+                                .putBoolean(Preferences.PREF_VOICE_ECHO_ENABLED, newEcho)
+                                .putInt(Preferences.PREF_VOICE_ECHO_LEVEL, newEchoLvl)
+                                .putBoolean(Preferences.PREF_VOICE_REVERB_ENABLED, newReverb)
+                                .putInt(Preferences.PREF_VOICE_REVERB_LEVEL, newReverbLvl)
+                                .putInt(Preferences.PREF_VOICE_REVERB_ROOM_SIZE, newRoomSize)
+                                .apply();
+
+                        VoiceChanger.setEchoReverbConfig(newEcho, newEchoLvl, newReverb, newReverbLvl, newRoomSize);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void showScreenShareAudioModeDialog() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int current = prefs.getInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, ScreenShareAudioHelper.MODE_BOTH);
+
+        final String[] modes = new String[]{
+                getString(R.string.screenshare_audio_mode_both),
+                getString(R.string.screenshare_audio_mode_screen_only),
+                getString(R.string.screenshare_audio_mode_mic_only)
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.pref_title_screenshare_audio_mode)
+                .setSingleChoiceItems(modes, current, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        prefs.edit().putInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, which).apply();
+                        if (getService() != null && getService().getExperimentalAudioCapture() != null) {
+                            getService().getExperimentalAudioCapture().setScreenShareAudioMode(which);
+                        }
+                        Toast.makeText(MainActivity.this, getString(R.string.screenshare_audio_changed, modes[which]), Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
         public boolean startFileUpload(String path) {

@@ -52,7 +52,9 @@ import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
 import org.nekit.ttproplus.data.AppInfo;
+import org.nekit.ttproplus.data.MicrophoneInputHelper;
 import org.nekit.ttproplus.data.Preferences;
+import org.nekit.ttproplus.data.ScreenShareAudioHelper;
 import org.nekit.ttproplus.data.TTSWrapper;
 import org.nekit.ttproplus.gui.PreferencesActivity;
 
@@ -611,9 +613,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 eqPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() { 
                     @Override
                     public final boolean onPreferenceClick(Preference preference) {
-                        boolean lambda$onCreate$0;
-                        lambda$onCreate$0 = PreferencesActivity.SoundSystemPreferenceFragment.this.lambda$onCreate$0(preference);
-                        return lambda$onCreate$0;
+                        return SoundSystemPreferenceFragment.this.lambda$onCreate$0(preference);
                     }
                 });
             }
@@ -622,23 +622,169 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 inputSourcePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() { 
                     @Override
                     public final boolean onPreferenceChange(Preference preference, Object obj) {
-                        boolean lambda$onCreate$1;
-                        lambda$onCreate$1 = PreferencesActivity.SoundSystemPreferenceFragment.this.lambda$onCreate$1(preference, obj);
-                        return lambda$onCreate$1;
+                        return SoundSystemPreferenceFragment.this.lambda$onCreate$1(preference, obj);
+                    }
+                });
+            }
+
+            setupExperimentalCapturePreferences();
+        }
+
+        private void setupExperimentalCapturePreferences() {
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+
+            final Preference captureModePref = findPreference(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE);
+            if (captureModePref != null) {
+                updateCaptureModeSummary(captureModePref, prefs);
+                captureModePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        showCaptureModeDialog(captureModePref, prefs);
+                        return true;
+                    }
+                });
+            }
+
+            final Preference inputDevicePref = findPreference(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE);
+            if (inputDevicePref != null) {
+                updateInputDeviceSummary(inputDevicePref, prefs);
+                inputDevicePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        showInputDeviceDialog(inputDevicePref, prefs);
+                        return true;
+                    }
+                });
+            }
+
+            Preference detectedMicsPref = findPreference("detected_microphones");
+            if (detectedMicsPref != null) {
+                detectedMicsPref.setSummary(MicrophoneInputHelper.getDetectedMicrophonesSummary(getActivity()));
+                detectedMicsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle(R.string.pref_title_detected_microphones)
+                                .setMessage(MicrophoneInputHelper.buildDetectedMicrophonesReport(getActivity()))
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show();
+                        return true;
+                    }
+                });
+            }
+
+            final Preference screenAudioPref = findPreference(Preferences.PREF_SCREENSHARE_AUDIO_MODE);
+            if (screenAudioPref != null) {
+                updateScreenAudioSummary(screenAudioPref, prefs);
+                screenAudioPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        showScreenAudioDialog(screenAudioPref, prefs);
+                        return true;
                     }
                 });
             }
         }
 
+        private void updateCaptureModeSummary(Preference pref, SharedPreferences prefs) {
+            int mode = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, MicrophoneInputHelper.CAPTURE_MODE_DEFAULT);
+            pref.setSummary(MicrophoneInputHelper.getExperimentalCaptureModeLabel(getActivity(), mode));
+        }
 
+        private void showCaptureModeDialog(final Preference pref, final SharedPreferences prefs) {
+            final List<MicrophoneInputHelper.InputModeOption> options = MicrophoneInputHelper.getExperimentalCaptureModes(getActivity());
+            String[] titles = new String[options.size()];
+            int current = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, MicrophoneInputHelper.CAPTURE_MODE_DEFAULT);
+            int selectedIdx = 0;
+            for (int i = 0; i < options.size(); i++) {
+                titles[i] = options.get(i).title;
+                if (options.get(i).deviceId == current) {
+                    selectedIdx = i;
+                }
+            }
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.pref_title_experimental_capture_mode)
+                    .setSingleChoiceItems(titles, selectedIdx, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            int chosenMode = options.get(which).deviceId;
+                            prefs.edit().putInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, chosenMode).apply();
+                            updateCaptureModeSummary(pref, prefs);
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        }
 
-                public boolean lambda$onCreate$0(Preference preference) {
+        private void updateInputDeviceSummary(Preference pref, SharedPreferences prefs) {
+            pref.setSummary(MicrophoneInputHelper.getExperimentalInputDeviceLabel(getActivity(), prefs));
+        }
+
+        private void showInputDeviceDialog(final Preference pref, final SharedPreferences prefs) {
+            final List<MicrophoneInputHelper.InputDeviceOption> options = MicrophoneInputHelper.getAvailableExperimentalInputDevices(getActivity());
+            String[] titles = new String[options.size()];
+            String current = prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT);
+            int selectedIdx = 0;
+            for (int i = 0; i < options.size(); i++) {
+                titles[i] = options.get(i).title;
+                if (TextUtils.equals(options.get(i).deviceId, current)) {
+                    selectedIdx = i;
+                }
+            }
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.pref_title_experimental_input_device)
+                    .setSingleChoiceItems(titles, selectedIdx, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String chosenId = options.get(which).deviceId;
+                            prefs.edit().putString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, chosenId).apply();
+                            updateInputDeviceSummary(pref, prefs);
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        }
+
+        private void updateScreenAudioSummary(Preference pref, SharedPreferences prefs) {
+            int mode = ScreenShareAudioHelper.getAudioMode(prefs);
+            pref.setSummary(ScreenShareAudioHelper.getAudioModeLabel(getActivity(), mode));
+        }
+
+        private void showScreenAudioDialog(final Preference pref, final SharedPreferences prefs) {
+            final List<ScreenShareAudioHelper.AudioModeOption> options = ScreenShareAudioHelper.getAudioModeOptions(getActivity());
+            String[] titles = new String[options.size()];
+            int current = ScreenShareAudioHelper.getAudioMode(prefs);
+            int selectedIdx = 0;
+            for (int i = 0; i < options.size(); i++) {
+                titles[i] = options.get(i).title;
+                if (options.get(i).mode == current) {
+                    selectedIdx = i;
+                }
+            }
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.pref_title_screenshare_audio_mode)
+                    .setSingleChoiceItems(titles, selectedIdx, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            int chosenMode = options.get(which).mode;
+                            ScreenShareAudioHelper.setAudioMode(prefs, chosenMode);
+                            updateScreenAudioSummary(pref, prefs);
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        }
+
+        public boolean lambda$onCreate$0(Preference preference) {
             Intent intent = new Intent(getActivity(), (Class<?>) EqualizerActivity.class);
             startActivity(intent);
             return true;
         }
 
-                public boolean lambda$onCreate$1(Preference preference, Object newValue) {
+        public boolean lambda$onCreate$1(Preference preference, Object newValue) {
             String value = (String) newValue;
             if (("internal".equals(value) || "mixed".equals(value)) && !TeamTalkService.hasMediaProjectionData()) {
                 PreferencesActivity.pendingInputSource = value;

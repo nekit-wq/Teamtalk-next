@@ -1257,9 +1257,6 @@
     <string name="pref_title_audio_ducking_trigger">Условие приглушения</string>
     <string name="pref_summary_audio_ducking_trigger">Когда активировать приглушение стрима</string>
 
-
-
-
     <!-- Bulk Actions on Servers -->
     <string name="action_bulk_servers">Массовые действия над серверами...</string>
     <string name="bulk_servers_title">Управление серверами</string>
@@ -1303,4 +1300,115 @@
     <string name="bulk_send_pm_sent">Сообщение отправлено %1$d пользователям</string>
     <string name="bulk_move_channel_title">Выберите целевой канал</string>
     <string name="bulk_action_completed">Действие применено к %1$d пользователям</string>
+
+    <!-- Voice Changer & Effects -->
+    <string name="voice_changer_title">Эффекты голоса</string>
+    <string name="voice_changer_active">Активный эффект: %s</string>
+    <string name="voice_effect_off">Обычный</string>
+    <string name="voice_effect_echo">Эхо и реверберация</string>
+    <string name="voice_effect_deep">Низкий голос (Бас)</string>
+    <string name="voice_effect_chipmunk">Бурундук</string>
+    <string name="voice_effect_robot">Робот</string>
+    <string name="voice_effect_radio">Рация</string>
+    <string name="voice_effect_megaphone">Мегафон</string>
+    <string name="voice_effect_monster">Монстр</string>
+    <string name="voice_effect_alien">Пришелец</string>
+    <string name="voice_effect_underwater">Под водой</string>
+    <string name="voice_effect_chorus">Хор</string>
+    <string name="voice_effect_telephone">Телефон</string>
+    <string name="voice_effect_ghost">Призрак</string>
+
+    <!-- Echo & Reverb Settings Dialog -->
+    <string name="dialog_echo_reverb_title">Параметры эха и реверберации</string>
+    <string name="chk_echo_enable">Включить эхо</string>
+    <string name="label_echo_level">Эхо: %d%%</string>
+    <string name="label_echo_level_default">Эхо: 35%</string>
+    <string name="chk_reverb_enable">Включить реверберацию</string>
+    <string name="label_reverb_level">Реверберация: %d%%</string>
+    <string name="label_reverb_level_default">Реверберация: 50%</string>
+    <string name="label_reverb_room">Размер помещения: %d%%</string>
+    <string name="label_reverb_room_default">Размер помещения: 60%</string>
+
+    <!-- Microphone & Capture Settings -->
+    <string name="pref_title_experimental_capture_mode">Режим захвата микрофона</string>
+    <string name="pref_summary_experimental_capture_mode">Выберите режим захвата микрофона TeamTalk</string>
+    <string name="pref_experimental_capture_mode_disabled_title">По умолчанию</string>
+    <string name="pref_experimental_capture_mode_disabled_summary">Использовать стандартный захват устройства</string>
+    <string name="pref_experimental_capture_mode_mono_title">Моно</string>
+    <string name="pref_experimental_capture_mode_mono_summary">Принудительный захват в моно</string>
+    <string name="pref_experimental_capture_mode_stereo_title">Стерео (приоритет)</string>
+    <string name="pref_experimental_capture_mode_stereo_summary">Стерео при поддержке устройством</string>
+
+    <string name="pref_title_experimental_input_device">Выбор микрофона</string>
+    <string name="pref_summary_experimental_input_device">Физический микрофон для голосовой связи</string>
+    <string name="pref_experimental_input_device_default_title">Системный по умолчанию</string>
+    <string name="pref_experimental_input_device_default_summary">Автоматический выбор системой Android</string>
+    <string name="pref_microphone_device_builtin_title">Микрофон телефона</string>
+    <string name="pref_microphone_device_builtin_summary">Встроенный микрофон устройства</string>
+    <string name="pref_microphone_device_wired_title">Проводная гарнитура</string>
+    <string name="pref_microphone_device_wired_summary">Подключение через аудиоразъем</string>
+    <string name="pref_microphone_device_usb_title">USB-микрофон</string>
+    <string name="pref_microphone_device_usb_summary">Внешнее USB аудиоустройство</string>
+    <string name="pref_microphone_device_bluetooth_title">Bluetooth-гарнитура</string>
+    <string name="pref_microphone_device_bluetooth_summary">Беспроводная Bluetooth-связь</string>
+
+    <string name="pref_title_detected_microphones">Обнаруженные микрофоны</string>
+    <string name="pref_summary_detected_microphones">Аппаратные капсюли микрофона устройства</string>
+    <string name="pref_summary_detected_microphones_count">Обнаружено микрофонов: %1$d</string>
+    <string name="pref_summary_detected_microphones_none">Android не сообщил информацию о микрофонах.</string>
+    <string name="pref_summary_detected_microphones_unsupported">Доступно на Android 9 и новее.</string>
+    <string name="pref_microphone_detected_report_intro">Список физических микрофонов, обнаруженных в системе:</string>
+    <string name="pref_microphone_detected_report_limit">Аппаратный отчет о капсюлях:</string>
+    <string name="pref_microphone_unknown_name">Микрофон %1$d</string>
+    <string name="pref_microphone_report_type">Тип: %1$s</string>
+    <string name="pref_microphone_report_location">Расположение: %1$s</string>
+    <string name="pref_microphone_report_group">Группа / индекс: %1$s</string>
+    <string name="pref_microphone_report_directionality">Направленность: %1$s</string>
+    <string name="pref_microphone_type_builtin">Встроенный</string>
+    <string name="pref_microphone_type_wired_headset">Гарнитура (джек)</string>
+    <string name="pref_microphone_type_wired_headphones">Наушники</string>
+    <string name="pref_microphone_type_bluetooth_sco">Bluetooth SCO</string>
+    <string name="pref_microphone_type_usb_device">USB устройство</string>
+    <string name="pref_microphone_type_usb_headset">USB гарнитура</string>
+    <string name="pref_microphone_type_bluetooth_le">Bluetooth LE</string>
+    <string name="pref_microphone_type_unknown">Тип %1$d</string>
+    <string name="pref_microphone_location_mainbody">Корпус</string>
+    <string name="pref_microphone_location_movable">Корпус (подвижный)</string>
+    <string name="pref_microphone_location_peripheral">Внешний</string>
+    <string name="pref_microphone_location_unknown">Неизвестно</string>
+    <string name="pref_microphone_directionality_omni">Всенаправленный</string>
+    <string name="pref_microphone_directionality_bidirectional">Двунаправленный</string>
+    <string name="pref_microphone_directionality_cardioid">Кардиоидный</string>
+    <string name="pref_microphone_directionality_hypercardioid">Гиперкардиоидный</string>
+    <string name="pref_microphone_directionality_supercardioid">Суперкардиоидный</string>
+    <string name="pref_microphone_directionality_unknown">Неизвестно</string>
+
+    <string name="pref_title_mic_enhancements">Улучшение микрофона (FIR-фильтр)</string>
+    <string name="pref_summary_mic_enhancements">Студийный фильтр эквализации и четкости речи.</string>
+
+    <!-- Screen Sharing & Streaming -->
+    <string name="text_screenshare_start">Трансляция экрана</string>
+    <string name="text_screenshare_stop">Остановить трансляцию экрана</string>
+    <string name="text_screenshare_started">Трансляция экрана запущена</string>
+    <string name="text_screenshare_stopped">Трансляция экрана остановлена</string>
+    <string name="pref_title_screenshare_audio_mode">Звук при трансляции экрана</string>
+    <string name="pref_summary_screenshare_audio_mode">Выберите источник аудио для трансляции</string>
+    <string name="screenshare_audio_mode_both">Микрофон и системный звук</string>
+    <string name="screenshare_audio_mode_both_summary">Передавать голос с микрофона и звуки из приложений</string>
+    <string name="screenshare_audio_mode_screen_only">Только системный звук</string>
+    <string name="screenshare_audio_mode_screen_only_summary">Передавать звуки из приложений без микрофона</string>
+    <string name="screenshare_audio_mode_mic_only">Только микрофон</string>
+    <string name="screenshare_audio_mode_mic_only_summary">Передавать только голос без звуков экрана</string>
+    <string name="screenshare_audio_changed">Звук трансляции: %s</string>
+    <string name="pref_title_internal_audio_volume">Громкость звука экрана</string>
+    <string name="pref_summary_internal_audio_volume">Громкость системного аудио при стриминге</string>
+
+    <!-- Hear Myself -->
+    <string name="pref_title_hear_myself">Слышать свой голос</string>
+    <string name="pref_summary_hear_myself">Автоматически подписываться на собственный голос при входе в канал</string>
+
+    <!-- Sound System Categories -->
+    <string name="pref_cat_soundsystem_input">Вход звука</string>
+    <string name="pref_cat_soundsystem_output">Выход звука</string>
+    <string name="pref_cat_soundsystem_levels">Уровни громкости</string>
 </resources>

@@ -49,6 +49,7 @@ import dk.bearware.AudioPreprocessor;
 import dk.bearware.AudioPreprocessorType;
 import dk.bearware.Channel;
 import dk.bearware.ClientErrorMsg;
+import dk.bearware.Codec;
 import dk.bearware.EncryptionContext;
 import dk.bearware.FileTransfer;
 import dk.bearware.MediaFileInfo;
@@ -63,6 +64,9 @@ import dk.bearware.TeamTalkBase;
 import dk.bearware.TextMessage;
 import dk.bearware.User;
 import dk.bearware.UserAccount;
+import org.nekit.ttproplus.data.MicrophoneInputHelper;
+import org.nekit.ttproplus.data.ScreenShareAudioHelper;
+import org.nekit.ttproplus.utils.ScreenShareManager;
 import dk.bearware.events.ClientEventListener;
 import dk.bearware.events.TeamTalkEventHandler;
 import org.nekit.ttproplus.BuildConfig;
@@ -126,6 +130,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     private MediaProjection mediaProjection;
     private MediaSessionCompat mediaSession;
     private AudioRecord micAudioRecord;
+    private ExperimentalAudioCapture experimentalAudioCapture;
+    private ScreenShareManager screenShareManager;
+    private int nextExperimentalVoiceStreamId = 0;
     private PowerManager.WakeLock mServiceWakeLock;
     private WifiManager.WifiLock mServiceWifiLock;
     Channel mychannel;
@@ -183,6 +190,25 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             }
             if ("eq_mic_ns".equals(key) || "eq_mic_aec".equals(key) || "eq_mic_agc".equals(key) || key.startsWith(Preferences.PREF_EQ_MIC_BAND_PREFIX) || Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING.equals(key) || Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE.equals(key) || Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN.equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL.equals(key)) {
                 TeamTalkService.this.applyRealTimeAudioProcessing();
+            }
+            if ((Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE.equals(key)
+                    || Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE.equals(key)
+                    || Preferences.PREF_VOICE_CHANGER_MODE.equals(key)
+                    || Preferences.PREF_SOUNDSYSTEM_INPUT_SOURCE.equals(key)) && TeamTalkService.this.ttclient != null) {
+                TeamTalkService.this.reinitSoundInputDevice();
+            }
+            if (Preferences.PREF_SOUNDSYSTEM_MIC_ENHANCEMENTS.equals(key)) {
+                if (TeamTalkService.this.experimentalAudioCapture != null) {
+                    TeamTalkService.this.experimentalAudioCapture.setMicEnhancementEnabled(sharedPreferences.getBoolean(key, false));
+                }
+            }
+            if (Preferences.PREF_SCREENSHARE_AUDIO_MODE.equals(key)) {
+                if (TeamTalkService.this.experimentalAudioCapture != null) {
+                    TeamTalkService.this.experimentalAudioCapture.setScreenShareAudioMode(sharedPreferences.getInt(key, ScreenShareAudioHelper.MODE_BOTH));
+                }
+            }
+            if (Preferences.PREF_CONNECTION_HEAR_MYSELF.equals(key)) {
+                TeamTalkService.this.applyHearMyselfSubscription();
             }
             if (Preferences.PREF_GENERAL_CLIENTNAME.equals(key) || Preferences.PREF_GENERAL_NICKNAME.equals(key)) {
                 if (TeamTalkService.this.ttclient != null && (TeamTalkService.this.ttclient.getFlags() & 2) != 0) {
@@ -601,6 +627,18 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }, 3, 1);
         this.mediaSession.setActive(true);
         Log.d("bearware", "Created TeamTalk 5 service");
+        this.experimentalAudioCapture = new ExperimentalAudioCapture(this);
+        this.experimentalAudioCapture.setService(this);
+        this.experimentalAudioCapture.setVoiceActivationListener(new ExperimentalAudioCapture.VoiceActivationListener() {
+            @Override
+            public void onVoiceActivation(TeamTalkBase client, boolean active) {
+                adjustMuteOnTx(active);
+                if (active) {
+                    checkAndTriggerAutoRecord();
+                }
+            }
+        });
+        this.screenShareManager = new ScreenShareManager(this, this.ttclient);
         this.mFloatingWindowManager = new FloatingWindowManager(this);
         this.mFloatingWindowManager.checkAndShow();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -648,7 +686,14 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (this.recordingSilenceHandler != null) {
             this.recordingSilenceHandler.removeCallbacksAndMessages(null);
         }
-        stopInternalAudioCapture();
+        if (this.screenShareManager != null) {
+            this.screenShareManager.stopShare();
+            this.screenShareManager = null;
+        }
+        if (this.experimentalAudioCapture != null) {
+            this.experimentalAudioCapture.shutdown();
+            this.experimentalAudioCapture = null;
+        }
         stopRecording();
         if (this.ttclient != null && this.isStreamingMedia) {
             this.ttclient.stopStreamingMediaFileToChannel();
@@ -889,6 +934,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public void reinitSoundInputDevice() {
         if (this.ttclient == null) {
+            return;
+        }
+        if (isExperimentalCaptureRequired()) {
+            if (this.experimentalAudioCapture != null && this.experimentalAudioCapture.isRunning()) {
+                this.experimentalAudioCapture.scheduleRestart();
+            }
             return;
         }
         boolean tx = (this.ttclient.getFlags() & 256) != 0;
@@ -1215,14 +1266,13 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (enable) {
             checkAndTriggerAutoRecord();
         }
-        String inputSource = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString(Preferences.PREF_SOUNDSYSTEM_INPUT_SOURCE, "mic");
-        boolean useInternal = "internal".equals(inputSource) || "mixed".equals(inputSource);
+        boolean experimental = isExperimentalCaptureRequired();
         if (enable) {
             this.txSuspended = false;
             this.voxSuspended = false;
-            if (useInternal) {
+            if (experimental) {
                 this.ttclient.enableVoiceTransmission(true);
-                startInternalAudioCapture();
+                startExperimentalAudioCapture(false);
             } else {
                 int indevid = getPreferredSoundInputDeviceId();
                 if ((this.ttclient.getFlags() & 1) != 0 || this.ttclient.initSoundInputDevice(indevid)) {
@@ -1231,8 +1281,8 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 }
             }
         } else {
-            if (useInternal) {
-                stopInternalAudioCapture();
+            if (this.experimentalAudioCapture != null && this.experimentalAudioCapture.isRunning()) {
+                stopExperimentalAudioCapture(false);
             }
             this.ttclient.enableVoiceTransmission(false);
             this.ttclient.closeSoundInputDevice();
@@ -1267,208 +1317,130 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return mediaProjectionData != null;
     }
 
-    private void startInternalAudioCapture() {
-        if (this.isInternalAudioRunning) {
-            return;
-        }
-        if (mediaProjectionData == null) {
-            Log.e("bearware", "No media projection data available");
-            return;
-        }
-        this.isInternalAudioRunning = true;
-        this.internalAudioThread = new Thread(new Runnable() { 
-            @Override
-            public void run() {
-                byte[] micBuffer;
-                MediaProjectionManager projectionManager;
-                AudioPlaybackCaptureConfiguration config;
-                byte[] finalBuffer;
-                int finalRead;
-                MediaProjectionManager projectionManager2 = (MediaProjectionManager) TeamTalkService.this.getSystemService("media_projection");
-                if (projectionManager2 == null) {
-                    return;
-                }
-                if (TeamTalkService.this.mediaProjection == null) {
-                    try {
-                        TeamTalkService.this.mediaProjection = projectionManager2.getMediaProjection(TeamTalkService.mediaProjectionResultCode, (Intent) TeamTalkService.mediaProjectionData.clone());
-                    } catch (Exception e) {
-                        Log.e("bearware", "Failed to get MediaProjection", e);
-                        TeamTalkService.this.isInternalAudioRunning = false;
-                        return;
-                    }
-                }
-                if (TeamTalkService.this.mediaProjection == null) {
-                    TeamTalkService.this.isInternalAudioRunning = false;
-                    return;
-                }
+    public synchronized MediaProjection getMediaProjection() {
+        if (this.mediaProjection == null && mediaProjectionData != null && Build.VERSION.SDK_INT >= 21) {
+            MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+            if (projectionManager != null) {
                 try {
-                    if (Build.VERSION.SDK_INT >= 29) {
-                        try {
-                            AudioPlaybackCaptureConfiguration config2 = new AudioPlaybackCaptureConfiguration.Builder(TeamTalkService.this.mediaProjection).addMatchingUsage(1).addMatchingUsage(14).addMatchingUsage(0).build();
-                            int minBufSize = AudioRecord.getMinBufferSize(OpusConstants.DEFAULT_OPUS_SAMPLERATE, 16, 2);
-                            if (minBufSize < 3840) {
-                                minBufSize = 3840;
-                            }
-                            TeamTalkService.this.internalAudioRecord = new AudioRecord.Builder().setAudioFormat(new AudioFormat.Builder().setEncoding(2).setSampleRate(OpusConstants.DEFAULT_OPUS_SAMPLERATE).setChannelMask(16).build()).setAudioPlaybackCaptureConfig(config2).setBufferSizeInBytes(minBufSize).build();
-                            TeamTalkService.this.internalAudioRecord.startRecording();
-                            boolean mixMic = "mixed".equals(PreferenceManager.getDefaultSharedPreferences(TeamTalkService.this.getApplicationContext()).getString(Preferences.PREF_SOUNDSYSTEM_INPUT_SOURCE, "mic"));
-                            if (mixMic) {
-                                try {
-                                    int micMinBuf = AudioRecord.getMinBufferSize(OpusConstants.DEFAULT_OPUS_SAMPLERATE, 16, 2);
-                                    if (micMinBuf < 3840) {
-                                        micMinBuf = 3840;
-                                    }
-                                    try {
-                                        TeamTalkService.this.micAudioRecord = new AudioRecord(1, OpusConstants.DEFAULT_OPUS_SAMPLERATE, 16, 2, micMinBuf);
-                                        TeamTalkService.this.micAudioRecord.startRecording();
-                                    } catch (Exception e2) {
-                                        Log.e("bearware", "Failed to start microphone for mixed mode", e2);
-                                        mixMic = false;
-                                    }
-                                } catch (IllegalArgumentException e) {
-                                    Log.e("bearware", "Error recording internal audio", e);
-                                    TeamTalkService.this.stopInternalAudioCapture();
-                                    return;
-                                } catch (SecurityException e) {
-                                    Log.e("bearware", "Error recording internal audio", e);
-                                    TeamTalkService.this.stopInternalAudioCapture();
-                                    return;
-                                } catch (Throwable th) {
-                                    TeamTalkService.this.stopInternalAudioCapture();
-                                    throw th;
-                                }
-                            }
-                            byte[] buffer = new byte[960 * 2];
-                            byte[] bArr = null;
-                            if (mixMic) {
-                                micBuffer = new byte[960 * 2];
-                            } else {
-                                micBuffer = null;
-                            }
-                            if (mixMic) {
-                                bArr = new byte[960 * 2];
-                            }
-                            byte[] mixedBuffer = bArr;
-                            int sampleIndex = 0;
-                            AudioBlock reusableBlock = new AudioBlock();
-                            reusableBlock.nStreamID = 0;
-                            reusableBlock.nSampleRate = OpusConstants.DEFAULT_OPUS_SAMPLERATE;
-                            reusableBlock.nChannels = 1;
-                            reusableBlock.uStreamTypes = 1;
-                            reusableBlock.lpRawAudio = new byte[960 * 2];
-
-                            while (TeamTalkService.this.isInternalAudioRunning) {
-                                byte[] finalBuffer2 = null;
-                                int finalRead2 = 0;
-                                if (!mixMic || TeamTalkService.this.micAudioRecord == null) {
-                                    projectionManager = projectionManager2;
-                                    config = config2;
-                                    int read = TeamTalkService.this.internalAudioRecord.read(buffer, 0, buffer.length);
-                                    if (read <= 0) {
-                                        finalBuffer = null;
-                                        finalRead = 0;
-                                    } else {
-                                        finalBuffer = buffer;
-                                        finalRead = read;
-                                    }
-                                } else {
-                                    projectionManager = projectionManager2;
-                                    try {
-                                         int micRead = TeamTalkService.this.micAudioRecord.read(micBuffer, 0, micBuffer.length);
-                                         if (micRead <= 0) {
-                                             config = config2;
-                                         } else {
-                                             finalBuffer2 = micBuffer;
-                                             finalRead2 = micRead;
-                                             config = config2;
-                                             int intRead = TeamTalkService.this.internalAudioRecord.read(buffer, 0, micRead, 1);
-                                             if (intRead > 0) {
-                                                 int mixLen = Math.min(micRead, intRead);
-                                                 TeamTalkService.mixPcm(buffer, micBuffer, mixedBuffer, mixLen);
-                                                 finalBuffer2 = mixedBuffer;
-                                                 finalRead2 = mixLen;
-                                             }
-                                         }
-                                         finalBuffer = finalBuffer2;
-                                        finalRead = finalRead2;
-                                    } catch (IllegalArgumentException e) {
-                                        Log.e("bearware", "Error recording internal audio", e);
-                                        TeamTalkService.this.stopInternalAudioCapture();
-                                        return;
-                                    } catch (SecurityException e) {
-                                        Log.e("bearware", "Error recording internal audio", e);
-                                        TeamTalkService.this.stopInternalAudioCapture();
-                                        return;
-                                    }
-                                }
-                                if (finalRead <= 0 || finalBuffer == null) {
-                                    try {
-                                        Thread.sleep(10L);
-                                    } catch (InterruptedException ignored) {
-                                    }
-                                } else {
-                                    if (reusableBlock.lpRawAudio == null || reusableBlock.lpRawAudio.length != finalRead) {
-                                        reusableBlock.lpRawAudio = new byte[finalRead];
-                                    }
-                                    System.arraycopy(finalBuffer, 0, reusableBlock.lpRawAudio, 0, finalRead);
-                                    reusableBlock.nSamples = finalRead / 2;
-                                    reusableBlock.uSampleIndex = sampleIndex;
-                                    TeamTalkService.this.ttclient.insertAudioBlock(reusableBlock);
-                                    sampleIndex += reusableBlock.nSamples;
-                                }
-                                projectionManager2 = projectionManager;
-                                config2 = config;
-                            }
-                        } catch (IllegalArgumentException e) {
-                            Log.e("bearware", "Error recording internal audio", e);
-                            TeamTalkService.this.stopInternalAudioCapture();
-                            return;
-                        } catch (SecurityException e) {
-                            Log.e("bearware", "Error recording internal audio", e);
-                            TeamTalkService.this.stopInternalAudioCapture();
-                            return;
-                        } catch (Throwable th2) {
-                            TeamTalkService.this.stopInternalAudioCapture();
-                        }
-                        TeamTalkService.this.stopInternalAudioCapture();
-                        return;
-                    }
-                    Log.e("bearware", "Internal audio capture requires Android 10+");
-                    TeamTalkService.this.isInternalAudioRunning = false;
-                } catch (Throwable th3) {
-                    TeamTalkService.this.stopInternalAudioCapture();
+                    this.mediaProjection = projectionManager.getMediaProjection(mediaProjectionResultCode, (Intent) mediaProjectionData.clone());
+                } catch (Throwable t) {
+                    Log.e("bearware", "Failed to get MediaProjection", t);
                 }
             }
-        }, "InternalAudioCaptureThread");
-        this.internalAudioThread.start();
+        }
+        return this.mediaProjection;
     }
 
-        public void stopInternalAudioCapture() {
-        this.isInternalAudioRunning = false;
-        if (this.internalAudioRecord != null) {
-            try {
-                if (this.internalAudioRecord.getRecordingState() == 3) {
-                    this.internalAudioRecord.stop();
-                }
-            } catch (Exception e) {
+    public boolean isScreenSharingActive() {
+        return this.screenShareManager != null && this.screenShareManager.isSharing();
+    }
+
+    public ScreenShareManager getScreenShareManager() {
+        return this.screenShareManager;
+    }
+
+    public ExperimentalAudioCapture getExperimentalAudioCapture() {
+        return this.experimentalAudioCapture;
+    }
+
+    public boolean isExperimentalCaptureRequired() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String inputSource = prefs.getString(Preferences.PREF_SOUNDSYSTEM_INPUT_SOURCE, "mic");
+        if ("internal".equals(inputSource) || "mixed".equals(inputSource)) {
+            return true;
+        }
+        if (isScreenSharingActive()) {
+            int screenAudioMode = prefs.getInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, ScreenShareAudioHelper.MODE_BOTH);
+            if (screenAudioMode != ScreenShareAudioHelper.MODE_MIC_ONLY) {
+                return true;
             }
-            this.internalAudioRecord.release();
-            this.internalAudioRecord = null;
         }
-        if (this.micAudioRecord != null) {
-            try {
-                if (this.micAudioRecord.getRecordingState() == 3) {
-                    this.micAudioRecord.stop();
+        int captureMode = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, MicrophoneInputHelper.CAPTURE_MODE_DEFAULT);
+        if (captureMode != MicrophoneInputHelper.CAPTURE_MODE_DEFAULT) {
+            return true;
+        }
+        String preferredDevice = prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT);
+        if (!MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT.equals(preferredDevice)) {
+            return true;
+        }
+        if (VoiceChanger.getVoiceChangerMode() != VoiceChanger.Mode.OFF.getId()) {
+            return true;
+        }
+        if (MicEnhancement.isEnabled()) {
+            return true;
+        }
+        return false;
+    }
+
+    public synchronized void startExperimentalAudioCapture(boolean vox) {
+        if (this.experimentalAudioCapture == null) {
+            this.experimentalAudioCapture = new ExperimentalAudioCapture(this);
+            this.experimentalAudioCapture.setService(this);
+        }
+        if (this.experimentalAudioCapture.isRunning()) {
+            this.experimentalAudioCapture.setVoiceActivationEnabled(vox);
+            return;
+        }
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int captureMode = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, MicrophoneInputHelper.CAPTURE_MODE_DEFAULT);
+        String preferredDev = prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT);
+        int voxLevel = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL, 10);
+        int voxStopDelay = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_STOP_DELAY, 500);
+
+        int sampleRate = OpusConstants.DEFAULT_OPUS_SAMPLERATE;
+        int frameDurationMs = 20;
+        if (this.mychannel != null && this.mychannel.audiocodec != null) {
+            if (this.mychannel.audiocodec.nCodec == Codec.OPUS_CODEC && this.mychannel.audiocodec.opus != null) {
+                if (this.mychannel.audiocodec.opus.nSampleRate > 0) {
+                    sampleRate = this.mychannel.audiocodec.opus.nSampleRate;
                 }
-            } catch (Exception e2) {
+                if (this.mychannel.audiocodec.opus.nTxIntervalMSec > 0) {
+                    frameDurationMs = this.mychannel.audiocodec.opus.nTxIntervalMSec;
+                }
+            } else if (this.mychannel.audiocodec.speex != null && this.mychannel.audiocodec.speex.nTxIntervalMSec > 0) {
+                frameDurationMs = this.mychannel.audiocodec.speex.nTxIntervalMSec;
             }
-            this.micAudioRecord.release();
-            this.micAudioRecord = null;
         }
-        if (this.internalAudioThread != null) {
-            this.internalAudioThread.interrupt();
-            this.internalAudioThread = null;
+
+        int streamId = ++this.nextExperimentalVoiceStreamId;
+        float gainMultiplier = 1.0f;
+        if (prefs.getBoolean(Preferences.PREF_EQ_MIC_PREAMP_ENABLE, false)) {
+            int gainDb = prefs.getInt(Preferences.PREF_EQ_MIC_PREAMP_GAIN, 0);
+            gainMultiplier = (float) Math.pow(10.0, gainDb / 20.0);
         }
+
+        ExperimentalAudioCapture.Config config = new ExperimentalAudioCapture.Config(
+                sampleRate,
+                frameDurationMs,
+                captureMode,
+                preferredDev,
+                streamId,
+                gainMultiplier,
+                vox,
+                voxLevel,
+                voxStopDelay
+        );
+
+        int screenShareAudioMode = prefs.getInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, ScreenShareAudioHelper.MODE_BOTH);
+        this.experimentalAudioCapture.setScreenShareAudioMode(screenShareAudioMode);
+        boolean micEnhance = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_MIC_ENHANCEMENTS, false);
+        this.experimentalAudioCapture.setMicEnhancementEnabled(micEnhance);
+
+        this.experimentalAudioCapture.start(this.ttclient, config);
+    }
+
+    public synchronized void stopExperimentalAudioCapture(boolean releaseClient) {
+        if (this.experimentalAudioCapture != null) {
+            this.experimentalAudioCapture.stop(this.ttclient, releaseClient);
+        }
+    }
+
+    public void startInternalAudioCapture() {
+        startExperimentalAudioCapture(false);
+    }
+
+    public void stopInternalAudioCapture() {
+        stopExperimentalAudioCapture(false);
     }
 
     public String getCurrentStreamPath() {
@@ -1512,14 +1484,13 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     public void enableVoiceActivation(boolean enable) {
-        String inputSource = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString(Preferences.PREF_SOUNDSYSTEM_INPUT_SOURCE, "mic");
-        boolean useInternal = "internal".equals(inputSource) || "mixed".equals(inputSource);
+        boolean experimental = isExperimentalCaptureRequired();
         if (enable) {
             this.txSuspended = false;
             this.voxSuspended = false;
-            if (useInternal) {
+            if (experimental) {
                 this.ttclient.enableVoiceActivation(true);
-                startInternalAudioCapture();
+                startExperimentalAudioCapture(true);
             } else {
                 int indevid = getPreferredSoundInputDeviceId();
                 if ((this.ttclient.getFlags() & 1) != 0 || this.ttclient.initSoundInputDevice(indevid)) {
@@ -1528,8 +1499,8 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 }
             }
         } else {
-            if (useInternal) {
-                stopInternalAudioCapture();
+            if (this.experimentalAudioCapture != null && this.experimentalAudioCapture.isRunning()) {
+                stopExperimentalAudioCapture(false);
             }
             this.ttclient.enableVoiceActivation(false);
             this.ttclient.closeSoundInputDevice();
@@ -2131,6 +2102,21 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         updateFloatingWindow();
     }
 
+    public void applyHearMyselfSubscription() {
+        if (this.ttclient == null || (this.ttclient.getFlags() & 2) == 0) {
+            return;
+        }
+        int myId = this.ttclient.getMyUserID();
+        if (myId <= 0) return;
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean hearMyself = pref.getBoolean(Preferences.PREF_CONNECTION_HEAR_MYSELF, false);
+        if (hearMyself) {
+            this.ttclient.doSubscribe(myId, 16);
+        } else {
+            this.ttclient.doUnsubscribe(myId, 16);
+        }
+    }
+
     @Override
     public void onCmdUserJoinedChannel(User user) {
         MyTextMessage msg;
@@ -2140,6 +2126,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.ttserver.chanpasswd = this.joinchannel.szPassword;
         }
         if (user.nUserID == this.ttclient.getMyUserID()) {
+            applyHearMyselfSubscription();
             setMyChannel(getChannels().get(Integer.valueOf(user.nChannelID)));
             displayNotification(true);
             if (this.mychannel == null || this.mychannel.nParentID == 0) {

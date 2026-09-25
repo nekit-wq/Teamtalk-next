@@ -47,6 +47,15 @@
                 android:id="@+id/action_upload"
                 android:title="@string/action_upload"/>
             <item
+                android:id="@+id/action_voice_changer"
+                android:title="@string/voice_changer_title"/>
+            <item
+                android:id="@+id/action_share_screen"
+                android:title="@string/text_screenshare_start"/>
+            <item
+                android:id="@+id/action_screenshare_audio"
+                android:title="@string/pref_title_screenshare_audio_mode"/>
+            <item
                 android:id="@+id/action_broadcast"
                 android:title="@string/action_broadcast"/>
         </menu>

@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <Preference android:title="@string/pref_equalizer_title" android:key="pref_open_equalizer" android:summary="@string/pref_equalizer_summary" />
-    <CheckBoxPreference android:title="@string/pref_title_mute_speakers" android:key="mute_speakers_on_tx_checkbox" android:summary="@string/pref_summary_mute_speakers" android:defaultValue="false" />
-    <CheckBoxPreference android:title="@string/pref_title_speakerphone_checkbox" android:key="speakerphone_checkbox" android:summary="@string/pref_summary_speakerphone_checkbox" android:defaultValue="false" />
-    <CheckBoxPreference android:title="@string/pref_title_voice_processing_checkbox" android:key="voiceprocessing_checkbox" android:summary="@string/pref_summary_voice_processing_checkbox" android:defaultValue="false" />
-    <CheckBoxPreference android:title="@string/pref_title_bluetooth_headset_checkbox" android:key="bluetooth_headset_checkbox" android:summary="@string/pref_summary_bluetooth_headset_checkbox" android:defaultValue="false" />
-    <org.nekit.ttproplus.gui.SeekBarPreference android:title="@string/pref_title_mediafile_volume" android:key="mediafilevolume_seekbar" android:summary="@string/pref_summary_mediafile_volume" android:defaultValue="50" />
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pref_cat_soundsystem_input" android:key="cat_soundsystem_input">
+        <Preference android:title="@string/pref_title_experimental_capture_mode" android:key="experimental_capture_mode" android:summary="@string/pref_summary_experimental_capture_mode" />
+        <Preference android:title="@string/pref_title_experimental_input_device" android:key="experimental_input_device" android:summary="@string/pref_summary_experimental_input_device" />
+        <Preference android:title="@string/pref_title_detected_microphones" android:key="detected_microphones" android:summary="@string/pref_summary_detected_microphones" />
+        <CheckBoxPreference android:title="@string/pref_title_voice_processing_checkbox" android:key="voiceprocessing_checkbox" android:summary="@string/pref_summary_voice_processing_checkbox" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_mic_enhancements" android:key="mic_enhancements_checkbox" android:summary="@string/pref_summary_mic_enhancements" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_bluetooth_headset_checkbox" android:key="bluetooth_headset_checkbox" android:summary="@string/pref_summary_bluetooth_headset_checkbox" android:defaultValue="false" />
+        <Preference android:title="@string/pref_equalizer_title" android:key="pref_open_equalizer" android:summary="@string/pref_equalizer_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_cat_soundsystem_output" android:key="cat_soundsystem_output">
+        <CheckBoxPreference android:title="@string/pref_title_mute_speakers" android:key="mute_speakers_on_tx_checkbox" android:summary="@string/pref_summary_mute_speakers" android:defaultValue="false" />
+        <CheckBoxPreference android:title="@string/pref_title_speakerphone_checkbox" android:key="speakerphone_checkbox" android:summary="@string/pref_summary_speakerphone_checkbox" android:defaultValue="false" />
+        <Preference android:title="@string/pref_title_screenshare_audio_mode" android:key="screenshare_audio_mode" android:summary="@string/pref_summary_screenshare_audio_mode" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_cat_soundsystem_levels" android:key="cat_soundsystem_levels">
+        <org.nekit.ttproplus.gui.SeekBarPreference android:title="@string/pref_title_mediafile_volume" android:key="mediafilevolume_seekbar" android:summary="@string/pref_summary_mediafile_volume" android:defaultValue="50" />
+        <org.nekit.ttproplus.gui.SeekBarPreference android:title="@string/pref_title_internal_audio_volume" android:key="internal_audio_gain_seekbar" android:summary="@string/pref_summary_internal_audio_volume" android:defaultValue="30" />
+    </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_cat_audio_ducking">
         <CheckBoxPreference
@@ -31,5 +44,4 @@
             android:entries="@array/audio_ducking_trigger_entries"
             android:entryValues="@array/audio_ducking_trigger_values" />
     </PreferenceCategory>
-
 </PreferenceScreen>
