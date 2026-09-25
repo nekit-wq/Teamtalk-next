@@ -44,6 +44,7 @@ import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import dk.bearware.AudioBlock;
+import dk.bearware.AudioCodec;
 import dk.bearware.AudioFileFormat;
 import dk.bearware.AudioPreprocessor;
 import dk.bearware.AudioPreprocessorType;
@@ -74,6 +75,7 @@ import org.nekit.ttproplus.data.ChatHistoryDbHelper;
 import org.nekit.ttproplus.data.ChatMessageEntry;
 import org.nekit.ttproplus.gui.Utils;
 import java.util.List;
+import java.util.Collections;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -130,6 +132,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     private MediaProjection mediaProjection;
     private MediaSessionCompat mediaSession;
     private AudioRecord micAudioRecord;
+    private AudioManager audioManager;
+    private boolean experimentalAudioSessionModeApplied = false;
+    private boolean experimentalVoiceTransmissionRequested = false;
+    private boolean voiceActivationRequested = false;
+    private boolean isScreenSharingActive = false;
     private ExperimentalAudioCapture experimentalAudioCapture;
     private ScreenShareManager screenShareManager;
     private int nextExperimentalVoiceStreamId = 0;
@@ -570,9 +577,27 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void onCreate() {
         super.onCreate();
         sInstance = this;
+        this.audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         TeamTalk5.loadLibrary();
         TeamTalk5.setLicenseInformation("", "");
         this.ttclient = new TeamTalk5();
+        this.experimentalAudioCapture = new ExperimentalAudioCapture(this);
+        this.experimentalAudioCapture.setService(this);
+        this.experimentalAudioCapture.setVoiceActivationListener(new ExperimentalAudioCapture.VoiceActivationListener() {
+            @Override
+            public void onVoiceActivation(TeamTalkBase client, boolean transmitting) {
+                if (voiceActivationRequested) {
+                    adjustMuteOnTx(transmitting);
+                    isMyselfTalking = transmitting;
+                    checkAudioDucking();
+                    updateFloatingWindow();
+                    if (onVoiceTransmissionToggleListener != null) {
+                        onVoiceTransmissionToggleListener.onVoiceActivationStateChanged(transmitting);
+                    }
+                    TeamTalkService.this.onVoiceActivation(transmitting);
+                }
+            }
+        });
         this.telephonyManager = (TelephonyManager) getSystemService("phone");
         this.listeningPhoneStateChanges = false;
         this.txSuspended = false;
@@ -933,30 +958,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     public void reinitSoundInputDevice() {
-        if (this.ttclient == null) {
-            return;
-        }
-        if (isExperimentalCaptureRequired()) {
-            if (this.experimentalAudioCapture != null && this.experimentalAudioCapture.isRunning()) {
-                this.experimentalAudioCapture.scheduleRestart();
-            }
-            return;
-        }
-        boolean tx = (this.ttclient.getFlags() & 256) != 0;
-        boolean vox = (this.ttclient.getFlags() & 24) != 0;
-        if (tx || vox) {
-            this.ttclient.closeSoundInputDevice();
-            int indevid = getPreferredSoundInputDeviceId();
-            if (this.ttclient.initSoundInputDevice(indevid)) {
-                applyRealTimeAudioProcessing();
-                if (tx) {
-                    this.ttclient.enableVoiceTransmission(true);
-                }
-                if (vox) {
-                    this.ttclient.enableVoiceActivation(true);
-                }
-            }
-        }
+        applyConfiguredInputDeviceSelection();
     }
 
     public boolean isRecording() {
@@ -1239,21 +1241,200 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return (this.ttclient.getFlags() & 32) != 0;
     }
 
+    public SharedPreferences getSessionPreferences() {
+        return PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    }
+
+    private int getNextExperimentalVoiceStreamId() {
+        int next = this.nextExperimentalVoiceStreamId + 1;
+        this.nextExperimentalVoiceStreamId = next;
+        if (next <= 0) {
+            this.nextExperimentalVoiceStreamId = 1;
+            return 1;
+        }
+        return next;
+    }
+
+    private float getExperimentalGainMultiplier() {
+        int gain = getSessionPreferences().getInt(Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN, SoundLevel.SOUND_GAIN_DEFAULT);
+        return gain <= 0 ? 0.0f : (float) Math.min(4.0d, Math.max(0.0d, (double) gain / (double) SoundLevel.SOUND_GAIN_DEFAULT));
+    }
+
+    private int getExperimentalPreferredSampleRate() {
+        if (this.mychannel != null && this.mychannel.audiocodec != null) {
+            AudioCodec codec = this.mychannel.audiocodec;
+            if (codec.nCodec == 1 && codec.speex != null) {
+                return codec.speex.nBandmode == 0 ? 8000 : (codec.speex.nBandmode == 2 ? 32000 : 16000);
+            }
+            if (codec.nCodec == 2 && codec.speex_vbr != null) {
+                return codec.speex_vbr.nBandmode == 0 ? 8000 : (codec.speex_vbr.nBandmode == 2 ? 32000 : 16000);
+            }
+            if (codec.nCodec == 3 && codec.opus != null && codec.opus.nSampleRate > 0) {
+                return codec.opus.nSampleRate;
+            }
+        }
+        return OpusConstants.DEFAULT_OPUS_SAMPLERATE;
+    }
+
+    private int getExperimentalFrameDurationMs() {
+        if (this.mychannel != null && this.mychannel.audiocodec != null) {
+            AudioCodec codec = this.mychannel.audiocodec;
+            if (codec.nCodec == 1 && codec.speex != null) {
+                return Math.max(20, codec.speex.nTxIntervalMSec);
+            }
+            if (codec.nCodec == 2 && codec.speex_vbr != null) {
+                return Math.max(20, codec.speex_vbr.nTxIntervalMSec);
+            }
+            if (codec.nCodec == 3 && codec.opus != null) {
+                return Math.max(10, codec.opus.nTxIntervalMSec);
+            }
+        }
+        return 20;
+    }
+
+    private void applyExperimentalAudioSessionMode() {
+        if (this.audioManager == null || this.experimentalAudioSessionModeApplied) {
+            return;
+        }
+        SharedPreferences prefs = getSessionPreferences();
+        boolean voiceProcessing = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING, false);
+        int captureMode = MicrophoneInputHelper.getExperimentalCaptureMode(prefs);
+        boolean stereoPreferred = (captureMode == MicrophoneInputHelper.CAPTURE_MODE_STEREO);
+        boolean useCommMode = !stereoPreferred && voiceProcessing;
+        try {
+            this.audioManager.setMode(useCommMode ? AudioManager.MODE_IN_COMMUNICATION : AudioManager.MODE_NORMAL);
+            if (useCommMode) {
+                boolean speaker = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE, false);
+                boolean wired = this.audioManager.isWiredHeadsetOn();
+                boolean sco = this.bluetoothHeadsetHelper != null && this.bluetoothHeadsetHelper.isOnHeadsetSco();
+                this.audioManager.setSpeakerphoneOn(speaker && !wired && !sco);
+            } else {
+                this.audioManager.setSpeakerphoneOn(false);
+            }
+            this.experimentalAudioSessionModeApplied = true;
+        } catch (Throwable t) {
+            Log.w("bearware", "Failed to apply experimental audio session mode", t);
+        }
+    }
+
+    private void clearExperimentalAudioSessionModeIfIdle() {
+        if (!this.experimentalAudioSessionModeApplied || isVoiceTransmitting() || isVoiceActivationEnabled() || this.experimentalVoiceTransmissionRequested) {
+            return;
+        }
+        try {
+            if (this.audioManager != null) {
+                this.audioManager.setMode(AudioManager.MODE_NORMAL);
+                this.audioManager.setSpeakerphoneOn(false);
+            }
+        } catch (Throwable t) {
+            Log.w("bearware", "Failed to clear experimental audio session mode", t);
+        } finally {
+            this.experimentalAudioSessionModeApplied = false;
+        }
+    }
+
+    public synchronized boolean startVoiceCapture(boolean vox) {
+        TeamTalkBase client = this.ttclient;
+        if (client == null || client.getMyChannelID() <= 0) {
+            return false;
+        }
+        if (this.experimentalAudioCapture == null) {
+            this.experimentalAudioCapture = new ExperimentalAudioCapture(this);
+            this.experimentalAudioCapture.setService(this);
+            this.experimentalAudioCapture.setVoiceActivationListener(new ExperimentalAudioCapture.VoiceActivationListener() {
+                @Override
+                public void onVoiceActivation(TeamTalkBase client, boolean transmitting) {
+                    if (voiceActivationRequested) {
+                        adjustMuteOnTx(transmitting);
+                        isMyselfTalking = transmitting;
+                        checkAudioDucking();
+                        updateFloatingWindow();
+                        if (onVoiceTransmissionToggleListener != null) {
+                            onVoiceTransmissionToggleListener.onVoiceActivationStateChanged(transmitting);
+                        }
+                        TeamTalkService.this.onVoiceActivation(transmitting);
+                    }
+                }
+            });
+        }
+        // Always close native input & disable native transmission so OpenSL ES never touches the hardware mic
+        client.enableVoiceTransmission(false);
+        client.enableVoiceActivation(false);
+        client.closeSoundInputDevice();
+
+        applyExperimentalAudioSessionMode();
+
+        SharedPreferences prefs = getSessionPreferences();
+        int sampleRate = getExperimentalPreferredSampleRate();
+        int frameDurationMs = getExperimentalFrameDurationMs();
+        int captureMode = MicrophoneInputHelper.getExperimentalCaptureMode(prefs);
+        String inputDeviceId = MicrophoneInputHelper.getExperimentalInputDeviceId(prefs);
+        int streamId = getNextExperimentalVoiceStreamId();
+        float gainMultiplier = getExperimentalGainMultiplier();
+        int voxLevel = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL, 10);
+        int voxStopDelay = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_STOP_DELAY, 500);
+
+        int screenAudioMode = prefs.getInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, ScreenShareAudioHelper.MODE_BOTH);
+        this.experimentalAudioCapture.setScreenShareAudioMode(screenAudioMode);
+        boolean micEnhance = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_MIC_ENHANCEMENTS, false);
+        this.experimentalAudioCapture.setMicEnhancementEnabled(micEnhance);
+
+        ExperimentalAudioCapture.Config config = new ExperimentalAudioCapture.Config(
+                sampleRate,
+                frameDurationMs,
+                captureMode,
+                inputDeviceId,
+                streamId,
+                gainMultiplier,
+                vox,
+                voxLevel,
+                voxStopDelay
+        );
+        boolean start = this.experimentalAudioCapture.start(client, config);
+        if (!start) {
+            clearExperimentalAudioSessionModeIfIdle();
+            return false;
+        }
+        return true;
+    }
+
+    public synchronized void stopExperimentalVoiceTransmission(boolean flushBlock) {
+        if (this.experimentalAudioCapture != null) {
+            this.experimentalAudioCapture.stop(this.ttclient, flushBlock);
+        }
+    }
+
     public boolean isVoiceTransmissionEnabled() {
-        return (this.ttclient.getFlags() & 256) != 0;
+        if (this.experimentalVoiceTransmissionRequested) {
+            return true;
+        }
+        TeamTalkBase client = this.ttclient;
+        return client != null && (client.getFlags() & 256) != 0;
     }
 
     public boolean isVoiceTransmitting() {
-        int flags = this.ttclient.getFlags();
+        if (this.experimentalVoiceTransmissionRequested) {
+            return true;
+        }
+        ExperimentalAudioCapture cap = this.experimentalAudioCapture;
+        if (cap != null && this.ttclient != null && cap.isVoiceTransmitting(this.ttclient)) {
+            return true;
+        }
+        TeamTalkBase client = this.ttclient;
+        int flags = client != null ? client.getFlags() : 0;
         return (flags & 256) != 0 || (flags & 24) == 24;
     }
 
     public boolean isVoiceActivationEnabled() {
-        return (this.ttclient.getFlags() & 24) != 0;
+        if (this.voiceActivationRequested) {
+            return true;
+        }
+        TeamTalkBase client = this.ttclient;
+        return client != null && (client.getFlags() & 24) != 0;
     }
 
     public void setMute(boolean state) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences prefs = getSessionPreferences();
         this.permanentMuteState = state;
         this.currentMuteState = state;
         if (isMute() != this.permanentMuteState && (!prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_MUTE_ON_TRANSMISSION, false) || !isVoiceTransmitting())) {
@@ -1265,35 +1446,71 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void enableVoiceTransmission(boolean enable) {
         if (enable) {
             checkAndTriggerAutoRecord();
-        }
-        boolean experimental = isExperimentalCaptureRequired();
-        if (enable) {
+            this.experimentalVoiceTransmissionRequested = true;
             this.txSuspended = false;
-            this.voxSuspended = false;
-            if (experimental) {
-                this.ttclient.enableVoiceTransmission(true);
-                startExperimentalAudioCapture(false);
-            } else {
-                int indevid = getPreferredSoundInputDeviceId();
-                if ((this.ttclient.getFlags() & 1) != 0 || this.ttclient.initSoundInputDevice(indevid)) {
-                    applyRealTimeAudioProcessing();
-                    this.ttclient.enableVoiceTransmission(true);
-                }
-            }
+            startVoiceCapture(false);
         } else {
-            if (this.experimentalAudioCapture != null && this.experimentalAudioCapture.isRunning()) {
-                stopExperimentalAudioCapture(false);
+            this.experimentalVoiceTransmissionRequested = false;
+            if (this.voiceActivationRequested) {
+                startVoiceCapture(true);
+            } else {
+                stopExperimentalVoiceTransmission(true);
+                clearExperimentalAudioSessionModeIfIdle();
             }
-            this.ttclient.enableVoiceTransmission(false);
-            this.ttclient.closeSoundInputDevice();
         }
-        adjustMuteOnTx(enable);
-        this.isMyselfTalking = enable;
+        adjustMuteOnTx(enable || isVoiceTransmitting());
+        this.isMyselfTalking = enable || isVoiceTransmitting();
         checkAudioDucking();
         updateFloatingWindow();
     }
 
-        public static void mixPcm(byte[] buffer1, byte[] buffer2, byte[] outBuffer, int length) {
+    public void enableVoiceActivation(boolean enable) {
+        this.voiceActivationRequested = enable;
+        if (enable) {
+            this.txSuspended = false;
+            this.voxSuspended = false;
+            if (!this.experimentalVoiceTransmissionRequested) {
+                startVoiceCapture(true);
+            }
+            if (this.onVoiceTransmissionToggleListener != null) {
+                this.onVoiceTransmissionToggleListener.onVoiceActivationToggle(true, false);
+            }
+        } else {
+            if (this.onVoiceTransmissionToggleListener != null) {
+                this.onVoiceTransmissionToggleListener.onVoiceActivationStateChanged(false);
+                this.onVoiceTransmissionToggleListener.onVoiceActivationToggle(false, false);
+            }
+            if (!this.experimentalVoiceTransmissionRequested) {
+                stopExperimentalVoiceTransmission(true);
+                clearExperimentalAudioSessionModeIfIdle();
+            }
+        }
+        adjustMuteOnTx(isVoiceTransmitting());
+        this.isMyselfTalking = isVoiceTransmitting();
+        updateFloatingWindow();
+    }
+
+    public void applyConfiguredInputDeviceSelection() {
+        boolean tx = isVoiceTransmissionEnabled();
+        boolean vox = isVoiceActivationEnabled();
+        stopExperimentalVoiceTransmission(true);
+        if (tx) {
+            startVoiceCapture(false);
+        } else if (vox) {
+            startVoiceCapture(true);
+        }
+    }
+
+    public void onVoiceChangerModeChanged() {
+        if (this.ttclient == null) {
+            return;
+        }
+        if (isVoiceTransmitting() || isVoiceTransmissionEnabled() || isVoiceActivationEnabled()) {
+            applyConfiguredInputDeviceSelection();
+        }
+    }
+
+    public static void mixPcm(byte[] buffer1, byte[] buffer2, byte[] outBuffer, int length) {
         for (int i = 0; i < length; i += 2) {
             short s1 = (short) ((buffer1[i] & 0xFF) | (buffer1[i + 1] << 8));
             short s2 = (short) ((buffer2[i] & 0xFF) | (buffer2[i + 1] << 8));
@@ -1317,6 +1534,10 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return mediaProjectionData != null;
     }
 
+    public void setMediaProjection(MediaProjection mp) {
+        this.mediaProjection = mp;
+    }
+
     public synchronized MediaProjection getMediaProjection() {
         if (this.mediaProjection == null && mediaProjectionData != null && Build.VERSION.SDK_INT >= 21) {
             MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
@@ -1331,8 +1552,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return this.mediaProjection;
     }
 
+    public void setScreenSharingActive(boolean active) {
+        this.isScreenSharingActive = active;
+    }
+
     public boolean isScreenSharingActive() {
-        return this.screenShareManager != null && this.screenShareManager.isSharing();
+        return this.isScreenSharingActive || (this.screenShareManager != null && this.screenShareManager.isSharing());
     }
 
     public ScreenShareManager getScreenShareManager() {
@@ -1343,104 +1568,83 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return this.experimentalAudioCapture;
     }
 
-    public boolean isExperimentalCaptureRequired() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String inputSource = prefs.getString(Preferences.PREF_SOUNDSYSTEM_INPUT_SOURCE, "mic");
-        if ("internal".equals(inputSource) || "mixed".equals(inputSource)) {
-            return true;
-        }
-        if (isScreenSharingActive()) {
-            int screenAudioMode = prefs.getInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, ScreenShareAudioHelper.MODE_BOTH);
-            if (screenAudioMode != ScreenShareAudioHelper.MODE_MIC_ONLY) {
-                return true;
-            }
-        }
-        int captureMode = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, MicrophoneInputHelper.CAPTURE_MODE_DEFAULT);
-        if (captureMode != MicrophoneInputHelper.CAPTURE_MODE_DEFAULT) {
-            return true;
-        }
-        String preferredDevice = prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT);
-        if (!MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT.equals(preferredDevice)) {
-            return true;
-        }
-        if (VoiceChanger.getVoiceChangerMode() != VoiceChanger.Mode.OFF.getId()) {
-            return true;
-        }
-        if (MicEnhancement.isEnabled()) {
-            return true;
-        }
-        return false;
-    }
-
-    public synchronized void startExperimentalAudioCapture(boolean vox) {
-        if (this.experimentalAudioCapture == null) {
-            this.experimentalAudioCapture = new ExperimentalAudioCapture(this);
-            this.experimentalAudioCapture.setService(this);
-        }
-        if (this.experimentalAudioCapture.isRunning()) {
-            this.experimentalAudioCapture.setVoiceActivationEnabled(vox);
-            return;
-        }
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        int captureMode = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, MicrophoneInputHelper.CAPTURE_MODE_DEFAULT);
-        String preferredDev = prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT);
-        int voxLevel = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL, 10);
-        int voxStopDelay = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_STOP_DELAY, 500);
-
-        int sampleRate = OpusConstants.DEFAULT_OPUS_SAMPLERATE;
-        int frameDurationMs = 20;
-        if (this.mychannel != null && this.mychannel.audiocodec != null) {
-            if (this.mychannel.audiocodec.nCodec == Codec.OPUS_CODEC && this.mychannel.audiocodec.opus != null) {
-                if (this.mychannel.audiocodec.opus.nSampleRate > 0) {
-                    sampleRate = this.mychannel.audiocodec.opus.nSampleRate;
-                }
-                if (this.mychannel.audiocodec.opus.nTxIntervalMSec > 0) {
-                    frameDurationMs = this.mychannel.audiocodec.opus.nTxIntervalMSec;
-                }
-            } else if (this.mychannel.audiocodec.speex != null && this.mychannel.audiocodec.speex.nTxIntervalMSec > 0) {
-                frameDurationMs = this.mychannel.audiocodec.speex.nTxIntervalMSec;
-            }
-        }
-
-        int streamId = ++this.nextExperimentalVoiceStreamId;
-        float gainMultiplier = 1.0f;
-        if (prefs.getBoolean(Preferences.PREF_EQ_MIC_PREAMP_ENABLE, false)) {
-            int gainDb = prefs.getInt(Preferences.PREF_EQ_MIC_PREAMP_GAIN, 0);
-            gainMultiplier = (float) Math.pow(10.0, gainDb / 20.0);
-        }
-
-        ExperimentalAudioCapture.Config config = new ExperimentalAudioCapture.Config(
-                sampleRate,
-                frameDurationMs,
-                captureMode,
-                preferredDev,
-                streamId,
-                gainMultiplier,
-                vox,
-                voxLevel,
-                voxStopDelay
-        );
-
-        int screenShareAudioMode = prefs.getInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, ScreenShareAudioHelper.MODE_BOTH);
-        this.experimentalAudioCapture.setScreenShareAudioMode(screenShareAudioMode);
-        boolean micEnhance = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_MIC_ENHANCEMENTS, false);
-        this.experimentalAudioCapture.setMicEnhancementEnabled(micEnhance);
-
-        this.experimentalAudioCapture.start(this.ttclient, config);
-    }
-
-    public synchronized void stopExperimentalAudioCapture(boolean releaseClient) {
+    public void setScreenShareAudioMode(int mode) {
+        getSessionPreferences().edit().putInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, mode).apply();
         if (this.experimentalAudioCapture != null) {
-            this.experimentalAudioCapture.stop(this.ttclient, releaseClient);
+            this.experimentalAudioCapture.setScreenShareAudioMode(mode);
         }
+    }
+
+    public void setMicEnhancementEnabled(boolean enabled) {
+        getSessionPreferences().edit().putBoolean(Preferences.PREF_SOUNDSYSTEM_MIC_ENHANCEMENTS, enabled).apply();
+        if (this.experimentalAudioCapture != null) {
+            this.experimentalAudioCapture.setMicEnhancementEnabled(enabled);
+        } else {
+            MicEnhancement.setEnabled(enabled);
+        }
+    }
+
+    public void startScreenShare(MediaProjection mediaProjection) {
+        if (this.screenShareManager == null) {
+            this.screenShareManager = new ScreenShareManager(this, new ScreenShareManager.ClientProvider() {
+                @Override
+                public List<TeamTalkBase> getClients() {
+                    return ttclient != null ? Collections.singletonList(ttclient) : Collections.<TeamTalkBase>emptyList();
+                }
+            });
+            this.screenShareManager.setOnStoppedBySystemListener(new ScreenShareManager.OnStoppedBySystemListener() {
+                @Override
+                public void onScreenShareStoppedBySystem() {
+                    onScreenShareStoppedBySystem();
+                }
+            });
+        }
+        boolean isTx = isVoiceTransmissionEnabled();
+        boolean isVox = isVoiceActivationEnabled();
+        if (isTx || isVox) {
+            stopExperimentalVoiceTransmission(true);
+        }
+        setScreenSharingActive(true);
+        setMediaProjection(mediaProjection);
+        this.screenShareManager.startShare(mediaProjection);
+        if (isTx) {
+            enableVoiceTransmission(true);
+        } else if (isVox) {
+            enableVoiceActivation(true);
+        } else {
+            enableVoiceTransmission(true);
+        }
+    }
+
+    public void stopScreenShare() {
+        boolean isTx = isVoiceTransmissionEnabled();
+        boolean isVox = isVoiceActivationEnabled();
+        if (isTx || isVox) {
+            stopExperimentalVoiceTransmission(true);
+        }
+        setScreenSharingActive(false);
+        setMediaProjection(null);
+        if (this.screenShareManager != null) {
+            this.screenShareManager.stopShare();
+        }
+        if (isTx) {
+            enableVoiceTransmission(true);
+        } else if (isVox) {
+            enableVoiceActivation(true);
+        }
+    }
+
+    public void onScreenShareStoppedBySystem() {
+        Log.i("bearware", "Screen share stopped by system");
+        stopScreenShare();
     }
 
     public void startInternalAudioCapture() {
-        startExperimentalAudioCapture(false);
+        startVoiceCapture(false);
     }
 
     public void stopInternalAudioCapture() {
-        stopExperimentalAudioCapture(false);
+        stopExperimentalVoiceTransmission(false);
     }
 
     public String getCurrentStreamPath() {
@@ -1481,32 +1685,6 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public void setCurrentPlayback(MediaFilePlayback playback) {
         this.currentPlayback = playback;
-    }
-
-    public void enableVoiceActivation(boolean enable) {
-        boolean experimental = isExperimentalCaptureRequired();
-        if (enable) {
-            this.txSuspended = false;
-            this.voxSuspended = false;
-            if (experimental) {
-                this.ttclient.enableVoiceActivation(true);
-                startExperimentalAudioCapture(true);
-            } else {
-                int indevid = getPreferredSoundInputDeviceId();
-                if ((this.ttclient.getFlags() & 1) != 0 || this.ttclient.initSoundInputDevice(indevid)) {
-                    applyRealTimeAudioProcessing();
-                    this.ttclient.enableVoiceActivation(true);
-                }
-            }
-        } else {
-            if (this.experimentalAudioCapture != null && this.experimentalAudioCapture.isRunning()) {
-                stopExperimentalAudioCapture(false);
-            }
-            this.ttclient.enableVoiceActivation(false);
-            this.ttclient.closeSoundInputDevice();
-        }
-        adjustMuteOnTx(enable);
-        updateFloatingWindow();
     }
 
     public void syncToUserCache(User user) {

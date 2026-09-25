@@ -216,6 +216,10 @@ public final class ExperimentalAudioCapture {
             }
         }
 
+        public boolean isVoiceTransmitting() {
+            return !this.voxEnabled || this.voiceTransmitting;
+        }
+
         public void stopAndRelease() {
             if (recordingCallback != null && Build.VERSION.SDK_INT >= 29 && audioRecord != null) {
                 try {
@@ -274,6 +278,23 @@ public final class ExperimentalAudioCapture {
 
     public boolean isActive() {
         return this.active;
+    }
+
+    public boolean isActive(TeamTalkBase client) {
+        return this.active && this.ttclients.contains(client);
+    }
+
+    public boolean isVoiceTransmitting() {
+        CaptureSession session = this.captureSession;
+        return this.active && session != null && session.isVoiceTransmitting();
+    }
+
+    public boolean isVoiceTransmitting(TeamTalkBase client) {
+        return isVoiceTransmitting() && this.ttclients.contains(client);
+    }
+
+    public boolean isMicEnhancementEnabled() {
+        return this.micEnhancementEnabled;
     }
 
     public int getActiveChannels() {
@@ -626,6 +647,7 @@ public final class ExperimentalAudioCapture {
                                 applyGain(preBuf, session.gainMultiplier);
 
                                 block.nStreamID = session.streamId;
+                                block.uStreamTypes = 1;
                                 block.nSampleRate = session.sampleRate;
                                 block.nChannels = session.channels;
                                 block.nSamples = session.frameSamples;
@@ -674,6 +696,7 @@ public final class ExperimentalAudioCapture {
                 applyGain(micBuffer, session.gainMultiplier);
 
                 block.nStreamID = session.streamId;
+                block.uStreamTypes = 1;
                 block.nSampleRate = session.sampleRate;
                 block.nChannels = session.channels;
                 block.nSamples = session.frameSamples;

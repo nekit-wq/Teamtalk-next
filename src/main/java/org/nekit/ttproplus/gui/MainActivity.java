@@ -1222,16 +1222,18 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
             if (resultCode == -1 && data != null && getService() != null) {
-                getService().setMediaProjectionData(resultCode, data);
-                MediaProjection mp = getService().getMediaProjection();
-                if (mp != null && getService().getScreenShareManager() != null) {
-                    getService().getScreenShareManager().startShare(mp);
-                    Toast.makeText(this, R.string.text_screenshare_started, Toast.LENGTH_SHORT).show();
-                    invalidateOptionsMenu();
+                if (Build.VERSION.SDK_INT >= 21) {
+                    MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                    MediaProjection mp = mpm != null ? mpm.getMediaProjection(resultCode, data) : null;
+                    if (mp != null) {
+                        getService().startScreenShare(mp);
+                        Toast.makeText(this, R.string.text_screenshare_started, Toast.LENGTH_SHORT).show();
+                        invalidateOptionsMenu();
+                        return;
+                    }
                 }
-            } else {
-                Toast.makeText(this, R.string.pref_summary_detected_microphones_unsupported, Toast.LENGTH_SHORT).show();
             }
+            Toast.makeText(this, R.string.pref_summary_detected_microphones_unsupported, Toast.LENGTH_SHORT).show();
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -1242,9 +1244,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     private void handleScreenShareAction() {
         if (getService() == null) return;
         if (getService().isScreenSharingActive()) {
-            if (getService().getScreenShareManager() != null) {
-                getService().getScreenShareManager().stopShare();
-            }
+            getService().stopScreenShare();
             Toast.makeText(this, R.string.text_screenshare_stopped, Toast.LENGTH_SHORT).show();
             invalidateOptionsMenu();
         } else {
@@ -1285,7 +1285,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 prefs.edit().putInt(Preferences.PREF_VOICE_CHANGER_MODE, which).apply();
                 VoiceChanger.setVoiceChangerMode(which);
                 if (getService() != null) {
-                    getService().reinitSoundInputDevice();
+                    getService().onVoiceChangerModeChanged();
                 }
                 Toast.makeText(MainActivity.this, getString(R.string.voice_changer_active, effectNames[which]), Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
@@ -1382,6 +1382,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                                 .apply();
 
                         VoiceChanger.setEchoReverbConfig(newEcho, newEchoLvl, newReverb, newReverbLvl, newRoomSize);
+                        if (getService() != null) {
+                            getService().onVoiceChangerModeChanged();
+                        }
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
@@ -1404,8 +1407,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         prefs.edit().putInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, which).apply();
-                        if (getService() != null && getService().getExperimentalAudioCapture() != null) {
-                            getService().getExperimentalAudioCapture().setScreenShareAudioMode(which);
+                        if (getService() != null) {
+                            getService().setScreenShareAudioMode(which);
                         }
                         Toast.makeText(MainActivity.this, getString(R.string.screenshare_audio_changed, modes[which]), Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
@@ -3868,6 +3871,16 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         } else if (sparseIntArray.get(9) != 0) {
             this.audioIcons.play(this.sounds.get(9), 1.0f, 1.0f, 0, 0, 1.0f);
         }
+    }
+
+    @Override
+    public void onVoiceActivationStateChanged(final boolean transmitting) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                adjustTxState(transmitting);
+            }
+        });
     }
 
     private void showRecordingCompleteDialog(final File recordedFile) {

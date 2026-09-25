@@ -710,6 +710,10 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                             int chosenMode = options.get(which).deviceId;
                             prefs.edit().putInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, chosenMode).apply();
                             updateCaptureModeSummary(pref, prefs);
+                            PreferencesActivity act = (PreferencesActivity) getActivity();
+                            if (act != null && act.getService() != null) {
+                                act.getService().applyConfiguredInputDeviceSelection();
+                            }
                             dialog.dismiss();
                         }
                     })
@@ -740,6 +744,10 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                             String chosenId = options.get(which).deviceId;
                             prefs.edit().putString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, chosenId).apply();
                             updateInputDeviceSummary(pref, prefs);
+                            PreferencesActivity act = (PreferencesActivity) getActivity();
+                            if (act != null && act.getService() != null) {
+                                act.getService().applyConfiguredInputDeviceSelection();
+                            }
                             dialog.dismiss();
                         }
                     })
@@ -771,6 +779,10 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                             int chosenMode = options.get(which).mode;
                             ScreenShareAudioHelper.setAudioMode(prefs, chosenMode);
                             updateScreenAudioSummary(pref, prefs);
+                            PreferencesActivity act = (PreferencesActivity) getActivity();
+                            if (act != null && act.getService() != null) {
+                                act.getService().setScreenShareAudioMode(chosenMode);
+                            }
                             dialog.dismiss();
                         }
                     })

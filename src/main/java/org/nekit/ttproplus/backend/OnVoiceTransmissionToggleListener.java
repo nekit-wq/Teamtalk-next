@@ -29,4 +29,5 @@ public interface OnVoiceTransmissionToggleListener {
 
     void onVoiceActivationToggle(boolean voiceActivationEnabled, boolean isSuspended);
 
+    default void onVoiceActivationStateChanged(boolean transmitting) {}
 }
