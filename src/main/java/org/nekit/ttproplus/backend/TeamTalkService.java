@@ -759,7 +759,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return channel != null ? String.format("%s / %s", serverEntry.servername, this.mychannel.szName) : serverEntry.servername;
     }
 
-    private void displayNotification(boolean enabled) {
+    public void displayNotification(boolean enabled) {
         Notification notification = this.widget;
         if (enabled) {
             if (this.ttserver == null) {
@@ -809,7 +809,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 builder.addAction(R.drawable.teamtalk_green, getString(R.string.action_stream_control), streamPi);
             }
             this.widget = builder.build();
-            this.notificationManager.notify(1, this.widget);
+            ServiceCompat.startForeground(this, 1, this.widget, getMyForegroundServiceType());
             return;
         }
         if (this.notificationManager != null) {
@@ -822,12 +822,25 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.widget = null;
     }
 
-    private int getMyForegroundServiceType() {
+    public int getMyForegroundServiceType() {
         int type = 128 | 2; // FOREGROUND_SERVICE_TYPE_MICROPHONE | FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-        if (this.mediaProjection != null) {
+        if (this.isScreenSharingActive || this.mediaProjection != null) {
             type |= 32; // FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
         }
         return type;
+    }
+
+    public void refreshForegroundServiceType() {
+        if (this.widget == null) {
+            displayNotification(true);
+            return;
+        }
+        try {
+            int type = getMyForegroundServiceType();
+            ServiceCompat.startForeground(this, 1, this.widget, type);
+        } catch (Throwable t) {
+            Log.w("bearware", "Unable to refresh foreground service type", t);
+        }
     }
 
     public synchronized void acquireServiceLocks() {
@@ -1553,7 +1566,10 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     public void setScreenSharingActive(boolean active) {
-        this.isScreenSharingActive = active;
+        if (this.isScreenSharingActive != active) {
+            this.isScreenSharingActive = active;
+            refreshForegroundServiceType();
+        }
     }
 
     public boolean isScreenSharingActive() {

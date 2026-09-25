@@ -1223,13 +1223,23 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
             if (resultCode == -1 && data != null && getService() != null) {
                 if (Build.VERSION.SDK_INT >= 21) {
-                    MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-                    MediaProjection mp = mpm != null ? mpm.getMediaProjection(resultCode, data) : null;
-                    if (mp != null) {
-                        getService().startScreenShare(mp);
-                        Toast.makeText(this, R.string.text_screenshare_started, Toast.LENGTH_SHORT).show();
-                        invalidateOptionsMenu();
-                        return;
+                    try {
+                        getService().setScreenSharingActive(true);
+                        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+                        MediaProjection mp = mpm != null ? mpm.getMediaProjection(resultCode, data) : null;
+                        if (mp != null) {
+                            getService().startScreenShare(mp);
+                            Toast.makeText(this, R.string.text_screenshare_started, Toast.LENGTH_SHORT).show();
+                            invalidateOptionsMenu();
+                            return;
+                        } else {
+                            getService().setScreenSharingActive(false);
+                        }
+                    } catch (Throwable t) {
+                        Log.e(TAG, "Failed to start screen share", t);
+                        if (getService() != null) {
+                            getService().setScreenSharingActive(false);
+                        }
                     }
                 }
             }
@@ -1248,6 +1258,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             Toast.makeText(this, R.string.text_screenshare_stopped, Toast.LENGTH_SHORT).show();
             invalidateOptionsMenu();
         } else {
+            getService().displayNotification(true);
             if (Build.VERSION.SDK_INT >= 21) {
                 MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
                 if (mpm != null) {
