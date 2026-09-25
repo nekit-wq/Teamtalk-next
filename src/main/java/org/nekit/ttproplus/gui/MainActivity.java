@@ -1259,7 +1259,15 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
     private void showVoiceChangerDialog() {
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        int current = prefs.getInt(Preferences.PREF_VOICE_CHANGER_MODE, 0);
+        int current = 0;
+        try {
+            current = prefs.getInt(Preferences.PREF_VOICE_CHANGER_MODE, 0);
+        } catch (ClassCastException e) {
+            try {
+                current = Integer.parseInt(prefs.getString(Preferences.PREF_VOICE_CHANGER_MODE, "0"));
+            } catch (Exception ignored) {
+            }
+        }
 
         final String[] effectNames = new String[]{
                 getString(R.string.voice_effect_off),

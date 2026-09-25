@@ -687,14 +687,14 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         }
 
         private void updateCaptureModeSummary(Preference pref, SharedPreferences prefs) {
-            int mode = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, MicrophoneInputHelper.CAPTURE_MODE_DEFAULT);
+            int mode = MicrophoneInputHelper.getExperimentalCaptureMode(prefs);
             pref.setSummary(MicrophoneInputHelper.getExperimentalCaptureModeLabel(getActivity(), mode));
         }
 
         private void showCaptureModeDialog(final Preference pref, final SharedPreferences prefs) {
             final List<MicrophoneInputHelper.InputModeOption> options = MicrophoneInputHelper.getExperimentalCaptureModes(getActivity());
             String[] titles = new String[options.size()];
-            int current = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, MicrophoneInputHelper.CAPTURE_MODE_DEFAULT);
+            int current = MicrophoneInputHelper.getExperimentalCaptureMode(prefs);
             int selectedIdx = 0;
             for (int i = 0; i < options.size(); i++) {
                 titles[i] = options.get(i).title;
@@ -728,7 +728,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         private void showInputDeviceDialog(final Preference pref, final SharedPreferences prefs) {
             final List<MicrophoneInputHelper.InputDeviceOption> options = MicrophoneInputHelper.getAvailableExperimentalInputDevices(getActivity());
             String[] titles = new String[options.size()];
-            String current = prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT);
+            String current = MicrophoneInputHelper.getExperimentalInputDeviceId(prefs);
             int selectedIdx = 0;
             for (int i = 0; i < options.size(); i++) {
                 titles[i] = options.get(i).title;

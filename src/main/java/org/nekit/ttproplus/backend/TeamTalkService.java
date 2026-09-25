@@ -1374,7 +1374,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         int voxLevel = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL, 10);
         int voxStopDelay = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_STOP_DELAY, 500);
 
-        int screenAudioMode = prefs.getInt(Preferences.PREF_SCREENSHARE_AUDIO_MODE, ScreenShareAudioHelper.MODE_BOTH);
+        int screenAudioMode = ScreenShareAudioHelper.getAudioMode(prefs);
         this.experimentalAudioCapture.setScreenShareAudioMode(screenAudioMode);
         boolean micEnhance = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_MIC_ENHANCEMENTS, false);
         this.experimentalAudioCapture.setMicEnhancementEnabled(micEnhance);

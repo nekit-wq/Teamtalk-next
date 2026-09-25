@@ -182,10 +182,18 @@ public final class MicrophoneInputHelper {
     }
 
     public static int getExperimentalCaptureMode(SharedPreferences prefs) {
+        if (prefs == null) {
+            return 0;
+        }
         int mode = 0;
         try {
-            mode = Integer.parseInt(prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, "0"));
-        } catch (NumberFormatException ignored) {
+            mode = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, 0);
+        } catch (ClassCastException e) {
+            try {
+                mode = Integer.parseInt(prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_CAPTURE_MODE, "0"));
+            } catch (Exception ignored) {
+            }
+        } catch (Exception ignored) {
         }
         if (mode == 1 || mode == 2) {
             return mode;
@@ -212,8 +220,22 @@ public final class MicrophoneInputHelper {
     }
 
     public static String getExperimentalInputDeviceId(SharedPreferences prefs) {
-        String devId = prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, EXPERIMENTAL_INPUT_DEVICE_DEFAULT);
-        return TextUtils.isEmpty(devId) ? EXPERIMENTAL_INPUT_DEVICE_DEFAULT : devId;
+        if (prefs == null) {
+            return EXPERIMENTAL_INPUT_DEVICE_DEFAULT;
+        }
+        try {
+            String devId = prefs.getString(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, EXPERIMENTAL_INPUT_DEVICE_DEFAULT);
+            return TextUtils.isEmpty(devId) ? EXPERIMENTAL_INPUT_DEVICE_DEFAULT : devId;
+        } catch (ClassCastException e) {
+            try {
+                int devIdInt = prefs.getInt(Preferences.PREF_SOUNDSYSTEM_EXPERIMENTAL_INPUT_DEVICE, -1);
+                return devIdInt != -1 ? String.valueOf(devIdInt) : EXPERIMENTAL_INPUT_DEVICE_DEFAULT;
+            } catch (Exception ignored) {
+                return EXPERIMENTAL_INPUT_DEVICE_DEFAULT;
+            }
+        } catch (Exception ignored) {
+            return EXPERIMENTAL_INPUT_DEVICE_DEFAULT;
+        }
     }
 
     public static String getExperimentalInputDeviceLabel(Context context, SharedPreferences prefs) {
