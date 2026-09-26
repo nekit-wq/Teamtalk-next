@@ -74,33 +74,29 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.28.4-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.28.5-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.28.4' }}
-          name: "TeamTalk Next v5.28.4"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.28.5' }}
+          name: "TeamTalk Next v5.28.5"
           body: |
-            ### TeamTalk Next v5.28.4 — Стереомикрофон по умолчанию, стриминг и фиксы Android 14+
+            ### TeamTalk Next v5.28.5 — 9-полосный эквалайзер микрофона, выбор микрофона звонка и фикс записи в сторонних приложениях
 
-            #### 🎙 Улучшения микрофона и звука:
-            - **Стереомикрофон по умолчанию:** Захват голоса теперь по умолчанию запускается в режиме Stereo (2 канала) через стереофонические аудиоисточники устройства.
-            - **Автоматический Fallback:** Если устройство физически не поддерживает 2 канала, захват плавно и автоматически переключается в моно без сбоев.
-            - **Сохранение стереобазы:** Системные фильтры Android AEC/NS автоматически отключаются в режиме стерео, предотвращая схлопывание каналов в моно.
-
-            #### 🛡 Стабильность и поддержка Android 14–16 (SDK 34–36):
-            - **Фикс MediaProjection SecurityException:** Корректное динамическое повышение типа Foreground Service до `FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION` перед захватом экрана.
-            - **Фикс ClassCastException:** Безопасное чтение числовых и строковых настроек микрофона из `SharedPreferences`.
+            #### 🎙 Улучшения микрофона и эквалайзера:
+            - **9-полосный эквалайзер микрофона:** Полноценная программная обработка частотных полос микрофона в реальном времени на базе biquad IIR-фильтров.
+            - **Выбор «Микрофона звонка»:** Добавлена опция выбора микрофона голосовой связи без перевода системы в режим звонка.
+            - **Фикс параллельной записи (Telegram и др.):** Устранено глушение записи голосовых сообщений в сторонних приложениях при включённой передаче или активации голосом.
 
             #### 📦 Обновление версий и библиотек:
-            - **Версия приложения:** Обновлена до `5.28.4` (build `437`).
-            - **Нативные библиотеки:** Встроенные библиотеки `libTeamTalk5-jni.so` (arm64-v8a, armeabi-v7a) синхронизированы и пропатчены до версии `5.28.4`.
+            - **Версия приложения:** Обновлена до `5.28.5` (build `438`).
+            - **Нативные библиотеки:** Встроенные библиотеки `libTeamTalk5-jni.so` (arm64-v8a, armeabi-v7a) синхронизированы и пропатчены до версии `5.28.5`.
           draft: false
           prerelease: false
           files: |
             build/outputs/apk/release/*.apk
-            TeamTalkNext-5.28.4-source.zip
+            TeamTalkNext-5.28.5-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -92,6 +92,7 @@ public final class ExperimentalAudioCapture {
                             }
                             VoiceChanger.resetState();
                             MicEnhancement.resetState();
+                            MicrophoneEqualizer.resetState();
                             Thread th = new Thread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -191,6 +192,7 @@ public final class ExperimentalAudioCapture {
         volatile int voxLevel;
         volatile int voxStopDelayMs = 500;
         volatile boolean voiceTransmitting;
+        volatile boolean silencedByPolicy = false;
 
         public CaptureSession(AudioRecord audioRecord, AudioRecord internalAudioRecord, int sampleRate,
                               int channels, int frameSamples, int streamId, float gainMultiplier,
@@ -369,7 +371,7 @@ public final class ExperimentalAudioCapture {
                     this.captureSession.voxEnabled = config.voxEnabled;
                     this.captureSession.voxLevel = config.voxLevel;
                     this.captureSession.voxStopDelayMs = config.voxStopDelayMs;
-                    if (config.voxEnabled) {
+                    if (config.voxEnabled || this.captureSession.audioSource == 7) {
                         this.captureSession.applyPreprocessorsConfig(true);
                     }
                 }
@@ -399,6 +401,7 @@ public final class ExperimentalAudioCapture {
             }
             VoiceChanger.resetState();
             MicEnhancement.resetState();
+            MicrophoneEqualizer.resetState();
             Thread th = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -596,6 +599,17 @@ public final class ExperimentalAudioCapture {
         long silenceStartTime = 0;
 
         while (this.running) {
+            if (session.silencedByPolicy) {
+                if (transmitting) {
+                    transmitting = false;
+                    session.voiceTransmitting = false;
+                    flushEmptyAudioBlock();
+                    notifyVoiceActivation(false);
+                }
+                SystemClock.sleep(50L);
+                continue;
+            }
+
             int bytesRead = 0;
             int micReadAttempts = 0;
             while (this.running && bytesRead < frameBytes) {
@@ -605,6 +619,11 @@ public final class ExperimentalAudioCapture {
                     this.lastCaptureActivityUptimeMs = SystemClock.uptimeMillis();
                     micReadAttempts = 0;
                 } else if (read < 0) {
+                    if (session.silencedByPolicy) {
+                        micReadAttempts = 0;
+                        SystemClock.sleep(50L);
+                        continue;
+                    }
                     micReadAttempts++;
                     Log.w(TAG, "Experimental capture mic read error: " + read + ", attempt " + micReadAttempts);
                     if (micReadAttempts >= 5) {
@@ -643,6 +662,7 @@ public final class ExperimentalAudioCapture {
                                 if (this.micEnhancementEnabled) {
                                     MicEnhancement.process(preBuf, 0, frameBytes, session.sampleRate, session.channels);
                                 }
+                                MicrophoneEqualizer.process(preBuf, 0, frameBytes, session.sampleRate, session.channels);
                                 VoiceChanger.process(preBuf, 0, frameBytes, session.sampleRate, session.channels);
                                 applyGain(preBuf, session.gainMultiplier);
 
@@ -689,6 +709,9 @@ public final class ExperimentalAudioCapture {
                 if (this.micEnhancementEnabled && screenMode != ScreenShareAudioHelper.MODE_SCREEN_ONLY) {
                     MicEnhancement.process(micBuffer, 0, frameBytes, session.sampleRate, session.channels);
                 }
+                if (screenMode != ScreenShareAudioHelper.MODE_SCREEN_ONLY) {
+                    MicrophoneEqualizer.process(micBuffer, 0, frameBytes, session.sampleRate, session.channels);
+                }
                 mixInternalAudio(session, micBuffer, internalBuffer, frameBytes, internalGain, screenMode);
                 if (screenMode != ScreenShareAudioHelper.MODE_SCREEN_ONLY) {
                     VoiceChanger.process(micBuffer, 0, frameBytes, session.sampleRate, session.channels);
@@ -711,8 +734,11 @@ public final class ExperimentalAudioCapture {
     private CaptureSession openSessionForConfig(Config config) {
         AudioDeviceInfo preferredDevice = findPreferredInputDevice(config.preferredInputDeviceId);
 
-        // If explicitly forced to MONO, skip stereo pass
-        if (config.captureMode == MicrophoneInputHelper.CAPTURE_MODE_MONO) {
+        boolean isCallMic = MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_CALL.equals(config.preferredInputDeviceId);
+
+        // Call microphone (AudioSource.VOICE_COMMUNICATION) is telephony voice processing and strictly mono.
+        // Also skip stereo pass if explicitly forced to MONO.
+        if (isCallMic || config.captureMode == MicrophoneInputHelper.CAPTURE_MODE_MONO) {
             return openSessionInternal(config, preferredDevice, false);
         }
 
@@ -739,19 +765,25 @@ public final class ExperimentalAudioCapture {
             sampleRates.add(8000);
         } else {
             if (config.sampleRate > 0) sampleRates.add(config.sampleRate);
-            sampleRates.add(16000);
             sampleRates.add(OpusConstants.DEFAULT_OPUS_SAMPLERATE);
+            sampleRates.add(16000);
+            sampleRates.add(44100);
+            sampleRates.add(32000);
             sampleRates.add(8000);
         }
 
+        boolean isCallMic = MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_CALL.equals(config.preferredInputDeviceId);
         int[] sources;
         int channelMask = stereo ? AudioFormat.CHANNEL_IN_STEREO : AudioFormat.CHANNEL_IN_MONO;
-        if (stereo) {
+        if (isCallMic) {
+            // Explicit call microphone requested by user - VOICE_COMMUNICATION is strictly mono
+            sources = stereo ? new int[]{1, 6, 0, 9, 5} : new int[]{7, 1, 6, 0};
+        } else if (stereo) {
             // Prioritize stereo-capable recording sources
             sources = new int[]{5, 9, 6, 1, 0}; // CAMCORDER, UNPROCESSED, VOICE_RECOGNITION, MIC, DEFAULT
         } else {
-            // Mono sources
-            sources = new int[]{7, 1, 6, 0, 9, 5}; // VOICE_COMMUNICATION, MIC, VOICE_RECOGNITION, DEFAULT, UNPROCESSED, CAMCORDER
+            // Standard mono sources: avoid VOICE_COMMUNICATION to prevent silencing other apps (e.g., Telegram voice messages)
+            sources = new int[]{1, 6, 0, 9, 5}; // MIC, VOICE_RECOGNITION, DEFAULT, UNPROCESSED, CAMCORDER
         }
 
         for (int sr : sampleRates) {
@@ -771,7 +803,9 @@ public final class ExperimentalAudioCapture {
     }
 
     private AudioDeviceInfo findPreferredInputDevice(String deviceId) {
-        if (this.audioManager != null && !TextUtils.isEmpty(deviceId) && !MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT.equals(deviceId)) {
+        if (this.audioManager != null && !TextUtils.isEmpty(deviceId)
+                && !MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT.equals(deviceId)
+                && !MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_CALL.equals(deviceId)) {
             AudioDeviceInfo[] devices = this.audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
             if (devices != null) {
                 for (AudioDeviceInfo dev : devices) {
@@ -869,7 +903,7 @@ public final class ExperimentalAudioCapture {
     private boolean startCaptureSession(final CaptureSession session) {
         try {
             session.audioRecord.startRecording();
-            session.applyPreprocessorsConfig(session.voxEnabled);
+            session.applyPreprocessorsConfig(session.voxEnabled || session.audioSource == 7);
             if (session.internalAudioRecord != null) {
                 try {
                     session.internalAudioRecord.startRecording();
@@ -889,11 +923,13 @@ public final class ExperimentalAudioCapture {
                             for (AudioRecordingConfiguration cfg : configs) {
                                 if (cfg != null && cfg.getClientAudioSessionId() == session.audioRecord.getAudioSessionId()) {
                                     if (cfg.isClientSilenced()) {
+                                        session.silencedByPolicy = true;
                                         if (!wasSilenced) {
                                             Log.w(TAG, "AudioRecord client silenced by system policy");
                                         }
                                         wasSilenced = true;
                                     } else {
+                                        session.silencedByPolicy = false;
                                         if (wasSilenced) {
                                             wasSilenced = false;
                                             Log.i(TAG, "AudioRecord unsilenced. Scheduling restart.");

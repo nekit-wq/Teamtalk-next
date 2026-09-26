@@ -21,6 +21,7 @@ import dk.bearware.SoundLevel;
 import java.util.Locale;
 import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.backend.AudioEffectsManager;
+import org.nekit.ttproplus.backend.MicrophoneEqualizer;
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
@@ -495,6 +496,7 @@ public class EqualizerActivity extends AppCompatActivity implements TeamTalkConn
                     seekBar.setContentDescription(text);
                     if (fromUser) {
                         EqualizerActivity.this.prefs.edit().putInt(Preferences.PREF_EQ_MIC_BAND_PREFIX + band, db).apply();
+                        MicrophoneEqualizer.setBandGain(band, db);
                         EqualizerActivity.this.notifyServiceAudioChange();
                     }
                 }
@@ -784,6 +786,7 @@ public class EqualizerActivity extends AppCompatActivity implements TeamTalkConn
         for (int i = 0; i < 9; i++) {
             this.prefs.edit().putInt(Preferences.PREF_EQ_MIC_BAND_PREFIX + i, 0).apply();
         }
+        MicrophoneEqualizer.setBands(new float[MicrophoneEqualizer.NUM_BANDS]);
         buildMicrophoneBands();
 
         this.seekBarVox.setProgress(0);

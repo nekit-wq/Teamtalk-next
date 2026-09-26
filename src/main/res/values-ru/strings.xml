@@ -1343,6 +1343,8 @@
     <string name="pref_summary_experimental_input_device">Физический микрофон для голосовой связи</string>
     <string name="pref_experimental_input_device_default_title">Системный по умолчанию</string>
     <string name="pref_experimental_input_device_default_summary">Автоматический выбор системой Android</string>
+    <string name="pref_experimental_input_device_call_title">Микрофон звонка</string>
+    <string name="pref_experimental_input_device_call_summary">Микрофон голосовой связи без перехода в режим звонка</string>
     <string name="pref_microphone_device_builtin_title">Микрофон телефона</string>
     <string name="pref_microphone_device_builtin_summary">Встроенный микрофон устройства</string>
     <string name="pref_microphone_device_wired_title">Проводная гарнитура</string>
@@ -1411,4 +1413,27 @@
     <string name="pref_cat_soundsystem_input">Вход звука</string>
     <string name="pref_cat_soundsystem_output">Выход звука</string>
     <string name="pref_cat_soundsystem_levels">Уровни громкости</string>
+
+    <!-- Private Chats -->
+    <string name="title_activity_private_chats">Личные сообщения</string>
+    <string name="private_chats_search_hint">Поиск сообщений…</string>
+    <string name="private_chats_empty_title">Нет личных сообщений</string>
+    <string name="private_chats_empty_desc">Пользователи, которые писали вам в личку, появятся здесь</string>
+    <string name="private_chats_count_format">%1$d диалогов • %2$d в сети</string>
+    <string name="user_online">В сети</string>
+    <string name="user_offline">Не в сети</string>
+    <string name="user_offline_chat_hint">Пользователь не в сети</string>
+    <string name="you_prefix">Вы: </string>
+    <string name="date_yesterday">Вчера</string>
+    <string name="action_open_chat">Открыть чат</string>
+    <string name="action_copy_name">Скопировать имя</string>
+    <string name="action_delete_dialog">Удалить переписку</string>
+    <string name="dialog_delete_confirm">Удалить переписку с %s?</string>
+    <string name="conversation_deleted">Переписка удалена</string>
+    <string name="title_section_private_tab">Личные</string>
+    <string name="filter_dialogs_server">На сервере</string>
+    <string name="filter_dialogs_all">Вся история</string>
+    <string name="filter_dialogs_online">В сети</string>
+    <string name="private_chats_empty_server_title">Нет сообщений за сессию</string>
+    <string name="private_chats_empty_server_desc">Пользователи, которые напишут вам во время пребывания на сервере, появятся здесь</string>
 </resources>

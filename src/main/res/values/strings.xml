@@ -1347,6 +1347,8 @@ By: %3$s"</string>
     <string name="pref_summary_experimental_input_device">Choose which Android input device TeamTalk should prefer</string>
     <string name="pref_experimental_input_device_default_title">System default</string>
     <string name="pref_experimental_input_device_default_summary">Let Android choose the current input device automatically</string>
+    <string name="pref_experimental_input_device_call_title">Call microphone</string>
+    <string name="pref_experimental_input_device_call_summary">Voice communication microphone without switching to call mode</string>
     <string name="pref_microphone_device_builtin_title">Phone microphone</string>
     <string name="pref_microphone_device_builtin_summary">Use device internal microphone</string>
     <string name="pref_microphone_device_wired_title">Wired headset</string>
@@ -1415,4 +1417,27 @@ By: %3$s"</string>
     <string name="pref_cat_soundsystem_input">Audio Input</string>
     <string name="pref_cat_soundsystem_output">Audio Output</string>
     <string name="pref_cat_soundsystem_levels">Audio Levels</string>
+
+    <!-- Private Chats -->
+    <string name="title_activity_private_chats">Private messages</string>
+    <string name="private_chats_search_hint">Search messages…</string>
+    <string name="private_chats_empty_title">No private messages</string>
+    <string name="private_chats_empty_desc">Users who write to you in private will appear here</string>
+    <string name="private_chats_count_format">%1$d conversations • %2$d online</string>
+    <string name="user_online">Online</string>
+    <string name="user_offline">Offline</string>
+    <string name="user_offline_chat_hint">User is offline</string>
+    <string name="you_prefix">You: </string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="action_open_chat">Open chat</string>
+    <string name="action_copy_name">Copy name</string>
+    <string name="action_delete_dialog">Delete conversation</string>
+    <string name="dialog_delete_confirm">Delete conversation with %s?</string>
+    <string name="conversation_deleted">Conversation deleted</string>
+    <string name="title_section_private_tab">Private</string>
+    <string name="filter_dialogs_server">Server</string>
+    <string name="filter_dialogs_all">All history</string>
+    <string name="filter_dialogs_online">Online</string>
+    <string name="private_chats_empty_server_title">No messages in session</string>
+    <string name="private_chats_empty_server_desc">Users who message you while connected to the server will appear here</string>
 </resources>

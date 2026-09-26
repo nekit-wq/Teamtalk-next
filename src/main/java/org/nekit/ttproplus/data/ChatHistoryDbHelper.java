@@ -409,4 +409,204 @@ public class ChatHistoryDbHelper extends SQLiteOpenHelper {
         entry.setOutgoing(cursor.getInt(idx.isOutgoing) == 1);
         return entry;
     }
+
+    public static class PrivateDialogEntry {
+        public String peerKey = "";
+        public int peerUserId = 0;
+        public String peerUsername = "";
+        public String peerNickname = "";
+        public String lastMessage = "";
+        public long lastTimestamp = 0;
+        public boolean lastIsOutgoing = false;
+        public int messageCount = 0;
+        public boolean isOnline = false;
+        public int currentUserId = -1;
+        public String channelName = "";
+
+        public String getDisplayName() {
+            if (peerNickname != null && !peerNickname.trim().isEmpty()) {
+                return peerNickname;
+            }
+            if (peerUsername != null && !peerUsername.trim().isEmpty()) {
+                return peerUsername;
+            }
+            return "#" + peerUserId;
+        }
+    }
+
+    public List<PrivateDialogEntry> getPrivateDialogs(String serverKey) {
+        List<PrivateDialogEntry> list = new ArrayList<>();
+        java.util.LinkedHashMap<String, PrivateDialogEntry> map = new java.util.LinkedHashMap<>();
+        try {
+            SQLiteDatabase db = getReadableDatabase();
+            StringBuilder where = new StringBuilder();
+            List<String> args = new ArrayList<>();
+
+            where.append(COL_MSG_TYPE).append(" = ?");
+            args.add(String.valueOf(ChatMessageEntry.TYPE_PRIVATE));
+
+            if (serverKey != null && !serverKey.isEmpty()) {
+                where.append(" AND ").append(COL_SERVER_KEY).append(" = ?");
+                args.add(serverKey);
+            }
+
+            try (Cursor cursor = db.query(TABLE_HISTORY, null,
+                    where.toString(), args.toArray(new String[0]),
+                    null, null, COL_TIMESTAMP + " DESC", null)) {
+
+                if (cursor != null && cursor.moveToFirst()) {
+                    ColumnIndices indices = new ColumnIndices(cursor);
+                    do {
+                        boolean isOutgoing = cursor.getInt(indices.isOutgoing) == 1;
+                        int peerId = isOutgoing ? cursor.getInt(indices.toUserId) : cursor.getInt(indices.fromUserId);
+                        String peerUser = isOutgoing ? cursor.getString(indices.toUsername) : cursor.getString(indices.fromUsername);
+                        String peerNick = isOutgoing ? cursor.getString(indices.toNickname) : cursor.getString(indices.fromNickname);
+                        String msgText = cursor.getString(indices.messageText);
+                        long ts = cursor.getLong(indices.timestamp);
+
+                        if (peerUser == null) peerUser = "";
+                        if (peerNick == null) peerNick = "";
+                        peerUser = peerUser.trim();
+                        peerNick = peerNick.trim();
+
+                        String key;
+                        if (!peerUser.isEmpty()) {
+                            key = "user:" + peerUser.toLowerCase(Locale.ROOT);
+                        } else if (!peerNick.isEmpty()) {
+                            key = "nick:" + peerNick.toLowerCase(Locale.ROOT);
+                        } else {
+                            key = "id:" + peerId;
+                        }
+
+                        PrivateDialogEntry dialog = map.get(key);
+                        if (dialog == null) {
+                            dialog = new PrivateDialogEntry();
+                            dialog.peerKey = key;
+                            dialog.peerUserId = peerId;
+                            dialog.peerUsername = peerUser;
+                            dialog.peerNickname = !peerNick.isEmpty() ? peerNick : (!peerUser.isEmpty() ? peerUser : ("#" + peerId));
+                            dialog.lastMessage = msgText != null ? msgText : "";
+                            dialog.lastTimestamp = ts;
+                            dialog.lastIsOutgoing = isOutgoing;
+                            dialog.messageCount = 1;
+                            map.put(key, dialog);
+                            list.add(dialog);
+                        } else {
+                            dialog.messageCount++;
+                            if (ts > dialog.lastTimestamp) {
+                                dialog.lastTimestamp = ts;
+                                dialog.lastMessage = msgText != null ? msgText : "";
+                                dialog.lastIsOutgoing = isOutgoing;
+                                if (!peerNick.isEmpty()) dialog.peerNickname = peerNick;
+                                if (!peerUser.isEmpty()) dialog.peerUsername = peerUser;
+                            }
+                        }
+                    } while (cursor.moveToNext());
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching private dialogs: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public List<ChatMessageEntry> getMessagesForPeer(String serverKey, String peerUsername, String peerNickname, int peerUserId, int limit) {
+        List<ChatMessageEntry> list = new ArrayList<>();
+        try {
+            SQLiteDatabase db = getReadableDatabase();
+            StringBuilder where = new StringBuilder();
+            List<String> args = new ArrayList<>();
+
+            where.append(COL_MSG_TYPE).append(" = ?");
+            args.add(String.valueOf(ChatMessageEntry.TYPE_PRIVATE));
+
+            if (serverKey != null && !serverKey.isEmpty()) {
+                where.append(" AND ").append(COL_SERVER_KEY).append(" = ?");
+                args.add(serverKey);
+            }
+
+            StringBuilder peerCond = new StringBuilder();
+            if (peerUsername != null && !peerUsername.trim().isEmpty()) {
+                peerCond.append("(").append(COL_FROM_USERNAME).append(" = ? OR ").append(COL_TO_USERNAME).append(" = ?)");
+                args.add(peerUsername.trim());
+                args.add(peerUsername.trim());
+            }
+            if (peerNickname != null && !peerNickname.trim().isEmpty()) {
+                if (peerCond.length() > 0) peerCond.append(" OR ");
+                peerCond.append("(").append(COL_FROM_NICKNAME).append(" = ? OR ").append(COL_TO_NICKNAME).append(" = ?)");
+                args.add(peerNickname.trim());
+                args.add(peerNickname.trim());
+            }
+            if (peerUserId > 0) {
+                if (peerCond.length() > 0) peerCond.append(" OR ");
+                peerCond.append("(").append(COL_FROM_USER_ID).append(" = ? OR ").append(COL_TO_USER_ID).append(" = ?)");
+                args.add(String.valueOf(peerUserId));
+                args.add(String.valueOf(peerUserId));
+            }
+
+            if (peerCond.length() > 0) {
+                where.append(" AND (").append(peerCond).append(")");
+            }
+
+            String limitStr = limit > 0 ? String.valueOf(limit) : "200";
+            try (Cursor cursor = db.query(TABLE_HISTORY, null,
+                    where.toString(), args.toArray(new String[0]),
+                    null, null, COL_TIMESTAMP + " ASC", limitStr)) {
+
+                if (cursor != null && cursor.moveToFirst()) {
+                    ColumnIndices indices = new ColumnIndices(cursor);
+                    do {
+                        list.add(cursorToEntry(cursor, indices));
+                    } while (cursor.moveToNext());
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching messages for peer: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public boolean deletePrivateDialog(String serverKey, String peerUsername, String peerNickname, int peerUserId) {
+        try {
+            SQLiteDatabase db = getWritableDatabase();
+            StringBuilder where = new StringBuilder();
+            List<String> args = new ArrayList<>();
+
+            where.append(COL_MSG_TYPE).append(" = ?");
+            args.add(String.valueOf(ChatMessageEntry.TYPE_PRIVATE));
+
+            if (serverKey != null && !serverKey.isEmpty()) {
+                where.append(" AND ").append(COL_SERVER_KEY).append(" = ?");
+                args.add(serverKey);
+            }
+
+            StringBuilder peerCond = new StringBuilder();
+            if (peerUsername != null && !peerUsername.trim().isEmpty()) {
+                peerCond.append("(").append(COL_FROM_USERNAME).append(" = ? OR ").append(COL_TO_USERNAME).append(" = ?)");
+                args.add(peerUsername.trim());
+                args.add(peerUsername.trim());
+            }
+            if (peerNickname != null && !peerNickname.trim().isEmpty()) {
+                if (peerCond.length() > 0) peerCond.append(" OR ");
+                peerCond.append("(").append(COL_FROM_NICKNAME).append(" = ? OR ").append(COL_TO_NICKNAME).append(" = ?)");
+                args.add(peerNickname.trim());
+                args.add(peerNickname.trim());
+            }
+            if (peerUserId > 0) {
+                if (peerCond.length() > 0) peerCond.append(" OR ");
+                peerCond.append("(").append(COL_FROM_USER_ID).append(" = ? OR ").append(COL_TO_USER_ID).append(" = ?)");
+                args.add(String.valueOf(peerUserId));
+                args.add(String.valueOf(peerUserId));
+            }
+
+            if (peerCond.length() > 0) {
+                where.append(" AND (").append(peerCond).append(")");
+                db.delete(TABLE_HISTORY, where.toString(), args.toArray(new String[0]));
+                return true;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error deleting private dialog: " + e.getMessage());
+        }
+        return false;
+    }
 }

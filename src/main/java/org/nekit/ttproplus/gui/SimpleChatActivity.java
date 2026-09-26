@@ -174,6 +174,7 @@ public class SimpleChatActivity extends AppCompatActivity
                 for (MyTextMessage m : textmsg.split()) {
                     sent = sent && ttclient.doTextMessage(m) > 0;
                     service.getUserTextMsgs(userid).add(m);
+                    service.recordSessionPrivateMessage(userid, targetName, m.szMessage, true, System.currentTimeMillis());
                     ChatHistoryDbHelper.getInstance(SimpleChatActivity.this).saveOutgoingMessage(srvKey, m, name, targetName, "");
                 }
                 if (sent) {

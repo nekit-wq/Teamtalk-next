@@ -140,6 +140,15 @@ import org.nekit.ttproplus.data.TTSWrapper;
 import org.nekit.ttproplus.data.TextMessageAdapter;
 import org.nekit.ttproplus.gui.MainActivity;
 import org.nekit.ttproplus.utils.PrefsHelper;
+import android.graphics.drawable.GradientDrawable;
+import android.text.Editable;
+import android.text.TextWatcher;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import org.nekit.ttproplus.data.ChatHistoryDbHelper;
+import org.nekit.ttproplus.data.ChatHistoryDbHelper.PrivateDialogEntry;
 
 public class MainActivity extends AppCompatActivity implements TeamTalkConnectionListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener, PopupMenu.OnMenuItemClickListener, SensorEventListener, OnVoiceTransmissionToggleListener, ClientEventListener.OnConnectionLostListener, ClientEventListener.OnCmdProcessingListener, ClientEventListener.OnCmdMyselfLoggedInListener, ClientEventListener.OnCmdMyselfLoggedOutListener, ClientEventListener.OnCmdMyselfKickedFromChannelListener, ClientEventListener.OnCmdUserUpdateListener, ClientEventListener.OnCmdUserLeftChannelListener, ClientEventListener.OnCmdChannelNewListener, ClientEventListener.OnCmdUserTextMessageListener, ClientEventListener.OnCmdUserJoinedChannelListener, ClientEventListener.OnCmdChannelRemoveListener, ClientEventListener.OnCmdChannelUpdateListener, ClientEventListener.OnCmdUserLoggedOutListener, ClientEventListener.OnCmdUserLoggedInListener, ClientEventListener.OnCmdFileRemoveListener, ClientEventListener.OnUserStateChangeListener, ClientEventListener.OnVoiceActivationListener, ClientEventListener.OnCmdFileNewListener {
     static final String MESSAGE_NOTIFICATION_TAG = "incoming_message";
@@ -151,6 +160,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     ChannelListAdapter channelsAdapter;
     ChannelsSectionFragment channelsFragment;
     ChatSectionFragment chatFragment;
+    PrivateChatsSectionFragment privateChatsFragment;
     private Context ctx;
     Channel curchannel;
     FileListAdapter filesAdapter;
@@ -1023,6 +1033,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.ttsWrapper.setAccessibilityStream(((Boolean) this.prefs.get("pref_a11y_volume", false)).booleanValue());
             this.ttsWrapper.switchEngine((String) this.prefs.get("pref_speech_engine", TTSWrapper.defaultEngineName));
         }
+        if (this.privateChatsFragment != null) {
+            this.privateChatsFragment.reloadDialogs();
+        }
     }
 
     private int loadSound(PrefsHelper prefs, Context context, String soundPack, String key, int defaultResId) {
@@ -1546,9 +1559,10 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         public class SectionsPagerAdapter extends FragmentPagerAdapter implements ViewPager.OnPageChangeListener {
         public static final int CHANNELS_PAGE = 0;
         public static final int CHAT_PAGE = 1;
-        public static final int FILES_PAGE = 3;
         public static final int MEDIA_PAGE = 2;
-        public static final int PAGE_COUNT = 4;
+        public static final int FILES_PAGE = 3;
+        public static final int PRIVATE_CHATS_PAGE = 4;
+        public static final int PAGE_COUNT = 5;
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm, 1);
@@ -1570,6 +1584,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 case 3:
                     MainActivity.this.filesFragment = (FilesSectionFragment) fragment;
                     break;
+                case 4:
+                    MainActivity.this.privateChatsFragment = (PrivateChatsSectionFragment) fragment;
+                    break;
             }
             return fragment;
         }
@@ -1586,6 +1603,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 case 3:
                     MainActivity.this.filesFragment = new FilesSectionFragment();
                     return MainActivity.this.filesFragment;
+                case 4:
+                    MainActivity.this.privateChatsFragment = new PrivateChatsSectionFragment();
+                    return MainActivity.this.privateChatsFragment;
                 default:
                     MainActivity.this.channelsFragment = new ChannelsSectionFragment();
                     return MainActivity.this.channelsFragment;
@@ -1594,7 +1614,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         @Override
         public int getCount() {
-            return 4;
+            return 5;
         }
 
         @Override
@@ -1609,6 +1629,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     return MainActivity.this.getString(R.string.title_section_media).toUpperCase(l);
                 case 3:
                     return MainActivity.this.getString(R.string.title_section_files).toUpperCase(l);
+                case 4:
+                    return MainActivity.this.getString(R.string.title_section_private_tab).toUpperCase(l);
                 default:
                     return null;
             }
@@ -2028,6 +2050,535 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 if (mainActivity.getFilesAdapter() != null) {
                     setListAdapter(mainActivity.getFilesAdapter());
                 }
+            }
+        }
+    }
+
+    public static class PrivateChatsSectionFragment extends Fragment {
+        MainActivity mainActivity;
+        private EditText searchEdit;
+        private ImageButton btnClearSearch;
+        private TextView countText;
+        private ListView listView;
+        private View emptyView;
+        private PrivateChatsAdapter adapter;
+        private final List<PrivateDialogEntry> allDialogs = new ArrayList<>();
+        private final List<PrivateDialogEntry> filteredDialogs = new ArrayList<>();
+        private String currentSearchQuery = "";
+
+        public static final int FILTER_SERVER = 0;  // "На сервере"
+        public static final int FILTER_ALL = 1;     // "Вся история"
+        public static final int FILTER_ONLINE = 2;  // "В сети"
+
+        private int currentFilterMode = FILTER_SERVER;
+        private TextView btnFilterServer;
+        private TextView btnFilterAll;
+        private TextView btnFilterOnline;
+
+        private static final int[] AVATAR_COLORS = {
+                0xFFE53935, 0xFF1E88E5, 0xFF43A047, 0xFFFB8C00, 0xFF8E24AA,
+                0xFF00ACC1, 0xFF3949AB, 0xFFD81B60, 0xFF546E7A, 0xFF6D4C41,
+                0xFFC0CA33, 0xFFF4511E, 0xFF00897B, 0xFF5C6BC0, 0xFFEC407A
+        };
+
+        @Override
+        public void onAttach(Context context) {
+            super.onAttach(context);
+            if (context instanceof MainActivity) {
+                this.mainActivity = (MainActivity) context;
+            }
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            if (activity instanceof MainActivity) {
+                this.mainActivity = (MainActivity) activity;
+            }
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_main_private_chats, container, false);
+            if (this.mainActivity == null && getActivity() instanceof MainActivity) {
+                this.mainActivity = (MainActivity) getActivity();
+            }
+            if (this.mainActivity != null && this.mainActivity.accessibilityAssistant != null) {
+                this.mainActivity.accessibilityAssistant.registerPage(rootView, 4);
+            }
+
+            searchEdit = rootView.findViewById(R.id.private_chats_search_edit);
+            btnClearSearch = rootView.findViewById(R.id.private_chats_btn_clear_search);
+            btnFilterServer = rootView.findViewById(R.id.filter_btn_server);
+            btnFilterAll = rootView.findViewById(R.id.filter_btn_all);
+            btnFilterOnline = rootView.findViewById(R.id.filter_btn_online);
+            countText = rootView.findViewById(R.id.private_chats_count_text);
+            listView = rootView.findViewById(R.id.private_chats_listview);
+            emptyView = rootView.findViewById(R.id.private_chats_empty_view);
+
+            if (getActivity() != null) {
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                currentFilterMode = sp.getInt("pref_private_chats_filter_mode", FILTER_SERVER);
+            }
+
+            updateFilterUi();
+
+            if (btnFilterServer != null) {
+                btnFilterServer.setOnClickListener(v -> setFilterMode(FILTER_SERVER));
+            }
+            if (btnFilterAll != null) {
+                btnFilterAll.setOnClickListener(v -> setFilterMode(FILTER_ALL));
+            }
+            if (btnFilterOnline != null) {
+                btnFilterOnline.setOnClickListener(v -> setFilterMode(FILTER_ONLINE));
+            }
+
+            adapter = new PrivateChatsAdapter();
+            if (listView != null) {
+                listView.setAdapter(adapter);
+                listView.setEmptyView(emptyView);
+            }
+
+            setupSearch();
+            setupListActions();
+            reloadDialogs();
+
+            return rootView;
+        }
+
+        private void setFilterMode(int mode) {
+            currentFilterMode = mode;
+            if (getActivity() != null) {
+                PreferenceManager.getDefaultSharedPreferences(getActivity())
+                        .edit().putInt("pref_private_chats_filter_mode", mode).apply();
+            }
+            updateFilterUi();
+            reloadDialogs();
+        }
+
+        private void updateFilterUi() {
+            if (btnFilterServer == null || btnFilterAll == null || btnFilterOnline == null) return;
+            setChipStyle(btnFilterServer, currentFilterMode == FILTER_SERVER);
+            setChipStyle(btnFilterAll, currentFilterMode == FILTER_ALL);
+            setChipStyle(btnFilterOnline, currentFilterMode == FILTER_ONLINE);
+        }
+
+        private void setChipStyle(TextView view, boolean selected) {
+            if (selected) {
+                view.setBackgroundResource(R.drawable.chip_filter_selected);
+                view.setTextColor(0xFFFFFFFF);
+                view.setTypeface(null, android.graphics.Typeface.BOLD);
+            } else {
+                view.setBackgroundResource(R.drawable.chip_filter_unselected);
+                if (getContext() != null) {
+                    view.setTextColor(getContext().getResources().getColor(R.color.textSecondary));
+                }
+                view.setTypeface(null, android.graphics.Typeface.NORMAL);
+            }
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            reloadDialogs();
+        }
+
+        private void setupSearch() {
+            if (searchEdit == null) return;
+            searchEdit.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    currentSearchQuery = s != null ? s.toString().trim().toLowerCase(Locale.ROOT) : "";
+                    if (btnClearSearch != null) {
+                        btnClearSearch.setVisibility(currentSearchQuery.isEmpty() ? View.GONE : View.VISIBLE);
+                    }
+                    applyFilter();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+
+            if (btnClearSearch != null) {
+                btnClearSearch.setOnClickListener(v -> {
+                    if (searchEdit != null) searchEdit.setText("");
+                });
+            }
+        }
+
+        private void setupListActions() {
+            if (listView == null) return;
+            listView.setOnItemClickListener((parent, view, position, id) -> {
+                if (position < 0 || position >= filteredDialogs.size()) return;
+                PrivateDialogEntry dialog = filteredDialogs.get(position);
+                openChat(dialog);
+            });
+
+            listView.setOnItemLongClickListener((parent, view, position, id) -> {
+                if (position < 0 || position >= filteredDialogs.size()) return false;
+                PrivateDialogEntry dialog = filteredDialogs.get(position);
+                showDialogOptions(dialog);
+                return true;
+            });
+        }
+
+        private void openChat(PrivateDialogEntry dialog) {
+            if (getActivity() == null) return;
+            Intent intent = new Intent(getActivity(), TextMessageActivity.class);
+            int targetUserId = dialog.isOnline && dialog.currentUserId > 0 ? dialog.currentUserId : dialog.peerUserId;
+            intent.putExtra(TextMessageActivity.EXTRA_USERID, targetUserId);
+            intent.putExtra("peer_username", dialog.peerUsername);
+            intent.putExtra("peer_nickname", dialog.peerNickname);
+            intent.putExtra("is_offline", !dialog.isOnline);
+            startActivity(intent);
+        }
+
+        private void showDialogOptions(final PrivateDialogEntry dialog) {
+            if (getActivity() == null) return;
+            String[] options = new String[]{
+                    getString(R.string.action_open_chat),
+                    getString(R.string.action_copy_name),
+                    getString(R.string.action_delete_dialog)
+            };
+
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(dialog.getDisplayName())
+                    .setItems(options, (d, which) -> {
+                        switch (which) {
+                            case 0:
+                                openChat(dialog);
+                                break;
+                            case 1:
+                                if (getActivity() != null) {
+                                    ClipboardManager cm = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+                                    if (cm != null) {
+                                        cm.setPrimaryClip(ClipData.newPlainText("Nickname", dialog.getDisplayName()));
+                                        Toast.makeText(getActivity(), R.string.text_copied, Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                                break;
+                            case 2:
+                                confirmDeleteDialog(dialog);
+                                break;
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        }
+
+        private void confirmDeleteDialog(final PrivateDialogEntry dialog) {
+            if (getActivity() == null) return;
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(R.string.action_delete_dialog)
+                    .setMessage(getString(R.string.dialog_delete_confirm, dialog.getDisplayName()))
+                    .setPositiveButton(android.R.string.yes, (d, which) -> {
+                        if (mainActivity != null) {
+                            ChatHistoryDbHelper dbHelper = ChatHistoryDbHelper.getInstance(mainActivity);
+                            String serverKey = "";
+                            TeamTalkService s = mainActivity.getService();
+                            if (s != null && s.getServerEntry() != null) {
+                                serverKey = s.getServerEntry().ipaddr + ":" + s.getServerEntry().tcpport;
+                            }
+                            dbHelper.deletePrivateDialog(serverKey, dialog.peerUsername, dialog.peerNickname, dialog.peerUserId);
+                            if (s != null) {
+                                s.removeSessionPrivateDialog(dialog.peerUserId, dialog.peerUsername, dialog.peerNickname);
+                                if (dialog.currentUserId > 0) {
+                                    Vector<MyTextMessage> msgs = s.getUserTextMsgs(dialog.currentUserId);
+                                    if (msgs != null) msgs.clear();
+                                }
+                                if (dialog.peerUserId > 0) {
+                                    Vector<MyTextMessage> msgs = s.getUserTextMsgs(dialog.peerUserId);
+                                    if (msgs != null) msgs.clear();
+                                }
+                            }
+                            Toast.makeText(getActivity(), R.string.conversation_deleted, Toast.LENGTH_SHORT).show();
+                            reloadDialogs();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.no, null)
+                    .show();
+        }
+
+        public void reloadDialogs() {
+            if (getActivity() == null || mainActivity == null || adapter == null) return;
+            mainActivity.runOnUiThread(() -> {
+                if (getActivity() == null || mainActivity == null) return;
+                TeamTalkService service = mainActivity.getService();
+                String serverKey = "";
+                if (service != null && service.getServerEntry() != null) {
+                    serverKey = service.getServerEntry().ipaddr + ":" + service.getServerEntry().tcpport;
+                }
+
+                Map<String, PrivateDialogEntry> map = new LinkedHashMap<>();
+
+                // If FILTER_ALL or FILTER_ONLINE, load history from local SQLite database
+                if (currentFilterMode == FILTER_ALL || currentFilterMode == FILTER_ONLINE) {
+                    ChatHistoryDbHelper dbHelper = ChatHistoryDbHelper.getInstance(mainActivity);
+                    List<PrivateDialogEntry> dbDialogs = dbHelper.getPrivateDialogs(serverKey);
+                    for (PrivateDialogEntry d : dbDialogs) {
+                        map.put(d.peerKey, d);
+                    }
+                }
+
+                // Merge session private dialogs from current server connection
+                if (service != null) {
+                    Map<String, TeamTalkService.SessionDialogInfo> sessionDialogs = service.getSessionPrivateDialogs();
+                    for (Map.Entry<String, TeamTalkService.SessionDialogInfo> sEntry : sessionDialogs.entrySet()) {
+                        String key = sEntry.getKey();
+                        TeamTalkService.SessionDialogInfo info = sEntry.getValue();
+
+                        PrivateDialogEntry entry = map.get(key);
+                        if (entry == null) {
+                            entry = new PrivateDialogEntry();
+                            entry.peerKey = key;
+                            entry.peerUserId = info.userId;
+                            entry.peerUsername = info.username;
+                            entry.peerNickname = info.nickname;
+                            entry.lastMessage = info.lastMessage;
+                            entry.lastTimestamp = info.lastTimestamp;
+                            entry.lastIsOutgoing = info.lastIsOutgoing;
+                            entry.messageCount = info.messageCount;
+                            map.put(key, entry);
+                        } else {
+                            if (info.lastTimestamp >= entry.lastTimestamp) {
+                                entry.lastTimestamp = info.lastTimestamp;
+                                entry.lastMessage = info.lastMessage;
+                                entry.lastIsOutgoing = info.lastIsOutgoing;
+                            }
+                            entry.messageCount = Math.max(entry.messageCount, info.messageCount);
+                        }
+                    }
+                }
+
+                // Check online status against active server users
+                allDialogs.clear();
+                int onlineCount = 0;
+                Map<Integer, User> liveUsers = service != null ? service.getUsers() : Collections.emptyMap();
+                Map<Integer, Channel> channels = service != null ? service.getChannels() : Collections.emptyMap();
+
+                for (PrivateDialogEntry d : map.values()) {
+                    d.isOnline = false;
+                    d.currentUserId = -1;
+                    d.channelName = "";
+
+                    if (!liveUsers.isEmpty()) {
+                        for (User u : liveUsers.values()) {
+                            if (u == null) continue;
+                            boolean matches = false;
+                            if (!TextUtils.isEmpty(d.peerUsername) && !TextUtils.isEmpty(u.szUsername)
+                                    && d.peerUsername.equalsIgnoreCase(u.szUsername.trim())) {
+                                matches = true;
+                            } else if (!TextUtils.isEmpty(d.peerNickname) && !TextUtils.isEmpty(u.szNickname)
+                                    && d.peerNickname.equalsIgnoreCase(u.szNickname.trim())) {
+                                matches = true;
+                            } else if (d.peerUserId > 0 && d.peerUserId == u.nUserID) {
+                                matches = true;
+                            }
+
+                            if (matches) {
+                                d.isOnline = true;
+                                d.currentUserId = u.nUserID;
+                                d.peerNickname = Utils.getDisplayName(mainActivity, u);
+                                if (!TextUtils.isEmpty(u.szUsername)) {
+                                    d.peerUsername = u.szUsername.trim();
+                                }
+                                Channel c = channels.get(u.nChannelID);
+                                if (c != null && !TextUtils.isEmpty(c.szName)) {
+                                    d.channelName = c.szName;
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    if (d.isOnline) {
+                        onlineCount++;
+                    }
+
+                    // If FILTER_ONLINE, only include online users
+                    if (currentFilterMode == FILTER_ONLINE && !d.isOnline) {
+                        continue;
+                    }
+
+                    allDialogs.add(d);
+                }
+
+                // Sort latest first
+                allDialogs.sort((a, b) -> Long.compare(b.lastTimestamp, a.lastTimestamp));
+
+                // Update empty view strings according to filter
+                if (emptyView != null) {
+                    TextView emptyTitle = emptyView.findViewById(R.id.empty_title);
+                    TextView emptyDesc = emptyView.findViewById(R.id.empty_desc);
+                    if (emptyTitle != null && emptyDesc != null) {
+                        if (currentFilterMode == FILTER_SERVER) {
+                            emptyTitle.setText(R.string.private_chats_empty_server_title);
+                            emptyDesc.setText(R.string.private_chats_empty_server_desc);
+                        } else {
+                            emptyTitle.setText(R.string.private_chats_empty_title);
+                            emptyDesc.setText(R.string.private_chats_empty_desc);
+                        }
+                    }
+                }
+
+                if (countText != null && isAdded()) {
+                    countText.setText(getString(R.string.private_chats_count_format, allDialogs.size(), onlineCount));
+                }
+                applyFilter();
+            });
+        }
+
+        private void applyFilter() {
+            filteredDialogs.clear();
+            if (TextUtils.isEmpty(currentSearchQuery)) {
+                filteredDialogs.addAll(allDialogs);
+            } else {
+                for (PrivateDialogEntry d : allDialogs) {
+                    boolean matchName = d.peerNickname != null && d.peerNickname.toLowerCase(Locale.ROOT).contains(currentSearchQuery);
+                    boolean matchUser = d.peerUsername != null && d.peerUsername.toLowerCase(Locale.ROOT).contains(currentSearchQuery);
+                    boolean matchMsg = d.lastMessage != null && d.lastMessage.toLowerCase(Locale.ROOT).contains(currentSearchQuery);
+                    if (matchName || matchUser || matchMsg) {
+                        filteredDialogs.add(d);
+                    }
+                }
+            }
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
+            }
+        }
+
+        private String formatTimestamp(long timestamp) {
+            if (timestamp <= 0) return "";
+            Calendar msgCal = Calendar.getInstance();
+            msgCal.setTimeInMillis(timestamp);
+            Calendar now = Calendar.getInstance();
+
+            if (now.get(Calendar.YEAR) == msgCal.get(Calendar.YEAR) &&
+                    now.get(Calendar.DAY_OF_YEAR) == msgCal.get(Calendar.DAY_OF_YEAR)) {
+                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                return sdf.format(new Date(timestamp));
+            } else if (now.get(Calendar.YEAR) == msgCal.get(Calendar.YEAR) &&
+                    now.get(Calendar.DAY_OF_YEAR) - msgCal.get(Calendar.DAY_OF_YEAR) == 1) {
+                return getString(R.string.date_yesterday);
+            } else if (now.get(Calendar.YEAR) == msgCal.get(Calendar.YEAR)) {
+                SimpleDateFormat sdf = new SimpleDateFormat("d MMM", Locale.getDefault());
+                return sdf.format(new Date(timestamp));
+            } else {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy", Locale.getDefault());
+                return sdf.format(new Date(timestamp));
+            }
+        }
+
+        private class PrivateChatsAdapter extends BaseAdapter {
+            private final LayoutInflater inflater;
+
+            PrivateChatsAdapter() {
+                this.inflater = LayoutInflater.from(getContext() != null ? getContext() : mainActivity);
+            }
+
+            @Override
+            public int getCount() {
+                return filteredDialogs.size();
+            }
+
+            @Override
+            public PrivateDialogEntry getItem(int position) {
+                return filteredDialogs.get(position);
+            }
+
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if (convertView == null) {
+                    convertView = inflater.inflate(R.layout.item_private_chat, parent, false);
+                }
+
+                TextView avatarView = convertView.findViewById(R.id.chat_avatar);
+                View onlineBadge = convertView.findViewById(R.id.chat_online_badge);
+                TextView nicknameView = convertView.findViewById(R.id.chat_nickname);
+                TextView usernameView = convertView.findViewById(R.id.chat_username);
+                TextView statusView = convertView.findViewById(R.id.chat_status);
+                TextView timeView = convertView.findViewById(R.id.chat_time);
+                TextView messageView = convertView.findViewById(R.id.chat_last_message);
+                TextView countBadge = convertView.findViewById(R.id.chat_count_badge);
+
+                PrivateDialogEntry dialog = getItem(position);
+                if (dialog != null) {
+                    String name = dialog.getDisplayName();
+                    nicknameView.setText(name);
+
+                    // Avatar letter & color
+                    String firstLetter = name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase(Locale.ROOT);
+                    avatarView.setText(firstLetter);
+                    int colorIndex = Math.abs(dialog.peerKey.hashCode()) % AVATAR_COLORS.length;
+                    GradientDrawable avatarBg = (GradientDrawable) avatarView.getBackground();
+                    if (avatarBg != null) {
+                        avatarBg.setColor(AVATAR_COLORS[colorIndex]);
+                    }
+
+                    // Online indicator
+                    onlineBadge.setVisibility(dialog.isOnline ? View.VISIBLE : View.GONE);
+
+                    // Username (@username)
+                    if (!TextUtils.isEmpty(dialog.peerUsername)) {
+                        usernameView.setText("@" + dialog.peerUsername);
+                        usernameView.setVisibility(View.VISIBLE);
+                    } else {
+                        usernameView.setVisibility(View.GONE);
+                    }
+
+                    // Status text
+                    if (dialog.isOnline) {
+                        String statusText = getString(R.string.user_online);
+                        if (!TextUtils.isEmpty(dialog.channelName)) {
+                            statusText += " · " + dialog.channelName;
+                        }
+                        statusView.setText(statusText);
+                        statusView.setTextColor(0xFF43A047);
+                    } else {
+                        statusView.setText(R.string.user_offline);
+                        statusView.setTextColor(0xFF90A4AE);
+                    }
+
+                    // Time
+                    timeView.setText(formatTimestamp(dialog.lastTimestamp));
+
+                    // Last message preview
+                    String prefix = dialog.lastIsOutgoing ? getString(R.string.you_prefix) : "";
+                    messageView.setText(prefix + dialog.lastMessage);
+
+                    // Message count badge
+                    if (dialog.messageCount > 1) {
+                        countBadge.setText(String.valueOf(dialog.messageCount));
+                        GradientDrawable countBg = (GradientDrawable) countBadge.getBackground();
+                        if (countBg != null) {
+                            countBg.setColor(0xFF546E7A);
+                        }
+                        countBadge.setVisibility(View.VISIBLE);
+                    } else {
+                        countBadge.setVisibility(View.GONE);
+                    }
+
+                    // Accessibility content description
+                    StringBuilder cd = new StringBuilder();
+                    cd.append(name).append(", ");
+                    cd.append(dialog.isOnline ? getString(R.string.user_online) : getString(R.string.user_offline)).append(", ");
+                    if (!TextUtils.isEmpty(dialog.channelName)) {
+                        cd.append(dialog.channelName).append(", ");
+                    }
+                    cd.append(prefix).append(dialog.lastMessage).append(", ");
+                    cd.append(formatTimestamp(dialog.lastTimestamp));
+                    convertView.setContentDescription(cd.toString());
+                }
+
+                return convertView;
             }
         }
     }
@@ -3024,16 +3575,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return;
         }
         boolean z = false;
-        boolean aec = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("eq_mic_aec", false);
-        boolean voiceProcessing = ((Boolean) this.prefs.get(Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING, false)).booleanValue() || aec;
-        this.audioManager.setMode(voiceProcessing ? AudioManager.MODE_IN_COMMUNICATION : AudioManager.MODE_NORMAL);
-        if (voiceProcessing) {
-            AudioManager audioManager = this.audioManager;
-            if (((Boolean) this.prefs.get(Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE, false)).booleanValue() && !this.audioManager.isWiredHeadsetOn()) {
-                z = true;
-            }
-            audioManager.setSpeakerphoneOn(z);
+        this.audioManager.setMode(AudioManager.MODE_NORMAL);
+        if (((Boolean) this.prefs.get(Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE, false)).booleanValue() && !this.audioManager.isWiredHeadsetOn()) {
+            z = true;
         }
+        this.audioManager.setSpeakerphoneOn(z);
     }
 
         public void adjustMuteButton(ImageButton btn) {
@@ -3308,6 +3854,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         this.mediaAdapter.notifyDataSetChanged();
         this.filesAdapter.setTeamTalkService(service);
         this.filesAdapter.update(mychanid);
+        if (this.privateChatsFragment != null) {
+            this.privateChatsFragment.reloadDialogs();
+        }
         int flags = getClient().getFlags();
         if ((flags & 2) == 0 && !getClient().initSoundOutputDevice(0)) {
             Toast.makeText(this, R.string.err_init_sound_output, 1).show();
@@ -3496,6 +4045,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             String name = Utils.getDisplayName(getBaseContext(), user);
             this.ttsWrapper.speak(name + " " + getResources().getString(R.string.text_tts_loggedin));
         }
+        if (this.privateChatsFragment != null) {
+            this.privateChatsFragment.reloadDialogs();
+        }
     }
 
     @Override
@@ -3511,6 +4063,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             String name = Utils.getDisplayName(getBaseContext(), user);
             this.ttsWrapper.speak(name + " " + getResources().getString(R.string.text_tts_loggedout));
         }
+        if (this.privateChatsFragment != null) {
+            this.privateChatsFragment.reloadDialogs();
+        }
     }
 
     @Override
@@ -3522,6 +4077,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         subscriptionChange(user);
         this.users.put(Integer.valueOf(user.nUserID), user);
+        if (this.privateChatsFragment != null) {
+            this.privateChatsFragment.reloadDialogs();
+        }
     }
 
     @Override
@@ -3595,6 +4153,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.channelsAdapter.notifyDataSetChanged();
             this.accessibilityAssistant.unlockEvents();
         }
+        if (this.privateChatsFragment != null) {
+            this.privateChatsFragment.reloadDialogs();
+        }
     }
 
     @Override
@@ -3633,6 +4194,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     this.ttsWrapper.speak(getString(R.string.text_cmd_leftchan) + " " + chan.szName);
                 }
             }
+            if (this.privateChatsFragment != null) {
+                this.privateChatsFragment.reloadDialogs();
+            }
             return;
         }
 
@@ -3656,6 +4220,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 this.ttsWrapper.speak(name + " " + getResources().getString(R.string.text_tts_left_chan));
             }
             this.accessibilityAssistant.unlockEvents();
+            if (this.privateChatsFragment != null) {
+                this.privateChatsFragment.reloadDialogs();
+            }
             return;
         } else if (this.ttsWrapper != null && (((Boolean) this.prefs.get("all_channel_leave_checkbox", false)).booleanValue() || ((Boolean) this.prefs.get("all_users_channel_movement_checkbox", false)).booleanValue())) {
             String name = Utils.getDisplayName(getBaseContext(), user);
@@ -3677,6 +4244,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.accessibilityAssistant.lockEvents();
             this.channelsAdapter.notifyDataSetChanged();
             this.accessibilityAssistant.unlockEvents();
+        }
+        if (this.privateChatsFragment != null) {
+            this.privateChatsFragment.reloadDialogs();
         }
     }
 
@@ -3732,6 +4302,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                         .setAutoCancel(true)
                         .build();
                 this.notificationManager.notify(MESSAGE_NOTIFICATION_TAG, completemsg.nFromUserID, notification);
+                if (this.privateChatsFragment != null) {
+                    this.privateChatsFragment.reloadDialogs();
+                }
                 return;
             case 2:
                 this.accessibilityAssistant.lockEvents();

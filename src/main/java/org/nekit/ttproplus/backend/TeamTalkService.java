@@ -84,6 +84,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -543,6 +544,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.fileTransfers.clear();
         this.users.clear();
         this.usertxtmsgs.clear();
+        this.sessionPrivateDialogs.clear();
         this.chatlogtxtmsgs.clear();
         updateFloatingWindow();
     }
@@ -668,6 +670,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.mFloatingWindowManager.checkAndShow();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         prefs.registerOnSharedPreferenceChangeListener(this.mPrefListener);
+        MicrophoneEqualizer.loadFromPreferences(prefs);
         acquireServiceLocks();
         registerNetworkCallback();
     }
@@ -1310,20 +1313,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             return;
         }
         SharedPreferences prefs = getSessionPreferences();
-        boolean voiceProcessing = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING, false);
-        int captureMode = MicrophoneInputHelper.getExperimentalCaptureMode(prefs);
-        boolean stereoPreferred = (captureMode == MicrophoneInputHelper.CAPTURE_MODE_STEREO);
-        boolean useCommMode = !stereoPreferred && voiceProcessing;
         try {
-            this.audioManager.setMode(useCommMode ? AudioManager.MODE_IN_COMMUNICATION : AudioManager.MODE_NORMAL);
-            if (useCommMode) {
-                boolean speaker = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE, false);
-                boolean wired = this.audioManager.isWiredHeadsetOn();
-                boolean sco = this.bluetoothHeadsetHelper != null && this.bluetoothHeadsetHelper.isOnHeadsetSco();
-                this.audioManager.setSpeakerphoneOn(speaker && !wired && !sco);
-            } else {
-                this.audioManager.setSpeakerphoneOn(false);
-            }
+            this.audioManager.setMode(AudioManager.MODE_NORMAL);
+            boolean speaker = prefs.getBoolean(Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE, false);
+            boolean wired = this.audioManager.isWiredHeadsetOn();
+            boolean sco = this.bluetoothHeadsetHelper != null && this.bluetoothHeadsetHelper.isOnHeadsetSco();
+            this.audioManager.setSpeakerphoneOn(speaker && !wired && !sco);
             this.experimentalAudioSessionModeApplied = true;
         } catch (Throwable t) {
             Log.w("bearware", "Failed to apply experimental audio session mode", t);
@@ -1841,6 +1836,69 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return msgs;
     }
 
+    public static class SessionDialogInfo {
+        public int userId;
+        public String username = "";
+        public String nickname = "";
+        public String lastMessage = "";
+        public long lastTimestamp = 0;
+        public boolean lastIsOutgoing = false;
+        public int messageCount = 0;
+    }
+
+    private final Map<String, SessionDialogInfo> sessionPrivateDialogs = new LinkedHashMap<>();
+
+    public synchronized Map<String, SessionDialogInfo> getSessionPrivateDialogs() {
+        return new LinkedHashMap<>(this.sessionPrivateDialogs);
+    }
+
+    public synchronized void recordSessionPrivateMessage(int userId, String nickname, String message, boolean isOutgoing, long timestamp) {
+        User u = this.users != null ? this.users.get(Integer.valueOf(userId)) : null;
+        String username = (u != null && u.szUsername != null) ? u.szUsername.trim() : "";
+        if (nickname == null || nickname.isEmpty()) {
+            nickname = (u != null) ? Utils.getDisplayName(this, u) : ("ID: " + userId);
+        }
+        String key;
+        if (!username.isEmpty()) {
+            key = "user:" + username.toLowerCase(Locale.ROOT);
+        } else if (!nickname.isEmpty()) {
+            key = "nick:" + nickname.toLowerCase(Locale.ROOT);
+        } else {
+            key = "id:" + userId;
+        }
+
+        SessionDialogInfo info = this.sessionPrivateDialogs.get(key);
+        if (info == null) {
+            info = new SessionDialogInfo();
+            info.userId = userId;
+            info.username = username;
+            info.nickname = nickname;
+            info.lastMessage = message != null ? message : "";
+            info.lastTimestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
+            info.lastIsOutgoing = isOutgoing;
+            info.messageCount = 1;
+            this.sessionPrivateDialogs.put(key, info);
+        } else {
+            info.userId = userId;
+            if (!username.isEmpty()) info.username = username;
+            if (!nickname.isEmpty()) info.nickname = nickname;
+            info.lastMessage = message != null ? message : "";
+            info.lastTimestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
+            info.lastIsOutgoing = isOutgoing;
+            info.messageCount++;
+        }
+    }
+
+    public synchronized void removeSessionPrivateDialog(int userId, String username, String nickname) {
+        if (!TextUtils.isEmpty(username)) {
+            this.sessionPrivateDialogs.remove("user:" + username.toLowerCase(Locale.ROOT));
+        }
+        if (!TextUtils.isEmpty(nickname)) {
+            this.sessionPrivateDialogs.remove("nick:" + nickname.toLowerCase(Locale.ROOT));
+        }
+        this.sessionPrivateDialogs.remove("id:" + userId);
+    }
+
     public Vector<MyTextMessage> getChatLogTextMsgs() {
         if (this.chatlogtxtmsgs.isEmpty() && this.ttserver != null) {
             String srvKey = this.ttserver.ipaddr + ":" + this.ttserver.tcpport;
@@ -2082,6 +2140,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         for (int i = 0; i < micEq.length; i++) {
             micEq[i] = prefs.getInt(Preferences.PREF_EQ_MIC_BAND_PREFIX + i, 0);
         }
+        MicrophoneEqualizer.setBands(micEq);
         try {
             java.lang.reflect.Method eqMethod = this.ttclient.getClass().getMethod("setMicrophoneEqualizer", float[].class);
             eqMethod.invoke(this.ttclient, new Object[]{micEq});
@@ -2093,13 +2152,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         try {
             AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (audioManager != null && !audioManager.isBluetoothA2dpOn()) {
-                if (aecEnabled || vpEnabled) {
-                    audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                    if (speakerphone && !audioManager.isWiredHeadsetOn()) {
-                        audioManager.setSpeakerphoneOn(true);
-                    }
+                audioManager.setMode(AudioManager.MODE_NORMAL);
+                if (speakerphone && !audioManager.isWiredHeadsetOn()) {
+                    audioManager.setSpeakerphoneOn(true);
                 } else {
-                    audioManager.setMode(AudioManager.MODE_NORMAL);
+                    audioManager.setSpeakerphoneOn(false);
                 }
             }
         } catch (Exception e) {
@@ -2437,6 +2494,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         switch (textmessage.nMsgType) {
             case 1:
                 getUserTextMsgs(textmessage.nFromUserID).add(newmsg);
+                recordSessionPrivateMessage(textmessage.nFromUserID, newmsg.szNickName, newmsg.szMessage, false, System.currentTimeMillis());
                 return;
             case 2:
                 getChatLogTextMsgs().add(newmsg);

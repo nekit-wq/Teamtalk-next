@@ -28,6 +28,7 @@ public final class MicrophoneInputHelper {
     public static final int EXPERIMENTAL_CAPTURE_STEREO = 2;
 
     public static final String EXPERIMENTAL_INPUT_DEVICE_DEFAULT = "default";
+    public static final String EXPERIMENTAL_INPUT_DEVICE_CALL = "call_mic";
 
     public static final class InputDeviceOption {
         public final String deviceId;
@@ -138,6 +139,7 @@ public final class MicrophoneInputHelper {
     public static List<InputDeviceOption> getAvailableExperimentalInputDevices(Context context) {
         ArrayList<InputDeviceOption> list = new ArrayList<>();
         list.add(new InputDeviceOption(EXPERIMENTAL_INPUT_DEVICE_DEFAULT, context.getString(R.string.pref_experimental_input_device_default_title), context.getString(R.string.pref_experimental_input_device_default_summary)));
+        list.add(new InputDeviceOption(EXPERIMENTAL_INPUT_DEVICE_CALL, context.getString(R.string.pref_experimental_input_device_call_title), context.getString(R.string.pref_experimental_input_device_call_summary)));
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         if (audioManager != null) {
             AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
