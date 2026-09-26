@@ -1,0 +1,49 @@
+From 94c34f9a6cdd0abdd460cf4c7375504cdad5c2bd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Bj=C3=B8rn=20Damstedt=20Rasmussen?= <contact@bearware.dk>
+Date: Sun, 23 Jul 2023 21:13:56 +0200
+Subject: [PATCH] Static build config for Windows
+
+---
+ ACE/ace/config.h                            | 16 ++++++++++++++++
+ ACE/include/makeinclude/platform_macros.GNU |  6 ++++++
+ 2 files changed, 22 insertions(+)
+ create mode 100755 ACE/ace/config.h
+ create mode 100755 ACE/include/makeinclude/platform_macros.GNU
+
+diff --git a/ACE/ace/config.h b/ACE/ace/config.h
+new file mode 100755
+index 00000000000..d2e751ddaaa
+--- /dev/null
++++ b/ACE/ace/config.h
+@@ -0,0 +1,16 @@
++#define ACE_DEFAULT_THREAD_KEYS 1088
++#define ACE_USES_IPV4_IPV6_MIGRATION 1
++
++#ifndef ACE_HAS_IPV6
++#define ACE_HAS_IPV6
++#endif
++
++#ifndef ACE_USES_WCHAR
++#define ACE_USES_WCHAR
++#endif
++
++#ifndef ACE_AS_STATIC_LIBS
++#define ACE_AS_STATIC_LIBS
++#endif
++
++#include "ace/config-win32.h"
+diff --git a/ACE/include/makeinclude/platform_macros.GNU b/ACE/include/makeinclude/platform_macros.GNU
+new file mode 100755
+index 00000000000..7c337f909f1
+--- /dev/null
++++ b/ACE/include/makeinclude/platform_macros.GNU
+@@ -0,0 +1,6 @@
++shared_libs=0
++static_libs_only=1
++ssl=1
++ipv6=1
++
++include $(ACE_ROOT)/include/makeinclude/platform_win32_msvc.GNU
+-- 
+2.39.2 (Apple Git-143)
+

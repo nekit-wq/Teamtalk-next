@@ -1,0 +1,2422 @@
+/*
+ * Copyright (c) 2005-2018, BearWare.dk
+ * 
+ * Contact Information:
+ *
+ * Bjoern D. Rasmussen
+ * Kirketoften 5
+ * DK-8260 Viby J
+ * Denmark
+ * Email: contact@bearware.dk
+ * Phone: +45 20 20 54 59
+ * Web: http://www.bearware.dk
+ *
+ * This source code is part of the TeamTalk SDK owned by
+ * BearWare.dk. Use of this file, or its compiled unit, requires a
+ * TeamTalk SDK License Key issued by BearWare.dk.
+ *
+ * The TeamTalk SDK License Agreement along with its Terms and
+ * Conditions are outlined in the file License.txt included with the
+ * TeamTalk SDK distribution.
+ *
+ */
+
+#include "PacketLayout.h"
+
+#include "Common.h"
+
+#include <utility>
+#include <vector>
+#include <cstdint>
+#include <cstddef>
+#include <cassert>
+#include <cstring>
+#include <set>
+
+namespace teamtalk
+{
+    static void ConvertToUInt12Array(const std::vector<uint16_t>& source,
+                              std::vector<uint8_t>& target)
+    {
+        std::vector<uint8_t>::size_type target_size = 0;
+        if(source.size() % 2 == 1)
+            target_size = source.size() * 12 / 8 + 1;
+        else
+            target_size = source.size() * 12 / 8;
+
+        target.resize(target_size);
+
+        uint8_t* target_ptr = target.data();
+        for(size_t i=0;i<source.size();)
+        {
+            if(source.size()-i >= 2)
+            {
+                target_ptr = SET2_UINT12_PTR(target_ptr, source[i], source[i+1]);
+                i += 2;
+            }
+            else
+            {
+                target_ptr = SET_UINT12_PTR(target_ptr, source[i]);
+                i += 1;
+            }
+        }
+        assert(target_ptr == (target.data())+target_size);
+    }
+
+
+    static void ConvertFromUInt12Array(const uint8_t* source,
+                                uint16_t source_size,
+                                std::vector<uint16_t>& target)
+    {
+        target.reserve(source_size);
+
+        for(uint16_t i=0;i<source_size;)
+        {
+            uint16_t v1;
+            uint16_t v2;
+            const uint8_t* ptr = &source[i];
+            if(source_size - i >= 3)
+            {
+                GET2_UINT12(ptr, v1, v2);
+                target.push_back(v1);
+                target.push_back(v2);
+                i += 3;
+            }
+            else if(source_size - i == 2)
+            {
+                GET_UINT12(ptr, v1);
+                target.push_back(v1);
+                i += 2;
+            }
+            else
+            {
+                // A single trailing byte cannot hold a 12-bit value. This
+                // branch used to leave 'i' unchanged, so a field length of
+                // 1 modulo 3 looped forever wherever assert() is compiled
+                // out. Stop instead of spinning.
+                assert(0);
+                break;
+            }
+        }
+    }
+
+    static bool ReadUInt12Array(const uint8_t* ptr, uint8_t field_type,
+                         std::vector<uint16_t>& output)
+    {
+        assert(field_type == READFIELD_TYPE(ptr));
+        if (field_type != READFIELD_TYPE(ptr))
+            return false;
+
+        // Two 12-bit values pack into three bytes, so a valid array ends on a
+        // whole pair or on a two byte tail. One byte left over cannot be
+        // decoded, which makes the field malformed. ReadUInt16Array already
+        // rejects its own bad lengths the same way.
+        uint16_t const field_size = READFIELD_SIZE(ptr);
+        if((field_size == 0u) || ((field_size % 3) == 1))
+            return false;
+
+        const uint8_t* field_ptr = READFIELD_DATAPTR(ptr);
+        ConvertFromUInt12Array(field_ptr, field_size, output);
+        return true;
+    }
+
+    static void WriteUInt12ArrayToIOVec(const std::vector<uint16_t>& input,
+                                 uint8_t field_type,
+                                 std::vector<iovec>& out_iovec)
+    {
+        std::vector<uint8_t> field_data;
+        ConvertToUInt12Array(input, field_data);
+
+        //new field
+        int alloc_size = 0;
+        alloc_size += FIELDVALUE_PREFIX + int(field_data.size());
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+
+        uint8_t* data_ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        data_ptr = WRITEFIELD_DATA(data_ptr, field_type, field_data.data(), field_data.size());
+
+        assert(alloc_size == data_ptr - reinterpret_cast<const uint8_t*>(v.iov_base));
+        out_iovec.push_back(v);
+    }
+
+    static bool ReadUInt16Array(const uint8_t* ptr, uint8_t  field_type,
+                         std::vector<uint16_t>& output)
+    {
+        assert(field_type == READFIELD_TYPE(ptr));
+        if (field_type != READFIELD_TYPE(ptr))
+            return false;
+
+        uint16_t const field_size = READFIELD_SIZE(ptr);
+        if((field_size == 0u) || ((field_size % 2) != 0))
+            return false;
+
+        const uint8_t* field_ptr = READFIELD_DATAPTR(ptr);
+        for(uint16_t i=0;i<field_size;i+=2)
+        {
+            output.push_back(GET_UINT16(field_ptr));
+            field_ptr += 2;
+        }
+        return true;
+    }
+
+    static void WriteUInt16ArrayToIOVec(const std::vector<uint16_t>& input,
+                                 uint8_t field_type,
+                                 std::vector<iovec>& out_iovec)
+    {
+        std::vector<uint8_t> field_data(input.size()*sizeof(uint16_t));
+        uint8_t* field_ptr = field_data.data();
+        for(unsigned short i : input)
+            field_ptr = SET_UINT16_PTR(field_ptr, i);
+
+        //new field
+        int alloc_size = 0;
+        alloc_size += FIELDVALUE_PREFIX + int(field_data.size());
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+
+        uint8_t* data_ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        data_ptr = WRITEFIELD_DATA(data_ptr, field_type, field_data.data(), field_data.size());
+
+        assert(alloc_size == data_ptr - reinterpret_cast<const uint8_t*>(v.iov_base));
+        out_iovec.push_back(v);
+    }
+
+    static uint16_t GetHdrSize(PacketHdrType hdr_type)
+    {
+        switch(hdr_type)
+        {
+        default :
+        case PACKETHDR_CHANNEL_ONLY :
+            return TT_CHANNEL_HEADER_SIZE;
+        case PACKETHDR_DEST_USER :
+            return TT_USER_HEADER_SIZE;
+        }
+    }
+
+    uint8_t FieldPacket::GetKind() const
+    {
+        int cnt = 0;
+        const iovec* buf = GetPacket(cnt);
+        assert(buf);
+        assert(buf[0].iov_len >= TT_CHANNEL_HEADER_SIZE);
+        const auto* ptr = reinterpret_cast<const uint8_t*>(buf[0].iov_base);
+        return ptr[PACKET_INDEX_KIND] & PACKET_MASK_KIND;
+    }
+
+    void FieldPacket::GetSrcDest(uint16_t& src_userid, uint16_t& dest_chanid) const
+    {
+        int cnt = 0;
+        const iovec* buf = GetPacket(cnt);
+        assert(buf);
+        assert(buf[0].iov_len >= TT_CHANNEL_HEADER_SIZE);
+        const uint8_t* ptr = &reinterpret_cast<const uint8_t*>(buf[0].iov_base)[PACKET_INDEX_SRC_DEST];
+        GET2_UINT12(ptr, src_userid, dest_chanid);
+    }
+
+    uint8_t* FieldPacket::GetFieldsStart() const
+    {
+        switch(GetHdrType())
+        {
+        case PACKETHDR_CHANNEL_ONLY :
+            return &reinterpret_cast<uint8_t*>(m_iovec[0].iov_base)[PACKET_INDEX_FIELDS_DEST_CHANNEL];
+        case PACKETHDR_DEST_USER :
+            return &reinterpret_cast<uint8_t*>(m_iovec[0].iov_base)[PACKET_INDEX_FIELDS_DEST_USER_SET];
+        default :
+            assert(0);
+            return nullptr;
+        }
+    }
+    
+    uint16_t FieldPacket::GetSrcUserID() const
+    {
+        uint16_t src = 0;
+        uint16_t dest = 0;
+        GetSrcDest(src, dest);
+        return src;
+    }
+
+    uint16_t FieldPacket::GetDestUserID() const
+    {
+        int cnt = 0;
+        const iovec* buf = GetPacket(cnt);
+        assert(buf);
+
+        const auto* ptr = reinterpret_cast<const uint8_t*>(buf[0].iov_base);
+        uint8_t const kind = ptr[PACKET_INDEX_DEST_USER_SET];
+        if((kind & PACKET_MASK_DEST_USER_SET) == 0)
+            return 0;
+        uint16_t dest_userid = 0;
+        ptr = &ptr[PACKET_INDEX_DEST_USER];
+        GET_UINT12(ptr, dest_userid);
+        return dest_userid;
+    }
+    
+    uint16_t FieldPacket::GetChannel() const
+    {
+        uint16_t src = 0;
+        uint16_t dest = 0;
+        GetSrcDest(src, dest);
+        return dest;
+    }
+
+    uint32_t FieldPacket::GetTime() const
+    {
+        int cnt = 0;
+        const iovec* buf = GetPacket(cnt);
+        assert(buf);
+        const uint8_t* ptr = &reinterpret_cast<const uint8_t*>(buf[0].iov_base)[PACKET_INDEX_TIME];
+        return GET_UINT32(ptr);
+    }
+
+    void FieldPacket::SetDestUser(uint16_t userid)
+    {
+        assert(userid);
+        assert(m_iovec.size());
+        assert(GetHdrType() == PACKETHDR_DEST_USER);
+        uint8_t* ptr = &reinterpret_cast<uint8_t*>(m_iovec[0].iov_base)[PACKET_INDEX_DEST_USER];
+        SET_UINT12(ptr, userid);
+        assert(GetDestUserID() == userid);
+    }
+
+    void FieldPacket::SetChannel(uint16_t channelid)
+    {
+        assert(channelid);
+        assert(m_iovec.size());
+        uint8_t* ptr = &reinterpret_cast<uint8_t*>(m_iovec[0].iov_base)[PACKET_INDEX_KIND];
+
+        uint16_t src_userid;
+        uint16_t tmp;
+        GetSrcDest(src_userid, tmp);
+        ptr = &ptr[PACKET_INDEX_SRC_DEST];
+        SET2_UINT12(ptr, src_userid, channelid);
+    }
+
+    uint16_t FieldPacket::GetPacketSize() const
+    {
+        int buffers = 0;
+        int size = 0;
+        const iovec* vv = GetPacket(buffers);
+        for(int i=0;i<buffers;i++)
+            size += vv[i].iov_len;
+        return size;
+    }
+
+    bool FieldPacket::ValidatePacket() const
+    {
+        int buffers = 0;
+        int const size = GetPacketSize();
+        const iovec* vv = GetPacket(buffers);
+        //assert(vv);
+        //assert(size >= MINIMUM_PACKET_SIZE);
+        if((vv == nullptr) || std::cmp_less(size , GetHdrSize(GetHdrType())))
+            return false;
+
+        if(std::cmp_equal(size , GetHdrSize(GetHdrType())))
+            return true;
+
+        if(GetHdrSize(GetHdrType()) + FIELDVALUE_PREFIX >= size)
+            return false;
+
+        int pos_buf = 0;
+        if(GetHdrType() == PACKETHDR_DEST_USER)
+            pos_buf = PACKET_INDEX_FIELDS_DEST_USER_SET;
+        else
+            pos_buf = PACKET_INDEX_FIELDS_DEST_CHANNEL;
+
+        int pos = 0;
+        for(int i=0;i<buffers;i++)
+        {
+            while(std::cmp_less(pos_buf ,vv[i].iov_len))
+            {
+                uint16_t const field_size = READFIELD_SIZE(&reinterpret_cast<const uint8_t*>(vv[i].iov_base)[pos_buf]);
+                pos_buf += field_size + FIELDVALUE_PREFIX;
+            }
+            //assert(pos_buf == vv[i].iov_len);
+            if(std::cmp_not_equal(pos_buf , vv[i].iov_len))
+                return false;
+            pos += pos_buf;
+            //assert(pos <= size);
+            if(pos > size)
+                return false;
+            pos_buf = 0;
+        }
+        //assert(pos == size);
+        return pos == size;
+    }
+
+    void FieldPacket::Init(PacketHdrType hdr_type, uint8_t kind, uint16_t src_userid, uint32_t time)
+    {
+        m_iovec.reserve(16);
+
+        int const HDR_SIZE = GetHdrSize(hdr_type);
+
+        uint8_t* packet_hdr = nullptr;
+        ACE_NEW(packet_hdr, uint8_t[HDR_SIZE]);
+        m_cleanup = true;
+
+        if(hdr_type == PACKETHDR_DEST_USER)
+        {
+            packet_hdr[PACKET_INDEX_KIND] = kind | PACKET_MASK_DEST_USER_SET;
+            //init to zero
+            uint8_t* ptr = &packet_hdr[PACKET_INDEX_DEST_USER];
+            SET_UINT12(ptr, 0);
+        }
+        else
+            packet_hdr[PACKET_INDEX_KIND] = kind;
+
+        SET2_UINT12(&packet_hdr[PACKET_INDEX_SRC_DEST], src_userid, (uint16_t)0);
+        SET_UINT32(&packet_hdr[PACKET_INDEX_TIME], time);
+
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(packet_hdr);
+        v.iov_len = HDR_SIZE;
+        m_iovec.push_back(v);
+
+        //ensure compatibility with CryptPacket
+        assert(m_iovec.size() == 1);
+    }
+
+    bool FieldPacket::Finalized() const
+    {
+        uint16_t src_userid = 0;
+        uint16_t chanid = 0;
+        GetSrcDest(src_userid, chanid);
+        return chanid>0;
+    }
+
+    PacketHdrType FieldPacket::GetHdrType() const
+    {
+        int const buffers = 0;
+
+        const auto* ptr = reinterpret_cast<const uint8_t*>(m_iovec[0].iov_base);
+        if((ptr[PACKET_INDEX_DEST_USER_SET] & PACKET_MASK_DEST_USER_SET) != 0u)
+            return PACKETHDR_DEST_USER;
+                    return PACKETHDR_CHANNEL_ONLY;
+    }
+
+    FieldPacket::FieldPacket(PacketHdrType hdr_type, uint8_t kind, uint16_t src_userid, uint32_t time)
+    {
+        Init(hdr_type, kind, src_userid, time);
+    }
+
+    FieldPacket::FieldPacket(const char* packet, uint16_t packet_size)
+        : m_iovec(1), m_cleanup(false)
+    {
+        
+        m_iovec[0].iov_base = const_cast<char*>(packet);
+        m_iovec[0].iov_len = packet_size;
+
+        //TODO: validate that all fields are within bounds
+        //set everything to 0 if the packet size is greater than what has been received
+    }
+
+    FieldPacket::FieldPacket(const iovec* v, uint16_t buffers)
+    {
+        for(size_t i=0;i<buffers;i++)
+            m_iovec.push_back(v[i]);
+
+        m_cleanup = false;
+    }
+
+    FieldPacket::FieldPacket(const FieldPacket& p)
+    {
+        int buffers = 0;
+        const iovec* v = p.GetPacket(buffers);
+        for(int i=0;i<buffers;i++)
+        {
+            iovec new_v;
+            ACE_NEW(new_v.iov_base, char[v[i].iov_len]);
+            memcpy(new_v.iov_base, v[i].iov_base, v[i].iov_len);
+            new_v.iov_len = v[i].iov_len;
+            m_iovec.push_back(new_v);
+        }
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections = p.GetCryptSections();
+#endif
+        m_cleanup = true;
+
+        assert(p.GetKind() == GetKind()); //cannot copy packet of different kind
+    }
+
+    FieldPacket::FieldPacket(uint8_t kind, const FieldPacket& crypt_pkt,
+                             iovec& decrypt_fields)
+    {
+        //helper for encrypted packet
+        Init(crypt_pkt.GetHdrType(), kind, crypt_pkt.GetSrcUserID(),
+             crypt_pkt.GetTime());
+
+        //transfer FieldPacket settings
+        if(crypt_pkt.GetDestUserID() != 0u)
+            SetDestUser(crypt_pkt.GetDestUserID());
+        if(crypt_pkt.GetChannel() != 0u)
+            SetChannel(crypt_pkt.GetChannel());
+
+        assert(m_iovec.size() == 1);
+        m_iovec.push_back(decrypt_fields);
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size()-1));
+#endif
+    }
+
+    FieldPacket::~FieldPacket()
+    {
+        if(m_cleanup)
+        {
+            for(auto & i : m_iovec)
+                delete [] reinterpret_cast<uint8_t*>(i.iov_base);
+        }
+    }
+
+    uint8_t* FieldPacket::FindFieldNonConst(uint8_t fieldtype) const
+    {
+        uint8_t* ptr = nullptr;
+        if(!m_iovec.empty())
+        {
+            if(GetPacketSize() == GetHdrSize(GetHdrType()))
+                return nullptr;
+
+            int size = int(GetFieldsStart() - reinterpret_cast<uint8_t*>(m_iovec[0].iov_base));
+            size = m_iovec[0].iov_len - size;
+            ptr = GetFieldsStart();
+            ptr = FINDFIELD_TYPE(ptr, fieldtype, size);
+        }
+        if(m_iovec.size() > 1 && (ptr == nullptr))
+        {
+            for(size_t i=1;i<m_iovec.size() && (ptr == nullptr);i++)
+            {
+                ptr = FINDFIELD_TYPE(reinterpret_cast<uint8_t*>(m_iovec[i].iov_base), fieldtype, m_iovec[i].iov_len);
+            }
+        }
+        return ptr;
+    }
+
+    const uint8_t* FieldPacket::FindField(uint8_t fieldtype) const
+    {
+        return FindFieldNonConst(fieldtype);
+    }
+
+    const iovec* FieldPacket::GetPacket(int& buffers) const
+    {
+        buffers = (int)m_iovec.size();
+        if(buffers != 0)
+            return m_iovec.data();
+        return nullptr;
+    }
+
+    HelloPacket::HelloPacket(uint16_t src_userid, uint32_t time) 
+        : FieldPacket(PACKETHDR_CHANNEL_ONLY, PACKET_KIND_HELLO, src_userid, time)
+    {
+        std::vector<uint8_t> protocol(1);
+        protocol[0] = TEAMTALK_PACKET_PROTOCOL;
+
+        int const alloc_size = int(FIELDVALUE_PREFIX + protocol.size()); //FIELDTYPE_PAYLOAD
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+        
+        uint8_t* ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+
+        ptr = WRITEFIELD_DATA(ptr, FIELDTYPE_PROTOCOL, protocol.data(), protocol.size());
+
+        v.iov_len = (u_long)(ptr - reinterpret_cast<const uint8_t*>(v.iov_base));
+        assert(v.iov_len == alloc_size);
+
+        assert(m_iovec.size());
+
+        m_iovec.push_back(v);
+    }
+
+    uint8_t HelloPacket::GetProtocol() const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_PROTOCOL);
+        if((ptr != nullptr) && READFIELD_SIZE(ptr) >= sizeof(uint8_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+            return GET_UINT8(ptr);
+        }
+        return 0;
+    }
+
+    /* KeepAlivePacket */
+
+    KeepAlivePacket::KeepAlivePacket(uint16_t src_userid, uint32_t time, 
+                               uint16_t payload_size)
+        : FieldPacket(PACKETHDR_CHANNEL_ONLY, PACKET_KIND_KEEPALIVE, src_userid, time)
+    {
+        std::vector<uint8_t> payload(payload_size);
+
+        int const alloc_size = FIELDVALUE_PREFIX + payload_size; //FIELDTYPE_PAYLOAD
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+        
+        uint8_t* ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+
+        ptr = WRITEFIELD_DATA(ptr, FIELDTYPE_PAYLOAD, payload.data(), payload_size);
+
+        v.iov_len = (u_long)(ptr - reinterpret_cast<const uint8_t*>(v.iov_base));
+        assert(v.iov_len == alloc_size);
+
+        assert(m_iovec.size());
+
+        m_iovec.push_back(v);
+    }
+
+    uint16_t KeepAlivePacket::GetPayloadSize() const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_PAYLOAD);
+        if(ptr != nullptr)
+            return READFIELD_SIZE(ptr);
+        return 0;
+    }
+
+    /* AudioPacket */
+
+    AudioPacket::AudioPacket(uint8_t kind, uint16_t src_userid, uint32_t time,
+                             uint8_t stream_id, uint16_t packet_no, 
+                             const char* enc_audio, uint16_t enc_length)
+            : FieldPacket(PACKETHDR_CHANNEL_ONLY, kind, src_userid, time)
+    {
+        InitCommon(stream_id, packet_no, nullptr, nullptr, enc_audio, enc_length, nullptr);
+    }
+
+    AudioPacket::AudioPacket(uint8_t kind, uint16_t src_userid, uint32_t time, 
+                             uint8_t stream_id, uint16_t packet_no, 
+                             uint8_t frag_no, uint8_t* frag_cnt,
+                             const char* enc_audio, uint16_t enc_length)
+            : FieldPacket(PACKETHDR_CHANNEL_ONLY, kind, src_userid, time)
+    {
+        InitCommon(stream_id, packet_no, &frag_no, frag_cnt,
+                   enc_audio, enc_length, nullptr);
+    }
+
+
+    AudioPacket::AudioPacket(uint8_t kind, uint16_t src_userid, uint32_t time, 
+                             uint8_t stream_id, uint16_t packet_no, 
+                             const char* enc_audio, uint16_t enc_length, 
+                             const std::vector<uint16_t>& enc_framesizes)
+            : FieldPacket(PACKETHDR_CHANNEL_ONLY, kind, src_userid, time)
+    {
+        InitCommon(stream_id, packet_no, nullptr, nullptr, enc_audio, enc_length, &enc_framesizes);
+    }
+
+    AudioPacket::AudioPacket(uint8_t kind, uint16_t src_userid, uint32_t time, uint8_t stream_id, 
+                    uint16_t packet_no, uint8_t frag_no, uint8_t* frag_cnt, 
+                    const char* enc_audio, uint16_t enc_length, const std::vector<uint16_t>* enc_framesizes)
+            : FieldPacket(PACKETHDR_CHANNEL_ONLY, kind, src_userid, time)
+    {
+        InitCommon(stream_id, packet_no, &frag_no, frag_cnt, enc_audio, 
+                   enc_length, enc_framesizes);
+    }
+
+    void AudioPacket::InitCommon(uint8_t stream_id, uint16_t packet_no, 
+                                 const uint8_t* frag_no, const uint8_t* frag_cnt, 
+                                 const char* enc_audio, uint16_t enc_length,
+                                 const std::vector<uint16_t>* enc_framesizes)
+    {
+        int alloc_size = 0;
+
+        std::vector<uint8_t> stream_field;
+        if(frag_no != nullptr)
+        {
+            //FIELDTYPE_STREAMID_PKTNUM_AND_FRAGCNT || FIELDTYPE_STREAMID_PKTNUM_AND_FRAGNO
+            uint16_t const field_size =  sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint8_t);
+            alloc_size += field_size + FIELDVALUE_PREFIX;
+            stream_field.resize(field_size);
+        }
+        else
+        {
+            uint16_t const field_size = sizeof(uint8_t) + sizeof(uint16_t); //FIELDTYPE_STREAMID_PKTNUM
+            alloc_size += field_size + FIELDVALUE_PREFIX;
+            stream_field.resize(field_size);
+        }
+
+        alloc_size += FIELDVALUE_PREFIX + enc_length; //FIELDTYPE_ENCDATA
+
+        //encoded frame sizes are stored in a 12-bit array
+        std::vector<char>::size_type enc_array_size = 0;
+        assert(!enc_framesizes || (enc_framesizes && !enc_framesizes->empty()));
+        if((enc_framesizes != nullptr) && (!enc_framesizes->empty()))
+        {
+            if(enc_framesizes->size() % 2 == 1)
+                enc_array_size = (enc_framesizes->size() * 12 / 8) + 1;
+            else
+                enc_array_size = (enc_framesizes->size() * 12 / 8);
+            alloc_size += int(FIELDVALUE_PREFIX + enc_array_size);
+        }
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+        //store data indexes
+        uint8_t* ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        ptr = WRITEFIELD_DATA(ptr, FIELDTYPE_ENCDATA, enc_audio, enc_length);
+
+        assert(!frag_cnt || !frag_no || frag_cnt && *frag_no == 0);
+        uint8_t* field_buf_ptr = stream_field.data();
+        if(frag_cnt != nullptr)
+        {
+            field_buf_ptr = SET_UINT8_PTR(field_buf_ptr, stream_id);
+            field_buf_ptr = SET_UINT16_PTR(field_buf_ptr, packet_no);
+            field_buf_ptr = SET_UINT8_PTR(field_buf_ptr, *frag_cnt);
+            ptr = WRITEFIELD_DATA(ptr, FIELDTYPE_STREAMID_PKTNUM_AND_FRAGCNT,
+                            stream_field.data(), stream_field.size());
+        }
+        else if(frag_no != nullptr)
+        {
+            field_buf_ptr = SET_UINT8_PTR(field_buf_ptr, stream_id);
+            field_buf_ptr = SET_UINT16_PTR(field_buf_ptr, packet_no);
+            field_buf_ptr = SET_UINT8_PTR(field_buf_ptr, *frag_no);
+            ptr = WRITEFIELD_DATA(ptr, FIELDTYPE_STREAMID_PKTNUM_AND_FRAGNO,
+                            stream_field.data(), stream_field.size());
+        }
+        else
+        {
+            field_buf_ptr = SET_UINT8_PTR(field_buf_ptr, stream_id);
+            field_buf_ptr = SET_UINT16_PTR(field_buf_ptr, packet_no);
+            ptr = WRITEFIELD_DATA(ptr, FIELDTYPE_STREAMID_PKTNUM,
+                                  stream_field.data(), stream_field.size());
+        }
+        
+        if((enc_framesizes != nullptr) && (!enc_framesizes->empty()))
+        {
+            const std::vector<uint16_t>& frm_sizes = *enc_framesizes;
+            std::vector<uint8_t> enc_array;
+            ConvertToUInt12Array(frm_sizes, enc_array);
+            assert(enc_array.size() == enc_array_size);
+
+            ptr = WRITEFIELD_DATA(ptr, FIELDTYPE_ENCFRAMESIZES,
+                                  enc_array.data(), enc_array.size());
+        }
+
+        v.iov_len = (u_long)(ptr - reinterpret_cast<const uint8_t*>(v.iov_base));
+        assert(v.iov_len == alloc_size);
+
+        //CryptPacket will become incompatible if m_iovec[1] doesn't contain 
+        //the part which needs to be encrypted
+        assert(m_iovec.size() == 1);
+
+        m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+    }
+
+
+    AudioPacket::AudioPacket(const char* packet, uint16_t packet_size)
+        : FieldPacket(packet, packet_size)
+    {
+    }
+
+    AudioPacket::AudioPacket(const FieldPacket& packet)
+        : FieldPacket(packet)
+    {
+    }
+
+    AudioPacket::AudioPacket(const AudioPacket& packet)
+         
+    = default;
+
+    bool AudioPacket::GetStreamField(uint8_t& streamid, uint16_t& packet_no,
+                                     uint8_t& frag_no, uint8_t* frag_cnt) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_STREAMID_PKTNUM);
+        if((ptr != nullptr) && READFIELD_SIZE(ptr) >= sizeof(uint8_t) + sizeof(uint16_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+            ptr = GET_UINT8_PTR(ptr, streamid);
+            ptr = GET_UINT16_PTR(ptr, packet_no);
+            frag_no = INVALID_FRAGMENT_NO;
+            return true;
+        }
+        ptr =  FindField(FIELDTYPE_STREAMID_PKTNUM_AND_FRAGCNT);
+        if((ptr != nullptr) && READFIELD_SIZE(ptr) >= sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint8_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+            ptr = GET_UINT8_PTR(ptr, streamid);
+            ptr = GET_UINT16_PTR(ptr, packet_no);
+            if(frag_cnt != nullptr)
+                ptr = GET_UINT8_PTR(ptr, *frag_cnt); //this is frag count
+            frag_no = 0;
+            return true;
+        }
+        ptr =  FindField(FIELDTYPE_STREAMID_PKTNUM_AND_FRAGNO);
+        if((ptr != nullptr) && READFIELD_SIZE(ptr) >= sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint8_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+            ptr = GET_UINT8_PTR(ptr, streamid);
+            ptr = GET_UINT16_PTR(ptr, packet_no);
+            ptr = GET_UINT8_PTR(ptr, frag_no);
+            return true;
+        }
+        return false;
+    }
+
+    uint8_t AudioPacket::GetStreamID() const
+    {
+        uint8_t streamid = 0; uint16_t packet_no = 0;
+        uint8_t frag_no = INVALID_FRAGMENT_NO;
+        if(GetStreamField(streamid, packet_no, frag_no, nullptr))
+            return streamid;
+        return 0;
+    }
+
+    uint16_t AudioPacket::GetPacketNumber() const
+    {
+        //only applies to FIELDTYPE_STREAMID_PKTNUM (to distinguish fragments)
+        if(FindField(FIELDTYPE_STREAMID_PKTNUM) == nullptr)
+            return 0;
+
+        uint8_t streamid = 0; uint16_t packet_no = 0;
+        uint8_t frag_no = INVALID_FRAGMENT_NO;
+        if(GetStreamField(streamid, packet_no, frag_no, nullptr))
+            return packet_no;
+        return 0;
+    }
+
+    uint16_t AudioPacket::GetPacketNumberAndFragNo(uint8_t& frag_no,
+                                                   uint8_t* frag_cnt) const
+    {
+        if(FindField(FIELDTYPE_STREAMID_PKTNUM_AND_FRAGNO) == nullptr &&
+           FindField(FIELDTYPE_STREAMID_PKTNUM_AND_FRAGCNT) == nullptr)
+            return 0;
+
+        uint8_t streamid = 0; uint16_t packet_no = 0;
+        frag_no = INVALID_FRAGMENT_NO;
+        if(GetStreamField(streamid, packet_no, frag_no, frag_cnt))
+            return packet_no;
+        return 0;
+    }
+
+    const char* AudioPacket::GetEncodedAudio(uint16_t& length) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_ENCDATA);
+        if(ptr != nullptr)
+        {
+            length = READFIELD_SIZE(ptr);
+            ptr = READFIELD_DATAPTR(ptr);
+        }
+        else length = 0;
+        return reinterpret_cast<const char*>(ptr);
+    }
+
+    std::vector<uint16_t> AudioPacket::GetEncodedFrameSizes() const
+    {
+        std::vector<uint16_t> v_frm_sizes;
+
+        const uint8_t* ptr = FindField(FIELDTYPE_ENCFRAMESIZES);
+        if(ptr == nullptr)
+            return v_frm_sizes;
+
+        if(!ReadUInt12Array(ptr, FIELDTYPE_ENCFRAMESIZES, v_frm_sizes))
+            v_frm_sizes.clear();
+
+        return v_frm_sizes;
+    }
+
+    bool AudioPacket::HasFragments() const
+    {
+        return FindField(FIELDTYPE_STREAMID_PKTNUM_AND_FRAGNO) != nullptr ||
+            FindField(FIELDTYPE_STREAMID_PKTNUM_AND_FRAGCNT) != nullptr;
+    }
+
+    VideoPacket::VideoPacket(const VideoPacket& p)
+         
+    = default;
+
+    VideoPacket::VideoPacket(const FieldPacket& p)
+        : FieldPacket(p)
+    {
+    }
+
+
+    VideoPacket::VideoPacket(const char* packet, uint16_t packet_size)
+        : FieldPacket(packet, packet_size)
+    {
+    }
+
+    VideoPacket::VideoPacket(uint8_t kind, uint16_t src_userid, uint32_t time, 
+                             uint8_t stream_id, uint32_t packet_no, 
+                             const uint16_t* width, const uint16_t* height,
+                             const char* enc_data, uint16_t enc_len) 
+        : FieldPacket(PACKETHDR_CHANNEL_ONLY, kind, src_userid, time)
+    {
+        //CryptPacket will become incompatible if m_iovec[1] doesn't contain 
+        //the part which needs to be encrypted
+        assert(m_iovec.size() == 1);
+
+        Init(kind, stream_id, packet_no, width, height, enc_data, enc_len, nullptr, nullptr);
+
+        assert(m_iovec.size() == 2); //CryptPacket compatibility
+    }
+
+    VideoPacket::VideoPacket(uint8_t kind, uint16_t src_userid, uint32_t time,
+                             uint8_t stream_id, uint32_t packet_no, 
+                             const uint16_t* width, const uint16_t* height,
+                             const char* enc_data, uint16_t enc_len, 
+                             const uint16_t fragmentcnt) 
+        : FieldPacket(PACKETHDR_CHANNEL_ONLY, kind, src_userid, time)
+    {
+        //CryptPacket will become incompatible if m_iovec[1] doesn't contain 
+        //the part which needs to be encrypted
+        assert(m_iovec.size() == 1);
+
+        Init(kind, stream_id, packet_no, width, height, enc_data, enc_len, 
+             nullptr, &fragmentcnt);
+
+        assert(m_iovec.size() == 2); //CryptPacket compatibility
+    }
+
+    VideoPacket::VideoPacket(uint8_t kind, uint16_t src_userid, uint32_t time,
+                             uint8_t stream_id, uint32_t packet_no, 
+                             const char* enc_data, uint16_t enc_len, 
+                             uint16_t fragmentno)
+        : FieldPacket(PACKETHDR_CHANNEL_ONLY, kind, src_userid, time)
+    {
+        //CryptPacket will become incompatible if m_iovec[1] doesn't contain 
+        //the part which needs to be encrypted
+        assert(m_iovec.size() == 1);
+
+        Init(kind, stream_id, packet_no, nullptr, nullptr, enc_data, enc_len, &fragmentno, nullptr);
+
+        assert(m_iovec.size() == 2); //CryptPacket compatibility
+    }
+
+    uint8_t* VideoPacket::Init(uint8_t  /*kind*/, uint8_t stream_id, uint32_t packet_no,
+                               const uint16_t* width, const uint16_t* height,
+                               const char* enc_data, uint16_t enc_len, 
+                               const uint16_t* fragmentno, const uint16_t* fragmentcnt)
+    {
+        assert(FindField(FIELDTYPE_STREAMID_PKTNUM_VIDINFO) == nullptr);
+        assert(FindField(FIELDTYPE_STREAMID_PKTNUM_FRAGCNT_VIDINFO) == nullptr);
+        assert(FindField(FIELDTYPE_STREAMID_PKTNUM) == nullptr);
+        assert(FindField(FIELDTYPE_STREAMID_PKTNUM_FRAGCNT) == nullptr);
+        assert(FindField(FIELDTYPE_STREAMID_PKTNUM_FRAGNO) == nullptr);
+        assert(FindField(FIELDTYPE_ENCDATA) == nullptr);
+
+        assert(stream_id);
+        assert(width && height || !width && !height);
+
+        int field_size = 0;
+        int field_type = 0;
+        if((width != nullptr) && (height != nullptr) && (fragmentcnt != nullptr)) //FIELDTYPE_STREAMID_PKTNUM_FRAGCNT_VIDINFO
+        {
+            field_type = FIELDTYPE_STREAMID_PKTNUM_FRAGCNT_VIDINFO;
+            field_size = sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint16_t) + (12+12) / 8;
+            assert(!fragmentno || *fragmentno == 0);
+        }
+        else if((width != nullptr) && (height != nullptr)) //FIELDTYPE_STREAMID_PKTNUM_VIDINFO
+        {
+            field_type = FIELDTYPE_STREAMID_PKTNUM_VIDINFO;
+            field_size = sizeof(uint8_t) + sizeof(uint32_t) + (12 + 12) / 8;
+            assert(!fragmentno && !fragmentcnt);
+        }
+        else if(fragmentcnt != nullptr) //FIELDTYPE_STREAMID_PKTNUM_FRAGCNT
+        {
+            field_type = FIELDTYPE_STREAMID_PKTNUM_FRAGCNT;
+            field_size = sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint16_t);
+            assert(!fragmentno || *fragmentno == 0);
+        }
+        else if(fragmentno != nullptr) //FIELDTYPE_STREAMID_PKTNUM_FRAGNO
+        {
+            field_type = FIELDTYPE_STREAMID_PKTNUM_FRAGNO;
+            field_size = sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint16_t);
+            assert(!fragmentcnt);
+        }
+        else //FIELDTYPE_STREAMID_PKTNUM
+        {
+            field_type = FIELDTYPE_STREAMID_PKTNUM;
+            field_size = sizeof(uint8_t) + sizeof(uint32_t);
+            assert(!fragmentcnt && !fragmentno);
+            assert(!width && !height);
+        }
+
+        int const alloc_size = FIELDVALUE_PREFIX + field_size + FIELDVALUE_PREFIX + enc_len;
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW_RETURN(data_buf, uint8_t[alloc_size], nullptr);
+
+        //store data indexes
+        uint8_t* ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        std::vector<uint8_t> field(field_size);
+        uint8_t* field_ptr = field.data();
+        switch(field_type)
+        {
+        case FIELDTYPE_STREAMID_PKTNUM_FRAGCNT_VIDINFO :
+            assert(width && height && fragmentcnt);
+            field_ptr = SET_UINT8_PTR(field_ptr, stream_id);
+            field_ptr = SET_UINT32_PTR(field_ptr, packet_no);
+            field_ptr = SET_UINT16_PTR(field_ptr, *fragmentcnt);
+            field_ptr = SET2_UINT12_PTR(field_ptr, *width, *height);
+            break;
+        case FIELDTYPE_STREAMID_PKTNUM_VIDINFO :
+            assert(width && height);
+            field_ptr = SET_UINT8_PTR(field_ptr, stream_id);
+            field_ptr = SET_UINT32_PTR(field_ptr, packet_no);
+            field_ptr = SET2_UINT12_PTR(field_ptr, *width, *height);
+            break;
+        case FIELDTYPE_STREAMID_PKTNUM_FRAGCNT :
+            assert(fragmentcnt);
+            field_ptr = SET_UINT8_PTR(field_ptr, stream_id);
+            field_ptr = SET_UINT32_PTR(field_ptr, packet_no);
+            field_ptr = SET_UINT16_PTR(field_ptr, *fragmentcnt);
+            break;
+        case FIELDTYPE_STREAMID_PKTNUM_FRAGNO :
+            assert(fragmentno);
+            field_ptr = SET_UINT8_PTR(field_ptr, stream_id);
+            field_ptr = SET_UINT32_PTR(field_ptr, packet_no);
+            field_ptr = SET_UINT16_PTR(field_ptr, *fragmentno);
+            break;
+        default :
+            assert(0);
+        case FIELDTYPE_STREAMID_PKTNUM :
+            field_ptr = SET_UINT8_PTR(field_ptr, stream_id);
+            field_ptr = SET_UINT32_PTR(field_ptr, packet_no);
+            break;
+        }
+
+        ptr = WRITEFIELD_DATA(ptr, field_type, field.data(), field_size);
+        ptr = WRITEFIELD_DATA(ptr, FIELDTYPE_ENCDATA, enc_data, enc_len);
+
+        //int x = ptr - reinterpret_cast<const uint8_t*>(v.iov_base) ;
+        assert(ptr - reinterpret_cast<const uint8_t*>(v.iov_base) == alloc_size);
+
+        assert(m_iovec.size());
+
+        m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+
+        return ptr; //callee must continue to write from this position
+    }
+
+    uint8_t VideoPacket::GetStreamID(uint32_t* packet_no, uint16_t* fragno,
+                                     uint16_t* fragcnt, uint16_t* width,
+                                     uint16_t* height) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_STREAMID_PKTNUM_VIDINFO);
+        if(ptr == nullptr) ptr = FindField(FIELDTYPE_STREAMID_PKTNUM_FRAGCNT_VIDINFO);
+        if(ptr == nullptr) ptr = FindField(FIELDTYPE_STREAMID_PKTNUM);
+        if(ptr == nullptr) ptr = FindField(FIELDTYPE_STREAMID_PKTNUM_FRAGCNT);
+        if(ptr == nullptr) ptr = FindField(FIELDTYPE_STREAMID_PKTNUM_FRAGNO);
+        if(ptr == nullptr) return 0;
+
+        uint8_t stream_id = 0;
+        uint16_t u16_1;
+        uint16_t u16_2;
+        uint32_t u32 = 0;
+
+        uint16_t const field_size = READFIELD_SIZE(ptr);
+        uint8_t const field_type = READFIELD_TYPE(ptr);
+        ptr = READFIELD_DATAPTR(ptr);
+        switch(field_type)
+        {
+        case FIELDTYPE_STREAMID_PKTNUM_VIDINFO :
+            if(field_size < sizeof(uint8_t) + sizeof(uint32_t) + (12+12) / 8)
+                return 0;
+            //invalid parameters for this field
+            if((fragno != nullptr) || (fragcnt != nullptr))
+                return 0;
+            //stream id
+            ptr = GET_UINT8_PTR(ptr, stream_id);
+            //packet no
+            ptr = GET_UINT32_PTR(ptr, u32);
+            if(packet_no != nullptr)
+                *packet_no = u32;
+            //width & height
+            ptr = GET2_UINT12_PTR(ptr, u16_1, u16_2);
+            if(width != nullptr)
+                *width = u16_1;
+            if(height != nullptr)
+                *height = u16_2;
+            break;
+        case FIELDTYPE_STREAMID_PKTNUM_FRAGCNT_VIDINFO :
+            if(field_size < sizeof(uint8_t) + sizeof(uint32_t) + 
+                sizeof(uint16_t) + (12+12) / 8)
+                return 0;
+            //stream id
+            ptr = GET_UINT8_PTR(ptr, stream_id);
+            //packet no
+            ptr = GET_UINT32_PTR(ptr, u32);
+            if(packet_no != nullptr)
+                *packet_no = u32;
+            //fragment count
+            ptr = GET_UINT16_PTR(ptr, u16_1);
+            if(fragcnt != nullptr)
+                *fragcnt = u16_1;
+            //fragment no
+            if(fragno != nullptr)
+                *fragno = 0;
+            //width & height
+            ptr = GET2_UINT12_PTR(ptr, u16_1, u16_2);
+            if(width != nullptr)
+                *width = u16_1;
+            if(height != nullptr)
+                *height = u16_2;
+            break;
+        case FIELDTYPE_STREAMID_PKTNUM :
+            if(field_size < sizeof(uint8_t) + sizeof(uint32_t))
+                return 0;
+            //invalid parameters for this field
+            if((fragno != nullptr) || (fragcnt != nullptr) || (width != nullptr) || (height != nullptr))
+                return 0;
+            //stream id
+            ptr = GET_UINT8_PTR(ptr, stream_id);
+            //packet no
+            ptr = GET_UINT32_PTR(ptr, u32);
+            if(packet_no != nullptr)
+                *packet_no = u32;
+            break;
+        case FIELDTYPE_STREAMID_PKTNUM_FRAGCNT :
+            if(field_size < sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint16_t))
+                return 0;
+            //invalid parameters for this field
+            if((width != nullptr) || (height != nullptr))
+                return 0;
+            //stream id
+            ptr = GET_UINT8_PTR(ptr, stream_id);
+            //packet no
+            ptr = GET_UINT32_PTR(ptr, u32);
+            if(packet_no != nullptr)
+                *packet_no = u32;
+            //fragment cnt
+            ptr = GET_UINT16_PTR(ptr, u16_1);
+            if(fragcnt != nullptr)
+                *fragcnt = u16_1;
+            //fragment no
+            if(fragno != nullptr)
+                *fragno = 0;
+            break;
+        case FIELDTYPE_STREAMID_PKTNUM_FRAGNO :
+            if(field_size < sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint16_t))
+                return 0;
+            //invalid parameters for this field
+            if((fragcnt != nullptr) || (width != nullptr) || (height != nullptr))
+                return 0;
+            //stream id
+            ptr = GET_UINT8_PTR(ptr, stream_id);
+            //packet no
+            ptr = GET_UINT32_PTR(ptr, u32);
+            if(packet_no != nullptr)
+                *packet_no = u32;
+            ptr = GET_UINT16_PTR(ptr, u16_1);
+            //fragment no
+            if(fragno != nullptr)
+                *fragno = u16_1;
+            break;
+        }
+        return stream_id;
+    }
+
+    uint32_t VideoPacket::GetPacketNo() const
+    {
+        uint32_t packet_no = 0;
+        uint8_t const streamid = GetStreamID(&packet_no);
+        return packet_no;
+    }
+
+    uint16_t VideoPacket::GetFragmentNo() const
+    {
+        uint16_t fragno = 0;
+        if(GetStreamID(nullptr, &fragno) == 0u)
+            return INVALID_FRAGMENT_NO;
+        return fragno;
+    }
+
+    uint16_t VideoPacket::GetFragmentCount() const
+    {
+        uint16_t fragcnt = 0;
+        if(GetStreamID(nullptr, nullptr, &fragcnt) != 0u)
+            return fragcnt;
+        return 0;
+    }
+
+    bool VideoPacket::GetVideoInfo(uint16_t& width, uint16_t& height) const
+    {
+        return GetStreamID(0, 0, 0, &width, &height) != 0;
+    }
+
+    const char* VideoPacket::GetEncodedData(uint16_t& packet_bytes) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_ENCDATA);
+        if(ptr == nullptr)
+            return nullptr;
+        packet_bytes = READFIELD_SIZE(ptr);
+        assert(packet_bytes>0);
+        return reinterpret_cast<const char*>(READFIELD_DATAPTR(ptr));
+    }
+
+    bool IsBlockRange(const std::set<uint16_t>& blocks)
+    {
+        if(blocks.size()>1)
+        {
+            auto ii = blocks.end();
+            ii--;
+            return (*blocks.begin() + blocks.size() - 1 == *ii);
+        }
+        return false;
+    }
+    
+    DesktopPacket::DesktopPacket(uint16_t src_userid, uint32_t time, 
+                                 uint8_t stream_id, uint16_t width, 
+                                 uint16_t height, uint8_t bmp_mode, 
+                                 uint16_t pkt_upd_index, 
+                                 uint16_t pkt_upd_count,
+                                 const map_block_t& blocks,
+                                 const block_frags_t& fragments,
+                                 const mmap_dup_blocks_t& dup_blocks)
+        : FieldPacket(PACKETHDR_CHANNEL_ONLY, PACKET_KIND_DESKTOP, src_userid, time)
+    {
+        int alloc_size = 0;
+        
+        //FIELDTYPE_SESSIONID_NEW
+        //[stream_id, width, height, bmp_mode, pkt_upd_index, pkt_upd_count]
+        int const field_size = sizeof(uint8_t) + sizeof(uint16_t) +
+            sizeof(uint16_t) + sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t);
+
+        alloc_size += FIELDVALUE_PREFIX + field_size;
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        std::vector<uint8_t> streamid_field((size_t)field_size);
+        uint8_t* field_ptr = streamid_field.data();
+
+        field_ptr = SET_UINT8_PTR(field_ptr, stream_id);
+        field_ptr = SET_UINT16_PTR(field_ptr, width);
+        field_ptr = SET_UINT16_PTR(field_ptr, height);
+        field_ptr = SET_UINT8_PTR(field_ptr, bmp_mode);
+        field_ptr = SET_UINT16_PTR(field_ptr, pkt_upd_index);
+        field_ptr = SET_UINT16_PTR(field_ptr, pkt_upd_count); //change UpdatePacketCount() if changed
+
+        data_buf = WRITEFIELD_DATA(data_buf, FIELDTYPE_SESSIONID_NEW, streamid_field.data(),
+                                   streamid_field.size());
+
+        assert(reinterpret_cast<uint8_t*>(v.iov_base) == data_buf - alloc_size);
+        
+        assert(m_iovec.size());
+
+        m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+        uint16_t const fieldsize_alloced = InitCommon(blocks, fragments, dup_blocks);
+
+#ifdef _DEBUG
+        size_t data_size = 0;
+        map_block_t::const_iterator bi;
+        for(bi=blocks.begin();bi!= blocks.end();bi++)
+            data_size += bi->second.block_size;
+        block_frags_t::const_iterator fi;
+        for(fi=fragments.begin();fi!=fragments.end();fi++)
+            data_size += fi->frag_size;
+        size_t range_blocks = 0;
+        size_t single_blocks = 0;
+        size_t single_entries = 0;
+        mmap_dup_blocks_t::const_iterator dbi;
+        for(dbi=dup_blocks.begin();dbi!=dup_blocks.end();dbi++)
+        {
+            if(IsBlockRange(dbi->second))
+                range_blocks++;
+            else
+            {
+                single_blocks += dbi->second.size();
+                single_entries++;
+            }
+        }
+        uint16_t fields = DESKTOPPACKET_SESSIONUSAGE(true);
+        fields += DESKTOPPACKET_DATAUSAGE(uint16_t(blocks.size()), uint16_t(fragments.size()));
+        fields += DESKTOPPACKET_BLOCKUSAGE(uint16_t(single_entries), uint16_t(single_blocks));
+        fields += DESKTOPPACKET_BLOCKRANGEUSAGE(uint16_t(range_blocks));
+
+        assert(fields + data_size == fieldsize_alloced + (uint16_t)v.iov_len);
+        assert(GetPacketSize() <= MAX_PACKET_SIZE);
+#endif
+    }
+
+    //Update session (first packet based on FIELDTYPE_SESSIONID_UPD)
+    DesktopPacket::DesktopPacket(uint16_t src_userid, uint32_t time, 
+                                 uint8_t session_id, uint16_t pkt_upd_index, 
+                                 uint16_t pkt_upd_count, 
+                                 const map_block_t& blocks, 
+                                 const block_frags_t& fragments,
+                                 const mmap_dup_blocks_t& dup_blocks)
+        : FieldPacket(PACKETHDR_CHANNEL_ONLY, PACKET_KIND_DESKTOP, src_userid, time)
+    {
+        int alloc_size = 0;
+        
+        //FIELDTYPE_SESSIONID_UPD
+        //[streamid, pkt_upd_index, pkt_upd_count]
+        int const field_size = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t);
+        alloc_size += FIELDVALUE_PREFIX + field_size;
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        std::vector<uint8_t> streamid_field((size_t)field_size);
+        uint8_t* field_ptr = streamid_field.data();
+
+        field_ptr = SET_UINT8_PTR(field_ptr, session_id);
+        field_ptr = SET_UINT16_PTR(field_ptr, pkt_upd_index);
+        field_ptr = SET_UINT16_PTR(field_ptr, pkt_upd_count); //change UpdatePacketCount() if changed
+
+        data_buf = WRITEFIELD_DATA(data_buf, FIELDTYPE_SESSIONID_UPD,
+                                   streamid_field.data(), streamid_field.size());
+
+        assert(reinterpret_cast<uint8_t*>(v.iov_base) == data_buf - alloc_size);
+
+        assert(m_iovec.size());
+
+        m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+        uint16_t const fieldsize_alloced = InitCommon(blocks, fragments, dup_blocks);
+
+#ifdef _DEBUG
+        int data_size = 0;
+        map_block_t::const_iterator bi;
+        for(bi=blocks.begin();bi!= blocks.end();bi++)
+            data_size += bi->second.block_size;
+        block_frags_t::const_iterator fi;
+        for(fi=fragments.begin();fi!=fragments.end();fi++)
+            data_size += fi->frag_size;
+        int range_blocks = 0;
+        int single_blocks = 0;
+        int single_entries = 0;
+        mmap_dup_blocks_t::const_iterator dbi;
+        for(dbi=dup_blocks.begin();dbi!=dup_blocks.end();dbi++)
+        {
+            if(IsBlockRange(dbi->second))
+                range_blocks++;
+            else
+            {
+                single_blocks += uint16_t(dbi->second.size());
+                single_entries++;
+            }
+        }
+        uint16_t fields = DESKTOPPACKET_SESSIONUSAGE(false);
+        fields += DESKTOPPACKET_DATAUSAGE(uint16_t(blocks.size()), uint16_t(fragments.size()));
+        fields += DESKTOPPACKET_BLOCKUSAGE(single_entries, single_blocks);
+        fields += DESKTOPPACKET_BLOCKRANGEUSAGE(range_blocks);
+
+        assert(fields + data_size == fieldsize_alloced + (uint16_t)v.iov_len);
+        assert(GetPacketSize() <= MAX_PACKET_SIZE);
+#endif
+    }
+
+    DesktopPacket::DesktopPacket(const char* packet, uint16_t packet_size)
+        : FieldPacket(packet, packet_size)
+    {
+    }
+
+    DesktopPacket::DesktopPacket(const DesktopPacket& packet)
+         
+    = default;
+
+    bool DesktopPacket::UpdatePacketCount(uint16_t pkt_upd_count)
+    {
+        uint8_t* ptr = FindFieldNonConst(FIELDTYPE_SESSIONID_NEW);
+        if(ptr != nullptr)
+        {
+            if(READFIELD_SIZE(ptr) >= sizeof(uint8_t) + sizeof(uint16_t) +
+                sizeof(uint16_t) + sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t))
+            {
+                ptr = READFIELD_DATAPTR(ptr);
+                ptr += 1; //session_id
+                ptr += 2; //width
+                ptr += 2; //height
+                ptr += 1; //bmp_mode
+                ptr += 2; //pkt_upd_index
+                SET_UINT16(ptr, pkt_upd_count);
+#ifdef _DEBUG
+                uint8_t session_id = 0;
+                uint16_t pkt_index;
+                uint16_t pkt_count;
+                if(GetSessionProperties(&session_id, nullptr, nullptr, nullptr,
+                                        &pkt_index, &pkt_count))
+                    assert(pkt_count == pkt_upd_count);
+                if(GetUpdateProperties(&session_id, &pkt_index, &pkt_count))
+                    assert(pkt_count == pkt_upd_count);
+#endif
+                return true;
+            }
+            return false;
+        }
+
+        ptr = FindFieldNonConst(FIELDTYPE_SESSIONID_UPD);
+        if(ptr == nullptr)
+            return false;
+
+        if(READFIELD_SIZE(ptr) >= sizeof(uint8_t) + sizeof(uint16_t) +
+            sizeof(uint16_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+            ptr += 1; //session_id
+            ptr += 2; //pkt_upd_index
+            SET_UINT16(ptr, pkt_upd_count);
+            return true;
+        }
+        return false;
+    }
+
+
+    uint16_t DesktopPacket::InitCommon(const map_block_t& blocks, 
+                                       const block_frags_t& fragments,
+                                       const mmap_dup_blocks_t& dup_blocks)
+    {
+        uint16_t alloced = 0;
+        if(!blocks.empty())
+        {
+            int alloc_size = 0;
+            int blocks_size = 0;
+
+            std::vector<uint16_t> blocknums_sizes_input;
+
+            auto ii = blocks.begin();
+            while(ii != blocks.end())
+            {
+                assert(ii->first < BLOCKNUMS_MAX);
+                blocknums_sizes_input.push_back(ii->first); //block no
+                blocknums_sizes_input.push_back(ii->second.block_size); //block size
+
+                blocks_size += ii->second.block_size;
+                ii++;
+            }
+
+            std::vector<uint8_t> blocknums_sizes_output;
+            ConvertToUInt12Array(blocknums_sizes_input,
+                                 blocknums_sizes_output);
+
+            //FIELDTYPE_BLOCKNUMS_AND_SIZES
+            alloc_size += int(FIELDVALUE_PREFIX + blocknums_sizes_output.size());
+
+            //FIELDTYPE_BLOCKS_DATA
+            alloc_size += FIELDVALUE_PREFIX + blocks_size;
+
+            uint8_t* data_buf = nullptr;
+            ACE_NEW_RETURN(data_buf, uint8_t[alloc_size], alloced);
+            
+            uint8_t* data_ptr = data_buf;
+            iovec v;
+            v.iov_base = reinterpret_cast<char*>(data_buf);
+            v.iov_len = alloc_size;
+
+            //write FIELDTYPE_BLOCKNUMS_AND_SIZES
+            data_ptr = WRITEFIELD_DATA(data_ptr, FIELDTYPE_BLOCKNUMS_AND_SIZES,
+                            blocknums_sizes_output.data(),
+                            blocknums_sizes_output.size());
+
+            //write FIELDTYPE_BLOCKS_DATA
+            data_ptr = WRITEFIELD_TYPE(data_ptr, FIELDTYPE_BLOCKS_DATA,
+                            blocks_size);
+            
+            ii = blocks.begin();
+            while(ii != blocks.end())
+            {
+                memcpy(data_ptr, ii->second.block_data, ii->second.block_size);
+                data_ptr += ii->second.block_size;
+                ii++;
+            }            
+
+            assert(alloc_size == data_ptr - reinterpret_cast<const uint8_t*>(v.iov_base));
+            m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+            m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+            alloced += (uint16_t)v.iov_len;
+        }
+
+        if(!fragments.empty())
+        {
+            int alloc_size = 0;
+            int frags_size = 0;
+
+            //Build array for FIELDTYPE_BLOCKNUMS_FRAGNO_AND_SIZES
+            //[[blockno(uint12_t), fragsize(uint12_t), fragno(uint4_t), frag_cnt(uint4_t)], ...] = 4 bytes
+            std::vector<uint8_t> frags_info_output(4*fragments.size());
+            uint8_t* frags_info_ptr = frags_info_output.data();
+
+            auto ii = fragments.begin();
+            while(ii != fragments.end())
+            {
+                assert(ii->block_no < BLOCKNUMS_MAX);
+                frags_info_ptr = SET2_UINT12_PTR(frags_info_ptr, ii->block_no, ii->frag_size);
+                frags_info_ptr = SET_UINT4_PTR(frags_info_ptr, ii->frag_no, ii->frag_cnt);
+
+                frags_size += ii->frag_size;
+                ii++;
+            }
+
+
+            //FIELDTYPE_BLOCKNUMS_FRAGNO_AND_SIZES
+            alloc_size += int(FIELDVALUE_PREFIX + frags_info_output.size());
+
+            //FIELDTYPE_BLOCKS_FRAG_DATA
+            alloc_size += FIELDVALUE_PREFIX + frags_size;
+
+            uint8_t* data_buf = nullptr;
+            ACE_NEW_RETURN(data_buf, uint8_t[alloc_size], alloced);
+            
+            uint8_t* data_ptr = data_buf;
+            iovec v;
+            v.iov_base = reinterpret_cast<char*>(data_buf);
+            v.iov_len = alloc_size;
+
+            //FIELDTYPE_BLOCKNUMS_FRAGNO_AND_SIZES
+            data_ptr = WRITEFIELD_DATA(data_ptr, FIELDTYPE_BLOCKNUMS_FRAGNO_AND_SIZES,
+                            frags_info_output.data(), frags_info_output.size());
+
+            //write FIELDTYPE_BLOCKS_FRAG_DATA
+            data_ptr = WRITEFIELD_TYPE(data_ptr, FIELDTYPE_BLOCKS_FRAG_DATA, frags_size);
+            
+            ii = fragments.begin();
+            while(ii != fragments.end())
+            {
+                memcpy(data_ptr, ii->frag_data, ii->frag_size);
+                data_ptr += ii->frag_size;
+                ii++;
+            }
+
+            assert(alloc_size == data_ptr - reinterpret_cast<const uint8_t*>(v.iov_base));
+            m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+            m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+            alloced += (uint16_t)v.iov_len;
+        }
+
+        if(!dup_blocks.empty())
+        {
+            int alloc_size = 0;
+
+            std::vector<uint16_t> blocknums_single_input, blocknums_range_input;
+#ifdef _DEBUG
+            size_t block_ranges = 0, single_entries = 0, single_blocks = 0;
+#endif
+            auto dbi = dup_blocks.begin();
+            for(;dbi!=dup_blocks.end();dbi++)
+            {
+                assert(dbi->second.size());
+                assert(dbi->first < BLOCKNUMS_MAX);
+
+                auto ii = dbi->second.begin();
+                if(IsBlockRange(dbi->second))
+                {
+                    blocknums_range_input.push_back(dbi->first);
+                    ii = dbi->second.begin();
+                    blocknums_range_input.push_back(*ii);
+                    ii = dbi->second.end();
+                    ii--;
+                    blocknums_range_input.push_back(*ii);
+#ifdef _DEBUG
+                    block_ranges++;
+#endif
+                }
+                else
+                {
+                    blocknums_single_input.push_back(dbi->first);
+                    for(;ii!=dbi->second.end();ii++)
+                        blocknums_single_input.push_back(*ii);
+                    blocknums_single_input.push_back(BLOCKNO_INDEX_DUPLICATE);
+#ifdef _DEBUG
+                    single_blocks += dbi->second.size();
+                    single_entries++;
+#endif
+                }
+            }
+
+            std::vector<uint8_t> blocknums_single_output;
+            std::vector<uint8_t> blocknums_range_output;
+            if(!blocknums_single_input.empty())
+            {
+                ConvertToUInt12Array(blocknums_single_input,
+                                     blocknums_single_output);
+
+                //FIELDTYPE_BLOCK_DUP
+                alloc_size += int(FIELDVALUE_PREFIX + blocknums_single_output.size());
+
+            }
+            if(!blocknums_range_input.empty())
+            {
+                ConvertToUInt12Array(blocknums_range_input,
+                                     blocknums_range_output);
+
+                //FIELDTYPE_BLOCK_DUP_RANGE
+                alloc_size += int(FIELDVALUE_PREFIX + blocknums_range_output.size());
+            }
+
+            uint8_t* data_buf = nullptr;
+            ACE_NEW_RETURN(data_buf, uint8_t[alloc_size], alloced);
+            
+            uint8_t* data_ptr = data_buf;
+            iovec v;
+            v.iov_base = reinterpret_cast<char*>(data_buf);
+            v.iov_len = alloc_size;
+
+            if(!blocknums_single_output.empty())
+            {
+                //write FIELDTYPE_BLOCK_DUP
+                data_ptr = WRITEFIELD_DATA(data_ptr, FIELDTYPE_BLOCK_DUP,
+                                           blocknums_single_output.data(),
+                                           blocknums_single_output.size());
+#ifdef _DEBUG
+                size_t const bytes = DESKTOPPACKET_BLOCKUSAGE(single_entries, single_blocks);
+                assert(bytes == blocknums_single_output.size() + FIELDVALUE_PREFIX);
+#endif
+            }
+            if(!blocknums_range_output.empty())
+            {
+                //write FIELDTYPE_BLOCK_DUP_RANGE
+                data_ptr = WRITEFIELD_DATA(data_ptr, FIELDTYPE_BLOCK_DUP_RANGE,
+                                blocknums_range_output.data(),
+                                blocknums_range_output.size());
+#ifdef _DEBUG
+                size_t const bytes = DESKTOPPACKET_BLOCKRANGEUSAGE(block_ranges);
+                assert(bytes == blocknums_range_output.size() + FIELDVALUE_PREFIX);
+#endif
+            }
+            m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+            m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+            alloced += (uint16_t)v.iov_len;
+        }
+        return alloced;
+    }
+
+    uint8_t DesktopPacket::GetSessionID() const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_SESSIONID_NEW);
+        if(ptr == nullptr)
+            ptr = FindField(FIELDTYPE_SESSIONID_UPD);
+
+        if((ptr != nullptr) && READFIELD_SIZE(ptr) >= sizeof(uint8_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+            return GET_UINT8(ptr);
+        }
+
+        return 0; //invalid ID
+    }
+
+    uint16_t DesktopPacket::GetPacketIndex() const
+    {
+        uint16_t pkt_upd_index = 0;
+
+        if(GetUpdateProperties(nullptr, &pkt_upd_index, nullptr))
+            return pkt_upd_index;
+        
+        if(GetSessionProperties(nullptr, nullptr, nullptr, nullptr,
+                                &pkt_upd_index, nullptr))
+            return pkt_upd_index;
+
+        return INVALID_PACKET_INDEX;
+    }
+
+    bool DesktopPacket::GetSessionProperties(uint8_t* session_id, 
+                                             uint16_t* width, 
+                                             uint16_t* height, 
+                                             uint8_t* bmp_mode,
+                                             uint16_t* pkt_upd_index,
+                                             uint16_t* pkt_upd_count) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_SESSIONID_NEW);
+        if((ptr != nullptr) && READFIELD_SIZE(ptr) >= sizeof(uint8_t) + sizeof(uint16_t) +
+           sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+
+            if(session_id != nullptr)
+                *session_id = GET_UINT8(ptr);
+            ptr += sizeof(uint8_t);
+
+            if(width != nullptr)
+                *width = GET_UINT16(ptr);
+            ptr += sizeof(uint16_t);
+
+            if(height != nullptr)
+                *height = GET_UINT16(ptr);
+            ptr += sizeof(uint16_t);
+
+            if(bmp_mode != nullptr)
+                *bmp_mode = GET_UINT8(ptr);
+            ptr += sizeof(uint8_t);
+
+            if(pkt_upd_index != nullptr)
+                *pkt_upd_index = GET_UINT16(ptr);
+            ptr += sizeof(uint16_t);
+
+            if(pkt_upd_count != nullptr)
+                *pkt_upd_count = GET_UINT16(ptr);
+            ptr += sizeof(uint16_t);
+
+            return true;
+        }
+        return false;
+    }
+
+    bool DesktopPacket::GetUpdateProperties(uint8_t* session_id, 
+                                            uint16_t* pkt_upd_index,
+                                            uint16_t* pkt_upd_count) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_SESSIONID_UPD);
+        if((ptr != nullptr) && READFIELD_SIZE(ptr) >= sizeof(uint8_t) 
+            + sizeof(uint16_t) + sizeof(uint16_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+
+            if(session_id != nullptr)
+                *session_id = GET_UINT8(ptr);
+            ptr += sizeof(uint8_t);
+
+            if(pkt_upd_index != nullptr)
+                *pkt_upd_index = GET_UINT16(ptr);
+            ptr += sizeof(uint16_t);
+
+            if(pkt_upd_count != nullptr)
+                *pkt_upd_count = GET_UINT16(ptr);
+            ptr += sizeof(uint16_t);
+
+            return true;
+        }
+        return false;
+    }
+
+    bool DesktopPacket::GetBlocks(map_block_t& blocks) const
+    {
+        const uint8_t* blocknums_ptr = FindField(FIELDTYPE_BLOCKNUMS_AND_SIZES);
+        if(blocknums_ptr == nullptr)
+            return false;
+
+        const uint8_t* blockdata_ptr = FindField(FIELDTYPE_BLOCKS_DATA);
+        if(blockdata_ptr == nullptr)
+            return false;
+
+        uint16_t const blockdata_len = READFIELD_SIZE(blockdata_ptr);
+        blockdata_ptr = READFIELD_DATAPTR(blockdata_ptr);
+
+        
+        std::vector<uint16_t> blocks_n_sizes;
+        if(!ReadUInt12Array(blocknums_ptr, FIELDTYPE_BLOCKNUMS_AND_SIZES,
+                            blocks_n_sizes))
+            return false;
+
+        assert(blocks_n_sizes.size() % 2 == 0);
+        if((blocks_n_sizes.size() % 2) != 0u)
+            return false;
+
+        uint16_t byte_pos = 0;
+        for(size_t i=0;i<blocks_n_sizes.size();i+=2)
+        {
+            desktop_block bb;
+            bb.block_size = blocks_n_sizes[i+1];
+
+            // The declared block sizes come off the wire, so they can add up
+            // to more than the payload actually holds. Without this the block
+            // pointer runs past the receive buffer. GetBlockFragments() below
+            // already does the same check. byte_pos is uint16_t and can wrap
+            // once the declared total passes 65535, so this has to be checked
+            // per block rather than on the total afterwards.
+            if(byte_pos + bb.block_size > blockdata_len) //buffer overflow check
+                return false;
+
+            bb.block_data = reinterpret_cast<const char*>(&blockdata_ptr[byte_pos]);
+
+            byte_pos += bb.block_size;
+
+            blocks[blocks_n_sizes[i]] = bb;
+        }
+        assert(blockdata_ptr + byte_pos == blockdata_ptr + blockdata_len);
+        return true;
+    }
+
+    bool DesktopPacket::GetBlockFragments(block_frags_t& fragments) const
+    {
+        const uint8_t* info_ptr = FindField(FIELDTYPE_BLOCKNUMS_FRAGNO_AND_SIZES);
+        if(info_ptr == nullptr)
+            return false;
+
+        const uint8_t* data_ptr = FindField(FIELDTYPE_BLOCKS_FRAG_DATA);
+        if(data_ptr == nullptr)
+            return false;
+
+        uint16_t const info_size = READFIELD_SIZE(info_ptr);
+        info_ptr = READFIELD_DATAPTR(info_ptr);
+
+        const auto* u8_info_ptr = info_ptr;
+
+        uint16_t const data_size = READFIELD_SIZE(data_ptr);
+        data_ptr = READFIELD_DATAPTR(data_ptr);
+
+        uint16_t byte_pos = 0;
+        for(uint16_t i=0;i<info_size;i+=4)
+        {
+            block_fragment bf;
+            u8_info_ptr = GET2_UINT12_PTR(u8_info_ptr, bf.block_no, bf.frag_size);
+            u8_info_ptr = GET_UINT4_PTR(u8_info_ptr, bf.frag_no, bf.frag_cnt);
+            assert(byte_pos+bf.frag_size<=data_size);
+            if(byte_pos+bf.frag_size>data_size) //buffer overflow check
+                return false;
+            bf.frag_data = reinterpret_cast<const char*>(&data_ptr[byte_pos]);
+            byte_pos += bf.frag_size;
+            fragments.push_back(bf);
+        }
+        assert(data_ptr + byte_pos == data_ptr + data_size);
+        
+        return true;
+    }
+
+    bool DesktopPacket::GetDuplicateBlocks(map_dup_blocks_t& dup_blocks) const
+    {
+        bool ok = false;
+        const uint8_t* info_ptr = FindField(FIELDTYPE_BLOCK_DUP);
+        if(info_ptr != nullptr)
+        {
+            std::vector<uint16_t> blocknums_single;
+            if(!ReadUInt12Array(info_ptr, FIELDTYPE_BLOCK_DUP,
+                                blocknums_single))
+                return false;
+
+            uint16_t block_no = BLOCKNO_INDEX_DUPLICATE;
+            std::set<uint16_t> blocknums;
+            for(unsigned short i : blocknums_single)
+            {
+                if(block_no == BLOCKNO_INDEX_DUPLICATE)
+                    block_no = i;
+                else if(i == BLOCKNO_INDEX_DUPLICATE)
+                {
+                    assert(block_no != BLOCKNO_INDEX_DUPLICATE);
+                    assert(blocknums.size());
+                    auto const ii = dup_blocks.find(block_no);
+                    if(ii != dup_blocks.end())
+                        ii->second.insert(blocknums.begin(), blocknums.end());
+                    else
+                        dup_blocks[block_no] = blocknums;
+                    block_no = BLOCKNO_INDEX_DUPLICATE;
+                    blocknums.clear();
+                }
+                else
+                    blocknums.insert(i);
+            }
+            ok = true;
+        }
+        info_ptr = FindField(FIELDTYPE_BLOCK_DUP_RANGE);
+        if(info_ptr != nullptr)
+        {
+            std::vector<uint16_t> blocknums_range;
+            if(!ReadUInt12Array(info_ptr, FIELDTYPE_BLOCK_DUP_RANGE,
+                                blocknums_range))
+                return false;
+
+            // Each range entry is three values: a source block and a low/high
+            // pair. The values come off the wire, so the count can be anything;
+            // without this the loop below reads past the vector on the last
+            // step. GetBlocks() guards its own array the same way.
+            if((blocknums_range.size() % 3) != 0u)
+                return false;
+            assert(blocknums_range.size() % 3 == 0);
+
+            for(size_t i=0;i<blocknums_range.size();i+=3)
+            {
+                std::set<uint16_t> blocknums;
+                for(uint16_t block_no=blocknums_range[i+1];
+                    block_no<=blocknums_range[i+2];block_no++)
+                    blocknums.insert(block_no);
+
+                auto const ii = dup_blocks.find(blocknums_range[i]);
+                if(ii != dup_blocks.end())
+                    ii->second.insert(blocknums.begin(), blocknums.end());
+                else
+                    dup_blocks[blocknums_range[i]] = blocknums;
+            }
+            ok = true;
+        }
+        return ok;
+    }
+
+    const char* DesktopPacket::GetBlock(uint16_t block_no, 
+                                        uint16_t& length) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_BLOCKS_DATA);
+        if(ptr == nullptr)
+            return nullptr;
+
+        uint16_t const total_size = READFIELD_SIZE(ptr);
+        ptr = READFIELD_DATAPTR(ptr);
+
+        map_block_t blocks;
+        GetBlocks(blocks);
+
+        auto const ii = blocks.find(block_no);
+        if(ii != blocks.end())
+        {
+            length = ii->second.block_size;
+            return ii->second.block_data;
+        }
+        return nullptr;
+    }
+
+
+    DesktopAckPacket::DesktopAckPacket(uint16_t src_userid, uint32_t time, 
+                                       uint16_t owner_userid, uint8_t session_id, 
+                                       uint32_t time_ack,
+                                       const std::set<uint16_t>& packets_ack,
+                                       const packet_range_t& packet_range_ack)
+                                       : FieldPacket(PACKETHDR_CHANNEL_ONLY,
+                                                     PACKET_KIND_DESKTOP_ACK, 
+                                                     src_userid, time)
+    {
+        int alloc_size = 0;
+
+        //FIELDTYPE_SESSIONID_ACK
+        //[sessionid(uint8_t), userid(uint16_t), time_ack(uint32_t)]
+        int const info_size = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint32_t);
+        alloc_size += FIELDVALUE_PREFIX + info_size;
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+        
+        uint8_t* data_ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        data_ptr = WRITEFIELD_TYPE(data_ptr, FIELDTYPE_SESSIONID_ACK, info_size);
+        data_ptr = SET_UINT8_PTR(data_ptr, session_id);
+        data_ptr = SET_UINT16_PTR(data_ptr, owner_userid);
+        data_ptr = SET_UINT32_PTR(data_ptr, time_ack);
+
+        m_iovec.push_back(v);
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+        InitCommon(packets_ack, packet_range_ack);
+    }
+
+    DesktopAckPacket::DesktopAckPacket(const char* packet, uint16_t packet_size)
+        : FieldPacket(packet, packet_size) {}
+
+    DesktopAckPacket::DesktopAckPacket(const DesktopAckPacket& packet)
+         = default;
+
+    bool DesktopAckPacket::GetSessionInfo(uint16_t* owner_userid,
+                                          uint8_t* session_id, 
+                                          uint32_t* upd_time) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_SESSIONID_ACK);
+        if(ptr == nullptr)
+            return false;
+
+        uint16_t const field_size = READFIELD_SIZE(ptr);
+        if(field_size < sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint32_t))
+            return false;
+
+        const auto* field_ptr = READFIELD_DATAPTR(ptr);
+        if (session_id != nullptr)
+            *session_id = GET_UINT8(field_ptr);
+        field_ptr += 1;
+        if (owner_userid != nullptr)
+            *owner_userid = GET_UINT16(field_ptr);
+        field_ptr += 2;
+        if (upd_time != nullptr)
+            *upd_time = GET_UINT32(field_ptr);
+        field_ptr += 4;
+        return true;
+    }
+
+    void DesktopAckPacket::InitCommon(const std::set<uint16_t>& packets_ack,
+                                      const packet_range_t& packet_range_ack)
+    {
+        //TODO: Ensure ACK packet doesn't become too big
+        if(!packets_ack.empty())
+        {
+            std::vector<uint16_t> const packetnums_input(packets_ack.begin(), 
+                                                   packets_ack.end());
+
+            //FIELDTYPE_PACKETS_ACK
+            WriteUInt16ArrayToIOVec(packetnums_input, FIELDTYPE_PACKETS_ACK,
+                                    m_iovec);
+
+#ifdef ENABLE_ENCRYPTION
+            m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+        }
+
+        if(!packet_range_ack.empty())
+        {
+            std::vector<uint16_t> packetnums_input;
+
+            auto ii = packet_range_ack.begin();
+            while(ii != packet_range_ack.end())
+            {
+                assert(ii->first < ii->second);
+                packetnums_input.push_back(ii->first);
+                packetnums_input.push_back(ii->second);
+                ii++;
+            }
+
+            //FIELDTYPE_PACKETRANGE_ACK
+            WriteUInt16ArrayToIOVec(packetnums_input, FIELDTYPE_PACKETRANGE_ACK,
+                                    m_iovec);
+#ifdef ENABLE_ENCRYPTION
+            m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+        }
+    }
+
+    bool DesktopAckPacket::GetPacketsAcked(std::set<uint16_t>& packets_ack) const
+    {
+        std::vector<uint16_t> packetnums;
+        const uint8_t* ptr = FindField(FIELDTYPE_PACKETS_ACK);
+        if(ptr != nullptr)
+        {
+
+            //FIELDTYPE_PACKETS_ACK
+            ReadUInt16Array(ptr, FIELDTYPE_PACKETS_ACK, packetnums);
+            packets_ack.insert(packetnums.begin(), packetnums.end());
+        }
+
+        //FIELDTYPE_PACKETRANGE_ACK
+        ptr = FindField(FIELDTYPE_PACKETRANGE_ACK);
+        if(ptr == nullptr)
+            return true;
+        packetnums.clear();
+
+        ReadUInt16Array(ptr, FIELDTYPE_PACKETRANGE_ACK, packetnums);
+        // Each range is a low/high pair. ReadUInt16Array requires an even byte
+        // length but still yields field_size/2 values, which can be odd, so the
+        // count has to be checked at run time and not only with assert(), which
+        // is compiled out of a release server.
+        if((packetnums.size() % 2) != 0u)
+            return false;
+        assert(packetnums.size() % 2 == 0);
+        //insert ranges
+        for(size_t i=0;i<packetnums.size();i+=2)
+        {
+            assert(packetnums[i+1] > packetnums[i]);
+            for(uint16_t b_low=packetnums[i];b_low<=packetnums[i+1];b_low++)
+                packets_ack.insert(b_low);
+        }
+        return true;
+    }
+
+    DesktopNakPacket::DesktopNakPacket(uint16_t src_userid, uint32_t time, 
+                                       uint8_t session_id)
+                                       : FieldPacket(PACKETHDR_CHANNEL_ONLY,
+                                                     PACKET_KIND_DESKTOP_NAK, 
+                                                     src_userid, time)
+    {
+        int const alloc_size = FIELDVALUE_PREFIX + sizeof(uint8_t); //FIELDTYPE_SESSIONID_NAK
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+
+        //store data indexes
+        uint8_t* ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        ptr = WRITEFIELD_VALUE_U8(ptr, FIELDTYPE_SESSIONID_NAK, session_id);
+
+        v.iov_len = (u_long)(ptr - reinterpret_cast<const uint8_t*>(v.iov_base));
+        assert(v.iov_len == alloc_size);
+
+        assert(m_iovec.size());
+
+        m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+    }
+
+    DesktopNakPacket::DesktopNakPacket(const char* packet, uint16_t packet_size)
+        : FieldPacket(packet, packet_size)
+    {
+    }
+
+    DesktopNakPacket::DesktopNakPacket(const DesktopNakPacket& packet)
+         
+    = default;
+
+    uint8_t DesktopNakPacket::GetSessionID() const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_SESSIONID_NAK);
+        if((ptr != nullptr) && READFIELD_SIZE(ptr) >= sizeof(uint8_t))
+        {
+            ptr = READFIELD_DATAPTR(ptr);
+            return GET_UINT8(ptr);
+        }
+
+        return 0; //invalid ID
+    }
+
+    DesktopCursorPacket::DesktopCursorPacket(uint16_t src_userid, uint32_t time, 
+                                             uint8_t session_id, int16_t x, int16_t y)
+                                : FieldPacket(PACKETHDR_CHANNEL_ONLY,
+                                              PACKET_KIND_DESKTOPCURSOR, 
+                                              src_userid, time)
+    {
+        int alloc_size = 0;
+
+        //FIELDTYPE_MY_CURSORPOS
+        //[sessionid(uint8_t), x(uint16_t), y(uint16_t)]
+
+        int const field_size = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t);
+
+        alloc_size += FIELDVALUE_PREFIX + field_size;
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        std::vector<uint8_t> cursor_session(field_size);
+        uint8_t* field_ptr = cursor_session.data();
+        field_ptr = SET_UINT8_PTR(field_ptr, session_id);
+        field_ptr = SET_UINT16_PTR(field_ptr, x);
+        field_ptr = SET_UINT16_PTR(field_ptr, y);
+
+        data_buf = WRITEFIELD_DATA(data_buf, FIELDTYPE_MY_CURSORPOS, cursor_session.data(), cursor_session.size());
+
+        m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+    }
+
+    DesktopCursorPacket::DesktopCursorPacket(const char* packet, uint16_t packet_size)
+        : FieldPacket(packet, packet_size)
+    {
+    }
+
+    DesktopCursorPacket::DesktopCursorPacket(const DesktopCursorPacket& packet)
+        : DesktopCursorPacket(packet.GetSrcUserID(), packet.GetTime(), packet.GetSessionID(), packet.GetX(), packet.GetY())
+    {
+        SetChannel(packet.GetChannel());
+    }
+
+    bool DesktopCursorPacket::GetSessionCursor(uint16_t* dest_userid, 
+                                               uint8_t* session_id,
+                                               int16_t* x,
+                                               int16_t* y) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_MY_CURSORPOS);
+        if(ptr != nullptr)
+        {
+            uint16_t const field_size = READFIELD_SIZE(ptr);
+            if(field_size < sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t))
+                return false;
+
+            if (dest_userid != nullptr)
+                *dest_userid = 0;
+
+            const auto* field_ptr = READFIELD_DATAPTR(ptr);
+            if (session_id != nullptr)
+                *session_id = GET_UINT8(field_ptr);
+            field_ptr += 1;
+            if (x != nullptr)
+                *x = GET_UINT16(field_ptr);
+            field_ptr += 2;
+            if (y != nullptr)
+                *y = GET_UINT16(field_ptr);
+            field_ptr += 2;
+            return true;
+        }
+        ptr = FindField(FIELDTYPE_REMOTE_CURSORPOS);
+        if(ptr != nullptr)
+        {
+            uint16_t const field_size = READFIELD_SIZE(ptr);
+            if(field_size < sizeof(uint16_t) + sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t))
+                return false;
+
+            const auto* field_ptr = READFIELD_DATAPTR(ptr);
+            if (dest_userid != nullptr)
+                *dest_userid = GET_UINT16(field_ptr);
+            field_ptr += 2;
+            if (session_id != nullptr)
+                *session_id = GET_UINT8(field_ptr);
+            field_ptr += 1;
+            if (x != nullptr)
+                *x = GET_UINT16(field_ptr);
+            field_ptr += 2;
+            if (y != nullptr)
+                *y = GET_UINT16(field_ptr);
+            field_ptr += 2;
+            return true;
+        }
+        return false;
+    }
+
+    uint16_t DesktopCursorPacket::GetDestUserID() const
+    {
+        uint16_t dest_userid = 0;
+        if(GetSessionCursor(&dest_userid, nullptr, nullptr, nullptr))
+            return dest_userid;
+        return INVALID_DEST_USERID;
+    }
+
+    DesktopInputPacket::DesktopInputPacket(uint16_t src_userid, uint32_t time,
+                                           uint8_t session_id, uint8_t packetno,
+                                           const std::vector<DesktopInput>& inputs)
+                                           : FieldPacket(PACKETHDR_DEST_USER,
+                                                         PACKET_KIND_DESKTOPINPUT,
+                                                         src_userid, time)
+    {
+        //FIELDTYPE_REMOTE_INPUT
+        //[sessionid(uint8_t), packetno(uint8_t), [[x(uint16_t), y(uint16_t), keycode(uint32_t), keystate(uint32_t)], ...
+
+        int const field_size = sizeof(uint8_t) + sizeof(uint8_t) + 
+                            ((sizeof(uint16_t) + sizeof(uint16_t) +
+                            sizeof(uint32_t) + sizeof(uint32_t)) * int(inputs.size()));
+
+        int const alloc_size = FIELDVALUE_PREFIX + field_size;
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        std::vector<uint8_t> buffer(field_size);
+        buffer.resize(field_size);
+        uint8_t* field_ptr = buffer.data();
+        field_ptr = SET_UINT8_PTR(field_ptr, session_id);
+        field_ptr = SET_UINT8_PTR(field_ptr, packetno);
+
+        for(auto input : inputs)
+        {
+            field_ptr = SET_UINT16_PTR(field_ptr, input.x);
+            field_ptr = SET_UINT16_PTR(field_ptr, input.y);
+            field_ptr = SET_UINT32_PTR(field_ptr, input.keycode);
+            field_ptr = SET_UINT32_PTR(field_ptr, input.keystate);
+        }
+
+        data_buf = WRITEFIELD_DATA(data_buf, FIELDTYPE_REMOTE_INPUT, buffer.data(), buffer.size());
+
+        m_iovec.push_back(v);
+
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+    }
+
+    DesktopInputPacket::DesktopInputPacket(const char* packet, uint16_t packet_size)
+        : FieldPacket(packet, packet_size)
+    {
+    }
+
+    DesktopInputPacket::DesktopInputPacket(const DesktopInputPacket& packet)
+        : DesktopInputPacket(packet.GetSrcUserID(), packet.GetTime(), packet.GetSessionID(),
+                             packet.GetPacketNo(), packet.GetDesktopInput())
+    {
+        SetChannel(packet.GetChannel());
+        SetDestUser(packet.GetDestUserID());
+    }
+
+    bool DesktopInputPacket::GetSessionInfo(uint8_t* session_id,
+                                            uint8_t* packetno) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_REMOTE_INPUT);
+        if(ptr != nullptr)
+        {
+            uint16_t const field_size = READFIELD_SIZE(ptr);
+            if(field_size < sizeof(uint8_t) + sizeof(uint8_t))
+                return false;
+
+            const uint8_t* field_ptr = READFIELD_DATAPTR(ptr);
+
+            if (session_id != nullptr)
+                *session_id = GET_UINT8(field_ptr);
+            field_ptr += 1;
+            if (packetno != nullptr)
+                *packetno = GET_UINT8(field_ptr);
+            field_ptr += 1;
+            return true;
+        }
+        return false;
+    }
+
+    uint8_t DesktopInputPacket::GetSessionID() const
+    {
+        uint8_t session_id = 0;
+        GetSessionInfo(&session_id, nullptr);
+        return session_id;
+    }
+
+    uint8_t DesktopInputPacket::GetPacketNo(bool* found/* = NULL*/) const
+    {
+        uint8_t packetno = 0;
+        (found != nullptr)? *found = GetSessionInfo(nullptr, &packetno) 
+             : GetSessionInfo(nullptr, &packetno);
+        return packetno;
+    }
+
+    bool DesktopInputPacket::GetDesktopInput(std::vector<DesktopInput>& inputs) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_REMOTE_INPUT);
+        if(ptr != nullptr)
+        {
+            uint16_t field_size = READFIELD_SIZE(ptr);
+            if(field_size < sizeof(uint8_t) + sizeof(uint8_t) + 
+                            sizeof(uint16_t) + sizeof(uint16_t) + 
+                            sizeof(uint32_t) + sizeof(uint32_t))
+                return false;
+
+            const auto* field_ptr = READFIELD_DATAPTR(ptr);
+
+            uint8_t session_id = 0;
+            field_ptr = GET_UINT8_PTR(field_ptr, session_id);
+            field_size -= 1;
+            uint8_t packetno = 0;
+            field_ptr = GET_UINT8_PTR(field_ptr, packetno);
+            field_size -= 1;
+
+            while(field_size != 0u)
+            {
+                assert(field_size % 12 == 0);
+                if((field_size % 12) != 0)
+                    return false;
+
+                DesktopInput input;
+                field_ptr = GET_UINT16_PTR(field_ptr, input.x);
+                field_size -= 2;
+                field_ptr = GET_UINT16_PTR(field_ptr, input.y);
+                field_size -= 2;
+                field_ptr = GET_UINT32_PTR(field_ptr, input.keycode);
+                field_size -= 4;
+                field_ptr = GET_UINT32_PTR(field_ptr, input.keystate);
+                field_size -= 4;
+                
+                inputs.push_back(input);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    std::vector<DesktopInput> DesktopInputPacket::GetDesktopInput() const
+    {
+        std::vector<DesktopInput> result;
+        GetDesktopInput(result);
+        return result;
+    }
+
+
+    DesktopInputAckPacket::DesktopInputAckPacket(uint16_t src_userid, uint32_t time, 
+                                                 uint8_t session_id, uint8_t packetno)
+                                                 : FieldPacket(PACKETHDR_DEST_USER,
+                                                               PACKET_KIND_DESKTOPINPUT_ACK,
+                                                               src_userid, time)
+    {
+        int alloc_size = 0;
+
+        //FIELDTYPE_DESKTOPINPUT_ACK
+        //[sessionid(uint8_t), packetno(uint8_t)]
+        int const info_size = sizeof(uint8_t) + sizeof(uint8_t);
+        alloc_size += FIELDVALUE_PREFIX + info_size;
+
+        uint8_t* data_buf = nullptr;
+        ACE_NEW(data_buf, uint8_t[alloc_size]);
+        
+        uint8_t* data_ptr = data_buf;
+        iovec v;
+        v.iov_base = reinterpret_cast<char*>(data_buf);
+        v.iov_len = alloc_size;
+
+        data_ptr = WRITEFIELD_TYPE(data_ptr, FIELDTYPE_DESKTOPINPUT_ACK, info_size);
+        data_ptr = SET_UINT8_PTR(data_ptr, session_id);
+        data_ptr = SET_UINT8_PTR(data_ptr, packetno);
+
+        m_iovec.push_back(v);
+#ifdef ENABLE_ENCRYPTION
+        m_crypt_sections.insert(uint8_t(m_iovec.size())-1);
+#endif
+    }
+
+    DesktopInputAckPacket::DesktopInputAckPacket(const DesktopInputAckPacket& packet)
+        : DesktopInputAckPacket(packet.GetSrcUserID(), packet.GetTime(),
+                                packet.GetSessionID(), packet.GetPacketNo())
+    {
+        SetChannel(packet.GetChannel());
+        SetDestUser(packet.GetDestUserID());
+    }
+    
+    bool DesktopInputAckPacket::GetSessionInfo(uint8_t* session_id,
+                                               uint8_t* packetno) const
+    {
+        const uint8_t* ptr = FindField(FIELDTYPE_DESKTOPINPUT_ACK);
+        if(ptr == nullptr)
+            return false;
+
+        uint16_t const field_size = READFIELD_SIZE(ptr);
+        if(field_size < sizeof(uint8_t) + sizeof(uint8_t))
+            return false;
+
+        const uint8_t* field_ptr = READFIELD_DATAPTR(ptr);
+        if (session_id != nullptr)
+            *session_id = GET_UINT8(field_ptr);
+        field_ptr += 1;
+        if (packetno != nullptr)
+            *packetno = GET_UINT8(field_ptr);
+        field_ptr += 1;
+        return true;
+    }
+
+    uint8_t DesktopInputAckPacket::GetSessionID() const
+    {
+        uint8_t session_id = 0;
+        GetSessionInfo(&session_id, nullptr);
+        return session_id;
+    }
+
+    uint8_t DesktopInputAckPacket::GetPacketNo(bool* found/* = NULL*/) const
+    {
+        uint8_t packetno = 0;
+        (found != nullptr)? *found = GetSessionInfo(nullptr, &packetno) :
+               GetSessionInfo(nullptr, &packetno);
+        return packetno;
+    }
+
+} // namespace teamtalk
+

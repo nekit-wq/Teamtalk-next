@@ -1,0 +1,535 @@
+/*
+ * Copyright (c) 2005-2018, BearWare.dk
+ * 
+ * Contact Information:
+ *
+ * Bjoern D. Rasmussen
+ * Kirketoften 5
+ * DK-8260 Viby J
+ * Denmark
+ * Email: contact@bearware.dk
+ * Phone: +45 20 20 54 59
+ * Web: http://www.bearware.dk
+ *
+ * This source code is part of the TeamTalk SDK owned by
+ * BearWare.dk. Use of this file, or its compiled unit, requires a
+ * TeamTalk SDK License Key issued by BearWare.dk.
+ *
+ * The TeamTalk SDK License Agreement along with its Terms and
+ * Conditions are outlined in the file License.txt included with the
+ * TeamTalk SDK distribution.
+ *
+ */
+
+#ifndef CLIENTXML_H
+#define CLIENTXML_H
+
+#include "Settings.h"
+
+#define TEAMTALK_XML_VERSION                        "5.4"
+
+#define TEAMTALK_XML_VERSION_DEFAULT                "5.0"
+
+#define DEFAULT_NICKNAME                            _T("NoName")
+#define DEFAULT_GENDER                              GENDER_NEUTRAL
+#define DEFAULT_PUSHTOTALK                          false
+#define DEFAULT_VOICEACTIVATED                      true
+#define DEFAULT_VOICEACTIVATE_LEVEL                 2
+#define DEFAULT_RESTOREWEBLOGIN                     true
+
+#define DEFAULT_SOUND_OUTPUT_VOLUME                 50
+#define DEFAULT_SOUND_GAIN_LEVEL                    50
+#define DEFAULT_MEDIA_VS_VOICE                      100
+#define DEFAULT_CLIENT_SOUNDS_VS_VOICE              50
+#define DEFAULT_SOUNDEVENT_PLAYBACKMODE             PLAYBACKMODE_SYNC
+#define DEFAULT_MEDIASTORAGE_STREAMTYPES            STREAMTYPE_VOICE
+
+#define DEFAULT_SOUNDEVENT_USERJOINED               "Sounds\\newuser.wav"
+#define DEFAULT_SOUNDEVENT_USERLEFT                 "Sounds\\removeuser.wav"
+#define DEFAULT_SOUNDEVENT_USERLOGGEDIN               "Sounds\\logged_on.wav"
+#define DEFAULT_SOUNDEVENT_USERLOGGEDOUT               "Sounds\\logged_off.wav"
+#define DEFAULT_SOUNDEVENT_PRIVTEXTMSG              "Sounds\\user_msg.wav"
+#define DEFAULT_SOUNDEVENT_PRIVTEXTMSGSENT              "Sounds\\user_msg_sent.wav"
+#define DEFAULT_SOUNDEVENT_SERVERLOST               "Sounds\\serverlost.wav"
+#define DEFAULT_SOUNDEVENT_PTTHOTKEY                "Sounds\\hotkey.wav"
+#define DEFAULT_SOUNDEVENT_CHANTEXTMSG              "Sounds\\channel_msg.wav"
+#define DEFAULT_SOUNDEVENT_CHANTEXTMSGSENT          "Sounds\\channel_msg_sent.wav"
+#define DEFAULT_SOUNDEVENT_BCASTTEXTMSG              "Sounds\\broadcast_msg.wav"
+#define DEFAULT_SOUNDEVENT_FILESUPDATE              "Sounds\\fileupdate.wav"
+#define DEFAULT_SOUNDEVENT_FILETXCOMPLETE           "Sounds\\filetx_complete.wav"
+#define DEFAULT_SOUNDEVENT_VIDEOSESSION             "Sounds\\videosession.wav"
+#define DEFAULT_SOUNDEVENT_DESKTOPSESSION           "Sounds\\desktopsession.wav"
+#define DEFAULT_SOUNDEVENT_QUESTIONMODE             "Sounds\\questionmode.wav"
+#define DEFAULT_SOUNDEVENT_DESKTOPACCESS            "Sounds\\desktopaccessreq.wav"
+#define DEFAULT_SOUNDEVENT_CHANNELSILENT            ""
+#define DEFAULT_SOUNDEVENT_VOICEACTIVATED           "Sounds\\voiceact_on.wav"
+#define DEFAULT_SOUNDEVENT_VOICEDEACTIVATED         "Sounds\\voiceact_off.wav"
+#define DEFAULT_SOUNDEVENT_ENABLEVOICEACT           "Sounds\\vox_enable.wav"
+#define DEFAULT_SOUNDEVENT_DISABLEVOICEACT          "Sounds\\vox_disable.wav"
+#define DEFAULT_SOUNDEVENT_ME_ENABLEVOICEACT        "Sounds\\vox_me_enable.wav"
+#define DEFAULT_SOUNDEVENT_ME_DISABLEVOICEACT       "Sounds\\vox_me_disable.wav"
+#define DEFAULT_SOUNDEVENT_ENABLEMUTEALL           "Sounds\\mute_all.wav"
+#define DEFAULT_SOUNDEVENT_DISABLEMUTEALL           "Sounds\\unmute_all.wav"
+#define DEFAULT_SOUNDEVENT_TRANSMITQUEUE_READY      "Sounds\\txqueue_start.wav"
+#define DEFAULT_SOUNDEVENT_TRANSMITQUEUE_STOP       "Sounds\\txqueue_stop.wav"
+
+namespace teamtalk {
+
+    typedef std::vector<int> HotKey;
+
+    struct HostEntry
+    {
+        std::string szEntryName;
+        std::string szAddress;
+        int nTcpPort;
+        int nUdpPort;
+        bool bEncrypted;
+        std::string szUsername;
+        std::string szPassword;
+        std::string szChannel;
+        std::string szChPasswd;
+
+        std::string szNickname;
+        int nGender;
+        HotKey hotkey;
+        int nVoiceAct; // < 0 = disabled
+        VideoFormat capformat;
+        VideoCodec vidcodec;
+
+        HostEntry()
+        : nTcpPort(0)
+        , nUdpPort(0)
+        , bEncrypted(FALSE)
+        , nGender(GENDER_NONE)
+        , nVoiceAct(-1)
+        , capformat()
+        , vidcodec() { }
+    };
+
+    //used for join channel
+    struct JoinChannel
+    {
+        std::string szChannelPath;
+        std::string szPassword;
+        std::string szTopic;
+        std::string szOpPasswd;
+    };
+
+
+    class ClientXML : public XMLDocument
+    {
+    public:
+        ClientXML(const std::string& rootname) : XMLDocument(rootname, TEAMTALK_XML_VERSION){}
+        virtual bool SaveFile();
+
+        /******** <main> ********/
+        bool SetWindowPlacement(int x, int y, int cx, int cy);
+        bool GetWindowPlacement(int& x, int& y, int& cx, int& cy);
+
+        bool SetWindowExtended(bool bExtended);
+        bool GetWindowExtended();
+
+        /******** </main> ********/
+
+        /******** <general> *******/
+        bool SetNickname(const std::string& szNickname);
+        std::string GetNickname(std::string def_nickname = std::string());
+
+        void SetStatusMessage(const std::string& szStatusMsg);
+        std::string GetStatusMessage(std::string def_statusmsg = std::string());
+
+        void SetBearWareLogin(const std::string& szUsername, const std::string& szToken);
+        bool GetBearWareLogin(std::string& szUsername, std::string& szToken);
+
+        void SetRestoreUserFromWebLogin(bool bEnable);
+        bool GetRestoreUserFromWebLogin(bool bDefEnable = DEFAULT_RESTOREWEBLOGIN);
+
+        bool SetProfileName(const std::string& szProfilename);
+        std::string GetProfileName();
+
+        bool SetGender(int nGender);
+        int GetGender(int nDefGender = DEFAULT_GENDER);
+
+        bool SetPushToTalk(bool bEnable);
+        bool GetPushToTalk(bool bDefEnable = DEFAULT_PUSHTOTALK);
+
+        bool SetPushToTalkKey(const HotKey& keykey);
+        bool GetPushToTalkKey(HotKey& hotkey);
+
+        bool SetVoiceActivated(bool bEnable);
+        bool GetVoiceActivated(bool bDefVoiceAct = DEFAULT_VOICEACTIVATED);
+
+        bool SetVoiceActivationLevel(int nLevel);
+        int GetVoiceActivationLevel(int nDefVoxLevel = DEFAULT_VOICEACTIVATE_LEVEL);
+
+        int SetInactivityDelay(int nDelay);
+        int GetInactivityDelay();
+
+        bool SetDisableVadOnIdle(bool bEnable);
+        bool GetDisableVadOnIdle();
+
+        bool SetDesktopShareMode(int nMode);
+        int GetDesktopShareMode();
+
+        bool SetDesktopShareRgbMode(int nMode);
+        int GetDesktopShareRgbMode();
+
+        bool SetDesktopShareUpdateInterval(int nInterval);
+        int GetDesktopShareUpdateInterval();
+
+        bool SetFirewallInstall(bool bAsked);
+        bool GetFirewallInstall(bool bDefValue);
+        /******** </general> *******/
+
+        /******** <window> ********/
+        bool SetFont(const std::string& szFontName, int nSize, bool bBold, bool bUnderline, bool bItalic);
+        bool GetFont(std::string& szFontName, int& nSize, bool& bBold, bool& bUnderline, bool& bItalic);
+
+        bool SetStartMinimized(bool bEnable);
+        bool GetStartMinimized();
+
+        bool SetMinimizeToTray(bool bEnable);
+        bool GetMinimizeToTray();
+
+        bool SetPopupOnMessage(bool bEnable);
+        bool GetPopupOnMessage();
+
+        bool SetAlwaysOnTop(bool bEnable);
+        bool GetAlwaysOnTop();
+
+        bool SetShowUserCount(bool bEnable);
+        bool GetShowUserCount();
+
+        bool SetJoinDoubleClick(bool bEnable);
+        bool GetJoinDoubleClick();
+        bool SetDisplayServerName(bool bEnable);
+        bool GetDisplayServerName();
+
+        bool SetQuitClearChannels(bool bEnable);
+        bool GetQuitClearChannels();
+
+        bool SetMessageTimeStamp(bool bEnable);
+        bool GetMessageTimeStamp();
+
+        bool SetLanguageFile(const std::string& szLanguageFile);
+        std::string GetLanguageFile();
+
+        bool SetCloseTransferDialog(bool bEnable);
+        bool GetCloseTransferDialog();
+
+        bool SetVuMeterUpdate(bool bEnable);
+        bool GetVuMeterUpdate();
+
+        bool SetCheckApplicationUpdates(bool bEnable);
+        bool GetCheckApplicationUpdates();
+
+        bool SetShowUsernames(bool bEnable);
+        bool GetShowUsernames();
+
+        bool SetMaxTextLength(int nLength);
+        int GetMaxTextLength(int nDefault);
+
+        bool SetShowPublicServers(bool bEnable);
+        bool GetShowPublicServers();
+
+        // must match SortOrder in channel's tree
+        bool SetSortOrder(int nSorting);
+        int GetSortOrder();
+
+        void SetShowEmojis(bool bEnable);
+        bool GetShowEmojis(bool bDefault = true);
+
+        void SetShowLoggedInOut(bool bEnable);
+        bool GetShowLoggedInOut(bool bDefault = true);
+        /******** </window> *******/
+
+
+        /******** <client> *********/
+        bool SetClientTcpPort(int nPort);
+        int GetClientTcpPort(int nDefPort);
+
+        bool SetClientUdpPort(int nPort);
+        int GetClientUdpPort(int nDefPort);
+
+        bool SetAutoConnectToLastest(bool bEnable);
+        bool GetAutoConnectToLastest();
+
+        bool SetReconnectOnDropped(bool bEnable);
+        bool GetReconnectOnDropped();
+
+        bool SetAutoJoinRootChannel(bool bEnable);
+        bool GetAutoJoinRootChannel();
+
+        bool SetAudioLogStorageFormat(int aff);
+        int GetAudioLogStorageFormat();
+
+        bool SetAudioLogStorageMode(int mode);
+        int GetAudioLogStorageMode();
+
+        void SetAudioLogStreamTypes(StreamTypes uStreamTypes);
+        StreamTypes GetAudioLogStreamTypes(StreamTypes uDefaultStreamTypes);
+
+        bool SetAudioLogStorage(const std::string& audiofolder);
+        std::string GetAudioLogStorage();
+
+        bool SetChanTextLogStorage(const std::string& audiofolder);
+        std::string GetChanTextLogStorage();
+
+        bool SetUserTextLogStorage(const std::string& audiofolder);
+        std::string GetUserTextLogStorage();
+
+        bool SetDefaultSubscriptions(int subs);
+        int GetDefaultSubscriptions();
+        /********* </client> ********/
+
+        /********* <soundsystem> ********/
+        bool SetSoundInputDevice(int nDevice);
+        int GetSoundInputDevice(int nDefDeviceId);
+
+        bool SetSoundInputDevice(const std::string& devid);
+        std::string GetSoundInputDevice();
+
+        bool SetSoundOutputDevice(int nDevice);
+        int GetSoundOutputDevice(int nDefDeviceId);
+
+        bool SetSoundOutputDevice(const std::string& devid);
+        std::string GetSoundOutputDevice();
+
+        bool SetSoundOutputVolume(int nVolume);
+        int GetSoundOutputVolume(int def_vol);
+
+        bool SetMediaStreamVsVoice(int nPercent);
+        int GetMediaStreamVsVoice(int nDefPercent);
+
+        bool SetAutoPositioning(bool bEnable);
+        bool GetAutoPositioning();
+
+        bool SetAGC(bool bEnable);
+        bool GetAGC(bool bDefValue);
+
+        bool SetDenoise(bool bEnable);
+        bool GetDenoise(bool bDefValue);
+
+        bool SetVoiceGain(bool bEnable);
+        bool GetVoiceGain();
+
+        bool SetVoiceGainLevel(int nGain);
+        int GetVoiceGainLevel(int nDefGain);
+
+        bool SetEchoCancel(bool bEnable);
+        bool GetEchoCancel(bool bDefValue);
+        /********* </soundsystem> ********/
+
+        /********* <events> *************/
+        void SetEventSoundsEnabled(unsigned uSoundEvents);
+        unsigned GetEventSoundsEnabled(unsigned uDefEvents = 0);
+
+        void SetEventNewUser(const std::string& szPath);
+        std::string GetEventNewUser(std::string szDefPath = DEFAULT_SOUNDEVENT_USERJOINED);
+
+        void SetEventNewMessage(const std::string& szPath);
+        std::string GetEventNewMessage(std::string szDefPath = DEFAULT_SOUNDEVENT_PRIVTEXTMSG);
+
+        void SetEventNewMessageSent(const std::string& szPath);
+        std::string GetEventNewMessageSent(std::string szDefPath = DEFAULT_SOUNDEVENT_PRIVTEXTMSGSENT);
+
+        void SetEventRemovedUser(const std::string& szPath);
+        std::string GetEventRemovedUser(std::string szDefPath = DEFAULT_SOUNDEVENT_USERLEFT);
+
+        void SetEventUserLoggedIn(const std::string& szPath);
+        std::string GetEventUserLoggedIn(std::string szDefPath = DEFAULT_SOUNDEVENT_USERLOGGEDIN);
+
+        void SetEventUserLoggedOut(const std::string& szPath);
+        std::string GetEventUserLoggedOut(std::string szDefPath = DEFAULT_SOUNDEVENT_USERLOGGEDOUT);
+
+        void SetEventServerLost(const std::string& szPath);
+        std::string GetEventServerLost(std::string szDefPath = DEFAULT_SOUNDEVENT_SERVERLOST);
+
+        void SetEventChannelSilent(const std::string& szPath);
+        std::string GetEventChannelSilent(std::string szDefPath = DEFAULT_SOUNDEVENT_CHANNELSILENT);
+
+        void SetEventHotKey(const std::string& szPath);
+        std::string GetEventHotKey(std::string szDefPath = DEFAULT_SOUNDEVENT_PTTHOTKEY);
+
+        void SetEventChannelMsg(const std::string& szPath);
+        std::string GetEventChannelMsg(std::string szDefPath = DEFAULT_SOUNDEVENT_CHANTEXTMSG);
+
+        void SetEventChannelMsgSent(const std::string& szPath);
+        std::string GetEventChannelMsgSent(std::string szDefPath = DEFAULT_SOUNDEVENT_CHANTEXTMSGSENT);
+
+        void SetEventBroadcastMsg(const std::string& szPath);
+        std::string GetEventBroadcastMsg(std::string szDefPath = DEFAULT_SOUNDEVENT_BCASTTEXTMSG);
+
+        void SetEventFilesUpd(const std::string& szPath);
+        std::string GetEventFilesUpd(std::string szDefPath = DEFAULT_SOUNDEVENT_FILESUPDATE);
+
+        void SetEventTransferEnd(const std::string& szPath);
+        std::string GetEventTransferEnd(std::string szDefPath = DEFAULT_SOUNDEVENT_FILETXCOMPLETE);
+
+        void SetEventVideoSession(const std::string& szPath);
+        std::string GetEventVideoSession(std::string szDefPath = DEFAULT_SOUNDEVENT_VIDEOSESSION);
+
+        void SetEventDesktopSession(const std::string& szPath);
+        std::string GetEventDesktopSession(std::string szDefPath = DEFAULT_SOUNDEVENT_DESKTOPSESSION);
+
+        void SetEventQuestionMode(const std::string& szPath);
+        std::string GetEventQuestionMode(std::string szDefPath = DEFAULT_SOUNDEVENT_QUESTIONMODE);
+
+        void SetEventDesktopAccessReq(const std::string& szPath);
+        std::string GetEventDesktopAccessReq(std::string szDefPath = DEFAULT_SOUNDEVENT_DESKTOPACCESS);
+
+        void SetEventVoiceActivated(const std::string& szPath);
+        std::string GetEventVoiceActivated(std::string szDefPath = DEFAULT_SOUNDEVENT_VOICEACTIVATED);
+
+        void SetEventVoiceDeactivated(const std::string& szPath);
+        std::string GetEventVoiceDeactivated(std::string szDefPath = DEFAULT_SOUNDEVENT_VOICEDEACTIVATED);
+
+        void SetEventEnableVoiceActivation(const std::string& szPath);
+        std::string GetEventEnableVoiceActivation(std::string szDefPath = DEFAULT_SOUNDEVENT_ENABLEVOICEACT);
+
+        void SetEventDisableVoiceActivation(const std::string& szPath);
+        std::string GetEventDisableVoiceActivation(std::string szDefPath = DEFAULT_SOUNDEVENT_DISABLEVOICEACT);
+
+        void SetEventMeEnableVoiceActivation(const std::string& szPath);
+        std::string GetEventMeEnableVoiceActivation(std::string szDefPath = DEFAULT_SOUNDEVENT_ME_ENABLEVOICEACT);
+
+        void SetEventMeDisableVoiceActivation(const std::string& szPath);
+        std::string GetEventMeDisableVoiceActivation(std::string szDefPath = DEFAULT_SOUNDEVENT_ME_DISABLEVOICEACT);
+
+        void SetEventEnableMuteAll(const std::string& szPath);
+        std::string GetEventEnableMuteAll(std::string szDefPath = DEFAULT_SOUNDEVENT_ENABLEMUTEALL);
+
+        void SetEventDisableMuteAll(const std::string& szPath);
+        std::string GetEventDisableMuteAll(std::string szDefPath = DEFAULT_SOUNDEVENT_DISABLEMUTEALL);
+
+        void SetEventTransmitQueueHead(std::string szPath);
+        std::string GetEventTransmitQueueHead(std::string szDefPath = DEFAULT_SOUNDEVENT_TRANSMITQUEUE_READY);
+
+        void SetEventTransmitQueueStop(std::string szPath);
+        std::string GetEventTransmitQueueStop(std::string szDefPath = DEFAULT_SOUNDEVENT_TRANSMITQUEUE_STOP);
+
+        void SetEventTTSEvents(TTSEvents uEvents);
+        TTSEvents GetEventTTSEvents();
+
+        void SetClientSoundsVsVoice(int nPercent);
+        int GetClientSoundsVsVoice(int nDefPercent);
+
+        void SetSoundPlaybackMode(int pbmode);
+        int GetSoundPlaybackMode(int nDefPbMode);
+        /********* </events> ************/
+
+        /********* <advanced> ***********/
+        bool SetLowLevelMouseHook(bool bEnable);
+        bool GetLowLevelMouseHook();
+        /********* </advanced> **********/
+
+        /********* <shortcuts> **********/
+        bool SetHotKeyVoiceAct(const HotKey& hotkey);
+        bool GetHotKeyVoiceAct(HotKey& hotkey);
+
+        bool SetHotKeyVolumePlus(const HotKey& hotkey);
+        bool GetHotKeyVolumePlus(HotKey& hotkey);
+
+        bool SetHotKeyVolumeMinus(const HotKey& hotkey);
+        bool GetHotKeyVolumeMinus(HotKey& hotkey);
+
+        bool SetHotKeyMuteAll(const HotKey& hotkey);
+        bool GetHotKeyMuteAll(HotKey& hotkey);
+
+        bool SetHotKeyVoiceGainPlus(const HotKey& hotkey);
+        bool GetHotKeyVoiceGainPlus(HotKey& hotkey);
+
+        bool SetHotKeyVoiceGainMinus(const HotKey& hotkey);
+        bool GetHotKeyVoiceGainMinus(HotKey& hotkey);
+
+        bool SetHotKeyMinRestore(const HotKey& hotkey);
+        bool GetHotKeyMinRestore(HotKey& hotkey);
+        /********* </shortcuts> *********/
+
+        /********* <videocapture> *********/
+        bool SetVideoCaptureDevice(const std::string& viddev);
+        std::string GetVideoCaptureDevice();
+
+        bool SetVideoCaptureFormat(int index);
+        int GetVideoCaptureFormat(int nDefIndex);
+
+        bool SetVideoCaptureFormat(const VideoFormat& capformat);
+        bool GetVideoCaptureFormat(VideoFormat& capformat);
+
+        bool SetVideoCodecBitrate(int bitrate);
+        int GetVideoCodecBitrate(int nDefBitrate);
+
+        bool SetVideoCaptureEnabled(bool enabled);
+        bool GetVideoCaptureEnabled(bool def_value);
+        /********* </videocapture> *********/
+
+        /********* <latesthosts> ********/
+        bool AddLatestHostEntry(const HostEntry& entry);
+        bool RemoveLatestHostEntry(const HostEntry& entry);
+        int GetLatestHostEntryCount();
+        bool GetLatestHostEntry(int index, HostEntry& entry);
+        /********* </latesthosts> *******/
+
+        /********** <hostmanager> **********/
+        bool AddHostManagerEntry(const HostEntry& entry);
+        bool RemoveHostManagerEntry(const std::string entryname);
+        int GetHostManagerEntryCount();
+        bool GetHostManagerEntry(int index, HostEntry& entry);
+        bool GetHostManagerEntry(const std::string& entryname, HostEntry& entry);
+        /********** </hostmanager> **********/
+
+        /********** <mediafiles> *********/
+        bool SetLastMediaFiles(const std::vector<std::string>& filenames);
+        std::vector<std::string> GetLastMediaFiles();
+
+        void SetAudioPreprocessor(AudioPreprocessorType preproc);
+        AudioPreprocessorType GetAudioPreprocessor(AudioPreprocessorType defaultvalue);
+
+        void SetTTAudioPreprocessor(const TTAudioPreprocessor& ttaud);
+        TTAudioPreprocessor GetTTAudioPreprocessor();
+
+        void SetSpeexDSPAudioPreprocessor(const SpeexDSP& spxdsp);
+        SpeexDSP GetSpeexDSPAudioPreprocessor();
+
+        void SetMediaFilePlayback(const MediaFilePlayback& mfp);
+        MediaFilePlayback GetMediaFilePlayback();
+
+        void SetVideoCodec(const VideoCodec& codec);
+        VideoCodec GetVideoCodec();
+
+        void SetMediaFileRepeat(bool repeat);
+        bool GetMediaFileRepeat(bool defaultvalue);
+        /********** </mediafiles> *********/
+    protected:
+        tinyxml2::XMLElement* GetRootElement();
+        tinyxml2::XMLElement* GetMainElement();
+        tinyxml2::XMLElement* GetGeneralElement();
+        tinyxml2::XMLElement* GetWindowElement();
+        tinyxml2::XMLElement* GetClientElement();
+        tinyxml2::XMLElement* GetSoundSystemElement();
+        tinyxml2::XMLElement* GetEventsElement();
+        tinyxml2::XMLElement* GetVideoElement();
+        tinyxml2::XMLElement* GetAdvancedElement();
+        tinyxml2::XMLElement* GetShortCutsElement();
+        tinyxml2::XMLElement* GetHostManagerElement();
+        tinyxml2::XMLElement* GetLatestHostsElement();
+        tinyxml2::XMLElement* GetMediaFilesElement();
+
+        void PutHotKey(tinyxml2::XMLElement* parent, const HotKey& hotkey);
+        bool GetHotKey(const tinyxml2::XMLElement* parent, HotKey& hotkey);
+    };
+
+    class TTFile : public XMLDocument
+    {
+    public:
+       TTFile(const std::string& rootname) : 
+          XMLDocument(rootname, TEAMTALK_XML_VERSION) { }
+
+       void SetHostEntry(const HostEntry& entry);
+       bool GetHostEntry(HostEntry& entry, int i);
+       tinyxml2::XMLElement* GetRootElement();
+       bool HasClientSetup();
+    };
+
+}
+#endif

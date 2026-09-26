@@ -1,0 +1,21 @@
+
+if (TOOLCHAIN_FFMPEG)
+  set (FFMPEG_LINK_FLAGS ffmpeg-avdevice ffmpeg-avfilter ffmpeg-avformat ffmpeg-avcodec ffmpeg-swresample ffmpeg-swscale ffmpeg-avutil)
+else()
+  # Ubuntu: libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavresample-dev libavutil-dev libswresample-dev libswscale-dev
+
+  find_library(AVDEVICE_LIBRARY avdevice)
+  list (APPEND FFMPEG_LINK_FLAGS ${AVDEVICE_LIBRARY})
+  find_library(AVFILTER_LIBRARY avfilter)
+  list (APPEND FFMPEG_LINK_FLAGS ${AVFILTER_LIBRARY})
+  find_library(AVFORMAT_LIBRARY avformat)
+  list (APPEND FFMPEG_LINK_FLAGS ${AVFORMAT_LIBRARY})
+  find_library(AVCODEC_LIBRARY avcodec)
+  list (APPEND FFMPEG_LINK_FLAGS ${AVCODEC_LIBRARY})
+  find_library(SWRESAMPLE_LIBRARY swresample)
+  list (APPEND FFMPEG_LINK_FLAGS ${SWRESAMPLE_LIBRARY})
+  find_library(SWSCALE_LIBRARY swscale)
+  list (APPEND FFMPEG_LINK_FLAGS ${SWSCALE_LIBRARY})
+  find_library(AVUTIL_LIBRARY avutil)
+  list (APPEND FFMPEG_LINK_FLAGS ${AVUTIL_LIBRARY})
+endif()

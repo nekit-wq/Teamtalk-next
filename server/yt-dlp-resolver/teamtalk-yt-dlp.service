@@ -1,0 +1,17 @@
+[Unit]
+Description=TeamTalk yt-dlp stream resolver
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/tt/server/yt-dlp-resolver
+ExecStart=/root/tt/server/yt-dlp-resolver/.venv/bin/python /root/tt/server/yt-dlp-resolver/app.py
+Restart=always
+RestartSec=1s
+Environment=PYTHONUNBUFFERED=1
+Environment=FFREPORT=file=/tmp/ffmpeg-report.log:level=32
+Environment=PORT=8080
+
+[Install]
+WantedBy=multi-user.target

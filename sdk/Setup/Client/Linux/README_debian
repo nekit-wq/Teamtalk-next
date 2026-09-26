@@ -1,0 +1,59 @@
+TeamTalk 5 for Linux
+--------------------
+
+TeamTalk 5 supports ALSA sound system and PulseAudio for audio and
+Video4Linux2 (V4L2) for video capture.
+
+Officially supported Linux distributions are the follow:
+
+- Raspberry PI OS (Bookworm), Ubuntu 24.04, Ubuntu 26.04
+
+Checkout the Dependencies sections to see what libraries must be
+installed to run TeamTalk 5.
+
+
+Run TeamTalk
+------------
+
+Use the run.sh script to start the TeamTalk client. The run.sh script
+includes the shared library (libTeamTalk5.so) dependency in the library
+path, LD_LIBRARY_PATH.
+
+
+Known Issues
+------------
+
+There are still a couple of issues which needs to be fixed in the
+TeamTalk client before it runs smoothly on Linux. These are listed
+here:
+
+- Modifier keys alone cannot be used as hotkeys. Hotkeys needs to be
+  either a regular key or a regular key and a modifier key. F12 seems
+  like a good key to use as a PTT key on Linux when using KDE.
+
+- Streaming video flickers sometimes
+
+
+Help
+----
+
+If you have problems running TeamTalk then search on
+http://www.bearware.dk for help.
+
+
+Dependencies
+------------
+
+Several dependencies must be installed in order to run TeamTalk by
+using apt package manager. The follow two sections list the packages
+to install depending on your Linux distribution.
+
+
+Dependencies for Raspberry PI OS (Bookworm) / Ubuntu 24.04 / Ubuntu 26.04
+-------------------------------------------------------------------------
+
+To install the packages run the following command as 'root':
+
+apt install libqt6dbus6 libqt6multimedia6 libqt6network6 \
+  libqt6texttospeech6 libqt6widgets6 libqt6xml6 \
+  libasound2 libpulse0 libxss1

@@ -1,0 +1,15 @@
+.gradle
+.idea
+build
+debug
+release
+local.properties
+*.iml
+*.jks
+*.keystore
+
+# Allow project JARs, native SO libraries, and fixed signing keystore
+!libs/*.jar
+!gradle/wrapper/gradle-wrapper.jar
+!src/main/jniLibs/**/*.so
+!release.keystore

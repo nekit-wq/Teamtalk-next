@@ -1,0 +1,92 @@
+name: Android
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    if: "!startsWith(github.head_ref, 'debug') || startsWith(github.head_ref, 'debug-android')"
+    permissions:
+      security-events: write
+      packages: read
+
+    runs-on: ubuntu-26.04
+    name: Android
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '25'
+
+    - name: Set up Android NDK
+      uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r29
+        add-to-path: false
+
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v6
+      with:
+        validate-wrappers: true
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v4
+      with:
+        languages: java-kotlin
+        build-mode: manual
+
+    - name: Update Ubuntu repository
+      run: sudo apt-get update
+
+    - name: Print env
+      run: printenv | sort
+
+    - name: Install dependencies
+      working-directory: ${{github.workspace}}/Build
+      run: sudo make depend-ubuntu24-android
+
+    - name: Build TeamTalk library for Android
+      working-directory: ${{github.workspace}}/Build
+      run: make CMAKE_EXTRA="-G Ninja -DWEBRTC_FETCH_PATH=${{runner.workspace}}/webrtc -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-android" CMAKE_BUILD_EXTRA="--target install" android-all
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+    - name: Generate Android signing keystore
+      working-directory: ${{github.workspace}}/Client/TeamTalkAndroid
+      run: |
+        keytool -genkeypair -v -keystore key.keystore -alias key -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=TeamTalk, OU=CI, O=TeamTalk, L=CI, ST=CI, C=US"
+        cat > keystore.properties <<EOF
+        storeFile=key.keystore
+        storePassword=android
+        keyAlias=key
+        keyPassword=android
+        EOF
+
+    - name: Build TeamTalk Android client
+      working-directory: ${{github.workspace}}/Client/TeamTalkAndroid
+      run: ./gradlew build
+
+    - name: Upload TeamTalk SDK artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: teamtalksdk-android
+        path: ${{runner.workspace}}/install-android
+
+    - name: Upload TeamTalk Android APK artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: teamtalk-android-apk
+        path: ${{github.workspace}}/Client/TeamTalkAndroid/build/outputs/apk/**/*.apk
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v4
+      with:
+        category: "/language:java-kotlin"

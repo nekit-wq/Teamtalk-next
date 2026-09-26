@@ -1,0 +1,11 @@
+/**
+ * @page knownissues Known Issues
+ *
+ * Some features have known issues which are currently in the process
+ * of being solved. For an up to date list please checkout the <a
+ * href="https://github.com/BearWare/TeamTalk5/issues">Issues</a>
+ * section on the <a
+ * href="https://github.com/BearWare/TeamTalk5">TeamTalk GitHub
+ * project</a>.
+ *
+ */

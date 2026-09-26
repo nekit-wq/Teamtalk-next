@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>UserInfoDlg</class>
+ <widget class="QDialog" name="UserInfoDlg">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>359</width>
+    <height>404</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>User Information</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="idLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="nicknameLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="usernameLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="clientLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="statusLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="statusmsgLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="usertypeLabel">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="ipLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="vplLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="vflLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="afplLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="vfflLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="focusPolicy">
+      <set>Qt::StrongFocus</set>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QPushButton" name="copyButton">
+     <property name="text">
+      <string>Copy User Information to Clipboard</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

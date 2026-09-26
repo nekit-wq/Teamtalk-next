@@ -1,0 +1,946 @@
+/*
+ * Copyright (c) 2005-2018, BearWare.dk
+ *
+ * Contact Information:
+ *
+ * Bjoern D. Rasmussen
+ * Kirketoften 5
+ * DK-8260 Viby J
+ * Denmark
+ * Email: contact@bearware.dk
+ * Phone: +45 20 20 54 59
+ * Web: http://www.bearware.dk
+ *
+ * This source code is part of the TeamTalk SDK owned by
+ * BearWare.dk. Use of this file, or its compiled unit, requires a
+ * TeamTalk SDK License Key issued by BearWare.dk.
+ *
+ * The TeamTalk SDK License Agreement along with its Terms and
+ * Conditions are outlined in the file License.txt included with the
+ * TeamTalk SDK distribution.
+ *
+ */
+
+#include "AppInfo.h"
+#include "ServerConfig.h"
+#include "ServerGuard.h"
+#include "ServerUtil.h"
+#include "ServerXML.h"
+#include "TeamTalkDefs.h"
+#include "UPnP.h"
+#include "myace/MyACE.h"
+#include "teamtalk/Commands.h"
+#include "teamtalk/Log.h"
+#include "teamtalk/server/Server.h"
+#include "teamtalk/server/ServerNode.h"
+
+#include <ace/High_Res_Timer.h>
+#include <ace/Init_ACE.h>
+#include <ace/NT_Service.h>
+#include <ace/Select_Reactor.h>
+#include <ace/Timer_Heap.h>
+
+#include <csignal>
+#include <cstddef>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <utility>
+
+#if !defined(WIN32)
+#include <unistd.h>
+#endif
+
+using namespace std;
+using namespace teamtalk;
+
+class Service;
+
+static int RunServer(
+#if defined(BUILD_NT_SERVICE)
+              Service* service
+#endif
+              );
+
+static void PrintCommandArgs();
+
+static int ParseArguments(int argc, ACE_TCHAR* argv[]
+#if defined(BUILD_NT_SERVICE)
+              , Service* service
+#endif
+);
+
+#if defined(BUILD_NT_SERVICE)
+BOOL WINAPI ControlHandler(DWORD dwControlType)
+{
+    switch(dwControlType)
+    {
+    case CTRL_LOGOFF_EVENT :
+        return TRUE;
+    }
+    return FALSE;
+}
+
+ACE_TString GetWinError(DWORD err)
+{
+    ACE_TString result;
+    LPTSTR s = NULL;
+    ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL,
+        err,
+        0,
+        (LPTSTR)&s,
+        0,
+        NULL);
+    if(s)
+    {
+        result = s;
+        ::LocalFree(s);
+    }
+    return result;
+}
+
+class Service : public ACE_NT_Service
+{
+public:
+    void handle_control (DWORD control_code)
+    {
+        if (control_code == SERVICE_CONTROL_SHUTDOWN
+            || control_code == SERVICE_CONTROL_STOP)
+        {
+            report_status (SERVICE_STOP_PENDING);
+
+            reactor()->end_reactor_event_loop();
+            //reactor ()->notify (this,
+            //                    ACE_Event_Handler::EXCEPT_MASK);
+        }
+        else
+            inherited::handle_control (control_code);
+    }
+    int svc (void)
+    {
+        // As an NT service, we come in here in a different thread than the
+        // one which created the reactor.  So in order to do anything, we
+        // need to own the reactor. If we are not a service, report_status
+        // will return -1.
+        if(RunServer(this) < 0)
+            return -1;
+
+        return 0;
+    }
+    //hack
+    void report_status_foo(DWORD d1, DWORD d2 = 0)
+    {
+        this->report_status(d1,d2);
+    }
+private:
+    typedef ACE_NT_Service inherited;
+};
+
+ACE_NT_SERVICE_DEFINE (TeamTalk,
+                       Service,
+                       ACE_TEXT(TEAMTALK_DESCRIPTION));
+
+#endif
+
+// overwritable options
+static ACE_TString bindip;
+static ACE_TString settingsfile;
+static ACE_TString logfile = ACE_TEXT(TEAMTALK_LOGFILE);
+static ACE_TString pidfile;
+static ACE_TString weblogin;
+static ACE_TString tokenlogin;
+static int tcpport = 0;
+static int udpport = 0;
+static bool verbose = false;
+static bool daemon_pid = false;
+static bool daemon_mode = false;
+static bool nondaemon = false;
+static int rxloss = 0, txloss = 0;
+static bool cleanfiles = false;
+
+//setting files
+static ServerXML xmlSettings(TEAMTALK_XML_ROOTNAME);
+//log file
+static std::ofstream logstream;
+
+class SignalEventHandler : public ACE_Event_Handler
+{
+public:
+    SignalEventHandler(ACE_Reactor* r)
+        : ACE_Event_Handler(r)
+    {
+    }
+
+    int handle_signal(int signum, siginfo_t* /*unused*/,ucontext_t* /*unused*/) override
+    {
+        switch (signum)
+        {
+        case SIGINT :
+        case SIGTERM :
+            reactor()->end_reactor_event_loop();
+            break;
+        case SIGHUP :
+            if (!LoadConfig(xmlSettings, settingsfile))
+            {
+                ACE_TCHAR error_msg[1024];
+                ACE_OS::snprintf(error_msg, 1024, ACE_TEXT("Failed to reload settings file %s."), settingsfile.c_str());
+                TT_SYSLOG(error_msg);
+            }
+            else
+            {
+                logstream.close();
+
+                if (xmlSettings.GetServerLogMaxSize() != 0)
+                {
+                    logstream.open(logfile.c_str(), ios::app);
+                }
+
+                ACE_TCHAR msg[1024];
+                ACE_OS::snprintf(msg, 1024, ACE_TEXT("Reloaded settings file %s."), settingsfile.c_str());
+                TT_LOG(msg);
+            }
+        }
+        return 0;
+    }
+};
+
+int ACE_TMAIN(int argc, ACE_TCHAR* argv[])
+{
+    ACE::init();
+    int exitcode = EXIT_FAILURE;
+
+#if defined(BUILD_NT_SERVICE)
+    Service service;
+    service.reactor(ACE_Reactor::instance());
+    service.name(ACE_TEXT(TEAMTALK_NAME), ACE_TEXT(TEAMTALK_NAME));
+    int parse_result = ParseArguments(argc, argv, &service);
+    if (parse_result > 0)
+    {
+        ACE_NT_SERVICE_RUN(TeamTalk,
+            &service,
+            rett);
+        // 'rett' gets result of StartServiceCtrlDispatcherW()
+        exitcode = rett ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+    else if (parse_result == 0)
+        exitcode = EXIT_SUCCESS;
+#else
+    if(argc <= 1)
+    {
+        PrintCommandArgs();
+        exitcode = EXIT_SUCCESS;
+    }
+    else
+    {
+        int const parse_result = ParseArguments(argc, argv);
+        if(parse_result>0)
+        {
+            exitcode = RunServer()<0?EXIT_FAILURE:EXIT_SUCCESS;
+        }
+        else
+        {
+            exitcode = EXIT_FAILURE;
+        }
+    }
+#endif
+    ACE::fini();
+    return exitcode;
+}
+
+static void RunEventLoop(ACE_Reactor* tcpReactor, ACE_Reactor* udpReactor,
+                  const ACE_TString& workdir)
+{
+    int const ret = ACE_Thread_Manager::instance ()->spawn(EventLoop, udpReactor);
+    if(ret < 0)
+        TT_LOG(ACE_TEXT("Failed to spawn UDP reactor."));
+
+    SyncReactor(*udpReactor);
+
+    int log_check = 0;
+    int upnp_check = 0;
+    ACE_Time_Value tm(10,0);
+    while (tcpReactor->handle_events(tm) >= 0)
+    {
+        if (++log_check % 10 == 0 && xmlSettings.GetServerLogMaxSize() > 0 &&
+            logstream.tellp() >= xmlSettings.GetServerLogMaxSize())
+        {
+            RotateLogfile(workdir, logfile.c_str(), logstream);
+        }
+
+        if (xmlSettings.GetUPnP() && ++upnp_check >= 60)
+        {
+            upnp_check = 0;
+            if (!UPnP_RenewPortMapping(tcpport, udpport))
+            {
+                UPnP_RemovePortMapping(tcpport, udpport);
+                std::string externalIP;
+                UPnP_AddPortMapping(tcpport, udpport, externalIP);
+            }
+        }
+
+        tm.set(10, 0);
+    }
+
+    udpReactor->end_reactor_event_loop();
+}
+
+int RunServer(
+#if defined(BUILD_NT_SERVICE)
+              Service* service
+#endif
+              )
+{
+    //avoid SIGPIPE
+    ACE_Sig_Action no_sigpipe ((ACE_SignalHandler) SIG_IGN);
+    ACE_Sig_Action original_action;
+    no_sigpipe.register_action (SIGPIPE, &original_action);
+
+    int const ret = ACE::set_handle_limit(-1);//client handler (must be BIG)
+    ACE_Timer_Heap timerheap;
+    timerheap.set_time_policy(&ACE_High_Res_Timer::gettimeofday_hr);
+    ACE_Select_Reactor selectReactor(nullptr, &timerheap);
+    ACE_Reactor tcpReactor(&selectReactor);
+    ACE_Reactor::instance(&tcpReactor);
+    ACE_Reactor::instance()->owner (ACE_OS::thr_self ());
+
+    ACE_Reactor udpReactor;
+
+#if defined(BUILD_NT_SERVICE)
+    service->reactor(ACE_Reactor::instance());
+#endif
+    SignalEventHandler signalHandler(ACE_Reactor::instance());
+    ACE_Reactor::instance()->register_handler(SIGTERM, &signalHandler);
+    ACE_Reactor::instance()->register_handler(SIGINT, &signalHandler);
+    ACE_Reactor::instance()->register_handler(SIGHUP, &signalHandler);
+#if defined(WIN32)
+    ACE_Reactor::instance()->register_handler(SIGBREAK, &signalHandler);
+#endif
+
+    //init logger
+#if defined(BUILD_NT_SERVICE)
+    ACE_LOG_MSG->open(ACE_TEXT(TEAMTALK_NAME), ACE_Log_Msg::SYSLOG | ACE_Log_Msg::OSTREAM);
+#else
+    ACE_LOG_MSG->open(ACE_TEXT(TEAMTALK_NAME));
+#endif
+
+    ACE_TCHAR workdir[512] = {};
+    ACE_OS::getcwd(workdir, 512);
+
+    //enable logging
+    if (xmlSettings.GetServerLogMaxSize() != 0)
+    {
+        logstream.open(logfile.c_str(), ios::app);
+        ACE_OSTREAM_TYPE * output = &logstream;
+        ACE_LOG_MSG->msg_ostream(output, false);
+        ACE_LOG_MSG->set_flags(ACE_Log_Msg::OSTREAM);
+        u_long const flag = LM_ERROR | LM_INFO | LM_DEBUG;
+        ACE_LOG_MSG->priority_mask(flag, ACE_Log_Msg::PROCESS);
+    }
+
+    //create listener
+    ServerGuard srvguard(xmlSettings);
+    ServerNode servernode(ACE_TEXT( TEAMTALK_VERSION ), &tcpReactor, &tcpReactor, &udpReactor, &srvguard);
+
+    ServerSettings prop = servernode.GetServerProperties();
+
+    statchannels_t channels;
+    if(!ReadServerProperties(xmlSettings, prop, channels))
+    {
+        ACE_TCHAR error_msg[1024];
+        ACE_OS::snprintf(error_msg, 1024,
+                         ACE_TEXT("Failed to read server properties from settings file %s."), settingsfile.c_str());
+        TT_SYSLOG(error_msg);
+        return -1;
+    }
+
+    prop.rxloss = rxloss;
+    prop.txloss = txloss;
+
+    //check for override options
+    if (tcpport > 0)
+    {
+        ACE_INET_Addr const addr((u_short)tcpport, (!prop.tcpaddrs.empty()) ? prop.tcpaddrs[0].get_host_addr() : nullptr);
+        prop.tcpaddrs.clear();
+        prop.tcpaddrs.push_back(addr);
+    }
+    else
+    {
+        tcpport = prop.tcpaddrs.front().get_port_number();
+    }
+
+    if (udpport > 0)
+    {
+        ACE_INET_Addr const addr((u_short)udpport, (!prop.udpaddrs.empty()) ? prop.udpaddrs[0].get_host_addr(): nullptr);
+        prop.udpaddrs.clear();
+        prop.udpaddrs.push_back(addr);
+    }
+    else
+    {
+        udpport = prop.udpaddrs.front().get_port_number();
+    }
+
+    if(!bindip.empty())
+    {
+        ACE_INET_Addr const tcpaddr((!prop.tcpaddrs.empty()) ? prop.tcpaddrs[0].get_port_number() : tcpport, bindip.c_str());
+        prop.tcpaddrs.clear();
+        prop.tcpaddrs.push_back(tcpaddr);
+        ACE_INET_Addr const udpaddr((!prop.udpaddrs.empty()) ? prop.udpaddrs[0].get_port_number() : udpport, bindip.c_str());
+        prop.udpaddrs.clear();
+        prop.udpaddrs.push_back(udpaddr);
+    }
+
+    if (!ConfigureServer(servernode, prop, channels))
+    {
+        ACE_TCHAR error_msg[1024];
+        ACE_OS::snprintf(error_msg, 1024,
+                         ACE_TEXT("Failed to configure the server from settings file %s."), settingsfile.c_str());
+        TT_SYSLOG(error_msg);
+        return -1;
+    }
+    channels.clear();
+
+    bool encrypted = false;
+#if defined(ENABLE_TEAMTALKPRO)
+    encrypted = (!xmlSettings.GetCertificateFile().empty()) && (!xmlSettings.GetPrivateKeyFile().empty());
+    if (encrypted && !SetupEncryption(servernode, xmlSettings))
+        return -1;
+#endif
+
+    ACE_TString systemid = SERVER_WELCOME;
+#if defined(ENABLE_TEAMTALKPRO)
+    systemid = Utf8ToUnicode(xmlSettings.GetSystemID(UnicodeToUtf8(systemid).c_str()).c_str());
+    if (!servernode.StartServer(encrypted, systemid))
+#else
+    if (!servernode.StartServer(false, systemid))
+#endif
+    {
+        ACE_TCHAR error_msg[1024];
+        if(bindip.empty())
+            ACE_OS::snprintf(error_msg, 1024,
+            ACE_TEXT("Unable to launch server using TCP port %d UDP port %d.\n")
+            ACE_TEXT("Make sure the ports are not currently in use."),
+            (int)prop.tcpaddrs[0].get_port_number(), (int)prop.udpaddrs[0].get_port_number());
+        else
+            ACE_OS::snprintf(error_msg, 1024,
+            ACE_TEXT("Unable to launch server using IP-address %s TCP port %d UDP port %d.\n")
+            ACE_TEXT("Make sure the ports are not currently in use."),
+            prop.tcpaddrs[0].get_host_addr(), (int)prop.tcpaddrs[0].get_port_number(),
+            (int)prop.udpaddrs[0].get_port_number());
+
+        TT_SYSLOG(error_msg);
+        return -1;
+    }
+
+    if (xmlSettings.GetUPnP())
+    {
+        std::string externalIP;
+        if (UPnP_AddPortMapping(tcpport, udpport, externalIP))
+        {
+            ACE_TCHAR msg[256];
+            ACE_OS::snprintf(msg, 256,
+                ACE_TEXT("UPnP: Ports TCP %d, UDP %d forwarded. External IP: %s"),
+                (int)tcpport, (int)udpport, externalIP.c_str());
+            TT_LOG(msg);
+        }
+        else
+        {
+            TT_SYSLOG(ACE_TEXT("UPnP: Failed to add port mappings. Check if your router supports UPnP."));
+        }
+    }
+
+    TT_LOG(ACE_TEXT("Started ") ACE_TEXT( TEAMTALK_NAME ) ACE_TEXT(" v.") ACE_TEXT( TEAMTALK_VERSION ) ACE_TEXT("."));
+    if(!verbose)
+        ACE_LOG_MSG->clr_flags(ACE_Log_Msg::STDERR);
+
+    //don't write server events to syslog
+    ACE_LOG_MSG->clr_flags(ACE_Log_Msg::SYSLOG);
+
+#if defined(BUILD_NT_SERVICE)
+    SetConsoleCtrlHandler(ControlHandler, TRUE);
+    service->report_status_foo(SERVICE_RUNNING);
+    RunEventLoop(ACE_Reactor::instance(), &udpReactor, workdir);
+#else
+    if(daemon_mode)
+    {
+#if defined(WIN32)
+        cout << "Windows does not support daemon mode. Use -nd parameter instead." << endl;
+        return -1;
+#else
+        pid_t pid;
+        pid_t sid;
+
+        /* Fork off the parent process */
+        pid = fork();
+        if (pid < 0)
+        {
+            TT_SYSLOG(ACE_TEXT("Failed to start ") ACE_TEXT( TEAMTALK_NAME ));
+            exit(EXIT_FAILURE);
+        }
+
+        /* If we got a good PID, then
+        we can exit the parent process. */
+        if (pid > 0)
+        {
+            if(daemon_pid)
+                cout << TEAMTALK_NAME << " daemon got PID " << pid << endl;
+
+            if(!pidfile.empty())
+            {
+                std::ofstream fb(pidfile.c_str(), ios_base::out | ios_base::trunc);
+                if(fb.fail())
+                {
+                    cerr << "Failed to open: " << pidfile << endl;
+                }
+                fb << pid;
+                fb.close();
+            }
+            exit(EXIT_SUCCESS);
+        }
+
+        /* Change the file mode mask */
+        umask(0);
+
+        /* Open any logs here */
+
+        /* Create a new SID for the child process */
+        sid = setsid();
+        if (sid < 0)
+        {
+            TT_SYSLOG("No SID assigned to child process.");
+            /* Log any failure */
+            exit(EXIT_FAILURE);
+        }
+
+        RunEventLoop(ACE_Reactor::instance(), &udpReactor, workdir);
+
+#endif /* WIN32 */
+    }
+    else if(nondaemon)
+    {
+        //TCP commands thread
+        RunEventLoop(ACE_Reactor::instance(), &udpReactor, workdir);
+    }
+#endif /* BUILD_NT_SERVICE */
+
+    ACE_LOG_MSG->set_flags(ACE_Log_Msg::STDERR);
+
+    if (xmlSettings.GetUPnP())
+    {
+        UPnP_RemovePortMapping(tcpport, udpport);
+    }
+
+    servernode.StopServer();
+    TT_LOG(ACE_TEXT("Stopped ") ACE_TEXT(TEAMTALK_NAME) ACE_TEXT("."));
+
+    ACE_Thread_Manager::instance ()->wait ();
+
+    udpReactor.close();
+    tcpReactor.close();
+
+    ACE::fini();
+
+    return 0;
+}
+
+int ParseArguments(int argc, ACE_TCHAR* argv[]
+#if defined(BUILD_NT_SERVICE)
+              , Service* service
+#endif
+)
+{
+    std::map<ACE_TString,ACE_TString> args;
+
+    for(int i=0;i<argc;i++)
+    {
+        ACE_TString const str(argv[i]);
+        pair<ACE_TString,ACE_TString> newPair;
+        newPair.first = str;
+        if ((str == ACE_TEXT("-wd") ||
+            str == ACE_TEXT("-tcpport") ||
+            str == ACE_TEXT("-udpport") ||
+            str == ACE_TEXT("-ip") ||
+            str == ACE_TEXT("-c") ||
+            str == ACE_TEXT("-l") ||
+            str == ACE_TEXT("-pid-file") ||
+            str == ACE_TEXT("-rxloss") ||
+            str == ACE_TEXT("-txloss") ||
+            str == ACE_TEXT("-weblogin") ||
+            str == ACE_TEXT("-tokenlogin")))
+        {
+            if(i+1 >= argc)
+            {
+                cerr << "Missing option for parameter " << str << endl;
+                return 0;
+            }
+
+            newPair.second = argv[i+1];
+            i++;
+        }
+        else
+        {
+            newPair.second = ACE_TEXT("");
+        }
+        args.insert(newPair);
+    }
+
+    std::map<ACE_TString,ACE_TString>::iterator ite;
+
+    if(args.contains(ACE_TEXT("--version")))
+    {
+        cout << TEAMTALK_NAME << " version " << TEAMTALK_VERSION_FRIENDLY << endl;
+        return 0;
+    }
+    if(args.contains(ACE_TEXT("--help")) ||
+        args.contains(ACE_TEXT("-help")) ||
+        args.contains(ACE_TEXT("/help")) ||
+        args.contains(ACE_TEXT("-h")) ||
+        args.contains(ACE_TEXT("/h")) ||
+        args.contains(ACE_TEXT("-?")) ||
+        args.contains(ACE_TEXT("/?"))
+        )
+    {
+        PrintCommandArgs();
+        return 0;
+    }
+    if(args.contains(ACE_TEXT("-d")))
+    {
+        daemon_mode = true;
+    }
+    if(args.contains(ACE_TEXT("-nd")))
+    {
+        nondaemon = true;
+    }
+    if(args.contains(ACE_TEXT("-daemon-pid")))
+    {
+        daemon_pid = true;
+    }
+    if((ite = args.find(ACE_TEXT("-pid-file"))) != args.end())
+    {
+        pidfile = (*ite).second.c_str();
+    }
+    if( (ite = args.find(ACE_TEXT("-tcpport"))) != args.end())
+    {
+        tcpport = int(String2I((*ite).second.c_str()));
+    }
+    if( (ite = args.find(ACE_TEXT("-udpport"))) != args.end())
+    {
+        udpport = int(String2I((*ite).second.c_str()));
+    }
+    if( (ite = args.find(ACE_TEXT("-ip"))) != args.end())
+    {
+        bindip = (*ite).second;
+    }
+    if( (ite = args.find(ACE_TEXT("-verbose"))) != args.end())
+    {
+        verbose = true;
+    }
+    if( (ite = args.find(ACE_TEXT("-rxloss"))) != args.end())
+    {
+        rxloss = ACE_OS::atoi((*ite).second.c_str());
+    }
+    if( (ite = args.find(ACE_TEXT("-txloss"))) != args.end())
+    {
+        txloss = ACE_OS::atoi((*ite).second.c_str());
+    }
+    if( (ite = args.find(ACE_TEXT("-wd"))) != args.end())
+    {
+        ACE_TString const workdir = (*ite).second;
+        int const ret = ACE_OS::chdir(workdir.c_str());
+        if(ret != 0)
+        {
+            ACE_TCHAR error_msg[1024];
+            ACE_OS::snprintf(error_msg, 1024, ACE_TEXT("%s failed to change to directory \"%s\"."),
+                             ACE_TEXT(TEAMTALK_NAME), workdir.c_str());
+            TT_SYSLOG(error_msg);
+            return -1;
+        }
+    }
+    if( (ite = args.find(ACE_TEXT("-c"))) != args.end())
+    {
+        settingsfile = ite->second;
+    }
+    if ((ite = args.find(ACE_TEXT("-weblogin"))) != args.end())
+    {
+        weblogin = ite->second;
+    }
+    if ((ite = args.find(ACE_TEXT("-tokenlogin"))) != args.end())
+    {
+        tokenlogin = ite->second;
+    }
+    if( (ite = args.find(ACE_TEXT("-l"))) != args.end())
+    {
+        logfile = ite->second;
+    }
+#if defined(BUILD_NT_SERVICE)
+    else
+    {
+        //load config file from same directory as
+        //executable file when running as NT service.
+        ACE_TCHAR bufPath[MAX_PATH] = {};
+        if(GetModuleFileName(NULL, bufPath, MAX_PATH)>0)
+        {
+            TCHAR* pChr = ACE_OS::strrchr(bufPath, '\\');
+            TTASSERT(pChr);
+            if(pChr)
+            {
+                pChr++;
+                *pChr = 0;
+                ACE_OS::chdir(bufPath);
+            }
+            settingsfile = bufPath;
+            settingsfile += ACE_TEXT( TEAMTALK_SETTINGSFILE );
+        }
+    }
+    //pick out options related to NT services
+
+    if( (ite = args.find(ACE_TEXT("-i"))) != args.end())
+    {
+        if (service->insert(SERVICE_AUTO_START) < 0)
+        {
+            ACE_TCHAR error_msg[1024];
+            ACE_OS::snprintf(error_msg, 1024, ACE_TEXT("Failed to install ") ACE_TEXT(TEAMTALK_NAME) ACE_TEXT("\nError: %s"),
+                         GetWinError(ACE_OS::last_error()).c_str());
+            TT_SYSLOG(error_msg);
+            return -1;
+        }
+        else
+        {
+            TT_LOG(ACE_TEXT(TEAMTALK_NAME) ACE_TEXT(" installed successfully."));
+        }
+        return 0;
+    }
+    if( (ite = args.find(ACE_TEXT("-u"))) != args.end())
+    {
+        if (service->remove() < 0)
+        {
+            ACE_TCHAR error_msg[1024];
+            ACE_OS::snprintf(error_msg, 1024, ACE_TEXT("Failed to remove ") ACE_TEXT(TEAMTALK_NAME) ACE_TEXT("\nError: %s"),
+                         GetWinError(ACE_OS::last_error()).c_str());
+            TT_SYSLOG(error_msg);
+            return -1;
+        }
+        else
+        {
+            TT_LOG(ACE_TEXT(TEAMTALK_NAME) ACE_TEXT(" uninstalled successfully."));
+        }
+        return 0;
+    }
+    if( (ite = args.find(ACE_TEXT("-s"))) != args.end())
+    {
+        if (service->start_svc() < 0)
+        {
+            ACE_TCHAR error_msg[1024];
+            ACE_OS::snprintf(error_msg, 1024, ACE_TEXT("Failed to start ") ACE_TEXT(TEAMTALK_NAME) ACE_TEXT("\nError: %s"),
+                         GetWinError(ACE_OS::last_error()).c_str());
+            TT_SYSLOG(error_msg);
+            return -1;
+        }
+        else
+        {
+            TT_LOG(ACE_TEXT(TEAMTALK_NAME) ACE_TEXT(" started successfully."));
+        }
+        return 0;
+    }
+    if( (ite = args.find(ACE_TEXT("-e"))) != args.end())
+    {
+        if (service->stop_svc() < 0)
+        {
+            ACE_TCHAR error_msg[1024];
+            ACE_OS::snprintf(error_msg, 1024, ACE_TEXT("Failed to stop ") ACE_TEXT(TEAMTALK_NAME) ACE_TEXT("\nError: %s"),
+                         GetWinError(ACE_OS::last_error()).c_str());
+            TT_SYSLOG(error_msg);
+            return -1;
+        }
+        else
+        {
+            TT_LOG(ACE_TEXT(TEAMTALK_NAME) ACE_TEXT(" stopped successfully."));
+        }
+        return 0;
+    }
+#endif
+
+    if(!LoadConfig(xmlSettings, settingsfile))
+    {
+        ACE_TCHAR error_msg[1024];
+        ACE_OS::snprintf(error_msg, 1024, ACE_TEXT("Failed to load settings file %s."), settingsfile.c_str());
+        TT_SYSLOG(error_msg);
+        return -1;
+    }
+
+    RemoveFacebookLogins(xmlSettings);
+
+#if defined(ENABLE_TEAMTALKPRO)
+    // -tokenlogin foo@bearware.dk:fedeabe0912345
+    if (!tokenlogin.empty())
+    {
+        const ACE_TString rgxtokenlogin = ACE_TEXT("^(.*):(.*)$");
+#if defined(UNICODE)
+        std::wsmatch sm;
+        std::wstring const tokenstr = tokenlogin.c_str();
+#else
+        std::smatch sm;
+        std::string const tokenstr = tokenlogin.c_str();
+#endif
+        if (std::regex_search(tokenstr, sm, BuildRegex(rgxtokenlogin.c_str())) && sm.size() == 3)
+        {
+            ACE_TString const loginid = sm[1].str().c_str();
+            ACE_TString const newtoken = sm[2].str().c_str();
+            if (AuthBearWareAccount(loginid, newtoken) != WEBLOGIN_SUCCESS)
+            {
+                TT_SYSLOG(ACE_TEXT("Failed to authenticate BearWare.dk WebLogin."));
+                return 0;
+            }
+
+            xmlSettings.SetBearWareWebLogin(UnicodeToUtf8(loginid).c_str(), UnicodeToUtf8(newtoken).c_str());
+            xmlSettings.SaveFile();
+            TT_SYSLOG(ACE_TEXT("BearWare.dk WebLogin succedded. Token stored."));
+        }
+        else
+        {
+            TT_SYSLOG(ACE_TEXT("Invalid format for TOKEN. Should be \"bear_dk@bearware.dk:aefd43fea\""));
+            return 0;
+        }
+    }
+
+    // -weblogin foo@bearware.dk:mysecretpassword
+    if (!weblogin.empty())
+    {
+        const ACE_TString rgxweblogin = ACE_TEXT("^(.*):(.*)$");
+#if defined(UNICODE)
+        std::wsmatch sm;
+        std::wstring webloginstr = weblogin.c_str();
+#else
+        std::smatch sm;
+        std::string const webloginstr = weblogin.c_str();
+#endif
+        if (std::regex_search(webloginstr, sm, BuildRegex(rgxweblogin.c_str())) && sm.size() == 3)
+        {
+            ACE_TString const loginid = sm[1].str().c_str();
+            ACE_TString const passwd = sm[2].str().c_str();
+            ACE_TString bearwareid, token;
+            if (LoginBearWareAccount(loginid, passwd, token, bearwareid) != WEBLOGIN_SUCCESS)
+            {
+                TT_SYSLOG(ACE_TEXT("Failed to authenticate BearWare.dk WebLogin."));
+                return 0;
+            }
+
+            xmlSettings.SetBearWareWebLogin(UnicodeToUtf8(bearwareid).c_str(), UnicodeToUtf8(token).c_str());
+            xmlSettings.SaveFile();
+            TT_SYSLOG(ACE_TEXT("BearWare.dk WebLogin succedded. Token stored."));
+        }
+        else
+        {
+            TT_SYSLOG(ACE_TEXT("Invalid format for AUTH. Should be \"bear_dk:mysecretpassword\""));
+            return 0;
+        }
+    }
+#endif /*TEAMTALK_PRO */
+
+    bool skipstart_output = false;
+
+    if( (ite = args.find(ACE_TEXT("-wizard"))) != args.end())
+    {
+        RunWizard(xmlSettings);
+        skipstart_output = true;
+    }
+
+    if (args.contains(ACE_TEXT("-cleanfiles")))
+    {
+        RemoveUnusedFiles(xmlSettings);
+        skipstart_output = true;
+    }
+
+#if !defined(BUILD_NT_SERVICE)
+    if(!nondaemon && !daemon_mode)
+    {
+        if (!skipstart_output)
+            TT_LOG(ACE_TEXT("Missing either -d or -nd parameter in order to start."));
+        return 0;
+    }
+#endif
+
+#if defined(ENABLE_TEAMTALKPRO)
+    while (!LoginBearWare(xmlSettings))
+    {
+        TT_LOG(ACE_TEXT("Failed to log on using BearWare.dk WebLogin."));
+    }
+#endif
+
+    return 1; //GO
+}
+
+void PrintCommandArgs()
+{
+    cout << endl;
+    cout << TEAMTALK_NAME << " version " << TEAMTALK_VERSION_FRIENDLY << endl;
+    cout << "Compiled on " __DATE__ " " __TIME__ "." << endl;
+    cout << endl;
+    cout << "Copyright (c) 2002-2025, BearWare.dk" << endl;
+    cout << endl;
+    cout << "Usage: " << TEAMTALK_EXE << " [OPTIONS]" << endl << endl;
+#if defined(BUILD_NT_SERVICE)
+    cout << "Windows NT service install options:" << endl << endl;
+    cout << "  -i               Install " << TEAMTALK_NAME << " as NT service." << endl;
+    cout << "  -u               Uninstall " << TEAMTALK_NAME << " from NT services." << endl;
+    cout << "  -s               Start NT service (must already be installed)." << endl;
+    cout << "  -e               Stop NT service (must already be running)." << endl;
+    cout << endl;
+    cout << "Windows NT service startup arguments:" << endl << endl;
+#else
+    cout << "Valid options:" << endl;
+#endif
+#if !defined(BUILD_NT_SERVICE)
+#if !defined(WIN32)
+    cout << "  -d               Start " << TEAMTALK_NAME << " as daemon." << endl;
+    cout << "  -daemon-pid      Print PID of daemon started with -d option." << endl;
+    cout << "  -pid-file [FILE] Write PID of daemon started with -d option to file." << endl;
+#endif
+    cout << "  -nd              Start " << TEAMTALK_NAME << " as non-daemon." << endl;
+#endif
+    cout << "  -wizard          Run the setup-wizard to configure the server." << endl;
+#if defined(ENABLE_TEAMTALKPRO)
+    cout << "  -weblogin [AUTH] Setup BearWare.dk WebLogin using credentials" << endl;
+    cout << "                   specified in AUTH." << endl;
+    cout << "                   AUTH format is \"username:mysecretpassword\"" << endl;
+    cout << "                   where colon is separator." << endl;
+    cout << "  -tokenlogin [TOKEN]" << endl;
+    cout << "                   Setup BearWare.dk WebLogin using token" << endl;
+    cout << "                   specified in TOKEN." << endl;
+    cout << "                   TOKEN format is \"username:03abc6dfe\"" << endl;
+    cout << "                   where colon is separator." << endl;
+#endif
+    cout << "  -c [FILE]        Instead of loading " << TEAMTALK_SETTINGSFILE << " from current directory" << endl;
+    cout << "                   use this specified file." << endl;
+    cout << "  -l [FILE]        If logging is enabled save to the specified filename instead" << endl;
+    cout << "                   of writing to " << TEAMTALK_LOGFILE << " in current directory." << endl;
+    cout << "  -wd [DIR]        Set working directory (where " << TEAMTALK_SETTINGSFILE << endl;
+    cout << "                   is located and where the log file " << TEAMTALK_LOGFILE << endl;
+    cout << "                   will be stored)." << endl;
+    cout << "                   Current directory is the default location of " << endl;
+    cout << "                   " << TEAMTALK_SETTINGSFILE << " and log file." << endl;
+    cout << "  -tcpport [PORT]  Override the <tcpport> setting in " << TEAMTALK_SETTINGSFILE << "." << endl;
+    cout << "  -udpport [PORT]  Override the <udpport> setting in " << TEAMTALK_SETTINGSFILE << "." << endl;
+    cout << "  -ip [IPADDR]     Override <bind-ip> setting in " << TEAMTALK_SETTINGSFILE << "." << endl;
+    cout << "  -cleanfiles      Remove files that are not referenced by any channel." << std::endl;
+    cout << "  -verbose         Output log information to console." << endl;
+    cout << "  --version        Displays version info." << endl;
+    cout << "  --help           Displays this message." << endl;
+
+#if !defined(BUILD_NT_SERVICE)
+    cout << endl;
+    cout << "Examples: " << TEAMTALK_EXE << " -nd" << endl;
+    cout << "          " << TEAMTALK_EXE << " -wd /home/bill/srv1 -ip 192.168.0.2 -nd" << endl;
+    cout << "          " << TEAMTALK_EXE << " -c /home/bill/srv1/" << TEAMTALK_SETTINGSFILE << " -l " << TEAMTALK_LOGFILE << " -nd" << endl;
+#endif
+    cout << endl;
+    cout << "Kind regards go to the people behind the ACE Framework, miniupnpc, OpenSSL" << endl;
+    cout << "and TinyXML2 projects!" << endl;
+    cout << endl;
+    cout << "Report bugs to contact@bearware.dk" << endl;
+    cout << endl;
+}

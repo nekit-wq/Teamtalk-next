@@ -1,0 +1,183 @@
+name: SmokeTest
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  # TeamTalk unit test environment variables
+  INPUTDEVICEID: 1978
+  OUTPUTDEVICEID: 1978
+  VIDEODEVICEID: None
+  VERBOSE: 0
+  GITHUBSKIP: 1
+
+jobs:
+  build:
+    if: "!startsWith(github.head_ref, 'debug')"
+    runs-on: ubuntu-26.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        submodules: true
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '25'
+
+    - name: Update Ubuntu repository
+      run: sudo apt-get update
+
+    - name: Install dependencies
+      working-directory: ${{github.workspace}}/Build
+      run: sudo make depend-ubuntu26
+
+    - name: Install SmokeTest dependencies
+      run: >-
+           sudo apt-get install
+           catch2
+           libace-dev
+           libace-inet-dev
+           libace-inet-ssl-dev
+           libace-ssl-dev
+           libavcodec-dev
+           libavdevice-dev
+           libavfilter-dev
+           libavformat-dev
+           libavutil-dev
+           libminiupnpc-dev
+           libogg-dev
+           libopus-dev
+           libswresample-dev
+           libswscale-dev
+           libspeex-dev
+           libspeexdsp-dev
+           libtinyxml2-dev
+           libvpx-dev
+           portaudio19-dev
+           valgrind
+
+    - name: Configure CMake
+      working-directory: ${{runner.workspace}}
+      run: >-
+           cmake -S TeamTalk5 -B output -G Ninja
+           -DBUILD_TEAMTALK_LIBRARY_UNITTEST_CATCH2=ON
+           -DFEATURE_WEBRTC=OFF
+           -DTOOLCHAIN_ACE=OFF
+           -DTOOLCHAIN_CATCH2=OFF
+           -DTOOLCHAIN_FFMPEG=OFF
+           -DTOOLCHAIN_LIBVPX=OFF
+           -DTOOLCHAIN_MINIUPNPC=OFF
+           -DTOOLCHAIN_OGG=OFF
+           -DTOOLCHAIN_OPENSSL=OFF
+           -DTOOLCHAIN_OPUS=OFF
+           -DTOOLCHAIN_PORTAUDIO=OFF
+           -DTOOLCHAIN_SPEEX=OFF
+           -DTOOLCHAIN_SPEEXDSP=OFF
+           -DTOOLCHAIN_TINYXML2=OFF
+           -DTOOLCHAIN_ZLIB=OFF
+
+    - name: Build
+      working-directory: ${{runner.workspace}}/output
+      run: cmake --build .
+
+    - name: Run Java Server API tests (non-encrypted)
+      working-directory: ${{github.workspace}}/Library/TeamTalkJNI
+      run: make runjunitsrv
+      env:
+        ENCRYPTED: 0
+        WEBRTC: 0
+
+    - name: Run Java Server API tests (encrypted)
+      working-directory: ${{github.workspace}}/Library/TeamTalkJNI
+      run: make runjunitsrv
+      env:
+        ENCRYPTED: 1
+        WEBRTC: 0
+
+    - name: Start TeamTalk Standard Server
+      working-directory: ${{github.workspace}}
+      run: |
+        cp Library/TeamTalkLib/test/tt5srv.xml_template Server/tt5srv.xml
+        Server/tt5srv -d -c Server/tt5srv.xml
+
+    - name: Start TeamTalk Pro Server (encrypted)
+      working-directory: ${{github.workspace}}
+      run: |
+        cp -f Library/TeamTalkLib/test/tt5prosrv.xml_template Server/tt5prosrv.xml
+        cp Library/TeamTalkLib/test/ttservercert.pem Server/
+        cp Library/TeamTalkLib/test/ttserverkey.pem Server/
+        cp Library/TeamTalkLib/test/ca.cer Server/
+        Server/tt5prosrv -d -wd Server/
+
+    - name: Run PyTest
+      working-directory: ${{github.workspace}}
+      run: |
+        source env.sh
+        pytest-3 Library/TeamTalkPy/test/teamtalk_test.py
+
+    - name: Run Python client
+      working-directory: ${{github.workspace}}
+      run: |
+        source env.sh
+        make -C Client/ttserverlogpy
+
+    - name: Run Catch unit tests
+      working-directory: ${{github.workspace}}/Library/TeamTalkLib/test
+      run: ./catchtt --durations yes
+
+    - name: Stop TeamTalk Pro Server
+      run: killall tt5prosrv
+
+    - name: Run Java unit tests (non-encrypted)
+      working-directory: ${{github.workspace}}/Library/TeamTalkJNI
+      run: make runjunit
+      env:
+        ENCRYPTED: 0
+        WEBRTC: 0
+
+    - name: Stop TeamTalk Standard Server
+      run: killall tt5srv
+
+    - name: Start TeamTalk Pro Server (non-encrypted)
+      working-directory: ${{github.workspace}}
+      run: |
+        cp -f Library/TeamTalkLib/test/tt5srv.xml_template Server/tt5srv.xml
+        Server/tt5prosrv -d -c Server/tt5srv.xml
+
+    - name: Run Java unit tests with shared audio devices (non-encrypted)
+      working-directory: ${{github.workspace}}/Library/TeamTalkJNI
+      run: make runjunitpro
+      env:
+        ENCRYPTED: 0
+        WEBRTC: 0
+        INPUTDEVICEID: 4026
+        OUTPUTDEVICEID: 4026
+
+    - name: Stop TeamTalk Pro Server (non-encrypted)
+      run: killall tt5prosrv
+
+    - name: Start TeamTalk Pro Server (encrypted)
+      working-directory: ${{github.workspace}}
+      run: |
+        cp -f Library/TeamTalkLib/test/tt5prosrv.xml_template Server/tt5prosrv.xml
+        cp Library/TeamTalkLib/test/ttservercert.pem Server/
+        cp Library/TeamTalkLib/test/ttserverkey.pem Server/
+        cp Library/TeamTalkLib/test/ca.cer Server/
+        Server/tt5prosrv -d -wd Server/
+
+    - name: Run Java unit tests with virtual audio device (encrypted)
+      working-directory: ${{github.workspace}}/Library/TeamTalkJNI
+      run: make runjunitpro
+      env:
+        ENCRYPTED: 1
+        WEBRTC: 0
+
+    - name: Stop TeamTalk Pro Server (encrypted)
+      run: killall tt5prosrv

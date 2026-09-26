@@ -1,0 +1,211 @@
+/*
+ * Copyright (c) 2005-2018, BearWare.dk
+ * 
+ * Contact Information:
+ *
+ * Bjoern D. Rasmussen
+ * Kirketoften 5
+ * DK-8260 Viby J
+ * Denmark
+ * Email: contact@bearware.dk
+ * Phone: +45 20 20 54 59
+ * Web: http://www.bearware.dk
+ *
+ * This source code is part of the TeamTalk SDK owned by
+ * BearWare.dk. Use of this file, or its compiled unit, requires a
+ * TeamTalk SDK License Key issued by BearWare.dk.
+ *
+ * The TeamTalk SDK License Agreement along with its Terms and
+ * Conditions are outlined in the file License.txt included with the
+ * TeamTalk SDK distribution.
+ *
+ */
+
+#ifndef SERVERSETTINGS_H
+#define SERVERSETTINGS_H
+
+#include "settings/Settings.h"
+#include "teamtalk/Common.h"
+
+#include <cstdint>
+#include <ctime>
+#include <map>
+#include <string>
+#include <vector>
+
+constexpr auto TEAMTALK_XML_VERSION = "5.3";
+
+namespace teamtalk {
+
+    using statchannels_t = std::map< int, ChannelProp >;
+
+    int GetRootChannelID(const statchannels_t& channels); //success > 0
+    statchannels_t GetSubChannels(int nChannelID, const statchannels_t& channels);
+    std::string GetChannelPath(int nChannelID, const statchannels_t& channels);
+
+    std::string DateToString(time_t t);
+    time_t StringToDate(const std::string& date);
+
+    class ServerXML : public teamtalk::XMLDocument
+    {
+    public:
+        ServerXML(const std::string& rootname);
+        bool SaveFile() override;
+
+        tinyxml2::XMLElement* GetRootElement() override;
+
+        /***** <general> *****/
+        std::string GetSystemID(const std::string& defwelcome);
+        
+        bool SetServerName(const std::string& szServerName);
+        std::string GetServerName();
+
+        bool SetMessageOfTheDay(const std::string& szMsg);
+        std::string GetMessageOfTheDay();
+
+        bool SetBindIPs(const std::vector<std::string>& ips);
+        std::vector<std::string> GetBindIPs();
+
+        bool SetHostTcpPort(int nHostTcpPort);
+        int GetHostTcpPort(int defaultValue = -1);
+
+        bool SetHostUdpPort(int nUdpPort);
+        int GetHostUdpPort(int defaultValue = -1);
+
+        bool SetMaxUsers(int nMax);
+        int GetMaxUsers(int defaultValue = -1);
+
+        bool SetVoiceLogging(bool enable);
+        bool GetVoiceLogging();
+
+        bool SetCertificateFile(const std::string& certfile);
+        std::string GetCertificateFile();
+        bool SetPrivateKeyFile(const std::string& keyfile);
+        std::string GetPrivateKeyFile();
+
+        void SetCertificateAuthFile(const std::string& cafile);
+        std::string GetCertificateAuthFile();
+
+        void SetCertificateAuthDir(const std::string& cadir);
+        std::string GetCertificateAuthDir();
+
+        void SetCertificateVerify(bool enabled);
+        bool GetCertificateVerify(bool defvalue);
+
+        void SetCertificateVerifyOnce(bool enabled);
+        bool GetCertificateVerifyOnce(bool defvalue);
+
+        void SetCertificateVerifyDepth(int depth);
+        int GetCertificateVerifyDepth(int defvalue);
+        
+        bool SetAutoSave(bool enable);
+        bool GetAutoSave();
+
+        bool SetUPnP(bool enable);
+        bool GetUPnP();
+
+        bool SetMaxLoginAttempts(int nMax);
+        int GetMaxLoginAttempts();
+
+        bool SetUserTimeout(int nTimeoutSec);
+        int GetUserTimeout();
+
+        bool SetMaxLoginsPerIP(int max_ip_logins);
+        int GetMaxLoginsPerIP();
+
+        bool SetLoginDelay(int delaymsec);
+        int GetLoginDelay();
+        
+        /***** <bandwidth-limits> *****/
+
+        bool SetVoiceTxLimit(int tx_bytes_per_sec);
+        int GetVoiceTxLimit();
+
+        bool SetVideoCaptureTxLimit(int tx_bytes_per_sec);
+        int GetVideoCaptureTxLimit();
+
+        bool SetMediaFileTxLimit(int tx_bytes_per_sec);
+        int GetMediaFileTxLimit();
+
+        bool SetDesktopTxLimit(int tx_bytes_per_sec);
+        int GetDesktopTxLimit();
+
+        bool SetTotalTxLimit(int tx_bytes_per_sec);
+        int GetTotalTxLimit();
+        /***** </bandwidth-limits> *****/
+
+        bool SetDefaultDiskQuota(int64_t diskquota);
+        int64_t GetDefaultDiskQuota();
+                
+        /***** </general> *****/
+
+        /***** <logging> *****/
+        bool SetServerLogMaxSize(int64_t maxsize);
+        int64_t GetServerLogMaxSize();
+
+        void SetServerLogEvents(uint32_t events);
+        uint32_t GetServerLogEvents(uint32_t def_events);
+        /***** </logging> *****/
+
+        /***** <static-channels> ****/
+        bool SetStaticChannels(const statchannels_t& channels);
+        bool GetStaticChannels(statchannels_t& channels);
+        /***** </static-channels> ****/
+
+        /***** <file-storage> *****/
+        bool SetFilesRoot(const std::string& filesroot);
+        std::string GetFilesRoot();
+
+        bool SetMaxDiskUsage(int64_t diskquota);
+        int64_t GetMaxDiskUsage();
+        /***** </file-storage> *****/
+
+        std::vector<std::string> GetAdminIPAccessList();
+
+        /******** <users> *******/
+        void AddNewUser(const UserAccount& user);
+        bool RemoveUser(const std::string& username);
+        bool GetNextUser(int index, UserAccount& user);
+        bool AuthenticateUser(UserAccount& user);
+        bool GetUser(const std::string& username, UserAccount& user);
+        void UpdateLastLogin(const UserAccount& user);
+
+        // Removes operator privileges for a specific channel ID from all users.
+        bool CleanupChannelOperators(int deletedChannelID);
+        /****** </users> *****/
+
+        /********** <serverbans>  ************/
+        void AddUserBan(const BannedUser& ban);
+        bool RemoveUserBan(const BannedUser& ban);
+        bool GetUserBan(int index, BannedUser& ban);
+        int GetUserBanCount();
+        bool IsUserBanned(const BannedUser& ban);
+        void ClearUserBans();
+        std::vector<BannedUser> GetUserBans();
+        /********** </serverbans> ************/
+
+        /******** <bearware-weblogin> *********/
+        void SetBearWareWebLogin(const std::string& username,
+                                 const std::string& token);
+        bool GetBearWareWebLogin(std::string& username,
+                                 std::string& token);
+        /******** </bearware-weblogin> *********/
+
+    protected:
+        bool UpdateFile() override;
+    private:
+        /**** Sections ****/
+        tinyxml2::XMLElement* GetGeneralElement();
+        tinyxml2::XMLElement* GetFileStorageElement();
+        tinyxml2::XMLElement* GetLoggingElement();
+        tinyxml2::XMLElement* GetBandwidthLimitElement();
+        tinyxml2::XMLElement* GetServerBansElement();
+        tinyxml2::XMLElement* GetUsersElement();
+        tinyxml2::XMLElement* GetChannelElement(const std::string& chpath);
+        tinyxml2::XMLElement* GetUser(const std::string& username);
+        bool GetUser(const tinyxml2::XMLElement* userElement, UserAccount& user) const;
+        bool GetUserBan(const tinyxml2::XMLElement* banElement, BannedUser& ban);
+        void NewUserBan(tinyxml2::XMLElement* banElement, const BannedUser& ban);
+    };
+} // namespace teamtalk
+#endif

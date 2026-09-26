@@ -1,0 +1,106 @@
+/*
+ * Copyright (c) 2005-2018, BearWare.dk
+ * 
+ * Contact Information:
+ *
+ * Bjoern D. Rasmussen
+ * Kirketoften 5
+ * DK-8260 Viby J
+ * Denmark
+ * Email: contact@bearware.dk
+ * Phone: +45 20 20 54 59
+ * Web: http://www.bearware.dk
+ *
+ * This source code is part of the TeamTalk SDK owned by
+ * BearWare.dk. Use of this file, or its compiled unit, requires a
+ * TeamTalk SDK License Key issued by BearWare.dk.
+ *
+ * The TeamTalk SDK License Agreement along with its Terms and
+ * Conditions are outlined in the file License.txt included with the
+ * TeamTalk SDK distribution.
+ *
+ */
+
+#if !defined(SETTINGS_H)
+#define SETTINGS_H
+
+#include <tinyxml2.h>
+#include <cstdint>
+#include <string>
+
+#if defined(CreateFile)
+#pragma push_macro("CreateFile")
+#endif
+
+/*
+* Host Manager elements
+* <hostmanager>
+*  <host name="blah">
+*   <address/>
+*   <password/>
+*   <tcpport/>
+*   <udpport/>
+*  </host>
+* </hostmanager>
+*/
+
+namespace teamtalk {
+
+    class XMLDocument
+    {
+    public:
+        XMLDocument(std::string  rootname, std::string  version);
+        virtual ~XMLDocument();
+
+        virtual bool CreateFile(const std::string& filename);
+        bool LoadFile(const std::string& filename);
+        virtual bool SaveFile();
+        bool HasErrors();
+        std::string GetError();
+        bool Parse(const std::string& xml);
+
+        bool SetFileVersion(const std::string& version);
+        std::string GetFileVersion() const;
+
+        const std::string& GetFileName() const { return m_filename; }
+
+        void SetValue(const std::string& path, const std::string& value);
+        std::string GetValue(bool prefixRoot, const std::string& path, const std::string& defaultvalue);
+
+        void SetValue(const std::string& path, int value);
+        int GetValue(bool prefixRoot, const std::string& path, int defaultvalue);
+
+        void SetValueBool(const std::string& path, bool value);
+        bool GetValueBool(bool prefixRoot, const std::string& path, bool defaultvalue);
+
+    protected:
+        virtual bool UpdateFile();
+        tinyxml2::XMLDocument m_xmlDocument;
+        void PutElementText(tinyxml2::XMLElement* element, const std::string& value);
+        static void GetElementText(const tinyxml2::XMLElement* element, std::string& value);
+
+        void PutBoolean(tinyxml2::XMLElement* parent, const std::string& szName, bool bValue);
+        void PutString(tinyxml2::XMLElement* parent, const std::string& szName, const std::string& szValue);
+        void PutInteger(tinyxml2::XMLElement* parent, const std::string& szName, int nValue);
+        void PutInteger(tinyxml2::XMLElement* parent, const std::string& szName, int64_t nValue);
+
+        bool GetBoolean(const tinyxml2::XMLElement* parent, const std::string& szName, bool& bValue) const;
+        bool GetString(const tinyxml2::XMLElement* parent, const std::string& szName, std::string& szValue) const;
+        bool GetInteger(const tinyxml2::XMLElement* parent, const std::string& szName, int& nValue) const;
+        bool GetInteger(const tinyxml2::XMLElement* parent, const std::string& szName, int64_t& nValue) const;
+
+        tinyxml2::XMLElement* AppendElement(tinyxml2::XMLElement* parent, const char* name);
+        tinyxml2::XMLElement* ReplaceElement(tinyxml2::XMLElement* target, const char* name);
+        virtual tinyxml2::XMLElement* GetRootElement();
+        virtual const tinyxml2::XMLElement* GetRootElement() const;
+        std::string m_rootname, m_filename, m_xmlversion;
+    };
+
+} // namespace teamtalk
+
+#if defined(CreateFile)
+#pragma pop_macro("CreateFile")
+#endif
+
+
+#endif // !defined(SETTINGS_H)

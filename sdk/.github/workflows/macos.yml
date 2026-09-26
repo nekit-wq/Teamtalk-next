@@ -1,0 +1,94 @@
+name: macOS
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  # TeamTalk unit test environment variables
+  GITHUBSKIP: 1
+  INPUTDEVICEID: 1978
+  OUTPUTDEVICEID: 1978
+  VERBOSE: 0
+  VIDEODEVICEID: None
+
+jobs:
+  build:
+    if: "!startsWith(github.head_ref, 'debug') || startsWith(github.head_ref, 'debug-macos')"
+    runs-on: macos-26
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        submodules: true
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '25'
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.14'
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.11.1'
+        modules: 'qtmultimedia qtspeech'
+        setup-python: false
+        aqtsource: 'aqtinstall@git+https://github.com/miurahr/aqtinstall.git@master'
+
+    - name: Print env
+      run: printenv | sort
+
+    - name: Install dependencies
+      working-directory: ${{github.workspace}}/Build
+      run: make depend-mac
+
+    - name: Build TeamTalk toolchain, libraries and apps
+      working-directory: ${{github.workspace}}
+      shell: bash
+      run: make CMAKE_EXTRA="-G Ninja -DWEBRTC_FETCH_PATH=${{runner.workspace}}/webrtc -DTOOLCHAIN_INSTALL_PREFIX=${{runner.workspace}}/toolchain-install -DFEATURE_PORTAUDIO=OFF -DBUILD_TEAMTALK_LIBRARY_UNITTEST_CATCH2=ON -DBUILD_TEAMTALK_LIBRARY_UNITTEST_CATCH2_PERF=OFF -DBUILD_TEAMTALK_CLIENT_QTTEAMTALK_PRODUCT=ON -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install" -C Build mac
+
+    - name: Start TeamTalk Standard Server
+      working-directory: ${{github.workspace}}
+      run: |
+        cp Library/TeamTalkLib/test/tt5srv.xml_template Server/tt5srv.xml
+        Server/tt5srv -d -c Server/tt5srv.xml
+
+    - name: Start TeamTalk Pro Server (encrypted)
+      working-directory: ${{github.workspace}}
+      run: |
+        cp -f Library/TeamTalkLib/test/tt5prosrv.xml_template Server/tt5prosrv.xml
+        cp Library/TeamTalkLib/test/ttservercert.pem Server/
+        cp Library/TeamTalkLib/test/ttserverkey.pem Server/
+        cp Library/TeamTalkLib/test/ca.cer Server/
+        Server/tt5prosrv -d -wd Server/
+
+    - name: Run Catch unit tests
+      working-directory: ${{github.workspace}}/Library/TeamTalkLib/test
+      run: catchtt.app/Contents/MacOS/catchtt --durations yes
+
+    - name: Stop TeamTalk servers
+      run: killall tt5srv tt5prosrv
+
+    - name: Install TeamTalk SDK
+      working-directory: ${{github.workspace}}/Build/build-release-mac
+      run: cmake --build . --target install
+
+    - name: Build debug TeamTalk using prebuilt toolchain
+      working-directory: ${{github.workspace}}
+      shell: bash
+      run: make CONFIGTYPE=debug CMAKE_EXTRA="-DTOOLCHAIN_INSTALL_PREFIX=${{runner.workspace}}/toolchain-install -DTOOLCHAIN_BUILD_EXTERNALPROJECTS=OFF -DFEATURE_PORTAUDIO=OFF -DBUILD_TEAMTALK_LIBRARY_UNITTEST_CATCH2=ON -DBUILD_TEAMTALK_LIBRARY_UNITTEST_CATCH2_PERF=OFF -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install" -C Build mac
+
+    - name: Upload TeamTalk SDK artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: teamtalksdk-macos
+        path: ${{runner.workspace}}/install

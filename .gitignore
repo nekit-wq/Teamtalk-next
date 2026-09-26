@@ -1,15 +1,30 @@
-.gradle
-.idea
-build
-debug
-release
-local.properties
-*.iml
-*.jks
-*.keystore
+# Android client build outputs & cache
+client/.gradle/
+client/.idea/
+client/build/
+client/debug/
+client/release/
+client/local.properties
+client/*.iml
+client/*.jks
 
-# Allow project JARs, native SO libraries, and fixed signing keystore
-!libs/*.jar
-!gradle/wrapper/gradle-wrapper.jar
-!src/main/jniLibs/**/*.so
-!release.keystore
+# Allow client keystore, jars, and native libraries
+!client/libs/*.jar
+!client/gradle/wrapper/gradle-wrapper.jar
+!client/src/main/jniLibs/**/*.so
+!client/release.keystore
+
+# Python server virtualenv and caches
+server/**/.venv/
+server/**/__pycache__/
+server/**/*.py[cod]
+server/**/.pytest_cache/
+.venv/
+__pycache__/
+*.py[cod]
+
+# General IDE & OS files
+.DS_Store
+*.swp
+*.bak
+Thumbs.db
