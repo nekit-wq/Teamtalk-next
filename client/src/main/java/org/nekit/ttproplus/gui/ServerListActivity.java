@@ -48,6 +48,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import androidx.core.content.FileProvider;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
@@ -1362,7 +1363,9 @@ public class ServerListActivity extends AppCompatActivity
 
     private void exportServer(ServerEntry entry) {
         Vector<ServerEntry> singleServer = new Vector<>(Collections.singletonList(entry));
-        File ttFile = createExportFile(entry.servername + "_server.tt");
+        String safeName = entry.servername != null ? entry.servername.replaceAll("[^a-zA-Z0-9._-]", "_") : "server";
+        if (safeName.isEmpty()) safeName = "server";
+        File ttFile = createExportFile(safeName + ".tt");
         if (ttFile != null) {
             exportToFile(singleServer, ttFile, R.string.server_export_confirmation);
         }
@@ -1416,6 +1419,23 @@ public class ServerListActivity extends AppCompatActivity
         boolean success = Utils.saveServers(entries, filePath);
         int msgId = success ? successMsgId : R.string.err_file_write;
         showToast(getString(msgId, filePath));
+        if (success) {
+            shareExportedFile(new File(filePath));
+        }
+    }
+
+    private void shareExportedFile(File file) {
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("application/octet-stream");
+            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, file.getName());
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.action_export_tt)));
+        } catch (Exception e) {
+            Log.e(TAG, "Error sharing exported file", e);
+        }
     }
 
     private void showToast(String message) {
@@ -1527,10 +1547,20 @@ public class ServerListActivity extends AppCompatActivity
 
     private void performBulkServerExport(final List<ServerEntry> selected) {
         if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) || Permissions.WRITE_EXTERNAL_STORAGE.request(this)) {
-            File ttFile = createExportFile("servers_export_" + System.currentTimeMillis() + ".tt");
+            String fileName;
+            if (selected.size() == 1) {
+                String safeName = selected.get(0).servername != null ? selected.get(0).servername.replaceAll("[^a-zA-Z0-9._-]", "_") : "server";
+                if (safeName.isEmpty()) safeName = "server";
+                fileName = safeName + ".tt";
+            } else {
+                fileName = "servers_export_" + System.currentTimeMillis() + ".tt";
+            }
+            File ttFile = createExportFile(fileName);
             if (ttFile != null) {
-                exportToFile(new Vector<>(selected), ttFile, R.string.serverlist_export_confirmation);
-                Toast.makeText(this, getString(R.string.bulk_servers_exported_success, selected.size(), ttFile.getName()), Toast.LENGTH_LONG).show();
+                exportToFile(new Vector<>(selected), ttFile, selected.size() == 1 ? R.string.server_export_confirmation : R.string.serverlist_export_confirmation);
+                if (selected.size() > 1) {
+                    Toast.makeText(this, getString(R.string.bulk_servers_exported_success, selected.size(), ttFile.getName()), Toast.LENGTH_LONG).show();
+                }
             }
         }
     }

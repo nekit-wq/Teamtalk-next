@@ -4,7 +4,9 @@ import org.nekit.ttproplus.R;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -19,14 +21,20 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Vector;
+
+import org.nekit.ttproplus.data.ServerEntry;
 
 import dk.bearware.TeamTalkBase;
 import dk.bearware.UserAccount;
@@ -206,6 +214,7 @@ public class UserAccountsActivity extends AppCompatActivity implements
         String[] options = {
             getString(R.string.action_account_properties),
             getString(R.string.action_edit),
+            getString(R.string.action_export_tt),
             getString(R.string.action_delete),
         };
         new AlertDialog.Builder(this)
@@ -228,7 +237,62 @@ public class UserAccountsActivity extends AppCompatActivity implements
             intent.putExtra(UserAccountEditActivity.EXTRA_OPERATOR_CHANNELS, account.autoOperatorChannels);
             startActivity(intent);
         } else if (which == 2) {
+            exportAccountTT(account);
+        } else if (which == 3) {
             confirmDelete(account);
+        }
+    }
+
+    private void exportAccountTT(UserAccount account) {
+        if (account == null) return;
+        TeamTalkService service = mConnection != null ? mConnection.getService() : null;
+        ServerEntry currentServer = service != null ? service.getServerEntry() : null;
+
+        ServerEntry exportEntry = new ServerEntry();
+        if (currentServer != null) {
+            exportEntry.servername = currentServer.servername;
+            exportEntry.ipaddr = currentServer.ipaddr;
+            exportEntry.tcpport = currentServer.tcpport;
+            exportEntry.udpport = currentServer.udpport;
+            exportEntry.encrypted = currentServer.encrypted;
+        } else {
+            dk.bearware.ServerProperties srvProps = new dk.bearware.ServerProperties();
+            if (getClient() != null && getClient().getServerProperties(srvProps)) {
+                exportEntry.servername = srvProps.szServerName;
+            } else {
+                exportEntry.servername = "TeamTalk Server";
+            }
+        }
+        exportEntry.username = account.szUsername != null ? account.szUsername : "";
+        exportEntry.password = account.szPassword != null ? account.szPassword : "";
+        exportEntry.nickname = account.szUsername != null ? account.szUsername : "";
+        exportEntry.channel = account.szInitChannel != null ? account.szInitChannel : "";
+
+        File dirPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        if (!dirPath.exists()) {
+            dirPath.mkdirs();
+        }
+        String safeName = (exportEntry.username.isEmpty() ? "account" : exportEntry.username).replaceAll("[^a-zA-Z0-9._-]", "_");
+        File exportFile = new File(dirPath, safeName + ".tt");
+
+        Vector<ServerEntry> list = new Vector<>();
+        list.add(exportEntry);
+        boolean success = Utils.saveServers(list, exportFile.getAbsolutePath());
+        if (success) {
+            Toast.makeText(this, getString(R.string.server_export_confirmation, exportFile.getAbsolutePath()), Toast.LENGTH_LONG).show();
+            try {
+                Uri fileUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", exportFile);
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("application/octet-stream");
+                shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, exportFile.getName());
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.action_export_tt)));
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to share .tt file", e);
+            }
+        } else {
+            Toast.makeText(this, R.string.err_file_write, Toast.LENGTH_SHORT).show();
         }
     }
 
