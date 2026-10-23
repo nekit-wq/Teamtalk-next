@@ -136,6 +136,7 @@ public class ServerListActivity extends AppCompatActivity
         if (mActionMode != null && adapter != null) {
             int count = adapter.getSelectedCount();
             mActionMode.setTitle(getString(R.string.bulk_users_selected_count, count));
+            mActionMode.invalidate();
         }
     }
 
@@ -150,9 +151,19 @@ public class ServerListActivity extends AppCompatActivity
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             if (adapter != null && menu != null) {
+                int count = adapter.getSelectedCount();
                 MenuItem editItem = menu.findItem(R.id.action_cab_edit);
                 if (editItem != null) {
-                    editItem.setVisible(adapter.getSelectedCount() == 1);
+                    editItem.setVisible(count == 1);
+                }
+                MenuItem exportItem = menu.findItem(R.id.action_cab_export);
+                if (exportItem != null) {
+                    int resId = (count == 1) ? R.string.action_exportsrv : R.string.action_export_serverlist;
+                    exportItem.setTitle(resId);
+                    exportItem.setContentDescription(getString(resId));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        exportItem.setTooltipText(getString(resId));
+                    }
                 }
             }
             return true;
