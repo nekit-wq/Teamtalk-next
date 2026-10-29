@@ -809,7 +809,16 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 }
 
                 this.widget = builder.build();
-                ServiceCompat.startForeground(this, 1, this.widget, getMyForegroundServiceType());
+                try {
+                    ServiceCompat.startForeground(this, 1, this.widget, getMyForegroundServiceType());
+                } catch (SecurityException e) {
+                    Log.e("bearware", "SecurityException starting foreground service with type " + getMyForegroundServiceType() + ", falling back to basic types", e);
+                    try {
+                        ServiceCompat.startForeground(this, 1, this.widget, 128 | 2);
+                    } catch (Throwable t) {
+                        Log.e("bearware", "Fatal fallback starting foreground service", t);
+                    }
+                }
                 return;
             }
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, this.widget)
@@ -820,7 +829,16 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 builder.addAction(R.drawable.teamtalk_green, getString(R.string.action_stream_control), streamPi);
             }
             this.widget = builder.build();
-            ServiceCompat.startForeground(this, 1, this.widget, getMyForegroundServiceType());
+            try {
+                ServiceCompat.startForeground(this, 1, this.widget, getMyForegroundServiceType());
+            } catch (SecurityException e) {
+                Log.e("bearware", "SecurityException updating foreground service with type " + getMyForegroundServiceType() + ", falling back to basic types", e);
+                try {
+                    ServiceCompat.startForeground(this, 1, this.widget, 128 | 2);
+                } catch (Throwable t) {
+                    Log.e("bearware", "Fatal fallback updating foreground service", t);
+                }
+            }
             return;
         }
         if (this.notificationManager != null) {
@@ -835,7 +853,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public int getMyForegroundServiceType() {
         int type = 128 | 2; // FOREGROUND_SERVICE_TYPE_MICROPHONE | FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-        if (this.isScreenSharingActive || this.mediaProjection != null) {
+        if (isScreenSharingActive() && this.screenShareManager != null && this.screenShareManager.isSharing()) {
             type |= 32; // FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
         }
         return type;

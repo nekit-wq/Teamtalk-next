@@ -1,0 +1,10 @@
+{
+  "id": "org.nekit.plugin.subflipper",
+  "name": "Sub Flipper",
+  "version": "1.0.0",
+  "versionCode": 1,
+  "author": "Antigravity & Ivan",
+  "description": "Автоматическое циклическое переключение подписок (флиппер/флудер) на выбранном пользователе с регулируемым интервалом.",
+  "mainClass": "org.nekit.plugin.subflipper.SubFlipperPlugin",
+  "minClientVersion": "5.28.6"
+}

@@ -31,6 +31,14 @@ public class ScreenShareManager {
     private int height = 720;
     private boolean isSharing = false;
     private volatile boolean stoppingByApp = false;
+    private byte[] cachedFrameBuffer = null;
+
+    private synchronized byte[] getOrCreateFrameBuffer(int size) {
+        if (this.cachedFrameBuffer == null || this.cachedFrameBuffer.length != size) {
+            this.cachedFrameBuffer = new byte[size];
+        }
+        return this.cachedFrameBuffer;
+    }
 
     public interface ClientProvider {
         List<TeamTalkBase> getClients();
@@ -134,7 +142,8 @@ public class ScreenShareManager {
         Image.Plane[] planes = image.getPlanes();
         ByteBuffer buffer = planes[0].getBuffer();
         int rowStride = planes[0].getRowStride();
-        byte[] frameBuffer = new byte[this.width * this.height * 4];
+        int frameSize = this.width * this.height * 4;
+        byte[] frameBuffer = getOrCreateFrameBuffer(frameSize);
         int offset = 0;
 
         for (int row = 0; row < this.height; row++) {
@@ -201,6 +210,7 @@ public class ScreenShareManager {
                 this.handlerThread.quitSafely();
                 this.handlerThread = null;
             }
+            this.cachedFrameBuffer = null;
         }
     }
 }

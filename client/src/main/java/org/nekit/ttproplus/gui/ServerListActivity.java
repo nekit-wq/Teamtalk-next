@@ -246,6 +246,9 @@ public class ServerListActivity extends AppCompatActivity
         initializeViews();
         setupRecyclerView();
         setupSearch();
+        synchronized (servers) {
+            loadLocalServers();
+        }
         setTitle(R.string.title_activity_server_list);
         executorService = Executors.newFixedThreadPool(2);
 
@@ -316,6 +319,14 @@ public class ServerListActivity extends AppCompatActivity
         }
 
         handleIncomingIntent(getIntent());
+
+        synchronized (servers) {
+            servers.clear();
+            loadLocalServers();
+        }
+        if (adapter != null) {
+            adapter.updateServers();
+        }
 
         if (mConnection.isBound()) {
             if (getService() != null && getService().getEventHandler() != null) {
@@ -1324,17 +1335,42 @@ public class ServerListActivity extends AppCompatActivity
         builder.setPositiveButton(R.string.tt_file_action_import, (dialog, which) -> {
             for (ServerEntry entry : entries) {
                 entry.servertype = ServerEntry.ServerType.LOCAL;
+                boolean exists = false;
+                for (ServerEntry s : servers) {
+                    if (s.ipaddr != null && s.ipaddr.equalsIgnoreCase(entry.ipaddr) && s.tcpport == entry.tcpport) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    servers.add(entry);
+                }
             }
-            servers.addAll(entries);
             Collections.sort(servers, this);
-            adapter.updateServers();
             saveServers();
+            adapter.updateServers();
             Toast.makeText(this, R.string.servers_imported_successfully, Toast.LENGTH_SHORT).show();
+            if (entries.size() == 1) {
+                onServerClick(entries.get(0));
+            }
         });
 
         builder.setNegativeButton(R.string.tt_file_action_connect_only, (dialog, which) -> {
             ServerEntry firstEntry = entries.get(0);
             firstEntry.servertype = ServerEntry.ServerType.LOCAL;
+            boolean exists = false;
+            for (ServerEntry s : servers) {
+                if (s.ipaddr != null && s.ipaddr.equalsIgnoreCase(firstEntry.ipaddr) && s.tcpport == firstEntry.tcpport) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                servers.add(firstEntry);
+                Collections.sort(servers, this);
+                saveServers();
+                adapter.updateServers();
+            }
             onServerClick(firstEntry);
         });
 

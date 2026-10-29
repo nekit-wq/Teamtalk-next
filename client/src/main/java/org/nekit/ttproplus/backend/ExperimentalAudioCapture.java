@@ -626,7 +626,7 @@ public final class ExperimentalAudioCapture {
                     }
                     micReadAttempts++;
                     Log.w(TAG, "Experimental capture mic read error: " + read + ", attempt " + micReadAttempts);
-                    if (micReadAttempts >= 5) {
+                    if (micReadAttempts >= 25) {
                         Log.e(TAG, "Persistent read error. Scheduling restart.");
                         scheduleRestart();
                         if (transmitting) {
@@ -646,8 +646,9 @@ public final class ExperimentalAudioCapture {
 
             long now = SystemClock.uptimeMillis();
             int screenMode = getEffectiveScreenShareAudioMode(session);
+            boolean isStreamingOrSharing = (this.service != null && (this.service.isScreenSharingActive() || this.service.isStreamingMedia()));
 
-            if (session.voxEnabled && screenMode != ScreenShareAudioHelper.MODE_SCREEN_ONLY) {
+            if (session.voxEnabled && screenMode != ScreenShareAudioHelper.MODE_SCREEN_ONLY && !isStreamingOrSharing) {
                 int energy = computeEnergyLevel(micBuffer, frameBytes);
                 if (energy >= session.voxLevel) {
                     if (!transmitting) {
@@ -932,8 +933,7 @@ public final class ExperimentalAudioCapture {
                                         session.silencedByPolicy = false;
                                         if (wasSilenced) {
                                             wasSilenced = false;
-                                            Log.i(TAG, "AudioRecord unsilenced. Scheduling restart.");
-                                            scheduleRestart();
+                                            Log.i(TAG, "AudioRecord unsilenced.");
                                         }
                                     }
                                 }

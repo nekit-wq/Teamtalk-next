@@ -14,13 +14,23 @@ mkdir -p "$OUTPUT_DIR"
 
 # Classpath dependencies
 CLIENT_CLASSES="$CLIENT_DIR/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes"
+if [ ! -d "$CLIENT_CLASSES" ] && [ -f "/opt/android-sdk/ttnext-plugin-api.jar" ]; then
+    CLIENT_CLASSES="/opt/android-sdk/ttnext-plugin-api.jar"
+fi
+
 TT_JAR="$CLIENT_DIR/libs/TeamTalk5.jar"
 ANDROID_JAR="/root/Android/Sdk/platforms/android-36/android.jar"
 if [ ! -f "$ANDROID_JAR" ]; then
-    ANDROID_JAR="$(find /root/Android/Sdk/platforms -name "android.jar" | sort -V | tail -n 1)"
+    ANDROID_JAR="$(find /root/Android/Sdk/platforms -name "android.jar" 2>/dev/null | sort -V | tail -n 1)"
+fi
+if [ ! -f "$ANDROID_JAR" ] && [ -f "/opt/android-sdk/android.jar" ]; then
+    ANDROID_JAR="/opt/android-sdk/android.jar"
 fi
 
-D8="$(find /root/Android/Sdk/build-tools -name "d8" | sort -V | tail -n 1)"
+D8="$(find /root/Android/Sdk/build-tools -name "d8" 2>/dev/null | sort -V | tail -n 1)"
+if [ -z "$D8" ]; then
+    D8="$(which d8 2>/dev/null || true)"
+fi
 
 if [ -z "$D8" ]; then
     echo "Error: d8 tool not found in /root/Android/Sdk/build-tools"
@@ -62,6 +72,7 @@ build_plugin() {
 build_plugin "$SCRIPT_DIR/sample_echo_bot" "EchoBotPlugin.jar"
 build_plugin "$SCRIPT_DIR/sample_utility_commands" "UtilityCommandsPlugin.jar"
 build_plugin "$SCRIPT_DIR/sample_channel_logger" "ChannelLoggerPlugin.jar"
+build_plugin "$SCRIPT_DIR/sample_sub_flipper" "SubFlipperPlugin.jar"
 
 echo "=== All sample plugins built successfully! ==="
 ls -lh "$OUTPUT_DIR"

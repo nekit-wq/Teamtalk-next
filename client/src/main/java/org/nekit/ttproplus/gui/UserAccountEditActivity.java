@@ -116,7 +116,7 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             }
         } else {
             mAccount.uUserType = UserType.USERTYPE_DEFAULT;
-            mAccount.uUserRights = UserRight.USERRIGHT_NONE;
+            mAccount.uUserRights = USERRIGHT_DEFAULT;
             mAccount.autoOperatorChannels = new int[Constants.TT_CHANNELS_OPERATOR_MAX];
         }
 
@@ -199,6 +199,10 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             if (f instanceof AccountEditFragment) {
                 ((AccountEditFragment) f).updateAccount(mAccount);
             }
+        }
+
+        if (!isEdit && !isView && (mAccount.uUserType == UserType.USERTYPE_DEFAULT) && mAccount.uUserRights == UserRight.USERRIGHT_NONE) {
+            mAccount.uUserRights = USERRIGHT_DEFAULT;
         }
 
         int cmdId = service.getTTInstance().doNewUserAccount(mAccount);

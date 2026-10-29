@@ -1,4 +1,5 @@
 # Android client build outputs & cache
+.gradle/
 client/.gradle/
 client/.idea/
 client/build/
