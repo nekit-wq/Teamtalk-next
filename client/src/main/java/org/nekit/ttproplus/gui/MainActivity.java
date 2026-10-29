@@ -1247,7 +1247,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return;
         }
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
-            if (resultCode == -1 && data != null && getService() != null) {
+            if (resultCode == RESULT_OK && data != null && getService() != null) {
                 if (Build.VERSION.SDK_INT >= 21) {
                     try {
                         getService().setScreenSharingActive(true);
@@ -1259,17 +1259,24 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                             invalidateOptionsMenu();
                             return;
                         } else {
-                            getService().setScreenSharingActive(false);
+                            getService().stopScreenShare();
+                            Toast.makeText(this, R.string.text_screenshare_failed, Toast.LENGTH_SHORT).show();
                         }
                     } catch (Throwable t) {
                         Log.e(TAG, "Failed to start screen share", t);
                         if (getService() != null) {
-                            getService().setScreenSharingActive(false);
+                            getService().stopScreenShare();
                         }
+                        Toast.makeText(this, R.string.text_screenshare_failed, Toast.LENGTH_SHORT).show();
                     }
                 }
+            } else if (resultCode != RESULT_CANCELED) {
+                if (getService() != null) {
+                    getService().stopScreenShare();
+                }
+                Toast.makeText(this, R.string.text_screenshare_failed, Toast.LENGTH_SHORT).show();
             }
-            Toast.makeText(this, R.string.pref_summary_detected_microphones_unsupported, Toast.LENGTH_SHORT).show();
+            invalidateOptionsMenu();
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);

@@ -77,38 +77,30 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          git archive --format=zip --output=TeamTalkNext-5.28.8-source.zip HEAD
+          git archive --format=zip --output=TeamTalkNext-5.28.9-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.28.8' }}
-          name: "TeamTalk Next v5.28.8"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.28.9' }}
+          name: "TeamTalk Next v5.28.9"
           body: |
-            ### TeamTalk Next v5.28.8 — Исправление прав учетных записей, фикс FGS MediaProjection на Android 14-16, стабильный стриминг и мгновенный импорт .tt серверов
+            ### TeamTalk Next v5.28.9 — Фикс запуска трансляции экрана на Android 14-16
 
-            #### 👤 Права новых учетных записей:
-            - При создании новой учетной записи на сервере автоматически назначаются стандартные пользовательские права (передача голоса, медиа-файлов, видео, сообщений, загрузка файлов).
-
-            #### 🛡 Исправление краша FGS MediaProjection (Android 14/15/16):
-            - Устранен SecurityException при старте Foreground Service с типом mediaProjection. Флаг mediaProjection теперь активируется только при явном запуске демонстрации экрана, с автоматическим fallback на microphone|mediaPlayback.
-
-            #### 🎙 Стабильность звука при стриминге:
-            - Устранено постоянное мигание и выключение микрофона во время трансляций (кэширование видеобуфера экрана без GC-фризов, защита от сброса передачи при стриминге, увеличение порога ошибок AudioRecord).
-
-            #### 📁 Мгновенный импорт и отображение .tt серверов:
-            - Импортированные через .tt серверы мгновенно сохраняются и отображаются в списке серверов сразу после выхода из сервера без необходимости перезапуска приложения.
-            - Добавлена опция автоматического сохранения и подключения при открытии .tt файла.
+            #### 📺 Запуск трансляции экрана:
+            - Исправлен SecurityException и ошибочное уведомление об Android 9 при попытке демонстрации экрана на Android 14, 15 и 16.
+            - FGS корректно переключается в mediaProjection строго после подтверждения системного диалога пользователем перед вызовом getMediaProjection().
+            - Корректный сброс состояния трансляции при отмене, остановке или потере соединения.
 
             #### 📦 Версии:
-            - **Версия приложения:** Обновлена до `5.28.8` (номер сборки `441`).
+            - **Версия приложения:** Обновлена до `5.28.9` (номер сборки `442`).
           draft: false
           prerelease: false
           files: |
             client/build/outputs/apk/release/*.apk
             client/build/outputs/apk/debug/*.apk
             tests/output/*.jar
-            TeamTalkNext-5.28.8-source.zip
+            TeamTalkNext-5.28.9-source.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

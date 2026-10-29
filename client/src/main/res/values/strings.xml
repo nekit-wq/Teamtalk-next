@@ -1397,6 +1397,7 @@ By: %3$s"</string>
     <string name="text_screenshare_stop">Stop Screen Share</string>
     <string name="text_screenshare_started">Screen sharing started</string>
     <string name="text_screenshare_stopped">Screen sharing stopped</string>
+    <string name="text_screenshare_failed">Failed to start screen share</string>
     <string name="pref_title_screenshare_audio_mode">Screen share audio source</string>
     <string name="pref_summary_screenshare_audio_mode">Choose what audio is transmitted during screen share</string>
     <string name="screenshare_audio_mode_both">Microphone and screen audio</string>

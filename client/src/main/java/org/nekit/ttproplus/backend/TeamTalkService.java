@@ -722,6 +722,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (this.recordingSilenceHandler != null) {
             this.recordingSilenceHandler.removeCallbacksAndMessages(null);
         }
+        stopScreenShare();
         if (this.screenShareManager != null) {
             this.screenShareManager.stopShare();
             this.screenShareManager = null;
@@ -813,6 +814,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                     ServiceCompat.startForeground(this, 1, this.widget, getMyForegroundServiceType());
                 } catch (SecurityException e) {
                     Log.e("bearware", "SecurityException starting foreground service with type " + getMyForegroundServiceType() + ", falling back to basic types", e);
+                    this.isScreenSharingActive = false;
                     try {
                         ServiceCompat.startForeground(this, 1, this.widget, 128 | 2);
                     } catch (Throwable t) {
@@ -833,6 +835,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 ServiceCompat.startForeground(this, 1, this.widget, getMyForegroundServiceType());
             } catch (SecurityException e) {
                 Log.e("bearware", "SecurityException updating foreground service with type " + getMyForegroundServiceType() + ", falling back to basic types", e);
+                this.isScreenSharingActive = false;
                 try {
                     ServiceCompat.startForeground(this, 1, this.widget, 128 | 2);
                 } catch (Throwable t) {
@@ -853,7 +856,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public int getMyForegroundServiceType() {
         int type = 128 | 2; // FOREGROUND_SERVICE_TYPE_MICROPHONE | FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-        if (isScreenSharingActive() && this.screenShareManager != null && this.screenShareManager.isSharing()) {
+        if (this.isScreenSharingActive) {
             type |= 32; // FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
         }
         return type;
@@ -867,6 +870,14 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         try {
             int type = getMyForegroundServiceType();
             ServiceCompat.startForeground(this, 1, this.widget, type);
+        } catch (SecurityException e) {
+            Log.e("bearware", "SecurityException updating foreground service with type " + getMyForegroundServiceType() + ", falling back to basic types", e);
+            if (this.isScreenSharingActive) {
+                this.isScreenSharingActive = false;
+                try {
+                    ServiceCompat.startForeground(this, 1, this.widget, 128 | 2);
+                } catch (Throwable ignored) {}
+            }
         } catch (Throwable t) {
             Log.w("bearware", "Unable to refresh foreground service type", t);
         }
@@ -2000,6 +2011,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (this.ttclient == null || this.ttserver == null) {
             return;
         }
+        this.isScreenSharingActive = false;
         String nickname = this.ttserver.nickname;
         if (TextUtils.isEmpty(nickname)) {
             nickname = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString(Preferences.PREF_GENERAL_NICKNAME, "");
@@ -2239,6 +2251,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     @Override
     public void onConnectionLost() {
+        stopScreenShare();
         if (this.manualDisconnect || this.ttserver == null) {
             return;
         }

@@ -1393,6 +1393,7 @@
     <string name="text_screenshare_stop">Остановить трансляцию экрана</string>
     <string name="text_screenshare_started">Трансляция экрана запущена</string>
     <string name="text_screenshare_stopped">Трансляция экрана остановлена</string>
+    <string name="text_screenshare_failed">Не удалось запустить трансляцию экрана</string>
     <string name="pref_title_screenshare_audio_mode">Звук при трансляции экрана</string>
     <string name="pref_summary_screenshare_audio_mode">Выберите источник аудио для трансляции</string>
     <string name="screenshare_audio_mode_both">Микрофон и системный звук</string>
