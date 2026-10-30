@@ -1480,4 +1480,10 @@ By: %3$s"</string>
     <string name="plugin_err_main_class_invalid">Class \"%s\" does not implement Plugin interface</string>
     <string name="plugin_err_cannot_read_file">Could not read selected file</string>
     <string name="plugin_picker_error">File picker error: %s</string>
+    <string name="btn_select_channel">Select</string>
+    <string name="hint_init_channel">e.g. / or /Channel</string>
+    <string name="title_select_init_channel">Select Initial Channel</string>
+    <string name="channel_no_init">No initial channel (default)</string>
+    <string name="manual_input_channel">Enter channel manually…</string>
+    <string name="manual_input_channel_id">Enter Channel ID manually…</string>
 </resources>

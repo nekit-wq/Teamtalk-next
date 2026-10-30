@@ -16,6 +16,30 @@
         <TextView android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_note" />
         <EditText android:id="@+id/edit_account_note" android:layout_width="match_parent" android:layout_height="wrap_content" android:minLines="3" android:inputType="textMultiLine" />
         <TextView android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/label_init_channel" />
-        <EditText android:id="@+id/edit_account_init_chan" android:focusable="false" android:clickable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+            <EditText
+                android:id="@+id/edit_account_init_chan"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_init_channel"
+                android:inputType="text" />
+            <Button
+                android:id="@+id/btn_select_init_chan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_select_channel" />
+            <ImageButton
+                android:id="@+id/btn_clear_init_chan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/action_clear"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                style="?android:attr/borderlessButtonStyle" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

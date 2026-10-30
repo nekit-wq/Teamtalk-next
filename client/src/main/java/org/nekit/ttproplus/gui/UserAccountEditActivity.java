@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -28,8 +29,11 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import dk.bearware.Channel;
 import dk.bearware.Constants;
 import dk.bearware.TeamTalkBase;
 import dk.bearware.UserAccount;
@@ -110,6 +114,9 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             mAccount.uUserRights = getIntent().getIntExtra(EXTRA_USERRIGHTS, UserRight.USERRIGHT_NONE);
             mAccount.szNote = getIntent().getStringExtra(EXTRA_NOTE);
             mAccount.szInitChannel = getIntent().getStringExtra(EXTRA_INIT_CHANNEL);
+            if (mAccount.szInitChannel == null) {
+                mAccount.szInitChannel = "";
+            }
             mAccount.autoOperatorChannels = getIntent().getIntArrayExtra(EXTRA_OPERATOR_CHANNELS);
             if (mAccount.autoOperatorChannels == null) {
                 mAccount.autoOperatorChannels = new int[0];
@@ -117,6 +124,7 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
         } else {
             mAccount.uUserType = UserType.USERTYPE_DEFAULT;
             mAccount.uUserRights = USERRIGHT_DEFAULT;
+            mAccount.szInitChannel = "";
             mAccount.autoOperatorChannels = new int[Constants.TT_CHANNELS_OPERATOR_MAX];
         }
 
@@ -269,8 +277,22 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
         }
     }
 
+    public static class ChannelPickerItem {
+        public int id;
+        public String path;
+        public String displayName;
+
+        public ChannelPickerItem(int id, String path, String displayName) {
+            this.id = id;
+            this.path = path;
+            this.displayName = displayName;
+        }
+    }
+
     public static class BasicInfoFragment extends Fragment implements AccountEditFragment {
         EditText editUser, editPass, editNote, editInitChan;
+        Button btnSelectInitChan;
+        ImageButton btnClearInitChan;
         RadioGroup typeGroup;
         TextView noteDisabled;
 
@@ -281,6 +303,8 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             editPass = v.findViewById(R.id.edit_account_password);
             editNote = v.findViewById(R.id.edit_account_note);
             editInitChan = v.findViewById(R.id.edit_account_init_chan);
+            btnSelectInitChan = v.findViewById(R.id.btn_select_init_chan);
+            btnClearInitChan = v.findViewById(R.id.btn_clear_init_chan);
             typeGroup = v.findViewById(R.id.edit_account_type_group);
             noteDisabled = v.findViewById(R.id.note_disabled_user);
 
@@ -290,7 +314,7 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                 if (activity.isEdit || activity.isView) editUser.setEnabled(false);
                 editPass.setText(activity.mAccount.szPassword);
                 editNote.setText(activity.mAccount.szNote);
-                editInitChan.setText(activity.mAccount.szInitChannel);
+                editInitChan.setText(activity.mAccount.szInitChannel != null ? activity.mAccount.szInitChannel : "");
 
                 if ((activity.mAccount.uUserType & UserType.USERTYPE_ADMIN) != 0)
                     ((RadioButton) v.findViewById(R.id.radio_type_admin)).setChecked(true);
@@ -304,9 +328,19 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                     editPass.setEnabled(false);
                     editNote.setEnabled(false);
                     editInitChan.setEnabled(false);
+                    if (btnSelectInitChan != null) btnSelectInitChan.setEnabled(false);
+                    if (btnClearInitChan != null) btnClearInitChan.setEnabled(false);
                     for (int i = 0; i < typeGroup.getChildCount(); i++) {
                         typeGroup.getChildAt(i).setEnabled(false);
                     }
+                } else {
+                    if (btnSelectInitChan != null) {
+                        btnSelectInitChan.setOnClickListener(view -> showInitChannelPicker(activity));
+                    }
+                    if (btnClearInitChan != null) {
+                        btnClearInitChan.setOnClickListener(view -> editInitChan.setText(""));
+                    }
+                    editInitChan.setOnClickListener(view -> showInitChannelPicker(activity));
                 }
 
                 typeGroup.setOnCheckedChangeListener((group, checkedId) -> {
@@ -330,13 +364,78 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             return v;
         }
 
+        private void showInitChannelPicker(UserAccountEditActivity activity) {
+            TeamTalkService service = activity.ttConnection != null ? activity.ttConnection.getService() : null;
+            TeamTalkBase client = service != null ? service.getTTInstance() : null;
+            Map<Integer, Channel> channelsMap = service != null ? service.getChannels() : null;
+
+            final List<String> paths = new ArrayList<>();
+            final List<String> displayNames = new ArrayList<>();
+
+            paths.add("");
+            displayNames.add(activity.getString(R.string.channel_no_init));
+
+            if (channelsMap != null && !channelsMap.isEmpty()) {
+                List<Channel> sortedChannels = new ArrayList<>(channelsMap.values());
+                List<ChannelPickerItem> items = new ArrayList<>();
+                for (Channel ch : sortedChannels) {
+                    String p = client != null ? client.getChannelPath(ch.nChannelID) : null;
+                    if (p == null || p.isEmpty()) {
+                        p = "/" + ch.szName;
+                    }
+                    items.add(new ChannelPickerItem(ch.nChannelID, p, p));
+                }
+                Collections.sort(items, (a, b) -> a.path.compareToIgnoreCase(b.path));
+                for (ChannelPickerItem item : items) {
+                    paths.add(item.path);
+                    displayNames.add(item.path);
+                }
+            }
+
+            paths.add("__MANUAL__");
+            displayNames.add(activity.getString(R.string.manual_input_channel));
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setTitle(R.string.title_select_init_channel);
+            builder.setItems(displayNames.toArray(new String[0]), (dialog, which) -> {
+                String selectedPath = paths.get(which);
+                if ("__MANUAL__".equals(selectedPath)) {
+                    showManualPathDialog(activity);
+                } else {
+                    editInitChan.setText(selectedPath);
+                }
+            });
+            builder.setNegativeButton(android.R.string.cancel, null);
+            builder.show();
+        }
+
+        private void showManualPathDialog(UserAccountEditActivity activity) {
+            final EditText input = new EditText(activity);
+            input.setHint(R.string.hint_init_channel);
+            if (editInitChan != null) {
+                input.setText(editInitChan.getText());
+                input.setSelection(input.getText().length());
+            }
+
+            new AlertDialog.Builder(activity)
+                .setTitle(R.string.title_select_init_channel)
+                .setView(input)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    if (editInitChan != null) {
+                        editInitChan.setText(input.getText().toString().trim());
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+        }
+
         @Override
         public void updateAccount(UserAccount acc) {
             if (editUser == null) return;
             acc.szUsername = editUser.getText().toString().trim();
             acc.szPassword = editPass.getText().toString();
             acc.szNote = editNote.getText().toString();
-            acc.szInitChannel = editInitChan.getText().toString();
+            acc.szInitChannel = editInitChan != null ? editInitChan.getText().toString().trim() : "";
             int id = typeGroup.getCheckedRadioButtonId();
             if (id == R.id.radio_type_admin) acc.uUserType = UserType.USERTYPE_ADMIN;
             else if (id == R.id.radio_type_none) acc.uUserType = UserType.USERTYPE_NONE;
@@ -473,24 +572,32 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                     }
                 }
                 updateList(activity);
-                btnAdd.setOnClickListener(view -> {
-                    if (activity.ttConnection.getService() != null) {
-                        showChannelPicker(activity);
-                    }
-                });
-                listOps.setOnItemLongClickListener((adapterView, view, i, l) -> {
-                    channelIds.remove(i);
-                    updateList(activity);
-                    return true;
-                });
+                if (activity.isView) {
+                    btnAdd.setEnabled(false);
+                } else {
+                    btnAdd.setOnClickListener(view -> {
+                        if (activity.ttConnection != null && activity.ttConnection.getService() != null) {
+                            showChannelPicker(activity);
+                        }
+                    });
+                    listOps.setOnItemLongClickListener((adapterView, view, i, l) -> {
+                        if (i >= 0 && i < channelIds.size()) {
+                            channelIds.remove(i);
+                            updateList(activity);
+                        }
+                        return true;
+                    });
+                }
             }
             return v;
         }
 
         private void updateList(UserAccountEditActivity activity) {
             List<String> names = new ArrayList<>();
+            TeamTalkService srv = activity.ttConnection != null ? activity.ttConnection.getService() : null;
+            TeamTalkBase client = srv != null ? srv.getTTInstance() : null;
             for (int id : channelIds) {
-                String path = activity.ttConnection.getService().getTTInstance().getChannelPath(id);
+                String path = client != null ? client.getChannelPath(id) : null;
                 names.add(path != null && !path.isEmpty() ? path : activity.getString(R.string.label_channel_id, id));
             }
             ArrayAdapter<String> adapter = new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, names);
@@ -498,21 +605,67 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
         }
 
         private void showChannelPicker(UserAccountEditActivity activity) {
+            TeamTalkService service = activity.ttConnection != null ? activity.ttConnection.getService() : null;
+            TeamTalkBase client = service != null ? service.getTTInstance() : null;
+            Map<Integer, Channel> channelsMap = service != null ? service.getChannels() : null;
+
+            if (channelsMap != null && !channelsMap.isEmpty()) {
+                List<Channel> sortedChannels = new ArrayList<>(channelsMap.values());
+                List<ChannelPickerItem> items = new ArrayList<>();
+                for (Channel ch : sortedChannels) {
+                    String p = client != null ? client.getChannelPath(ch.nChannelID) : null;
+                    if (p == null || p.isEmpty()) {
+                        p = "/" + ch.szName;
+                    }
+                    items.add(new ChannelPickerItem(ch.nChannelID, p, p));
+                }
+                Collections.sort(items, (a, b) -> a.path.compareToIgnoreCase(b.path));
+
+                final List<String> names = new ArrayList<>();
+                final List<Integer> ids = new ArrayList<>();
+                for (ChannelPickerItem item : items) {
+                    if (!channelIds.contains(item.id)) {
+                        names.add(item.path);
+                        ids.add(item.id);
+                    }
+                }
+                names.add(activity.getString(R.string.manual_input_channel_id));
+                ids.add(-1);
+
+                new AlertDialog.Builder(activity)
+                    .setTitle(R.string.title_add_operator_channel)
+                    .setItems(names.toArray(new String[0]), (dialog, which) -> {
+                        int selectedId = ids.get(which);
+                        if (selectedId == -1) {
+                            showManualIdDialog(activity);
+                        } else if (!channelIds.contains(selectedId)) {
+                            channelIds.add(selectedId);
+                            updateList(activity);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+            } else {
+                showManualIdDialog(activity);
+            }
+        }
+
+        private void showManualIdDialog(UserAccountEditActivity activity) {
+            final EditText input = new EditText(activity);
+            input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+            input.setHint("1");
             new AlertDialog.Builder(activity)
                 .setTitle(R.string.title_add_operator_channel)
                 .setMessage("Channel ID:")
-                .setView(new EditText(activity))
+                .setView(input)
                 .setPositiveButton(android.R.string.ok, (d, w) -> {
-                    EditText input = (EditText) ((android.app.AlertDialog) d).findViewById(android.R.id.custom);
-                    if (input != null) {
-                        try {
-                            int cid = Integer.parseInt(input.getText().toString());
-                            if (cid > 0 && !channelIds.contains(cid)) {
-                                channelIds.add(cid);
-                                updateList(activity);
-                            }
-                        } catch (NumberFormatException ignored) {}
-                    }
+                    try {
+                        int cid = Integer.parseInt(input.getText().toString().trim());
+                        if (cid > 0 && !channelIds.contains(cid)) {
+                            channelIds.add(cid);
+                            updateList(activity);
+                        }
+                    } catch (NumberFormatException ignored) {}
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
