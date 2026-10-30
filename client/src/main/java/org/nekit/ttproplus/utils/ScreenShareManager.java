@@ -8,6 +8,8 @@ import android.media.projection.MediaProjection;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 import dk.bearware.DesktopWindow;
 import dk.bearware.TeamTalkBase;
@@ -26,6 +28,10 @@ public class ScreenShareManager {
     private VirtualDisplay virtualDisplay;
     private MediaProjection mediaProjection;
     private OnStoppedBySystemListener stoppedBySystemListener;
+    private final PowerManager powerManager;
+    private PowerManager.WakeLock screenShareWakeLock;
+    private long lastFrameTimestampMs = 0;
+    private static final long MIN_FRAME_INTERVAL_MS = 66; // Limit to ~15 FPS to prevent CPU/bandwidth saturation
 
     private int width = 1280;
     private int height = 720;
@@ -61,6 +67,7 @@ public class ScreenShareManager {
         this.context = context;
         this.clientProvider = clientProvider;
         this.mainHandler = new Handler(Looper.getMainLooper());
+        this.powerManager = context != null ? (PowerManager) context.getSystemService(Context.POWER_SERVICE) : null;
     }
 
     public void setOnStoppedBySystemListener(OnStoppedBySystemListener listener) {
@@ -78,6 +85,17 @@ public class ScreenShareManager {
         this.mediaProjection = projection;
         this.isSharing = true;
         this.stoppingByApp = false;
+        this.lastFrameTimestampMs = 0;
+
+        if (this.powerManager != null) {
+            try {
+                this.screenShareWakeLock = this.powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ttproplus:ScreenShareLock");
+                this.screenShareWakeLock.setReferenceCounted(false);
+                this.screenShareWakeLock.acquire();
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to acquire screenShareWakeLock", e);
+            }
+        }
 
         HandlerThread ht = new HandlerThread("ScreenShareThread");
         this.handlerThread = ht;
@@ -121,9 +139,21 @@ public class ScreenShareManager {
                 Image image = null;
                 try {
                     image = reader.acquireLatestImage();
-                    if (image != null) {
-                        processImage(image);
+                    if (image == null) {
+                        return;
                     }
+                    if (ScreenShareManager.this.powerManager != null && !ScreenShareManager.this.powerManager.isInteractive()) {
+                        // Screen is turned off / phone is locked.
+                        // Skip processing to avoid 100% CPU lockup and severe audio thread starvation.
+                        return;
+                    }
+                    long now = SystemClock.uptimeMillis();
+                    if (now - ScreenShareManager.this.lastFrameTimestampMs < MIN_FRAME_INTERVAL_MS) {
+                        // Drop excessive frames (e.g. on 90Hz/120Hz displays) to maintain stable audio & network streaming
+                        return;
+                    }
+                    ScreenShareManager.this.lastFrameTimestampMs = now;
+                    processImage(image);
                 } catch (Exception e) {
                     Log.e(TAG, "Error acquiring image", e);
                 } finally {
@@ -209,6 +239,12 @@ public class ScreenShareManager {
             if (this.handlerThread != null) {
                 this.handlerThread.quitSafely();
                 this.handlerThread = null;
+            }
+            if (this.screenShareWakeLock != null && this.screenShareWakeLock.isHeld()) {
+                try {
+                    this.screenShareWakeLock.release();
+                } catch (Exception ignored) {}
+                this.screenShareWakeLock = null;
             }
             this.cachedFrameBuffer = null;
         }

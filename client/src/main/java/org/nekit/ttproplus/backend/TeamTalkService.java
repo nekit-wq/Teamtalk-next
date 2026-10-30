@@ -906,7 +906,8 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 if (this.mServiceWifiLock == null) {
                     WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     if (wm != null) {
-                        this.mServiceWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "ttproplus:ServiceWifiLock");
+                        int wifiMode = Build.VERSION.SDK_INT >= 29 ? 4 /* WifiManager.WIFI_MODE_FULL_LOW_LATENCY */ : WifiManager.WIFI_MODE_FULL_HIGH_PERF;
+                        this.mServiceWifiLock = wm.createWifiLock(wifiMode, "ttproplus:ServiceWifiLock");
                         this.mServiceWifiLock.setReferenceCounted(false);
                     }
                 }
@@ -1490,6 +1491,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public void enableVoiceTransmission(boolean enable) {
         if (enable) {
+            acquireServiceLocks();
             checkAndTriggerAutoRecord();
             this.experimentalVoiceTransmissionRequested = true;
             this.txSuspended = false;
@@ -1512,6 +1514,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void enableVoiceActivation(boolean enable) {
         this.voiceActivationRequested = enable;
         if (enable) {
+            acquireServiceLocks();
             this.txSuspended = false;
             this.voxSuspended = false;
             if (!this.experimentalVoiceTransmissionRequested) {
@@ -1654,6 +1657,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
         setScreenSharingActive(true);
         setMediaProjection(mediaProjection);
+        acquireServiceLocks();
         this.screenShareManager.startShare(mediaProjection);
         if (isTx) {
             enableVoiceTransmission(true);
@@ -1721,6 +1725,10 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public void setStreamingMedia(boolean streaming) {
         this.isStreamingMedia = streaming;
+        if (streaming) {
+            acquireServiceLocks();
+        }
+        displayNotification(true);
     }
 
     public void setLocalPlaybackId(int id) {
@@ -2213,6 +2221,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     @Override
     public void onConnectSuccess() {
         this.isSeamlessReconnecting = false;
+        acquireServiceLocks();
         if (this.ttserver == null) {
             throw new AssertionError();
         }
