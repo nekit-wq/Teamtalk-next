@@ -1410,7 +1410,7 @@ public class ServerListActivity extends AppCompatActivity
 
     private void exportServer(ServerEntry entry) {
         Vector<ServerEntry> singleServer = new Vector<>(Collections.singletonList(entry));
-        String safeName = entry.servername != null ? entry.servername.replaceAll("[^a-zA-Z0-9._-]", "_") : "server";
+        String safeName = entry.servername != null ? entry.servername.replaceAll("[\\\\/:*?\"<>|\\r\\n\\t]", "_").trim() : "server";
         if (safeName.isEmpty()) safeName = "server";
         File ttFile = createExportFile(safeName + ".tt");
         if (ttFile != null) {

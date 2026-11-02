@@ -46,7 +46,8 @@ import dk.bearware.events.ClientEventListener;
 
 public class UserAccountsActivity extends AppCompatActivity implements
         TeamTalkConnectionListener,
-        ClientEventListener.OnCmdUserAccountListener {
+        ClientEventListener.OnCmdUserAccountListener,
+        ClientEventListener.OnCmdUserAccountRemoveListener {
 
     private static final String TAG = "UserAccountsActivity";
 
@@ -162,7 +163,11 @@ public class UserAccountsActivity extends AppCompatActivity implements
     @Override
     public void onServiceConnected(TeamTalkService service) {
         service.getEventHandler().registerOnCmdUserAccount(this, true);
-        getClient().doListUserAccounts(0, 100);
+        service.getEventHandler().registerOnCmdUserAccountRemove(this, true);
+        TeamTalkBase client = getClient();
+        if (client != null) {
+            client.doListUserAccounts(0, 100);
+        }
     }
 
     @Override
@@ -170,6 +175,7 @@ public class UserAccountsActivity extends AppCompatActivity implements
 
     @Override
     public void onCmdUserAccount(UserAccount useraccount) {
+        if (useraccount == null) return;
         runOnUiThread(() -> {
             boolean found = false;
             for (int i = 0; i < allAccounts.size(); i++) {
@@ -184,6 +190,24 @@ public class UserAccountsActivity extends AppCompatActivity implements
                 allAccounts.add(useraccount);
             }
             filterAccounts(searchEdit.getText().toString());
+        });
+    }
+
+    @Override
+    public void onCmdUserAccountRemove(UserAccount useraccount) {
+        if (useraccount == null || useraccount.szUsername == null) return;
+        runOnUiThread(() -> {
+            boolean removed = false;
+            for (int i = 0; i < allAccounts.size(); i++) {
+                if (useraccount.szUsername.equalsIgnoreCase(allAccounts.get(i).szUsername)) {
+                    allAccounts.remove(i);
+                    removed = true;
+                    break;
+                }
+            }
+            if (removed) {
+                filterAccounts(searchEdit.getText().toString());
+            }
         });
     }
 
@@ -245,6 +269,39 @@ public class UserAccountsActivity extends AppCompatActivity implements
 
     private void exportAccountTT(UserAccount account) {
         if (account == null) return;
+
+        String defaultName = (account.szUsername != null && !account.szUsername.trim().isEmpty())
+                ? account.szUsername.trim().replaceAll("[\\\\/:*?\"<>|\\r\\n\\t]", "_").trim()
+                : "account";
+        if (defaultName.isEmpty()) {
+            defaultName = "account";
+        }
+
+        final EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setText(defaultName);
+        input.setSelection(input.getText().length());
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.action_export_tt)
+                .setMessage(R.string.title_export_tt_filename)
+                .setView(input)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    String chosenName = input.getText().toString().trim();
+                    chosenName = chosenName.replaceAll("[\\\\/:*?\"<>|\\r\\n\\t]", "_").trim();
+                    if (chosenName.isEmpty()) {
+                        chosenName = "account";
+                    }
+                    if (chosenName.toLowerCase().endsWith(".tt")) {
+                        chosenName = chosenName.substring(0, chosenName.length() - 3);
+                    }
+                    performExportAccountTT(account, chosenName + ".tt");
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void performExportAccountTT(UserAccount account, String fileName) {
         TeamTalkService service = mConnection != null ? mConnection.getService() : null;
         ServerEntry currentServer = service != null ? service.getServerEntry() : null;
 
@@ -272,8 +329,7 @@ public class UserAccountsActivity extends AppCompatActivity implements
         if (!dirPath.exists()) {
             dirPath.mkdirs();
         }
-        String safeName = (exportEntry.username.isEmpty() ? "account" : exportEntry.username).replaceAll("[^a-zA-Z0-9._-]", "_");
-        File exportFile = new File(dirPath, safeName + ".tt");
+        File exportFile = new File(dirPath, fileName);
 
         Vector<ServerEntry> list = new Vector<>();
         list.add(exportEntry);
@@ -301,7 +357,10 @@ public class UserAccountsActivity extends AppCompatActivity implements
                 .setTitle(R.string.dialog_confirm_delete)
                 .setMessage(getString(R.string.msg_confirm_delete_account, account.szUsername))
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                    getClient().doDeleteUserAccount(account.szUsername);
+                    TeamTalkBase client = getClient();
+                    if (client != null && account.szUsername != null) {
+                        client.doDeleteUserAccount(account.szUsername);
+                    }
                     allAccounts.remove(account);
                     filterAccounts(searchEdit.getText().toString());
                 })

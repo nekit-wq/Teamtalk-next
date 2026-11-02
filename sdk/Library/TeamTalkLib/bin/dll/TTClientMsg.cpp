@@ -425,6 +425,7 @@ void TTMsgQueue::OnRemoveUserAccount(const ACE_TString& username)
     IntTTMessage* msg = MakeMsgBlock(mb, CLIENTEVENT_CMD_USERACCOUNT_REMOVE,
                                      0,
                                      __USERACCOUNT);
+    memset(msg->useraccount, 0, sizeof(UserAccount));
     ACE_OS::strsncpy(msg->useraccount->szUsername, username.c_str(), TT_STRLEN);
     EnqueueMsg(mb);
 }

@@ -124,7 +124,7 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
         } else {
             mAccount.uUserType = UserType.USERTYPE_DEFAULT;
             mAccount.uUserRights = USERRIGHT_DEFAULT;
-            mAccount.szInitChannel = "";
+            mAccount.szInitChannel = "/";
             mAccount.autoOperatorChannels = new int[Constants.TT_CHANNELS_OPERATOR_MAX];
         }
 
@@ -211,6 +211,10 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
 
         if (!isEdit && !isView && (mAccount.uUserType == UserType.USERTYPE_DEFAULT) && mAccount.uUserRights == UserRight.USERRIGHT_NONE) {
             mAccount.uUserRights = USERRIGHT_DEFAULT;
+        }
+
+        if (mAccount.szInitChannel == null || mAccount.szInitChannel.trim().isEmpty()) {
+            mAccount.szInitChannel = "/";
         }
 
         int cmdId = service.getTTInstance().doNewUserAccount(mAccount);
@@ -314,7 +318,7 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                 if (activity.isEdit || activity.isView) editUser.setEnabled(false);
                 editPass.setText(activity.mAccount.szPassword);
                 editNote.setText(activity.mAccount.szNote);
-                editInitChan.setText(activity.mAccount.szInitChannel != null ? activity.mAccount.szInitChannel : "");
+                editInitChan.setText(activity.mAccount.szInitChannel != null && !activity.mAccount.szInitChannel.trim().isEmpty() ? activity.mAccount.szInitChannel : "/");
 
                 if ((activity.mAccount.uUserType & UserType.USERTYPE_ADMIN) != 0)
                     ((RadioButton) v.findViewById(R.id.radio_type_admin)).setChecked(true);
@@ -334,11 +338,14 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                         typeGroup.getChildAt(i).setEnabled(false);
                     }
                 } else {
+                    editInitChan.setFocusable(false);
+                    editInitChan.setClickable(true);
+                    editInitChan.setCursorVisible(false);
                     if (btnSelectInitChan != null) {
                         btnSelectInitChan.setOnClickListener(view -> showInitChannelPicker(activity));
                     }
                     if (btnClearInitChan != null) {
-                        btnClearInitChan.setOnClickListener(view -> editInitChan.setText(""));
+                        btnClearInitChan.setOnClickListener(view -> editInitChan.setText("/"));
                     }
                     editInitChan.setOnClickListener(view -> showInitChannelPicker(activity));
                 }
@@ -372,8 +379,8 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             final List<String> paths = new ArrayList<>();
             final List<String> displayNames = new ArrayList<>();
 
-            paths.add("");
-            displayNames.add(activity.getString(R.string.channel_no_init));
+            paths.add("/");
+            displayNames.add(activity.getString(R.string.root_channel) + " (/)");
 
             if (channelsMap != null && !channelsMap.isEmpty()) {
                 List<Channel> sortedChannels = new ArrayList<>(channelsMap.values());
@@ -383,7 +390,9 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                     if (p == null || p.isEmpty()) {
                         p = "/" + ch.szName;
                     }
-                    items.add(new ChannelPickerItem(ch.nChannelID, p, p));
+                    if (!"/".equals(p)) {
+                        items.add(new ChannelPickerItem(ch.nChannelID, p, p));
+                    }
                 }
                 Collections.sort(items, (a, b) -> a.path.compareToIgnoreCase(b.path));
                 for (ChannelPickerItem item : items) {
@@ -435,7 +444,11 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             acc.szUsername = editUser.getText().toString().trim();
             acc.szPassword = editPass.getText().toString();
             acc.szNote = editNote.getText().toString();
-            acc.szInitChannel = editInitChan != null ? editInitChan.getText().toString().trim() : "";
+            String initChan = editInitChan != null ? editInitChan.getText().toString().trim() : "";
+            if (initChan.isEmpty()) {
+                initChan = "/";
+            }
+            acc.szInitChannel = initChan;
             int id = typeGroup.getCheckedRadioButtonId();
             if (id == R.id.radio_type_admin) acc.uUserType = UserType.USERTYPE_ADMIN;
             else if (id == R.id.radio_type_none) acc.uUserType = UserType.USERTYPE_NONE;
@@ -617,7 +630,9 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                     if (p == null || p.isEmpty()) {
                         p = "/" + ch.szName;
                     }
-                    items.add(new ChannelPickerItem(ch.nChannelID, p, p));
+                    if (!"/".equals(p)) {
+                        items.add(new ChannelPickerItem(ch.nChannelID, p, p));
+                    }
                 }
                 Collections.sort(items, (a, b) -> a.path.compareToIgnoreCase(b.path));
 

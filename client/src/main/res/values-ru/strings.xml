@@ -20,6 +20,7 @@
     <string name="action_exit">Выход</string>
     <string name="action_export_serverlist">Экспортировать список серверов</string>
     <string name="action_export_tt">Экспорт .tt</string>
+    <string name="title_export_tt_filename">Имя файла:</string>
     <string name="action_exportsrv">Экспортировать сервер</string>
     <string name="action_import_serverlist">Импортировать из Файла</string>
     <string name="action_join">Войти</string>

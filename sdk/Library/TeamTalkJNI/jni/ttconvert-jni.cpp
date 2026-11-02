@@ -581,7 +581,16 @@ void setTTMessage(JNIEnv* env, TTMessage& msg, jobject pMsg)
     {
         jclass cls_obj = env->FindClass("dk/bearware/UserAccount");
         jobject newObj = newObject(env, cls_obj);
-        setUserAccount(env, msg.useraccount, newObj, N2J);
+        if(msg.nClientEvent == CLIENTEVENT_CMD_USERACCOUNT_REMOVE)
+        {
+            jfieldID fid_user = env->GetFieldID(cls_obj, "szUsername", "Ljava/lang/String;");
+            if(fid_user)
+                env->SetObjectField(newObj, fid_user, NEW_JSTRING(env, msg.useraccount.szUsername));
+        }
+        else
+        {
+            setUserAccount(env, msg.useraccount, newObj, N2J);
+        }
         env->SetObjectField(pMsg, fid_acc, newObj);
     }
     break;

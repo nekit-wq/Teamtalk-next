@@ -20,6 +20,7 @@
     <string name="action_exit">Exit</string>
     <string name="action_export_serverlist">Export server list</string>
     <string name="action_export_tt">Export .tt</string>
+    <string name="title_export_tt_filename">File name:</string>
     <string name="action_exportsrv">Export server</string>
     <string name="action_import_serverlist">Import from a .tt File</string>
     <string name="action_join">Join</string>
