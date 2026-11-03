@@ -1,120 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
     android:padding="12dp">
 
-    <com.google.android.material.card.MaterialCardView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="14dp"
-        app:cardElevation="2dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="?attr/colorOutline">
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/bg_settings_card">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:text="@string/tab_bandwidth_limits"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/settingsSectionHeader"
+            android:textAllCaps="true"
+            android:layout_marginBottom="6dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tab_bandwidth_limits"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorPrimary"
-                android:layout_marginBottom="4dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ограничения скорости передачи данных в байтах в секунду (0 — без ограничений):"
+            android:textSize="12sp"
+            android:textColor="@color/textSecondary"
+            android:layout_marginBottom="14dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ограничения пропускной способности сервера в байтах в секунду (0 — без ограничений):"
-                android:textSize="12sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginBottom="14dp" />
+        <!-- Voice Bandwidth -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_voice_bw"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:layout_marginBottom="6dp" />
 
-            <!-- Voice Bandwidth -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:hint="@string/label_voice_bw"
-                app:suffixText="байт/с">
+        <EditText
+            android:id="@+id/edit_max_voice"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_settings_input"
+            android:textColor="@color/textPrimary"
+            android:textColorHint="@color/textSecondary"
+            android:textSize="15sp"
+            android:inputType="number"
+            android:layout_marginBottom="14dp" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_max_voice"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
+        <!-- Video Bandwidth -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_video_bw"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:layout_marginBottom="6dp" />
 
-            <!-- Video Bandwidth -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:hint="@string/label_video_bw"
-                app:suffixText="байт/с">
+        <EditText
+            android:id="@+id/edit_max_video"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_settings_input"
+            android:textColor="@color/textPrimary"
+            android:textColorHint="@color/textSecondary"
+            android:textSize="15sp"
+            android:inputType="number"
+            android:layout_marginBottom="14dp" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_max_video"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
+        <!-- Media Bandwidth -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_media_bw"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:layout_marginBottom="6dp" />
 
-            <!-- Media File Bandwidth -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:hint="@string/label_media_bw"
-                app:suffixText="байт/с">
+        <EditText
+            android:id="@+id/edit_max_media"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_settings_input"
+            android:textColor="@color/textPrimary"
+            android:textColorHint="@color/textSecondary"
+            android:textSize="15sp"
+            android:inputType="number"
+            android:layout_marginBottom="14dp" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_max_media"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
+        <!-- Desktop Bandwidth -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_desktop_bw"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:layout_marginBottom="6dp" />
 
-            <!-- Desktop Bandwidth -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:hint="@string/label_desktop_bw"
-                app:suffixText="байт/с">
+        <EditText
+            android:id="@+id/edit_max_desktop"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_settings_input"
+            android:textColor="@color/textPrimary"
+            android:textColorHint="@color/textSecondary"
+            android:textSize="15sp"
+            android:inputType="number"
+            android:layout_marginBottom="14dp" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_max_desktop"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
+        <!-- Total Bandwidth -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_total_bw"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/textPrimary"
+            android:layout_marginBottom="6dp" />
 
-            <!-- Total Bandwidth -->
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/label_total_bw"
-                app:suffixText="байт/с">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edit_max_total"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+        <EditText
+            android:id="@+id/edit_max_total"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_settings_input"
+            android:textColor="@color/textPrimary"
+            android:textColorHint="@color/textSecondary"
+            android:textSize="15sp"
+            android:inputType="number" />
+    </LinearLayout>
 </ScrollView>

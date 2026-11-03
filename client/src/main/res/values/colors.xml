@@ -21,4 +21,14 @@
     <color name="srvInfoTitleColor">#2E7D32</color>
     <color name="srvInfoTextColor">#558B2F</color>
     <color name="srvInfoTimeColor">#A5D6A7</color>
+    <color name="settingsCardBackground">#FFFFFF</color>
+    <color name="settingsCardBorder">#E0E0E0</color>
+    <color name="settingsInputBackground">#F9FAFB</color>
+    <color name="settingsInputBorder">#D1D5DB</color>
+    <color name="settingsSectionHeader">#1976D2</color>
+    <color name="settingsAccent">#1E88E5</color>
+    <color name="settingsAccentLight">#E3F2FD</color>
+    <color name="settingsWarningBg">#FFF3E0</color>
+    <color name="settingsWarningText">#E65100</color>
+    <color name="settingsDivider">#EEEEEE</color>
 </resources>

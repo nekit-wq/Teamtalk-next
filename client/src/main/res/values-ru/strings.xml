@@ -1239,7 +1239,7 @@
     <string name="btn_paste_from_clipboard">Вставить ссылку</string>
     <string name="btn_add_custom_station">Добавить свою</string>
     <string name="radio_select_station">Популярные музыкальные станции:</string>
-    <string name="radio_live_indicator">🔴 ПРЯМОЙ ЭФИР</string>
+    <string name="radio_live_indicator">ПРЯМОЙ ЭФИР</string>
     <string name="radio_preset_stations">Популярные станции</string>
     <string name="radio_custom_stations">Мои станции</string>
     <string name="dialog_add_station_title">Добавить радиостанцию</string>
@@ -1487,4 +1487,10 @@
     <string name="channel_no_init">Без начального канала (по умолчанию)</string>
     <string name="manual_input_channel">Ввести канал вручную…</string>
     <string name="manual_input_channel_id">Ввести ID канала вручную…</string>
+    <string name="hint_password_edit">Оставьте пустым, чтобы сохранить текущий пароль</string>
+    <string name="note_admin_full_rights">Администратор имеет полный неограниченный доступ ко всем каналам и функциям.</string>
+    <string name="section_voice_media">Голос и мультимедиа</string>
+    <string name="section_messages_files">Сообщения и файлы</string>
+    <string name="section_channels_admin">Каналы и администрирование</string>
+    <string name="section_system_rights">Системные права</string>
 </resources>

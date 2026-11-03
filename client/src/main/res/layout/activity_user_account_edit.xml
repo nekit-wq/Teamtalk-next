@@ -3,17 +3,26 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/windowBackground">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/account_edit_tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:elevation="4dp"
+        android:background="@color/windowBackground"
         app:tabMode="scrollable"
         app:tabGravity="fill"
-        app:tabIndicatorAnimationMode="elastic"
+        app:tabTextColor="@color/textSecondary"
+        app:tabSelectedTextColor="@color/settingsAccent"
+        app:tabIndicatorColor="@color/settingsAccent"
+        app:tabIndicatorHeight="3dp"
         app:tabIndicatorFullWidth="false" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/settingsDivider" />
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/account_edit_viewpager"
@@ -26,13 +35,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@color/surfaceColor"
-        android:elevation="8dp">
+        android:background="@color/windowBackground">
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/dividerColor" />
+            android:background="@color/settingsDivider" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -40,18 +48,18 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="10dp"
-            android:paddingBottom="10dp">
+            android:paddingBottom="12dp">
 
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/btn_save_account"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_primary_action_btn"
                 android:text="@string/action_save"
+                android:textColor="#FFFFFF"
                 android:textSize="15sp"
                 android:textStyle="bold"
-                app:cornerRadius="12dp"
-                app:icon="@android:drawable/ic_menu_save"
-                app:iconGravity="textStart" />
+                android:textAllCaps="false" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

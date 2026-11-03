@@ -1243,7 +1243,7 @@ By: %3$s"</string>
     <string name="btn_paste_from_clipboard">Paste URL</string>
     <string name="btn_add_custom_station">Add Custom</string>
     <string name="radio_select_station">Popular Music Stations:</string>
-    <string name="radio_live_indicator">🔴 LIVE STREAM</string>
+    <string name="radio_live_indicator">LIVE STREAM</string>
     <string name="radio_preset_stations">Popular Stations</string>
     <string name="radio_custom_stations">My Stations</string>
     <string name="dialog_add_station_title">Add Radio Station</string>
@@ -1491,4 +1491,10 @@ By: %3$s"</string>
     <string name="channel_no_init">No initial channel (default)</string>
     <string name="manual_input_channel">Enter channel manually…</string>
     <string name="manual_input_channel_id">Enter Channel ID manually…</string>
+    <string name="hint_password_edit">Leave empty to keep current password</string>
+    <string name="note_admin_full_rights">Administrator has unrestricted access to all channels and features.</string>
+    <string name="section_voice_media">Voice and Media</string>
+    <string name="section_messages_files">Messages and Files</string>
+    <string name="section_channels_admin">Channels and Administration</string>
+    <string name="section_system_rights">System Rights</string>
 </resources>

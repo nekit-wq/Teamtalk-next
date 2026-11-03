@@ -21,4 +21,14 @@
     <color name="textSecondary">#ff90a4ae</color>
     <color name="textTertiary">#ff607d8b</color>
     <color name="windowBackground">#ff1a1a1a</color>
+    <color name="settingsCardBackground">#21262D</color>
+    <color name="settingsCardBorder">#30363D</color>
+    <color name="settingsInputBackground">#161B22</color>
+    <color name="settingsInputBorder">#30363D</color>
+    <color name="settingsSectionHeader">#64B5F6</color>
+    <color name="settingsAccent">#2196F3</color>
+    <color name="settingsAccentLight">#172635</color>
+    <color name="settingsWarningBg">#3E2723</color>
+    <color name="settingsWarningText">#FFB74D</color>
+    <color name="settingsDivider">#30363D</color>
 </resources>

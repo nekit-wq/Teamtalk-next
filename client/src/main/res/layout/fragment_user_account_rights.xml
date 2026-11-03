@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
@@ -11,376 +10,428 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Quick Select All Card -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- Card: Master Switch -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorPrimary">
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:background="@drawable/bg_settings_card">
 
-            <LinearLayout
+            <CheckBox
+                android:id="@+id/chk_right_all"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp">
+                android:text="@string/chk_right_all"
+                android:textColor="@color/settingsAccent"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
-                <CheckBox
-                    android:id="@+id/chk_right_all"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/chk_right_all"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Card 1: General Rights -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- Card 1: Voice & Media -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorOutline">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_card">
 
-            <LinearLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/section_voice_media"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/settingsSectionHeader"
+                android:textAllCaps="true"
+                android:layout_marginBottom="10dp" />
+
+            <CheckBox
+                android:id="@+id/chk_right_voice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_voice"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="👤 Основные права"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginBottom="6dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_multi_login"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_multi_login" />
+            <CheckBox
+                android:id="@+id/chk_right_video"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_video"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_change_nickname"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_change_nickname" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_view_all"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_view_all" />
+            <CheckBox
+                android:id="@+id/chk_right_desktop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_desktop"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_view_hidden"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_view_hidden" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-        <!-- Card 2: Channels -->
-        <com.google.android.material.card.MaterialCardView
+            <CheckBox
+                android:id="@+id/chk_right_desktop_access"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_desktop_access"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
+
+            <CheckBox
+                android:id="@+id/chk_right_media_audio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_media_audio"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
+
+            <CheckBox
+                android:id="@+id/chk_right_media_video"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_media_video"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
+
+            <CheckBox
+                android:id="@+id/chk_right_record_voice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_record_voice"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Card 2: Messages & Files -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorOutline">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_card">
 
-            <LinearLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/section_messages_files"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/settingsSectionHeader"
+                android:textAllCaps="true"
+                android:layout_marginBottom="10dp" />
+
+            <CheckBox
+                android:id="@+id/chk_right_text_user"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_text_user"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📁 Каналы"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginBottom="6dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_create_chan"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_create_chan" />
+            <CheckBox
+                android:id="@+id/chk_right_text_chan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_text_chan"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_modify_chan"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_modify_chan" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_operator_enable"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_operator_enable" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            <CheckBox
+                android:id="@+id/chk_right_text_broadcast"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_text_broadcast"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-        <!-- Card 3: Voice & Media -->
-        <com.google.android.material.card.MaterialCardView
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
+
+            <CheckBox
+                android:id="@+id/chk_right_upload_files"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_upload_files"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
+
+            <CheckBox
+                android:id="@+id/chk_right_download_files"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_download_files"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Card 3: Channels & Administration -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorOutline">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_card">
 
-            <LinearLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/section_channels_admin"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/settingsSectionHeader"
+                android:textAllCaps="true"
+                android:layout_marginBottom="10dp" />
+
+            <CheckBox
+                android:id="@+id/chk_right_create_chan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_create_chan"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🎙 Голос и медиа"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginBottom="6dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_voice"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_voice" />
-
-                <CheckBox
-                    android:id="@+id/chk_right_record_voice"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_record_voice" />
-
-                <CheckBox
-                    android:id="@+id/chk_right_video"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_video" />
-
-                <CheckBox
-                    android:id="@+id/chk_right_media_audio"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_media_audio" />
-
-                <CheckBox
-                    android:id="@+id/chk_right_media_video"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_media_video" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Card 4: Desktop -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorOutline">
-
-            <LinearLayout
+            <CheckBox
+                android:id="@+id/chk_right_modify_chan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_modify_chan"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🖥 Рабочий стол"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginBottom="6dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_desktop"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_desktop" />
-
-                <CheckBox
-                    android:id="@+id/chk_right_desktop_access"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_desktop_access" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Card 5: Moderation -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorOutline">
-
-            <LinearLayout
+            <CheckBox
+                android:id="@+id/chk_right_operator_enable"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_operator_enable"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🛡 Модерация и администрирование"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginBottom="6dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_kick"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_kick" />
+            <CheckBox
+                android:id="@+id/chk_right_kick"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_kick"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_ban"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_ban" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_move_users"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_move_users" />
+            <CheckBox
+                android:id="@+id/chk_right_ban"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_ban"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_update_server_props"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_update_server_props" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-        <!-- Card 6: Messages & Files -->
-        <com.google.android.material.card.MaterialCardView
+            <CheckBox
+                android:id="@+id/chk_right_move_users"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_move_users"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Card 4: System Rights -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="2dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorOutline">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/bg_settings_card">
 
-            <LinearLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/section_system_rights"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/settingsSectionHeader"
+                android:textAllCaps="true"
+                android:layout_marginBottom="10dp" />
+
+            <CheckBox
+                android:id="@+id/chk_right_view_all"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_view_all"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="💬 Сообщения и файлы"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginBottom="6dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_text_user"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_text_user" />
+            <CheckBox
+                android:id="@+id/chk_right_view_hidden"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_view_hidden"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_text_chan"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_text_chan" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_text_broadcast"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_text_broadcast" />
+            <CheckBox
+                android:id="@+id/chk_right_multi_login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_multi_login"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_upload_files"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_upload_files" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
 
-                <CheckBox
-                    android:id="@+id/chk_right_download_files"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/chk_right_download_files" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            <CheckBox
+                android:id="@+id/chk_right_change_nickname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_change_nickname"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/settingsDivider" />
+
+            <CheckBox
+                android:id="@+id/chk_right_update_server_props"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:text="@string/chk_right_update_server_props"
+                android:textColor="@color/textPrimary"
+                android:textSize="14sp" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

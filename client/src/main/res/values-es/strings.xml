@@ -462,7 +462,7 @@
     <string name="user_prop_title_username">Nombre de usuario:</string>
     <string name="user_prop_title_voice_volume">Volumen de voz</string>
     <string name="user_state_away">Ausente -</string>
-    <string name="user_state_now_speaking">%1$s 🎤,</string>
+    <string name="user_state_now_speaking">%1$s hablando,</string>
     <string name="user_state_operator">Operador del canal -</string>
     <string name="user_state_selected">Seleccionado para mover -</string>
     <string name="version_update">Nueva versión de TeamTalk disponible: %1$s?</string>
