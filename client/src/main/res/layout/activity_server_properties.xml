@@ -21,13 +21,18 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <com.google.android.material.card.MaterialCardView
+    <LinearLayout
         android:id="@+id/card_save_server_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardElevation="8dp"
-        app:cardCornerRadius="0dp"
-        app:strokeWidth="0dp">
+        android:orientation="vertical"
+        android:background="@color/surfaceColor"
+        android:elevation="8dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/dividerColor" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -48,5 +53,5 @@
                 app:icon="@android:drawable/ic_menu_save"
                 app:iconGravity="textStart" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 </LinearLayout>
