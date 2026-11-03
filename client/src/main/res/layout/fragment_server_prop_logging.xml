@@ -1,11 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <LinearLayout android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <CheckBox android:id="@+id/chk_log_user_login" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/label_log_user_login" />
-        <CheckBox android:id="@+id/chk_log_user_kick" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/label_log_user_kick" />
-        <CheckBox android:id="@+id/chk_log_channel_create" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/label_log_channel" />
-        <CheckBox android:id="@+id/chk_log_server_update" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/label_log_server_update" />
-        <CheckBox android:id="@+id/chk_log_file_transfer" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/label_log_file_transfer" />
-    </LinearLayout>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:padding="12dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="2dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="?attr/colorOutline">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tab_logging"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimary"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="События, записываемые в системный журнал (лог) сервера:"
+                android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:layout_marginBottom="12dp" />
+
+            <CheckBox
+                android:id="@+id/chk_log_user_login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/label_log_user_login" />
+
+            <CheckBox
+                android:id="@+id/chk_log_user_kick"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/label_log_user_kick" />
+
+            <CheckBox
+                android:id="@+id/chk_log_channel_create"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/label_log_channel" />
+
+            <CheckBox
+                android:id="@+id/chk_log_server_update"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/label_log_server_update" />
+
+            <CheckBox
+                android:id="@+id/chk_log_file_transfer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/label_log_file_transfer" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </ScrollView>

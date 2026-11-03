@@ -1222,6 +1222,10 @@
     <!-- Menu Sections -->
     <string name="menu_section_channel_media">Канал и трансляция</string>
     <string name="menu_section_recording">Запись звука</string>
+    <string name="docked_recording_title">Запись разговора</string>
+    <string name="docked_recording_paused">Пауза</string>
+    <string name="docked_streaming_title">Трансляция медиа</string>
+    <string name="docked_streaming_paused">Пауза</string>
     <string name="menu_section_server_admin">Сервер и управление</string>
 
     <string name="profile_clone_postfix">Копия</string>

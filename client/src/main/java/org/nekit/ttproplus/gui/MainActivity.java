@@ -219,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     }
                 }
             }
+            MainActivity.this.updateDockedPanels();
             MainActivity.this.micActivityHandler.postDelayed(this, 100L);
         }
     };
@@ -348,6 +349,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         this.mViewPager.addOnPageChangeListener(this.mSectionsPagerAdapter);
         this.mTabLayout.setupWithViewPager(this.mViewPager);
         setupButtons();
+        setupDockedPanels();
         if (Build.VERSION.SDK_INT >= 26) {
             final MediaPlayer mMediaPlayer = MediaPlayer.create(this.ctx, R.raw.silence);
             if (mMediaPlayer != null) {
@@ -3950,6 +3952,199 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
             service.enableVoiceActivation(!service.isVoiceActivationEnabled());
             adjustVoiceGain();
+        }
+    }
+
+    private View panelRecordingBar;
+    private android.widget.ImageView recIndicatorIcon;
+    private TextView recBarTitle;
+    private TextView recBarDuration;
+    private ImageButton btnRecBarPause;
+    private ImageButton btnRecBarStop;
+
+    private View panelStreamingBar;
+    private android.widget.ImageView streamBarIcon;
+    private TextView streamBarTitle;
+    private TextView streamBarDuration;
+    private ImageButton btnStreamBarPause;
+    private ImageButton btnStreamBarStop;
+    private ProgressBar streamBarProgress;
+    private boolean recDotBlinkState = false;
+
+    private void setupDockedPanels() {
+        this.panelRecordingBar = findViewById(R.id.panel_recording_bar);
+        this.recIndicatorIcon = findViewById(R.id.rec_indicator_icon);
+        this.recBarTitle = findViewById(R.id.rec_bar_title);
+        this.recBarDuration = findViewById(R.id.rec_bar_duration);
+        this.btnRecBarPause = findViewById(R.id.btn_rec_bar_pause);
+        this.btnRecBarStop = findViewById(R.id.btn_rec_bar_stop);
+
+        if (this.btnRecBarPause != null) {
+            this.btnRecBarPause.setOnClickListener(v -> {
+                TeamTalkService srv = getService();
+                if (srv != null) {
+                    srv.toggleRecordingPause();
+                    updateDockedPanels();
+                }
+            });
+        }
+        if (this.btnRecBarStop != null) {
+            this.btnRecBarStop.setOnClickListener(v -> {
+                TeamTalkService srv = getService();
+                if (srv != null) {
+                    srv.stopRecording();
+                    updateDockedPanels();
+                }
+            });
+        }
+
+        this.panelStreamingBar = findViewById(R.id.panel_streaming_bar);
+        this.streamBarIcon = findViewById(R.id.stream_bar_icon);
+        this.streamBarTitle = findViewById(R.id.stream_bar_title);
+        this.streamBarDuration = findViewById(R.id.stream_bar_duration);
+        this.btnStreamBarPause = findViewById(R.id.btn_stream_bar_pause);
+        this.btnStreamBarStop = findViewById(R.id.btn_stream_bar_stop);
+        this.streamBarProgress = findViewById(R.id.stream_bar_progress);
+
+        if (this.btnStreamBarPause != null) {
+            this.btnStreamBarPause.setOnClickListener(v -> {
+                TeamTalkService srv = getService();
+                if (srv != null) {
+                    srv.toggleStreamingPause();
+                    updateDockedPanels();
+                }
+            });
+        }
+        if (this.btnStreamBarStop != null) {
+            this.btnStreamBarStop.setOnClickListener(v -> {
+                TeamTalkService srv = getService();
+                if (srv != null) {
+                    srv.stopStreamingMedia();
+                    updateDockedPanels();
+                }
+            });
+        }
+        if (this.panelStreamingBar != null) {
+            this.panelStreamingBar.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, StreamMediaActivity.class);
+                startActivity(intent);
+            });
+        }
+    }
+
+    private void updateDockedPanels() {
+        TeamTalkService service = getService();
+        if (service == null) {
+            if (this.panelRecordingBar != null && this.panelRecordingBar.getVisibility() != View.GONE) {
+                this.panelRecordingBar.setVisibility(View.GONE);
+            }
+            if (this.panelStreamingBar != null && this.panelStreamingBar.getVisibility() != View.GONE) {
+                this.panelStreamingBar.setVisibility(View.GONE);
+            }
+            return;
+        }
+
+        // 1. Recording Bar
+        boolean isRecActive = service.isRecordingActive();
+        boolean isRecPaused = service.isRecordingPaused();
+        if (this.panelRecordingBar != null) {
+            if (isRecActive || isRecPaused) {
+                if (this.panelRecordingBar.getVisibility() != View.VISIBLE) {
+                    this.panelRecordingBar.setVisibility(View.VISIBLE);
+                }
+                long durationMs = service.getRecordingDurationMs();
+                long seconds = (durationMs / 1000) % 60;
+                long minutes = (durationMs / (1000 * 60)) % 60;
+                long hours = (durationMs / (1000 * 60 * 60));
+                String durationStr;
+                if (hours > 0) {
+                    durationStr = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
+                } else {
+                    durationStr = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+                }
+
+                if (isRecPaused) {
+                    if (this.recBarTitle != null) this.recBarTitle.setText(R.string.docked_recording_paused);
+                    if (this.recBarDuration != null) this.recBarDuration.setText(durationStr);
+                    if (this.recIndicatorIcon != null) this.recIndicatorIcon.setImageResource(R.drawable.ic_rec_dot_paused);
+                    if (this.btnRecBarPause != null) this.btnRecBarPause.setImageResource(android.R.drawable.ic_media_play);
+                } else {
+                    if (this.recBarTitle != null) this.recBarTitle.setText(R.string.docked_recording_title);
+                    if (this.recBarDuration != null) this.recBarDuration.setText(durationStr);
+                    if (this.recIndicatorIcon != null) {
+                        this.recDotBlinkState = !this.recDotBlinkState;
+                        this.recIndicatorIcon.setImageResource(this.recDotBlinkState ? R.drawable.ic_rec_dot : R.drawable.ic_rec_dot_paused);
+                    }
+                    if (this.btnRecBarPause != null) this.btnRecBarPause.setImageResource(android.R.drawable.ic_media_pause);
+                }
+            } else {
+                if (this.panelRecordingBar.getVisibility() != View.GONE) {
+                    this.panelRecordingBar.setVisibility(View.GONE);
+                }
+            }
+        }
+
+        // 2. Media Streaming Bar
+        boolean isStreaming = service.isStreamingMedia();
+        if (this.panelStreamingBar != null) {
+            if (isStreaming) {
+                if (this.panelStreamingBar.getVisibility() != View.VISIBLE) {
+                    this.panelStreamingBar.setVisibility(View.VISIBLE);
+                }
+                boolean isPaused = service.isStreamingPaused();
+                dk.bearware.MediaFileInfo mfi = service.getCurrentMediaFileInfo();
+                String streamPath = service.getCurrentStreamPath();
+                String title = "";
+                if (streamPath != null && !streamPath.isEmpty()) {
+                    File f = new File(streamPath);
+                    title = f.getName();
+                } else if (mfi != null && mfi.szFileName != null && !mfi.szFileName.isEmpty()) {
+                    File f = new File(mfi.szFileName);
+                    title = f.getName();
+                }
+                if (title.isEmpty()) {
+                    title = getString(R.string.docked_streaming_title);
+                }
+
+                if (this.streamBarTitle != null) {
+                    this.streamBarTitle.setText(title);
+                }
+
+                long elapsedMs = mfi != null ? mfi.uElapsedMSec : 0;
+                long totalMs = mfi != null ? mfi.uDurationMSec : 0;
+
+                long elSec = (elapsedMs / 1000) % 60;
+                long elMin = (elapsedMs / (1000 * 60)) % 60;
+                String elStr = String.format(Locale.getDefault(), "%02d:%02d", elMin, elSec);
+
+                if (totalMs > 0) {
+                    long totSec = (totalMs / 1000) % 60;
+                    long totMin = (totalMs / (1000 * 60)) % 60;
+                    String totStr = String.format(Locale.getDefault(), "%02d:%02d", totMin, totSec);
+                    if (this.streamBarDuration != null) {
+                        this.streamBarDuration.setText((isPaused ? getString(R.string.docked_streaming_paused) + " • " : "") + elStr + " / " + totStr);
+                    }
+                    if (this.streamBarProgress != null) {
+                        int prog = (int) ((elapsedMs * 1000) / totalMs);
+                        this.streamBarProgress.setProgress(Math.min(1000, Math.max(0, prog)));
+                    }
+                } else {
+                    if (this.streamBarDuration != null) {
+                        this.streamBarDuration.setText((isPaused ? getString(R.string.docked_streaming_paused) + " • " : "") + elStr);
+                    }
+                    if (this.streamBarProgress != null) {
+                        this.streamBarProgress.setProgress(0);
+                    }
+                }
+
+                if (this.btnStreamBarPause != null) {
+                    this.btnStreamBarPause.setImageResource(isPaused ? android.R.drawable.ic_media_play : android.R.drawable.ic_media_pause);
+                }
+            } else {
+                if (this.panelStreamingBar.getVisibility() != View.GONE) {
+                    this.panelStreamingBar.setVisibility(View.GONE);
+                }
+            }
         }
     }
 

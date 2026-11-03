@@ -1,30 +1,386 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <LinearLayout android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <CheckBox android:id="@+id/chk_right_all" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_all" />
-        <CheckBox android:id="@+id/chk_right_multi_login" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_multi_login" />
-        <CheckBox android:id="@+id/chk_right_change_nickname" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_change_nickname" />
-        <CheckBox android:id="@+id/chk_right_view_all" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_view_all" />
-        <CheckBox android:id="@+id/chk_right_view_hidden" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_view_hidden" />
-        <CheckBox android:id="@+id/chk_right_create_chan" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_create_chan" />
-        <CheckBox android:id="@+id/chk_right_modify_chan" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_modify_chan" />
-        <CheckBox android:id="@+id/chk_right_update_server_props" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_update_server_props" />
-        <CheckBox android:id="@+id/chk_right_kick" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_kick" />
-        <CheckBox android:id="@+id/chk_right_ban" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_ban" />
-        <CheckBox android:id="@+id/chk_right_move_users" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_move_users" />
-        <CheckBox android:id="@+id/chk_right_operator_enable" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_operator_enable" />
-        <CheckBox android:id="@+id/chk_right_upload_files" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_upload_files" />
-        <CheckBox android:id="@+id/chk_right_download_files" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_download_files" />
-        <CheckBox android:id="@+id/chk_right_record_voice" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_record_voice" />
-        <CheckBox android:id="@+id/chk_right_voice" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_voice" />
-        <CheckBox android:id="@+id/chk_right_video" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_video" />
-        <CheckBox android:id="@+id/chk_right_desktop" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_desktop" />
-        <CheckBox android:id="@+id/chk_right_desktop_access" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_desktop_access" />
-        <CheckBox android:id="@+id/chk_right_media_audio" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_media_audio" />
-        <CheckBox android:id="@+id/chk_right_media_video" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_media_video" />
-        <CheckBox android:id="@+id/chk_right_text_user" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_text_user" />
-        <CheckBox android:id="@+id/chk_right_text_chan" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_text_chan" />
-        <CheckBox android:id="@+id/chk_right_text_broadcast" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/chk_right_text_broadcast" />
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Quick Select All Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorPrimary">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp">
+
+                <CheckBox
+                    android:id="@+id/chk_right_all"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/chk_right_all"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 1: General Rights -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👤 Основные права"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginBottom="6dp" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_multi_login"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_multi_login" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_change_nickname"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_change_nickname" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_view_all"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_view_all" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_view_hidden"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_view_hidden" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 2: Channels -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📁 Каналы"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginBottom="6dp" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_create_chan"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_create_chan" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_modify_chan"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_modify_chan" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_operator_enable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_operator_enable" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 3: Voice & Media -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎙 Голос и медиа"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginBottom="6dp" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_voice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_voice" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_record_voice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_record_voice" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_video"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_video" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_media_audio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_media_audio" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_media_video"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_media_video" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 4: Desktop -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🖥 Рабочий стол"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginBottom="6dp" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_desktop"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_desktop" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_desktop_access"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_desktop_access" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 5: Moderation -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛡 Модерация и администрирование"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginBottom="6dp" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_kick"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_kick" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_ban"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_ban" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_move_users"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_move_users" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_update_server_props"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_update_server_props" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card 6: Messages & Files -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💬 Сообщения и файлы"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginBottom="6dp" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_text_user"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_text_user" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_text_chan"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_text_chan" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_text_broadcast"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_text_broadcast" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_upload_files"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_upload_files" />
+
+                <CheckBox
+                    android:id="@+id/chk_right_download_files"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/chk_right_download_files" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>

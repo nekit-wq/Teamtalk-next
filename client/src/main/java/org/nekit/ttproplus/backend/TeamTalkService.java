@@ -56,6 +56,7 @@ import dk.bearware.EncryptionContext;
 import dk.bearware.FileTransfer;
 import dk.bearware.MediaFileInfo;
 import dk.bearware.MediaFilePlayback;
+import dk.bearware.VideoCodec;
 import dk.bearware.OpusConstants;
 import dk.bearware.RemoteFile;
 import dk.bearware.ServerProperties;
@@ -337,6 +338,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     private boolean isManualRecordingActive = false;
     private boolean isContinuousSessionActive = false;
     private boolean isRecordingPausedDueToSilence = false;
+    private boolean isManualRecordingPaused = false;
+    private long recordingStartTimeMs = 0;
+    private long recordingAccumulatedDurationMs = 0;
     private long lastVoiceActivityTime = 0;
     private final Handler recordingSilenceHandler = new Handler(Looper.getMainLooper());
     private final Runnable silenceCheckRunnable = new Runnable() {
@@ -1051,7 +1055,51 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     public boolean isRecording() {
-        return this.isRecording || this.isRecordingPausedDueToSilence || (this.isContinuousSessionActive && this.isManualRecordingActive);
+        return this.isRecording || this.isRecordingPausedDueToSilence || (this.isContinuousSessionActive && this.isManualRecordingActive) || this.isManualRecordingPaused;
+    }
+
+    public boolean isRecordingActive() {
+        return this.isRecording;
+    }
+
+    public boolean isRecordingPaused() {
+        return this.isManualRecordingPaused || this.isRecordingPausedDueToSilence;
+    }
+
+    public long getRecordingDurationMs() {
+        if (this.isRecording) {
+            return this.recordingAccumulatedDurationMs + Math.max(0, SystemClock.elapsedRealtime() - this.recordingStartTimeMs);
+        } else if (this.isManualRecordingPaused) {
+            return this.recordingAccumulatedDurationMs;
+        }
+        return 0;
+    }
+
+    public void pauseRecording() {
+        if (this.isRecording && this.ttclient != null) {
+            this.recordingAccumulatedDurationMs += Math.max(0, SystemClock.elapsedRealtime() - this.recordingStartTimeMs);
+            this.ttclient.stopRecordingMuxedAudioFile();
+            this.isRecording = false;
+            this.isManualRecordingPaused = true;
+            showRecordingToast(R.string.recording_silence_paused);
+        }
+    }
+
+    public void resumeRecording() {
+        if (this.isManualRecordingPaused && this.mychannel != null) {
+            this.isManualRecordingPaused = false;
+            this.recordingStartTimeMs = SystemClock.elapsedRealtime();
+            startRecordingFileInternal(false);
+            showRecordingToast(R.string.recording_silence_resumed);
+        }
+    }
+
+    public void toggleRecordingPause() {
+        if (this.isManualRecordingPaused) {
+            resumeRecording();
+        } else if (this.isRecording) {
+            pauseRecording();
+        }
     }
 
     public File getCurrentRecordingFile() {
@@ -1130,6 +1178,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void startRecording() {
         this.isManualRecordingActive = true;
         this.pendingAutoRecord = false;
+        this.isManualRecordingPaused = false;
+        this.recordingStartTimeMs = SystemClock.elapsedRealtime();
+        this.recordingAccumulatedDurationMs = 0;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         this.isContinuousSessionActive = "continuous".equals(prefs.getString(Preferences.PREF_RECORDING_SESSION_MODE, "stop"));
         this.lastVoiceActivityTime = SystemClock.elapsedRealtime();
@@ -1207,6 +1258,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.isManualRecordingActive = false;
         this.isContinuousSessionActive = false;
         this.isRecordingPausedDueToSilence = false;
+        this.isManualRecordingPaused = false;
+        this.recordingStartTimeMs = 0;
+        this.recordingAccumulatedDurationMs = 0;
         this.recordingSilenceHandler.removeCallbacks(this.silenceCheckRunnable);
 
         if (!this.isRecording && this.currentRecordingFile == null) {
@@ -1781,6 +1835,36 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     public void setCurrentPlayback(MediaFilePlayback playback) {
         this.currentPlayback = playback;
+    }
+
+    public boolean isStreamingPaused() {
+        return this.currentPlayback != null && this.currentPlayback.bPaused;
+    }
+
+    public void toggleStreamingPause() {
+        if (!this.isStreamingMedia || this.ttclient == null) return;
+        if (this.currentPlayback == null) {
+            this.currentPlayback = new MediaFilePlayback();
+        }
+        this.currentPlayback.bPaused = !this.currentPlayback.bPaused;
+        VideoCodec vc = new VideoCodec();
+        if (this.currentMediaFileInfo != null && this.currentMediaFileInfo.videoFmt != null && this.currentMediaFileInfo.videoFmt.picFourCC != 0) {
+            vc.nCodec = 128;
+        } else {
+            vc.nCodec = 0;
+        }
+        this.ttclient.updateStreamingMediaFileToChannel(this.currentPlayback, vc);
+    }
+
+    public void stopStreamingMedia() {
+        if (this.ttclient != null) {
+            this.ttclient.stopStreamingMediaFileToChannel();
+        }
+        this.isStreamingMedia = false;
+        this.currentPlayback = null;
+        this.currentMediaFileInfo = null;
+        this.currentStreamPath = "";
+        displayNotification(true);
     }
 
     public void syncToUserCache(User user) {

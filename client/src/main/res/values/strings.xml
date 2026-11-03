@@ -1226,6 +1226,10 @@ By: %3$s"</string>
     <!-- Menu Sections -->
     <string name="menu_section_channel_media">Channel &amp; Broadcast</string>
     <string name="menu_section_recording">Audio Recording</string>
+    <string name="docked_recording_title">Audio Recording</string>
+    <string name="docked_recording_paused">Paused</string>
+    <string name="docked_streaming_title">Media Stream</string>
+    <string name="docked_streaming_paused">Paused</string>
     <string name="menu_section_server_admin">Server &amp; Management</string>
 
     <string name="profile_clone_postfix">Copy</string>
