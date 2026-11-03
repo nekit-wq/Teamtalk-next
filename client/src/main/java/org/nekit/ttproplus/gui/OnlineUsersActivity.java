@@ -330,35 +330,47 @@ public class OnlineUsersActivity extends AppCompatActivity implements
             inflater = LayoutInflater.from(context);
         }
 
+        private static class ViewHolder {
+            TextView avatarView;
+            TextView nicknameView;
+            TextView statusView;
+            TextView channelView;
+        }
+
         @NonNull
         @Override
         public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+            ViewHolder holder;
             if (convertView == null) {
                 convertView = inflater.inflate(R.layout.item_online_user, parent, false);
+                holder = new ViewHolder();
+                holder.avatarView = convertView.findViewById(R.id.avatar);
+                holder.nicknameView = convertView.findViewById(R.id.nickname);
+                holder.statusView = convertView.findViewById(R.id.status_msg);
+                holder.channelView = convertView.findViewById(R.id.channel_info);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
             }
 
-            TextView avatarView = convertView.findViewById(R.id.avatar);
-            TextView nicknameView = convertView.findViewById(R.id.nickname);
-            TextView statusView = convertView.findViewById(R.id.status_msg);
-            TextView channelView = convertView.findViewById(R.id.channel_info);
             User user = getItem(position);
 
             if (user != null) {
                 String nickname = user.szNickname;
-                nicknameView.setText(nickname);
+                holder.nicknameView.setText(nickname);
 
                 String firstLetter = nickname.isEmpty() ? "?" : nickname.substring(0, 1).toUpperCase(Locale.ROOT);
-                avatarView.setText(firstLetter);
+                holder.avatarView.setText(firstLetter);
 
                 int colorIndex = Math.abs(user.nUserID) % avatarColors.length;
-                GradientDrawable drawable = (GradientDrawable) avatarView.getBackground();
+                GradientDrawable drawable = (GradientDrawable) holder.avatarView.getBackground();
                 drawable.setColor(avatarColors[colorIndex]);
 
                 if (!user.szStatusMsg.isEmpty()) {
-                    statusView.setText(user.szStatusMsg);
-                    statusView.setVisibility(View.VISIBLE);
+                    holder.statusView.setText(user.szStatusMsg);
+                    holder.statusView.setVisibility(View.VISIBLE);
                 } else {
-                    statusView.setVisibility(View.GONE);
+                    holder.statusView.setVisibility(View.GONE);
                 }
 
                 StringBuilder channelInfo = new StringBuilder();
@@ -397,7 +409,7 @@ public class OnlineUsersActivity extends AppCompatActivity implements
                     }
                 }
 
-                channelView.setText(channelInfo.toString());
+                holder.channelView.setText(channelInfo.toString());
             }
 
             return convertView;

@@ -44,6 +44,8 @@
     <application
         android:name=".gui.TeamTalkApp"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:largeHeap="true"
         android:icon="@drawable/teamtalk_blue"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"

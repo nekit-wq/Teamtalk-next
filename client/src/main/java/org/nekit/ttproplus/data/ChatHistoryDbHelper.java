@@ -55,6 +55,12 @@ public class ChatHistoryDbHelper extends SQLiteOpenHelper {
     }
 
     @Override
+    public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        db.enableWriteAheadLogging();
+    }
+
+    @Override
     public void onCreate(SQLiteDatabase db) {
         String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE_HISTORY + " ("
                 + COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "

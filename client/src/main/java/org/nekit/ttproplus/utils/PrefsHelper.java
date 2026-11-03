@@ -24,7 +24,7 @@ package org.nekit.ttproplus.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 
 import java.util.Map;
 import java.util.Set;

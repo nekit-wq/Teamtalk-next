@@ -22,7 +22,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
+import android.content.pm.ServiceInfo;
 import android.os.Binder;
 import android.os.Build;
 import android.os.CountDownTimer;
@@ -31,10 +31,11 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -265,62 +266,73 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             return false;
         }
     };
-    private final PhoneStateListener phoneStateListener = new PhoneStateListener() { 
-        int myStatus = 0;
+    private int savedPhoneCallStatus = 0;
 
+    private void handleCallStateChanged(int state) {
+        if (this.ttclient == null) return;
+        User myself = this.users.get(Integer.valueOf(this.ttclient.getMyUserID()));
+        if (myself == null) {
+            return;
+        }
+        switch (state) {
+            case TelephonyManager.CALL_STATE_IDLE:
+                if (this.inPhoneCall) {
+                    if (this.voxSuspended) {
+                        enableVoiceActivation(true);
+                    } else if (this.txSuspended) {
+                        enableVoiceTransmission(true);
+                    }
+                    setMute(this.permanentMuteState);
+                    if ((1 & this.savedPhoneCallStatus) == 0) {
+                        this.ttclient.doChangeStatus(myself.nStatusMode & (-2), myself.szStatusMsg);
+                    }
+                    this.inPhoneCall = false;
+                    scheduleReconnectBluetoothScoAfterCall();
+                }
+                break;
+            case TelephonyManager.CALL_STATE_RINGING:
+            case TelephonyManager.CALL_STATE_OFFHOOK:
+                if (!this.inPhoneCall) {
+                    this.inPhoneCall = true;
+                    if (!isMute()) {
+                        this.ttclient.setSoundOutputMute(true);
+                        this.currentMuteState = true;
+                    }
+                    if (isVoiceActivationEnabled()) {
+                        this.voxSuspended = true;
+                        enableVoiceActivation(false);
+                    } else if (isVoiceTransmissionEnabled()) {
+                        this.txSuspended = true;
+                        enableVoiceTransmission(false);
+                    }
+                    this.savedPhoneCallStatus = myself.nStatusMode;
+                    if ((this.savedPhoneCallStatus & 1) == 0) {
+                        this.ttclient.doChangeStatus(1 | this.savedPhoneCallStatus, myself.szStatusMsg);
+                    }
+                }
+                break;
+        }
+    }
+
+    private final PhoneStateListener phoneStateListener = new PhoneStateListener() { 
         @Override
         public void onCallStateChanged(int state, String incomingNumber) {
-            User myself = TeamTalkService.this.users.get(Integer.valueOf(TeamTalkService.this.ttclient.getMyUserID()));
-            if (myself == null) {
-                return;
-            }
-            switch (state) {
-                case TelephonyManager.CALL_STATE_IDLE:
-                    if (TeamTalkService.this.inPhoneCall) {
-                        boolean z = TeamTalkService.this.voxSuspended;
-                        TeamTalkService teamTalkService = TeamTalkService.this;
-                        if (z) {
-                            teamTalkService.enableVoiceActivation(true);
-                        } else if (teamTalkService.txSuspended) {
-                            TeamTalkService.this.enableVoiceTransmission(true);
-                        }
-                        TeamTalkService.this.setMute(TeamTalkService.this.permanentMuteState);
-                        if (myself != null && (1 & this.myStatus) == 0) {
-                            TeamTalkService.this.ttclient.doChangeStatus(myself.nStatusMode & (-2), myself.szStatusMsg);
-                        }
-                        TeamTalkService.this.inPhoneCall = false;
-                        TeamTalkService.this.scheduleReconnectBluetoothScoAfterCall();
-                    }
-                    return;
-                case TelephonyManager.CALL_STATE_RINGING:
-                case TelephonyManager.CALL_STATE_OFFHOOK:
-                    if (!TeamTalkService.this.inPhoneCall) {
-                        TeamTalkService.this.inPhoneCall = true;
-                        if (!TeamTalkService.this.isMute()) {
-                            TeamTalkService.this.ttclient.setSoundOutputMute(true);
-                            TeamTalkService.this.currentMuteState = true;
-                        }
-                        boolean isVoiceActivationEnabled = TeamTalkService.this.isVoiceActivationEnabled();
-                        TeamTalkService teamTalkService2 = TeamTalkService.this;
-                        if (isVoiceActivationEnabled) {
-                            teamTalkService2.voxSuspended = true;
-                            TeamTalkService.this.enableVoiceActivation(false);
-                        } else if (teamTalkService2.isVoiceTransmissionEnabled()) {
-                            TeamTalkService.this.txSuspended = true;
-                            TeamTalkService.this.enableVoiceTransmission(false);
-                        }
-                        this.myStatus = myself.nStatusMode;
-                        if ((this.myStatus & 1) == 0) {
-                            TeamTalkService.this.ttclient.doChangeStatus(1 | this.myStatus, myself.szStatusMsg);
-                            return;
-                        }
-                    }
-                    return;
-                default:
-                    return;
-            }
+            handleCallStateChanged(state);
         }
     };
+
+    private static class ServiceTelephonyCallback extends TelephonyCallback implements TelephonyCallback.CallStateListener {
+        private final TeamTalkService service;
+        ServiceTelephonyCallback(TeamTalkService service) {
+            this.service = service;
+        }
+        @Override
+        public void onCallStateChanged(int state) {
+            service.handleCallStateChanged(state);
+        }
+    }
+
+    private Object telephonyCallbackInstance = null;
     private boolean isRecording = false;
     private boolean isManualRecordingActive = false;
     private boolean isContinuousSessionActive = false;
@@ -737,9 +749,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.isStreamingMedia = false;
         }
         unregisterNetworkCallback();
-        if (this.eventTimer != null) {
-            this.eventTimer.cancel();
-        }
+        stopEventLoop();
         this.mEventHandler.unregisterListener(this);
         disablePhoneCallReaction();
         unwatchBluetoothHeadset();
@@ -855,9 +865,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     public int getMyForegroundServiceType() {
-        int type = 128 | 2; // FOREGROUND_SERVICE_TYPE_MICROPHONE | FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-        if (this.isScreenSharingActive) {
-            type |= 32; // FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+        int type = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            type = ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE | ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK;
+            if (this.isScreenSharingActive) {
+                type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION;
+            }
         }
         return type;
     }
@@ -875,7 +888,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             if (this.isScreenSharingActive) {
                 this.isScreenSharingActive = false;
                 try {
-                    ServiceCompat.startForeground(this, 1, this.widget, 128 | 2);
+                    int basicType = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ?
+                            (ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE | ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK) : 0;
+                    ServiceCompat.startForeground(this, 1, this.widget, basicType);
                 } catch (Throwable ignored) {}
             }
         } catch (Throwable t) {
@@ -946,13 +961,33 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.txSuspended = false;
         this.voxSuspended = false;
         this.inPhoneCall = false;
-        this.telephonyManager.listen(this.phoneStateListener, 32);
-        this.listeningPhoneStateChanges = true;
+        if (this.telephonyManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (this.telephonyCallbackInstance == null) {
+                    this.telephonyCallbackInstance = new ServiceTelephonyCallback(this);
+                }
+                try {
+                    this.telephonyManager.registerTelephonyCallback(getMainExecutor(), (TelephonyCallback) this.telephonyCallbackInstance);
+                    this.listeningPhoneStateChanges = true;
+                } catch (Exception e) {
+                    Log.w("bearware", "Failed to register TelephonyCallback", e);
+                }
+            } else {
+                this.telephonyManager.listen(this.phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+                this.listeningPhoneStateChanges = true;
+            }
+        }
     }
 
     public void disablePhoneCallReaction() {
-        if (this.listeningPhoneStateChanges) {
-            this.telephonyManager.listen(this.phoneStateListener, 0);
+        if (this.listeningPhoneStateChanges && this.telephonyManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && this.telephonyCallbackInstance != null) {
+                try {
+                    this.telephonyManager.unregisterTelephonyCallback((TelephonyCallback) this.telephonyCallbackInstance);
+                } catch (Exception ignored) {}
+            } else {
+                this.telephonyManager.listen(this.phoneStateListener, PhoneStateListener.LISTEN_NONE);
+            }
             this.listeningPhoneStateChanges = false;
         }
         this.txSuspended = false;
@@ -1479,6 +1514,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return client != null && (client.getFlags() & 24) != 0;
     }
 
+    public boolean isConnected() {
+        TeamTalkBase client = this.ttclient;
+        return client != null && (client.getFlags() & 2) != 0;
+    }
+
     public void setMute(boolean state) {
         SharedPreferences prefs = getSessionPreferences();
         this.permanentMuteState = state;
@@ -1967,47 +2007,65 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         return this.chatlogtxtmsgs;
     }
 
+    private final Handler eventHandlerLooper = new Handler(Looper.getMainLooper());
+    private boolean eventLoopRunning = false;
+    private boolean prevVoiceActivationState;
+    private boolean prevVoiceTransmissionState;
+
+    private final Runnable eventLoopRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!eventLoopRunning || TeamTalkService.this.ttclient == null) {
+                return;
+            }
+
+            int events = 0;
+            while (events < 100 && TeamTalkService.this.mEventHandler.processEvent(TeamTalkService.this.ttclient, 0)) {
+                events++;
+            }
+
+            boolean newVoiceTransmissionState = TeamTalkService.this.isVoiceTransmissionEnabled();
+            boolean newVoiceActivationState = TeamTalkService.this.isVoiceActivationEnabled();
+            if (TeamTalkService.this.onVoiceTransmissionToggleListener != null) {
+                if (newVoiceTransmissionState != prevVoiceTransmissionState) {
+                    TeamTalkService.this.onVoiceTransmissionToggleListener.onVoiceTransmissionToggle(newVoiceTransmissionState, TeamTalkService.this.txSuspended);
+                    prevVoiceTransmissionState = newVoiceTransmissionState;
+                }
+                if (newVoiceActivationState != prevVoiceActivationState) {
+                    TeamTalkService.this.onVoiceTransmissionToggleListener.onVoiceActivationToggle(newVoiceActivationState, TeamTalkService.this.voxSuspended);
+                    prevVoiceActivationState = newVoiceActivationState;
+                }
+            }
+
+            long delay = TeamTalkService.this.isConnected() ? 25L : 150L;
+            if (eventLoopRunning) {
+                eventHandlerLooper.postDelayed(this, delay);
+            }
+        }
+    };
+
     void createEventTimer() {
-        this.eventTimer = new CountDownTimer(10000L, 100L) { 
-            private boolean prevVoiceActivationState;
-            private boolean prevVoiceTransmissionState;
+        startEventLoop();
+    }
 
-            {
-                this.prevVoiceTransmissionState = TeamTalkService.this.isVoiceTransmissionEnabled();
-                this.prevVoiceActivationState = TeamTalkService.this.isVoiceActivationEnabled();
-            }
+    void startEventLoop() {
+        if (!this.eventLoopRunning) {
+            this.eventLoopRunning = true;
+            this.prevVoiceTransmissionState = isVoiceTransmissionEnabled();
+            this.prevVoiceActivationState = isVoiceActivationEnabled();
+            this.eventHandlerLooper.post(this.eventLoopRunnable);
+        }
+    }
 
-            @Override
-            public void onTick(long millisUntilFinished) {
-                int events = 0;
-                while (true) {
-                    int events2 = events + 1;
-                    if (events >= 50 || !TeamTalkService.this.mEventHandler.processEvent(TeamTalkService.this.ttclient, 0)) {
-                        break;
-                    } else {
-                        events = events2;
-                    }
-                }
-                boolean newVoiceTransmissionState = TeamTalkService.this.isVoiceTransmissionEnabled();
-                boolean newVoiceActivationState = TeamTalkService.this.isVoiceActivationEnabled();
-                if (TeamTalkService.this.onVoiceTransmissionToggleListener != null) {
-                    if (newVoiceTransmissionState != this.prevVoiceTransmissionState) {
-                        TeamTalkService.this.onVoiceTransmissionToggleListener.onVoiceTransmissionToggle(newVoiceTransmissionState, TeamTalkService.this.txSuspended);
-                        this.prevVoiceTransmissionState = newVoiceTransmissionState;
-                    }
-                    if (newVoiceActivationState != this.prevVoiceActivationState) {
-                        TeamTalkService.this.onVoiceTransmissionToggleListener.onVoiceActivationToggle(newVoiceActivationState, TeamTalkService.this.voxSuspended);
-                        this.prevVoiceActivationState = newVoiceActivationState;
-                    }
-                }
-            }
-
-            @Override
-            public void onFinish() {
-                start();
-            }
-        };
-        this.eventTimer.start();
+    void stopEventLoop() {
+        this.eventLoopRunning = false;
+        this.eventHandlerLooper.removeCallbacks(this.eventLoopRunnable);
+        if (this.eventTimer != null) {
+            try {
+                this.eventTimer.cancel();
+            } catch (Exception ignored) {}
+            this.eventTimer = null;
+        }
     }
 
     void createReconnectTimer(long delayMsec) {
@@ -2226,7 +2284,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             throw new AssertionError();
         }
         if (Utils.isWebLogin(this.ttserver.username)) {
-            new WebLoginAccessToken().execute(new Void[0]);
+            requestWebLoginAccessToken();
         } else {
             login();
         }
@@ -2694,43 +2752,20 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         reinitSoundInputDevice();
     }
 
-        class WebLoginAccessToken extends AsyncTask<Void, Void, Void> {
-        String username = "";
-        String token = "";
-        String accesstoken = "";
-
-        WebLoginAccessToken() {
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
+    private void requestWebLoginAccessToken() {
+        connectionExecutor.execute(() -> {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(TeamTalkService.this.getBaseContext());
-            this.username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
-            this.token = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
+            String username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
+            String token = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
+            String accesstoken = "";
             ServerProperties srvprop = new ServerProperties();
-            if (TeamTalkService.this.ttclient.getServerProperties(srvprop)) {
-                this.accesstoken = srvprop.szAccessToken;
+            if (TeamTalkService.this.ttclient != null && TeamTalkService.this.ttclient.getServerProperties(srvprop)) {
+                accesstoken = srvprop.szAccessToken;
             }
-        }
 
-                @Override
-        public void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            int length = this.username.length();
-            TeamTalkService teamTalkService = TeamTalkService.this;
-            if (length > 0) {
-                teamTalkService.ttserver.username = this.username;
-                TeamTalkService.this.login();
-                return;
-            }
-            Toast.makeText(teamTalkService, TeamTalkService.this.getResources().getString(R.string.text_weblogin_authfailure), 1).show();
-        }
-
-                @Override
-        public Void doInBackground(Void... voids) {
-            String xml = Utils.getURL(AppInfo.getBearWareAccessTokenUrl(TeamTalkService.this.getBaseContext(), this.username, this.token, this.accesstoken));
+            String xml = Utils.getURL(AppInfo.getBearWareAccessTokenUrl(TeamTalkService.this.getBaseContext(), username, token, accesstoken));
             Log.d("bearware", xml);
+            String parsedUser = "";
             try {
                 InputSource src = new InputSource(new StringReader(xml));
                 DocumentBuilderFactory dbf = Utils.createSecureDocumentBuilderFactory();
@@ -2738,22 +2773,21 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 Document document = db.parse(src);
                 XPathFactory factory = XPathFactory.newInstance();
                 XPath xPath = factory.newXPath();
-                this.username = (String) xPath.evaluate("/teamtalk/bearware/username", document, XPathConstants.STRING);
-                return null;
-            } catch (IOException e2) {
-                Log.e("bearware", "XML IOException: " + e2);
-                return null;
-            } catch (ParserConfigurationException e3) {
-                Log.e("bearware", "Parser cfg failed: " + e3);
-                return null;
-            } catch (XPathExpressionException e4) {
-                Log.e("bearware", "XPath failed: " + e4);
-                return null;
-            } catch (SAXException e5) {
-                Log.e("bearware", "XML SAXException: " + e5);
-                return null;
+                parsedUser = (String) xPath.evaluate("/teamtalk/bearware/username", document, XPathConstants.STRING);
+            } catch (Exception e) {
+                Log.e("bearware", "Web login parse error: " + e);
             }
-        }
+
+            final String finalUser = parsedUser;
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (finalUser != null && !finalUser.isEmpty() && TeamTalkService.this.ttserver != null) {
+                    TeamTalkService.this.ttserver.username = finalUser;
+                    TeamTalkService.this.login();
+                } else {
+                    Toast.makeText(TeamTalkService.this, TeamTalkService.this.getResources().getString(R.string.text_weblogin_authfailure), Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
     }
 
     private void registerNetworkCallback() {
@@ -2866,19 +2900,26 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
 
         syncToUserCache();
-        this.ttclient.disconnect();
 
-        if (!setupEncryption()) {
-            Log.w("bearware", "Seamless reconnect encryption setup failed");
-            createReconnectTimer(2000L);
-            return;
-        }
+        connectionExecutor.execute(() -> {
+            if (this.ttserver == null || this.manualDisconnect || this.ttclient == null) {
+                this.isSeamlessReconnecting = false;
+                return;
+            }
+            this.ttclient.disconnect();
 
-        if (!this.ttclient.connect(this.ttserver.ipaddr, this.ttserver.tcpport, this.ttserver.udpport, 0, 0, this.ttserver.encrypted)) {
-            Log.w("bearware", "Seamless connect() failed, scheduling quick retry");
-            createReconnectTimer(1500L);
-        } else {
-            Log.i("bearware", "Seamless connect() started over new network interface");
-        }
+            if (!setupEncryption()) {
+                Log.w("bearware", "Seamless reconnect encryption setup failed");
+                new Handler(Looper.getMainLooper()).post(() -> createReconnectTimer(2000L));
+                return;
+            }
+
+            if (!this.ttclient.connect(this.ttserver.ipaddr, this.ttserver.tcpport, this.ttserver.udpport, 0, 0, this.ttserver.encrypted)) {
+                Log.w("bearware", "Seamless connect() failed, scheduling quick retry");
+                new Handler(Looper.getMainLooper()).post(() -> createReconnectTimer(1500L));
+            } else {
+                Log.i("bearware", "Seamless connect() started over new network interface");
+            }
+        });
     }
 }

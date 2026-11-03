@@ -4,9 +4,8 @@ import org.nekit.ttproplus.R;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,6 +21,8 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -99,28 +100,23 @@ public class WebLoginActivity extends AppCompatActivity {
         setupUI();
     };
 
-    View.OnClickListener loginClick = view -> new ValidateLogin().execute();
+    private final ExecutorService loginExecutor = Executors.newSingleThreadExecutor();
 
-    class ValidateLogin extends AsyncTask<Void, Void, Void> {
+    View.OnClickListener loginClick = view -> performValidateLogin();
 
-        String username = "", password, token = "", nickname = "";
+    private void performValidateLogin() {
+        EditText bearwareid = findViewById(R.id.bearwareidedit);
+        EditText bearwarepasswd = findViewById(R.id.bearwarepasswdedit);
+        final String inputUser = bearwareid.getText().toString();
+        final String inputPasswd = bearwarepasswd.getText().toString();
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            EditText bearwareid = findViewById(R.id.bearwareidedit);
-            EditText bearwarepasswd = findViewById(R.id.bearwarepasswdedit);
-            this.username = bearwareid.getText().toString();
-            this.password = bearwarepasswd.getText().toString();
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-
-            String xml = Utils.getURL(AppInfo.getBearWareTokenUrl(getBaseContext(),
-                        this.username, this.password));
+        loginExecutor.execute(() -> {
+            String xml = Utils.getURL(AppInfo.getBearWareTokenUrl(getBaseContext(), inputUser, inputPasswd));
             Log.d(AppInfo.TAG, xml);
+
+            String parsedUser = inputUser;
+            String parsedNick = "";
+            String parsedToken = "";
 
             try {
                 InputSource src = new InputSource(new StringReader(xml));
@@ -130,46 +126,37 @@ public class WebLoginActivity extends AppCompatActivity {
                 XPathFactory factory = XPathFactory.newInstance();
                 XPath xPath = factory.newXPath();
 
-                this.username = (String)xPath.evaluate("/teamtalk/bearware/username", document, XPathConstants.STRING);
-                this.nickname= (String)xPath.evaluate("/teamtalk/bearware/nickname", document, XPathConstants.STRING);
-                this.token= (String)xPath.evaluate("/teamtalk/bearware/token", document, XPathConstants.STRING);
-
-            } catch (XPathExpressionException e) {
-                Log.e(AppInfo.TAG, "XPath failed: " + e);
-            } catch (ParserConfigurationException e) {
-                Log.e(AppInfo.TAG, "Parser cfg failed: " + e);
-            } catch (IOException e) {
-                Log.e(AppInfo.TAG, "XML IOException: " + e);
-            } catch (SAXException e) {
-                Log.e(AppInfo.TAG, "XML SAXException: " + e);
+                parsedUser = (String) xPath.evaluate("/teamtalk/bearware/username", document, XPathConstants.STRING);
+                parsedNick = (String) xPath.evaluate("/teamtalk/bearware/nickname", document, XPathConstants.STRING);
+                parsedToken = (String) xPath.evaluate("/teamtalk/bearware/token", document, XPathConstants.STRING);
+            } catch (XPathExpressionException | ParserConfigurationException | IOException | SAXException e) {
+                Log.e(AppInfo.TAG, "XML parse failed: " + e);
             }
 
-            return null;
-        }
+            final String finalUser = parsedUser;
+            final String finalNick = parsedNick;
+            final String finalToken = parsedToken;
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if (isFinishing()) return;
+            runOnUiThread(() -> {
+                if (isFinishing()) return;
 
-            if (token != null && token.length() > 0) {
+                if (finalToken != null && finalToken.length() > 0) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(WebLoginActivity.this.getBaseContext());
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, finalUser);
+                    editor.putString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, finalToken);
+                    editor.apply();
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(WebLoginActivity.this.getBaseContext());
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, this.username);
-                editor.putString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, this.token);
-                editor.apply();
+                    String msg = WebLoginActivity.this.getResources().getString(R.string.text_bearwarelogin_success, finalNick, finalUser);
+                    Toast.makeText(WebLoginActivity.this, msg, Toast.LENGTH_LONG).show();
 
-                String msg = WebLoginActivity.this.getResources().getString(R.string.text_bearwarelogin_success, this.nickname, this.username);
-                Toast.makeText(WebLoginActivity.this, msg, Toast.LENGTH_LONG).show();
-
-                WebLoginActivity.this.setupUI();
-                setResult(RESULT_OK);
-            }
-            else {
-                String msg = WebLoginActivity.this.getResources().getString(R.string.text_bearwarelogin_failed, this.nickname, this.username);
-                Toast.makeText(WebLoginActivity.this, msg, Toast.LENGTH_LONG).show();
-            }
-        }
+                    WebLoginActivity.this.setupUI();
+                    setResult(RESULT_OK);
+                } else {
+                    String msg = WebLoginActivity.this.getResources().getString(R.string.text_bearwarelogin_failed, finalNick, finalUser);
+                    Toast.makeText(WebLoginActivity.this, msg, Toast.LENGTH_LONG).show();
+                }
+            });
+        });
     }
 }

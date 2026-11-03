@@ -3,7 +3,7 @@ import org.nekit.ttproplus.R;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 
 import androidx.appcompat.app.AppCompatDelegate;
 

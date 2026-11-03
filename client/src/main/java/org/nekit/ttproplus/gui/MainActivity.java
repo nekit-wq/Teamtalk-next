@@ -31,7 +31,6 @@ import android.widget.CheckBox;
 import org.nekit.ttproplus.backend.VoiceChanger;
 import org.nekit.ttproplus.data.ScreenShareAudioHelper;
 import org.nekit.ttproplus.utils.ScreenShareManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -39,8 +38,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.os.Vibrator;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.util.SparseArray;
@@ -190,21 +195,28 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     CountDownTimer stats_timer = null;
     SparseArray<CmdComplete> activecmds = new SparseArray<>();
     TTSWrapper ttsWrapper = null;
+    private ProgressBar cachedMicBar = null;
     private final Handler micActivityHandler = new Handler(Looper.getMainLooper());
     private final Runnable micActivityRunnable = new Runnable() { 
         @Override
         public void run() {
-            if (MainActivity.this.prefs != null && ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_MIC_ACTIVITY, false)).booleanValue() && MainActivity.this.mConnection.isBound() && MainActivity.this.getClient() != null) {
-                ProgressBar micBar = (ProgressBar) MainActivity.this.findViewById(R.id.mic_activity_bar);
-                if (micBar != null) {
-                    micBar.setVisibility(0);
+            if (MainActivity.this.cachedMicBar == null) {
+                MainActivity.this.cachedMicBar = (ProgressBar) MainActivity.this.findViewById(R.id.mic_activity_bar);
+            }
+            ProgressBar micBar = MainActivity.this.cachedMicBar;
+            if (micBar != null) {
+                if (MainActivity.this.prefs != null && Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_MIC_ACTIVITY, false)) && MainActivity.this.mConnection.isBound() && MainActivity.this.getClient() != null) {
+                    if (micBar.getVisibility() != View.VISIBLE) {
+                        micBar.setVisibility(View.VISIBLE);
+                    }
                     int level = MainActivity.this.getClient().getSoundInputLevel();
-                    micBar.setProgress(level);
-                }
-            } else {
-                ProgressBar micBar2 = (ProgressBar) MainActivity.this.findViewById(R.id.mic_activity_bar);
-                if (micBar2 != null) {
-                    micBar2.setVisibility(8);
+                    if (micBar.getProgress() != level) {
+                        micBar.setProgress(level);
+                    }
+                } else {
+                    if (micBar.getVisibility() != View.GONE) {
+                        micBar.setVisibility(View.GONE);
+                    }
                 }
             }
             MainActivity.this.micActivityHandler.postDelayed(this, 100L);
@@ -1243,7 +1255,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     return;
                 }
             }
-            new FileCopyingTask().execute(uri);
+            copyFileAndUploadAsync(uri);
             return;
         }
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
@@ -1485,15 +1497,12 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         return false;
     }
 
-        private class FileCopyingTask extends AsyncTask<Uri, Void, String> {
-        private FileCopyingTask() {
-        }
+    private final ExecutorService fileCopyExecutor = Executors.newSingleThreadExecutor();
 
-        @Override
-        public String doInBackground(Uri... uris) {
-            Uri uri = uris[0];
+    private void copyFileAndUploadAsync(Uri uri) {
+        fileCopyExecutor.execute(() -> {
             String rawFileName = null;
-            try (Cursor cursor = MainActivity.this.getContentResolver().query(uri, null, null, null, null)) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
                     int columnIndex = cursor.getColumnIndex("_display_name");
                     if (columnIndex >= 0) {
@@ -1507,41 +1516,40 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 safeName = "temp_upload_" + System.currentTimeMillis() + ".dat";
             }
 
-            File transitFile = new File(MainActivity.this.getCacheDir(), safeName);
+            File transitFile = new File(getCacheDir(), safeName);
+            String transitPath = null;
             try {
                 if (transitFile.exists()) {
                     transitFile.delete();
                 }
-                if (!transitFile.createNewFile()) {
-                    return null;
-                }
-                transitFile.deleteOnExit();
-
-                try (InputStream src = MainActivity.this.getContentResolver().openInputStream(uri);
-                     FileOutputStream dest = new FileOutputStream(transitFile)) {
-                    if (src == null) return null;
-                    byte[] buffer = new byte[32768];
-                    int read;
-                    while ((read = src.read(buffer)) > 0) {
-                        dest.write(buffer, 0, read);
+                if (transitFile.createNewFile()) {
+                    transitFile.deleteOnExit();
+                    try (InputStream src = getContentResolver().openInputStream(uri);
+                         FileOutputStream dest = new FileOutputStream(transitFile)) {
+                        if (src != null) {
+                            byte[] buffer = new byte[32768];
+                            int read;
+                            while ((read = src.read(buffer)) > 0) {
+                                dest.write(buffer, 0, read);
+                            }
+                            dest.flush();
+                            transitPath = transitFile.getPath();
+                        }
                     }
-                    dest.flush();
-                    return transitFile.getPath();
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error copying upload file", e);
                 if (transitFile.exists()) transitFile.delete();
-                return null;
             }
-        }
 
-                @Override
-        public void onPostExecute(String path) {
-            if (path != null && !MainActivity.this.startFileUpload(path)) {
-                File transitFile = new File(path);
-                transitFile.delete();
-            }
-        }
+            final String finalPath = transitPath;
+            runOnUiThread(() -> {
+                if (finalPath != null && !startFileUpload(finalPath)) {
+                    File file = new File(finalPath);
+                    file.delete();
+                }
+            });
+        });
     }
 
     @Override
@@ -2775,6 +2783,47 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         Vector<User> currentusers = new Vector<>();
         private boolean pendingUpdate = false;
 
+        private final SparseIntArray channelPopulationMap = new SparseIntArray();
+        private boolean cachedShowQuickActions = true;
+        private boolean cachedQuickKickSrv = true;
+        private boolean cachedQuickBanSrv = true;
+        private boolean cachedQuickKickChan = true;
+        private boolean cachedQuickBanChan = true;
+        private boolean cachedMyKickRight = false;
+        private boolean cachedMyBanRight = false;
+        private int cachedMyUserId = 0;
+        private String cachedRootServerName = "";
+
+        private class ParentViewHolder {
+            TextView pName;
+            TextView pTopic;
+        }
+
+        private class ChannelViewHolder {
+            ImageView chanicon;
+            TextView name;
+            TextView topic;
+            Button join;
+            TextView population;
+        }
+
+        private class UserViewHolder {
+            ImageView usericon;
+            TextView nickname;
+            TextView status;
+            Button sndmsg;
+            View quickActionsContainer;
+            Button btnKickSrv;
+            Button btnBanSrv;
+            Button btnKickChan;
+            Button btnBanChan;
+        }
+
+        private class InfoViewHolder {
+            TextView title;
+            TextView details;
+        }
+
         ChannelListAdapter(Context context) {
             this.inflater = LayoutInflater.from(context);
         }
@@ -2853,6 +2902,36 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     return lambda$doNotifyDataSetChanged$2;
                 }
             });
+            if (MainActivity.this.getClient() != null) {
+                this.cachedMyUserId = MainActivity.this.getClient().getMyUserID();
+                UserAccount myAccount = new UserAccount();
+                if (MainActivity.this.getClient().getMyUserAccount(myAccount)) {
+                    this.cachedMyKickRight = (myAccount.uUserRights & 32) != 0;
+                    this.cachedMyBanRight = (myAccount.uUserRights & 64) != 0;
+                } else {
+                    this.cachedMyKickRight = false;
+                    this.cachedMyBanRight = false;
+                }
+                ServerProperties srvprop = new ServerProperties();
+                if (MainActivity.this.getClient().getServerProperties(srvprop)) {
+                    this.cachedRootServerName = (srvprop.szServerName != null) ? srvprop.szServerName : "";
+                }
+            }
+            if (MainActivity.this.prefs != null) {
+                this.cachedShowQuickActions = Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_USER_QUICK_ACTIONS, true));
+                this.cachedQuickKickSrv = Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_KICK_SRV, true));
+                this.cachedQuickBanSrv = Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_BAN_SRV, true));
+                this.cachedQuickKickChan = Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_KICK_CHAN, true));
+                this.cachedQuickBanChan = Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_BAN_CHAN, true));
+            }
+            this.channelPopulationMap.clear();
+            if (MainActivity.this.getService() != null && MainActivity.this.getService().getUsers() != null) {
+                for (User u : MainActivity.this.getService().getUsers().values()) {
+                    int cid = u.nChannelID;
+                    this.channelPopulationMap.put(cid, this.channelPopulationMap.get(cid, 0) + 1);
+                }
+            }
+
             super.notifyDataSetChanged();
             MainActivity.this.accessibilityAssistant.unlockEvents();
         }
@@ -2987,122 +3066,138 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            boolean neutral;
-            boolean isOperator;
-            String str;
-            String speaking;
-            int icon_resource;
-            View convertView2;
-            String finalChanName;
-            int population;
-            String str2;
-            View convertView3 = convertView;
             Object item = getItem(position);
+            int viewType = getItemViewType(position);
+
             if (item instanceof Channel) {
                 final Channel channel = (Channel) item;
-                switch (getItemViewType(position)) {
-                    case 0:
-                        if (convertView3 == null || convertView3.findViewById(R.id.parentname) == null) {
-                            convertView3 = this.inflater.inflate(R.layout.item_channel_back, parent, false);
+                switch (viewType) {
+                    case 0: {
+                        ParentViewHolder holder;
+                        if (convertView == null || !(convertView.getTag() instanceof ParentViewHolder)) {
+                            convertView = this.inflater.inflate(R.layout.item_channel_back, parent, false);
+                            holder = new ParentViewHolder();
+                            holder.pName = convertView.findViewById(R.id.parentname);
+                            holder.pTopic = convertView.findViewById(R.id.chantopic);
+                            convertView.setTag(holder);
+                        } else {
+                            holder = (ParentViewHolder) convertView.getTag();
                         }
-                        TextView pName = (TextView) convertView3.findViewById(R.id.parentname);
-                        TextView pTopic = (TextView) convertView3.findViewById(R.id.chantopic);
                         String parentNameStr;
                         if (channel.nChannelID == 0 || (MainActivity.this.curchannel != null && MainActivity.this.curchannel.nParentID == 0)) {
                             parentNameStr = MainActivity.this.getString(R.string.root_server);
                         } else {
                             parentNameStr = (channel.szName != null && !channel.szName.isEmpty()) ? channel.szName : MainActivity.this.getString(R.string.root_channel);
                         }
-                        pName.setText(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}));
-                        if (pTopic != null) {
-                            pTopic.setText(channel.szTopic != null ? channel.szTopic : "");
+                        holder.pName.setText(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}));
+                        if (holder.pTopic != null) {
+                            holder.pTopic.setText(channel.szTopic != null ? channel.szTopic : "");
                         }
-                        convertView3.setContentDescription(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}) + (channel.szTopic != null && !channel.szTopic.isEmpty() ? ", " + channel.szTopic : ""));
+                        convertView.setContentDescription(MainActivity.this.getString(R.string.back_to_channel, new Object[]{parentNameStr}) + (channel.szTopic != null && !channel.szTopic.isEmpty() ? ", " + channel.szTopic : ""));
                         break;
-                    case 1:
-                        if (convertView3 == null || convertView3.findViewById(R.id.channelname) == null) {
-                            convertView3 = this.inflater.inflate(R.layout.item_channel, parent, false);
+                    }
+                    case 1: {
+                        ChannelViewHolder holder;
+                        if (convertView == null || !(convertView.getTag() instanceof ChannelViewHolder)) {
+                            convertView = this.inflater.inflate(R.layout.item_channel, parent, false);
+                            holder = new ChannelViewHolder();
+                            holder.chanicon = convertView.findViewById(R.id.channelicon);
+                            holder.name = convertView.findViewById(R.id.channelname);
+                            holder.topic = convertView.findViewById(R.id.chantopic);
+                            holder.join = convertView.findViewById(R.id.join_btn);
+                            holder.population = convertView.findViewById(R.id.population);
+                            convertView.setTag(holder);
+                        } else {
+                            holder = (ChannelViewHolder) convertView.getTag();
                         }
-                        ImageView chanicon = (ImageView) convertView3.findViewById(R.id.channelicon);
-                        TextView name = (TextView) convertView3.findViewById(R.id.channelname);
-                        TextView topic = (TextView) convertView3.findViewById(R.id.chantopic);
-                        Button join = (Button) convertView3.findViewById(R.id.join_btn);
-                        int icon_resource2 = R.drawable.channel_orange;
+
+                        int iconRes = channel.bPassword ? R.drawable.channel_pink : R.drawable.channel_orange;
+                        holder.chanicon.setImageResource(iconRes);
                         if (channel.bPassword) {
-                            icon_resource2 = R.drawable.channel_pink;
-                            chanicon.setContentDescription(MainActivity.this.getString(R.string.text_passwdprot));
-                            chanicon.setImportantForAccessibility(1);
+                            holder.chanicon.setContentDescription(MainActivity.this.getString(R.string.text_passwdprot));
+                            holder.chanicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
                         } else {
-                            chanicon.setContentDescription(null);
-                            chanicon.setImportantForAccessibility(2);
+                            holder.chanicon.setContentDescription(null);
+                            holder.chanicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
                         }
-                        chanicon.setImageResource(icon_resource2);
-                        if (channel.nParentID == 0) {
-                            ServerProperties srvprop = new ServerProperties();
-                            MainActivity.this.getClient().getServerProperties(srvprop);
-                            name.setText(srvprop.szServerName);
-                            finalChanName = srvprop.szServerName;
-                        } else {
-                            name.setText(channel.szName);
-                            finalChanName = channel.szName;
-                        }
-                        topic.setText(channel.szTopic);
-                        View.OnClickListener listener = new View.OnClickListener() { 
-                            @Override
-                            public final void onClick(View view) {
-                                MainActivity.ChannelListAdapter.this.lambda$getView$3(channel, view);
-                            }
-                        };
-                        join.setOnClickListener(listener);
-                        join.setAccessibilityDelegate(MainActivity.this.accessibilityAssistant);
-                        join.setEnabled(channel.nChannelID != MainActivity.this.getClient().getMyChannelID());
-                        int population2 = 0;
+
+                        String chanName = (channel.nParentID == 0) ? this.cachedRootServerName : channel.szName;
+                        if (chanName == null || chanName.isEmpty()) chanName = (channel.szName != null ? channel.szName : "");
+                        holder.name.setText(chanName);
+                        holder.topic.setText(channel.szTopic != null ? channel.szTopic : "");
+
+                        holder.join.setOnClickListener(v -> MainActivity.this.joinChannel(channel));
+                        holder.join.setAccessibilityDelegate(MainActivity.this.accessibilityAssistant);
+                        int myChanId = MainActivity.this.getClient() != null ? MainActivity.this.getClient().getMyChannelID() : -1;
+                        holder.join.setEnabled(channel.nChannelID != myChanId);
+
+                        int pop = 0;
                         if (channel.nMaxUsers > 0) {
-                            int population3 = Utils.getUsers(channel.nChannelID, MainActivity.this.getService().getUsers()).size();
-                            TextView textView = (TextView) convertView3.findViewById(R.id.population);
-                            if (population3 > 0) {
-                                textView.setText(String.format(Locale.ROOT, "(%d)", Integer.valueOf(population3)));
-                            } else {
-                                textView.setText("");
+                            pop = this.channelPopulationMap.get(channel.nChannelID, 0);
+                            if (pop > 0 && holder.population != null) {
+                                holder.population.setText(String.format(Locale.ROOT, "(%d)", pop));
+                            } else if (holder.population != null) {
+                                holder.population.setText("");
                             }
-                            population2 = population3;
+                        } else if (holder.population != null) {
+                            holder.population.setText("");
                         }
-                        StringBuilder descBuilder = new StringBuilder(finalChanName);
+
+                        StringBuilder descBuilder = new StringBuilder(chanName);
                         if (channel.bPassword) {
                             descBuilder.append(", ").append(MainActivity.this.getString(R.string.text_passwdprot));
                         }
-                        if (population2 > 0) {
-                            descBuilder.append(", ").append(MainActivity.this.getString(R.string.desc_users_count, new Object[]{Integer.valueOf(population2)}));
+                        if (pop > 0) {
+                            descBuilder.append(", ").append(MainActivity.this.getString(R.string.desc_users_count, new Object[]{pop}));
                         }
-                        String finalChanName2 = channel.szTopic;
-                        if (finalChanName2 != null && !channel.szTopic.isEmpty()) {
+                        if (channel.szTopic != null && !channel.szTopic.isEmpty()) {
                             descBuilder.append(", ").append(MainActivity.this.getString(R.string.channel_prop_title_topic)).append(": ").append(channel.szTopic);
                         }
-                        convertView3.setContentDescription(descBuilder.toString());
+                        convertView.setContentDescription(descBuilder.toString());
                         break;
-                    case 3:
-                        if (convertView3 == null || convertView3.findViewById(R.id.titletext) == null) {
-                            convertView3 = this.inflater.inflate(R.layout.item_info, parent, false);
+                    }
+                    case 3: {
+                        InfoViewHolder holder;
+                        if (convertView == null || !(convertView.getTag() instanceof InfoViewHolder)) {
+                            convertView = this.inflater.inflate(R.layout.item_info, parent, false);
+                            holder = new InfoViewHolder();
+                            holder.title = convertView.findViewById(R.id.titletext);
+                            holder.details = convertView.findViewById(R.id.infodetails);
+                            convertView.setTag(holder);
+                        } else {
+                            holder = (InfoViewHolder) convertView.getTag();
                         }
-                        TextView title = (TextView) convertView3.findViewById(R.id.titletext);
-                        TextView details = (TextView) convertView3.findViewById(R.id.infodetails);
-                        title.setText(channel.szName);
-                        details.setText(channel.szTopic);
+                        holder.title.setText(channel.szName);
+                        holder.details.setText(channel.szTopic);
                         break;
+                    }
                 }
             } else if (item instanceof User) {
                 final User user = (User) item;
-                if (convertView3 == null || convertView3.findViewById(R.id.nickname) == null) {
-                    convertView3 = this.inflater.inflate(R.layout.item_user, parent, false);
+                UserViewHolder holder;
+                if (convertView == null || !(convertView.getTag() instanceof UserViewHolder)) {
+                    convertView = this.inflater.inflate(R.layout.item_user, parent, false);
+                    holder = new UserViewHolder();
+                    holder.usericon = convertView.findViewById(R.id.usericon);
+                    holder.nickname = convertView.findViewById(R.id.nickname);
+                    holder.status = convertView.findViewById(R.id.status);
+                    holder.sndmsg = convertView.findViewById(R.id.msg_btn);
+                    holder.quickActionsContainer = convertView.findViewById(R.id.quick_actions_container);
+                    holder.btnKickSrv = convertView.findViewById(R.id.btn_quick_kick_srv);
+                    holder.btnBanSrv = convertView.findViewById(R.id.btn_quick_ban_srv);
+                    holder.btnKickChan = convertView.findViewById(R.id.btn_quick_kick_chan);
+                    holder.btnBanChan = convertView.findViewById(R.id.btn_quick_ban_chan);
+                    convertView.setTag(holder);
+                } else {
+                    holder = (UserViewHolder) convertView.getTag();
                 }
-                ImageView usericon = (ImageView) convertView3.findViewById(R.id.usericon);
-                TextView nickname = (TextView) convertView3.findViewById(R.id.nickname);
-                TextView status = (TextView) convertView3.findViewById(R.id.status);
+
                 String name2 = Utils.getDisplayName(MainActivity.this.getBaseContext(), user);
-                nickname.setText(name2);
-                status.setText(user.szStatusMsg != null ? user.szStatusMsg : "");
+                holder.nickname.setText(name2);
+                holder.status.setText(user.szStatusMsg != null ? user.szStatusMsg : "");
+
                 boolean selected = MainActivity.this.userIDS.contains(Integer.valueOf(user.nUserID));
-                boolean isOperator2 = MainActivity.this.getClient() != null && MainActivity.this.getClient().isChannelOperator(user.nUserID, user.nChannelID);
+                boolean isOperator2 = (MainActivity.this.getClient() != null && MainActivity.this.getClient().isChannelOperator(user.nUserID, user.nChannelID));
                 boolean talking = (user.uUserState & 1) != 0;
                 boolean female = (user.nStatusMode & 256) != 0;
                 boolean neutral2 = (user.nStatusMode & 4096) != 0;
@@ -3111,206 +3206,109 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 if (MainActivity.this.getService() != null && MainActivity.this.getClient() != null && user.nUserID == MainActivity.this.getClient().getMyUserID()) {
                     talking = MainActivity.this.getService().isVoiceTransmitting();
                 }
+
                 String move = selected ? MainActivity.this.getString(R.string.user_state_selected) : "";
-                speaking = talking ? MainActivity.this.getString(R.string.user_state_now_speaking, new Object[]{name2}) : name2;
+                String speaking = talking ? MainActivity.this.getString(R.string.user_state_now_speaking, new Object[]{name2}) : name2;
                 String gender = female ? MainActivity.this.getString(R.string.user_state_female) : neutral2 ? MainActivity.this.getString(R.string.user_state_neutral) : MainActivity.this.getString(R.string.user_state_male);
                 String op = isOperator2 ? MainActivity.this.getString(R.string.user_state_operator) : "";
                 String admin = isAdmin ? MainActivity.this.getString(R.string.user_state_admin) : "";
                 String away = isAway ? MainActivity.this.getString(R.string.user_state_away) : "";
-                nickname.setContentDescription(move + " " + speaking + " " + gender + " " + op + " " + admin);
+                holder.nickname.setContentDescription(move + " " + speaking + " " + gender + " " + op + " " + admin);
+
+                int icon_resource;
                 if (talking) {
-                    if (female) {
-                        icon_resource = R.drawable.woman_green;
-                    } else {
-                        icon_resource = R.drawable.man_green;
-                    }
+                    icon_resource = female ? R.drawable.woman_green : R.drawable.man_green;
                 } else if (female) {
                     icon_resource = isAway ? R.drawable.woman_orange : R.drawable.woman_blue;
                 } else {
                     icon_resource = isAway ? R.drawable.man_orange : R.drawable.man_blue;
                 }
-                status.setContentDescription(away + " " + (user.szStatusMsg != null ? user.szStatusMsg : ""));
-                usericon.setImageResource(icon_resource);
-                usericon.setImportantForAccessibility(2);
-                Button sndmsg = (Button) convertView3.findViewById(R.id.msg_btn);
-                View.OnClickListener listener2 = new View.OnClickListener() { 
-                    @Override
-                    public final void onClick(View view) {
-                        MainActivity.ChannelListAdapter.this.lambda$getView$4(user, view);
-                    }
-                };
-                sndmsg.setOnClickListener(listener2);
-                sndmsg.setAccessibilityDelegate(MainActivity.this.accessibilityAssistant);
-                View quickActionsContainer = convertView3.findViewById(R.id.quick_actions_container);
-                if (quickActionsContainer == null) {
-                    convertView2 = convertView3;
-                } else {
-                    boolean showQuickActions = ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_USER_QUICK_ACTIONS, true)).booleanValue();
-                    boolean isMe = MainActivity.this.getClient() != null && user.nUserID == MainActivity.this.getClient().getMyUserID();
-                    if (!showQuickActions || isMe) {
-                        convertView2 = convertView3;
-                        quickActionsContainer.setVisibility(8);
+                holder.status.setContentDescription(away + " " + (user.szStatusMsg != null ? user.szStatusMsg : ""));
+                holder.usericon.setImageResource(icon_resource);
+                holder.usericon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                holder.sndmsg.setOnClickListener(v -> {
+                    Intent intent = new Intent(MainActivity.this, (Class<?>) TextMessageActivity.class);
+                    MainActivity.this.startActivity(intent.putExtra("userid", user.nUserID));
+                });
+                holder.sndmsg.setAccessibilityDelegate(MainActivity.this.accessibilityAssistant);
+
+                if (holder.quickActionsContainer != null) {
+                    boolean isMe = (this.cachedMyUserId > 0 && user.nUserID == this.cachedMyUserId);
+                    if (!this.cachedShowQuickActions || isMe) {
+                        holder.quickActionsContainer.setVisibility(View.GONE);
                     } else {
-                        UserAccount myuseraccount = new UserAccount();
-                        MainActivity.this.getClient().getMyUserAccount(myuseraccount);
-                        boolean banRight = (myuseraccount.uUserRights & 64) != 0;
-                        boolean kickRight = (myuseraccount.uUserRights & 32) != 0;
-                        int myuserid = MainActivity.this.getClient().getMyUserID();
-                        boolean kickRight2 = kickRight;
-                        TeamTalkBase client = MainActivity.this.getClient();
-                        int icon_resource3 = user.nChannelID;
-                        boolean operatorRight = client.isChannelOperator(myuserid, icon_resource3);
-                        Button btnKickSrv = (Button) convertView3.findViewById(R.id.btn_quick_kick_srv);
-                        int myuserid2 = R.id.btn_quick_ban_srv;
-                        Button btnBanSrv = (Button) convertView3.findViewById(myuserid2);
-                        Button btnKickChan = (Button) convertView3.findViewById(R.id.btn_quick_kick_chan);
-                        Button btnBanChan = (Button) convertView3.findViewById(R.id.btn_quick_ban_chan);
+                        boolean kickRight = this.cachedMyKickRight;
+                        boolean banRight = this.cachedMyBanRight;
+                        boolean operatorRight = (this.cachedMyUserId > 0 && MainActivity.this.getClient() != null && MainActivity.this.getClient().isChannelOperator(this.cachedMyUserId, user.nChannelID));
+
                         boolean anyVisible = false;
-                        if (btnKickSrv == null) {
-                            convertView2 = convertView3;
-                        } else {
-                            convertView2 = convertView3;
-                            boolean visible = ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_KICK_SRV, true)).booleanValue() && kickRight2;
-                            btnKickSrv.setVisibility(visible ? 0 : 8);
+                        if (holder.btnKickSrv != null) {
+                            boolean visible = this.cachedQuickKickSrv && kickRight;
+                            holder.btnKickSrv.setVisibility(visible ? View.VISIBLE : View.GONE);
                             if (visible) {
                                 anyVisible = true;
-                                btnKickSrv.setOnClickListener(new View.OnClickListener() { 
-                                    @Override
-                                    public final void onClick(View view) {
-                                        MainActivity.ChannelListAdapter.this.lambda$getView$6(user, view);
-                                    }
-                                });
+                                holder.btnKickSrv.setOnClickListener(v -> showQuickKickDialog(user, 0));
                             }
                         }
-                        if (btnBanSrv != null) {
-                            boolean visible2 = ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_BAN_SRV, true)).booleanValue() && banRight;
-                            btnBanSrv.setVisibility(visible2 ? 0 : 8);
-                            if (visible2) {
+                        if (holder.btnBanSrv != null) {
+                            boolean visible = this.cachedQuickBanSrv && banRight;
+                            holder.btnBanSrv.setVisibility(visible ? View.VISIBLE : View.GONE);
+                            if (visible) {
                                 anyVisible = true;
-                                btnBanSrv.setOnClickListener(new View.OnClickListener() { 
-                                    @Override
-                                    public final void onClick(View view) {
-                                        MainActivity.ChannelListAdapter.this.lambda$getView$8(user, view);
-                                    }
-                                });
+                                holder.btnBanSrv.setOnClickListener(v -> showQuickBanDialog(user, 0));
                             }
                         }
-                        if (btnKickChan != null) {
-                            boolean visible3 = ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_KICK_CHAN, true)).booleanValue() && (kickRight2 || operatorRight);
-                            btnKickChan.setVisibility(visible3 ? 0 : 8);
-                            if (visible3) {
+                        if (holder.btnKickChan != null) {
+                            boolean visible = this.cachedQuickKickChan && (kickRight || operatorRight);
+                            holder.btnKickChan.setVisibility(visible ? View.VISIBLE : View.GONE);
+                            if (visible) {
                                 anyVisible = true;
-                                btnKickChan.setOnClickListener(new View.OnClickListener() { 
-                                    @Override
-                                    public final void onClick(View view) {
-                                        MainActivity.ChannelListAdapter.this.lambda$getView$10(user, view);
-                                    }
-                                });
+                                holder.btnKickChan.setOnClickListener(v -> showQuickKickDialog(user, user.nChannelID));
                             }
                         }
-                        if (btnBanChan != null) {
-                            boolean visible4 = ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_BAN_CHAN, true)).booleanValue() && (banRight || operatorRight);
-                            btnBanChan.setVisibility(visible4 ? 0 : 8);
-                            if (visible4) {
+                        if (holder.btnBanChan != null) {
+                            boolean visible = this.cachedQuickBanChan && (banRight || operatorRight);
+                            holder.btnBanChan.setVisibility(visible ? View.VISIBLE : View.GONE);
+                            if (visible) {
                                 anyVisible = true;
-                                btnBanChan.setOnClickListener(new View.OnClickListener() { 
-                                    @Override
-                                    public final void onClick(View view) {
-                                        MainActivity.ChannelListAdapter.this.lambda$getView$12(user, view);
-                                    }
-                                });
+                                holder.btnBanChan.setOnClickListener(v -> showQuickBanDialog(user, user.nChannelID));
                             }
                         }
-                        quickActionsContainer.setVisibility(anyVisible ? 0 : 8);
+                        holder.quickActionsContainer.setVisibility(anyVisible ? View.VISIBLE : View.GONE);
                     }
                 }
-                convertView3 = convertView2;
             }
-            convertView3.setAccessibilityDelegate(MainActivity.this.accessibilityAssistant);
-            return convertView3;
+
+            if (convertView != null) {
+                convertView.setAccessibilityDelegate(MainActivity.this.accessibilityAssistant);
+            }
+            return convertView;
         }
 
-                public void lambda$getView$3(Channel channel, View v) {
-            if (v.getId() == R.id.join_btn) {
-                MainActivity.this.joinChannel(channel);
-            }
-        }
-
-                public void lambda$getView$4(User user, View v) {
-            if (v.getId() == R.id.msg_btn) {
-                Intent intent = new Intent(MainActivity.this, (Class<?>) TextMessageActivity.class);
-                MainActivity.this.startActivity(intent.putExtra("userid", user.nUserID));
-            }
-        }
-
-                public void lambda$getView$6(final User user, View v) {
+        private void showQuickKickDialog(final User user, final int channelId) {
             AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
             alert.setMessage(MainActivity.this.getString(R.string.kick_confirmation, new Object[]{user.szNickname}));
-            alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() { 
-                @Override
-                public final void onClick(DialogInterface dialogInterface, int i) {
-                    MainActivity.ChannelListAdapter.this.lambda$getView$5(user, dialogInterface, i);
+            alert.setPositiveButton(android.R.string.yes, (dialogInterface, i) -> {
+                if (MainActivity.this.getClient() != null) {
+                    MainActivity.this.getClient().doKickUser(user.nUserID, channelId);
                 }
             });
-            alert.setNegativeButton(android.R.string.no, (DialogInterface.OnClickListener) null);
+            alert.setNegativeButton(android.R.string.no, null);
             alert.show();
         }
 
-                public void lambda$getView$5(User user, DialogInterface dialog, int whichButton) {
-            MainActivity.this.getClient().doKickUser(user.nUserID, 0);
-        }
-
-                public void lambda$getView$8(final User user, View v) {
+        private void showQuickBanDialog(final User user, final int channelId) {
             AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
             alert.setMessage(MainActivity.this.getString(R.string.ban_confirmation, new Object[]{user.szNickname}));
-            alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() { 
-                @Override
-                public final void onClick(DialogInterface dialogInterface, int i) {
-                    MainActivity.ChannelListAdapter.this.lambda$getView$7(user, dialogInterface, i);
+            alert.setPositiveButton(android.R.string.yes, (dialogInterface, i) -> {
+                if (MainActivity.this.getClient() != null) {
+                    MainActivity.this.getClient().doBanUser(user.nUserID, channelId);
+                    MainActivity.this.getClient().doKickUser(user.nUserID, channelId);
                 }
             });
-            alert.setNegativeButton(android.R.string.no, (DialogInterface.OnClickListener) null);
+            alert.setNegativeButton(android.R.string.no, null);
             alert.show();
-        }
-
-                public void lambda$getView$7(User user, DialogInterface dialog, int whichButton) {
-            MainActivity.this.getClient().doBanUser(user.nUserID, 0);
-            MainActivity.this.getClient().doKickUser(user.nUserID, 0);
-        }
-
-                public void lambda$getView$10(final User user, View v) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-            alert.setMessage(MainActivity.this.getString(R.string.kick_confirmation, new Object[]{user.szNickname}));
-            alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() { 
-                @Override
-                public final void onClick(DialogInterface dialogInterface, int i) {
-                    MainActivity.ChannelListAdapter.this.lambda$getView$9(user, dialogInterface, i);
-                }
-            });
-            alert.setNegativeButton(android.R.string.no, (DialogInterface.OnClickListener) null);
-            alert.show();
-        }
-
-                public void lambda$getView$9(User user, DialogInterface dialog, int whichButton) {
-            MainActivity.this.getClient().doKickUser(user.nUserID, user.nChannelID);
-        }
-
-                public void lambda$getView$12(final User user, View v) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-            alert.setMessage(MainActivity.this.getString(R.string.ban_confirmation, new Object[]{user.szNickname}));
-            alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() { 
-                @Override
-                public final void onClick(DialogInterface dialogInterface, int i) {
-                    MainActivity.ChannelListAdapter.this.lambda$getView$11(user, dialogInterface, i);
-                }
-            });
-            alert.setNegativeButton(android.R.string.no, (DialogInterface.OnClickListener) null);
-            alert.show();
-        }
-
-                public void lambda$getView$11(User user, DialogInterface dialog, int whichButton) {
-            MainActivity.this.getClient().doBanUser(user.nUserID, user.nChannelID);
-            MainActivity.this.getClient().doKickUser(user.nUserID, user.nChannelID);
         }
     }
 
@@ -3324,15 +3322,17 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
     }
 
-        /* renamed from: org.nekit.ttproplus.gui.MainActivity$3, reason: invalid class name */
-        public class AnonymousClass3 extends CountDownTimer {
+    private static final ExecutorService statsExecutor = Executors.newSingleThreadExecutor();
+
+    /* renamed from: org.nekit.ttproplus.gui.MainActivity$3, reason: invalid class name */
+    public class AnonymousClass3 extends CountDownTimer {
         ClientStatistics prev_stats;
         final TextView val$connection;
         final int val$defcolor;
         final TextView val$ping;
         final TextView val$total;
 
-                AnonymousClass3(long arg0, long arg1, TextView textView, TextView textView2, int i, TextView textView3) {
+        AnonymousClass3(long arg0, long arg1, TextView textView, TextView textView2, int i, TextView textView3) {
             super(arg0, arg1);
             this.val$connection = textView;
             this.val$ping = textView2;
@@ -3342,7 +3342,6 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         @Override
         public void onTick(long millisUntilFinished) {
-            char c;
             if (MainActivity.this.getClient() == null || MainActivity.this.getService() == null) {
                 return;
             }
@@ -3372,18 +3371,38 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.val$connection.setText(MainActivity.this.getString(R.string.label_connection) + " " + con);
             this.val$connection.setTextColor(con_color);
             if ((flags & 32768) != 32768) {
-                if (MainActivity.this.prefs != null && ((Boolean) MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_PING_NO_SERVER, false)).booleanValue()) {
+                if (MainActivity.this.prefs != null && Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_PING_NO_SERVER, false))) {
                     ServerEntry entry = MainActivity.this.getService() != null ? MainActivity.this.getService().getServerEntry() : null;
                     if (entry != null && entry.ipaddr != null) {
                         final String ip = entry.ipaddr;
+                        final int port = entry.tcpport;
                         final TextView textView = this.val$ping;
-                        final int i = this.val$defcolor;
-                        new Thread(new Runnable() { 
-                            @Override
-                            public final void run() {
-                                MainActivity.AnonymousClass3.this.lambda$onTick$2(ip, textView, i);
+                        final int defColor = this.val$defcolor;
+                        statsExecutor.execute(() -> {
+                            long startTime = SystemClock.elapsedRealtime();
+                            boolean reachable = false;
+                            try (Socket socket = new Socket()) {
+                                socket.connect(new InetSocketAddress(ip, port > 0 ? port : 10333), 1000);
+                                reachable = true;
+                            } catch (Exception ignored) {
+                                try {
+                                    reachable = InetAddress.getByName(ip).isReachable(1000);
+                                } catch (Exception ignored2) {}
                             }
-                        }).start();
+                            long elapsed = SystemClock.elapsedRealtime() - startTime;
+                            final boolean isReachable = reachable;
+                            final long pingMs = elapsed;
+                            MainActivity.this.runOnUiThread(() -> {
+                                if (MainActivity.this.isFinishing()) return;
+                                if (isReachable) {
+                                    textView.setText(MainActivity.this.getString(R.string.label_ping) + " " + pingMs + "ms");
+                                    textView.setTextColor(defColor);
+                                } else {
+                                    textView.setText(MainActivity.this.getString(R.string.label_ping) + " timeout");
+                                    textView.setTextColor(0xffff0000);
+                                }
+                            });
+                        });
                     }
                 } else {
                     this.val$ping.setText("");
@@ -3401,80 +3420,21 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
             long totalrx = stats.nUdpBytesRecv - this.prev_stats.nUdpBytesRecv;
             long totaltx = stats.nUdpBytesSent - this.prev_stats.nUdpBytesSent;
-            if (stats.nUdpPingTimeMs < 0) {
-                c = 0;
-            } else {
-                String str = String.format(Locale.ROOT, "%1$d", Integer.valueOf(stats.nUdpPingTimeMs));
-                c = 0;
+            if (stats.nUdpPingTimeMs >= 0) {
+                String str = String.valueOf(stats.nUdpPingTimeMs);
                 this.val$ping.setText(MainActivity.this.getString(R.string.label_ping) + " " + str);
-                int i2 = stats.nUdpPingTimeMs;
-                TextView textView2 = this.val$ping;
-                if (i2 > 250) {
-                    textView2.setTextColor(0xffff0000);
+                if (stats.nUdpPingTimeMs > 250) {
+                    this.val$ping.setTextColor(0xffff0000);
                 } else {
-                    textView2.setTextColor(this.val$defcolor);
+                    this.val$ping.setTextColor(this.val$defcolor);
                 }
             }
-            Locale locale = Locale.ROOT;
-            Long valueOf = Long.valueOf(totalrx / PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID);
-            Long valueOf2 = Long.valueOf(totaltx / PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID);
-            Object[] objArr = new Object[2];
-            objArr[c] = valueOf;
-            objArr[1] = valueOf2;
-            String str2 = String.format(locale, "%1$d/%2$d KB", objArr);
+            long rxKb = totalrx / 1024L;
+            long txKb = totaltx / 1024L;
+            String str2 = String.format(Locale.ROOT, "%d/%d KB", rxKb, txKb);
             this.val$total.setText(MainActivity.this.getString(R.string.label_rxtx) + " " + str2);
             this.prev_stats = stats;
             MainActivity.this.accessibilityAssistant.unlockEvents();
-        }
-
-                public void lambda$onTick$2(String ip, final TextView ping, final int defcolor) {
-            try {
-                Process p = Runtime.getRuntime().exec("ping -c 1 -w 1 " + ip);
-                int status = p.waitFor();
-                if (status == 0) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                    String timeStr = "";
-                    while (true) {
-                        String line = reader.readLine();
-                        if (line == null) {
-                            break;
-                        }
-                        if (line.contains("time=")) {
-                            timeStr = line.substring(line.indexOf("time=") + 5);
-                            if (timeStr.contains(" ")) {
-                                timeStr = timeStr.substring(0, timeStr.indexOf(" "));
-                            }
-                        }
-                    }
-                    final String finalTime = timeStr;
-                    MainActivity.this.runOnUiThread(new Runnable() { 
-                        @Override
-                        public final void run() {
-                            MainActivity.AnonymousClass3.this.lambda$onTick$0(finalTime, ping, defcolor);
-                        }
-                    });
-                    return;
-                }
-                MainActivity.this.runOnUiThread(new Runnable() { 
-                    @Override
-                    public final void run() {
-                        MainActivity.AnonymousClass3.this.lambda$onTick$1(ping);
-                    }
-                });
-            } catch (Exception e) {
-            }
-        }
-
-                public void lambda$onTick$0(String finalTime, TextView ping, int defcolor) {
-            if (!finalTime.isEmpty()) {
-                ping.setText(MainActivity.this.getString(R.string.label_ping) + " " + finalTime + "ms");
-                ping.setTextColor(defcolor);
-            }
-        }
-
-                public void lambda$onTick$1(TextView ping) {
-            ping.setText(MainActivity.this.getString(R.string.label_ping) + " timeout");
-            ping.setTextColor(0xffff0000);
         }
 
         @Override

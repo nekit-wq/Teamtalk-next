@@ -25,7 +25,8 @@ package org.nekit.ttproplus.data;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -264,106 +265,58 @@ ClientEventListener.OnUserDesktopWindowListener {
         return false;
     }
 
-    final LinkedList<Integer> updatequeue = new LinkedList<Integer>();
-    ImageUpdateAsyncTask updatetask;
+    private final LinkedList<Integer> updatequeue = new LinkedList<Integer>();
+    private final java.util.concurrent.ExecutorService imageExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private boolean isUpdating = false;
 
     public void updateUserBitmap(int userid) {
-
         synchronized (updatequeue) {
-
             if (!updatequeue.contains(userid)) {
                 updatequeue.add(userid);
-            }  // Log.d(TAG, "Skipped update for #"+ userid);
-
-
-            if (updatetask == null) {
-                updatetask = new ImageUpdateAsyncTask();
-                updatetask.execute();
             }
-
-            updatequeue.notify();
+            if (!isUpdating) {
+                isUpdating = true;
+                scheduleNextImageExtract();
+            }
         }
     }
 
-    class ImageUpdateAsyncTask extends AsyncTask<Void, Integer, Void> {
-
-        SparseArray<Bitmap> ready_users;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            ready_users = media_sessions.clone();
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-
-            int userid = values[0];
-            Bitmap bmp;
-            synchronized (ready_users) {
-                bmp = ready_users.get(userid);
+    private void scheduleNextImageExtract() {
+        imageExecutor.execute(() -> {
+            int userid = 0;
+            synchronized (updatequeue) {
+                if (!updatequeue.isEmpty()) {
+                    userid = updatequeue.removeFirst();
+                } else {
+                    isUpdating = false;
+                    return;
+                }
             }
 
-            // only place new bitmap if user is being displayed
-            if (media_sessions.indexOfKey(userid) >= 0)
-            	media_sessions.put(userid, bmp);
-            
-            //update currently active sessions (get rid of obsolete sessions)
-            ready_users = media_sessions.clone();
-            
-            MediaAdapter.this.notifyDataSetChanged();
-        }
+            if (userid > 0) {
+                Bitmap prevBmp = media_sessions.get(userid);
+                Bitmap bmp = extractUserBitmap(userid, prevBmp);
+                final int finalUserId = userid;
+                final Bitmap finalBmp = bmp;
 
-        @Override
-        protected void onPostExecute(Void result) {
-            updatetask = null;
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            int userid;
-            do {
-
-                userid = 0;
-
+                mainHandler.post(() -> {
+                    if (finalBmp != null && media_sessions.indexOfKey(finalUserId) >= 0) {
+                        media_sessions.put(finalUserId, finalBmp);
+                        notifyDataSetChanged();
+                    }
+                    scheduleNextImageExtract();
+                });
+            } else {
                 synchronized (updatequeue) {
-                    if (updatequeue.isEmpty()) {
-                        try {
-                            updatequeue.wait(10000);
-                        } catch (InterruptedException e) {
-                            Log.d(TAG,
-                                    "Interrupted exception for image retrieve");
-                        }
+                    if (!updatequeue.isEmpty()) {
+                        scheduleNextImageExtract();
+                    } else {
+                        isUpdating = false;
                     }
-
-                    if (updatequeue.size() > 0)
-                        userid = updatequeue.remove();
                 }
-
-                if (userid > 0) {
-                    Bitmap bmp;
-                    synchronized (ready_users) {
-                        bmp = ready_users.get(userid);
-                    }
-                    bmp = extractUserBitmap(userid, bmp);
-                    if (bmp != null) {
-                        // Log.d(TAG,
-                        // "Received "+bmp.getWidth()+"x"+bmp.getHeight()+" bitmap from #"
-                        // + userid);
-                        synchronized (ready_users) {
-                            ready_users.put(userid, bmp);
-                        }
-                        this.publishProgress(userid);
-                    }  // Log.d(TAG, "Bitmap is null from #" + userid);
-
-                }
-            } while (userid != 0);
-
-            return null;
-        }
+            }
+        });
     }
 
     public Bitmap extractUserBitmap(int userid, Bitmap prev_bmp) {

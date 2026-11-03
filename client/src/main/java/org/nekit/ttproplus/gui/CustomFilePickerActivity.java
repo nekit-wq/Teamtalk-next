@@ -8,11 +8,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.InputType;
@@ -383,13 +382,82 @@ public class CustomFilePickerActivity extends AppCompatActivity {
 
     private List<FileItem> lastSearchResults = null;
 
+    private final java.util.concurrent.ExecutorService searchExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+
     private void searchTtFiles() {
         searchProgress.setVisibility(View.VISIBLE);
         txtSearchStatus.setVisibility(View.VISIBLE);
         txtSearchStatus.setText(R.string.searching_tt_files);
         btnSearchTt.setEnabled(false);
 
-        new SearchTask().execute();
+        searchExecutor.execute(() -> {
+            List<File> found = new ArrayList<>();
+
+            File extStorage = Environment.getExternalStorageDirectory();
+            if (extStorage != null && extStorage.exists()) {
+                scanDir(extStorage, found);
+            }
+
+            File[] additionalRoots = {
+                    new File("/storage"),
+                    new File("/sdcard"),
+            };
+            for (File root : additionalRoots) {
+                if (root.exists() && root.isDirectory() && !root.equals(extStorage)) {
+                    scanDir(root, found);
+                }
+            }
+
+            runOnUiThread(() -> {
+                if (isFinishing()) return;
+                searchProgress.setVisibility(View.GONE);
+                btnSearchTt.setEnabled(true);
+
+                if (found.isEmpty()) {
+                    Toast.makeText(CustomFilePickerActivity.this, R.string.no_tt_files_found, Toast.LENGTH_SHORT).show();
+                    txtSearchStatus.setText(R.string.no_tt_files_found);
+                    return;
+                }
+
+                isShowingSearchResults = true;
+                txtCurrentPath.setVisibility(View.GONE);
+                searchEditText.setVisibility(View.VISIBLE);
+                searchEditText.setText("");
+
+                lastSearchResults = new ArrayList<>();
+                for (File f : found) {
+                    lastSearchResults.add(new FileItem(f, true));
+                }
+
+                sortFileList(lastSearchResults);
+
+                filesList.clear();
+                filesList.addAll(lastSearchResults);
+                adapter.notifyDataSetChanged();
+
+                updateSearchStatus();
+            });
+        });
+    }
+
+    private void scanDir(File dir, List<File> found) {
+        if (dir == null || !dir.exists() || !dir.isDirectory()) return;
+
+        String name = dir.getName().toLowerCase();
+        if (name.startsWith(".") || name.equals("android") || name.equals("obb") || name.equals("data") || name.equals("cache")) {
+            return;
+        }
+
+        File[] files = dir.listFiles();
+        if (files == null) return;
+
+        for (File f : files) {
+            if (f.isDirectory()) {
+                scanDir(f, found);
+            } else if (f.getName().toLowerCase().endsWith(".tt")) {
+                found.add(f);
+            }
+        }
     }
 
     private void filterSearchResults(String query) {
@@ -433,80 +501,7 @@ public class CustomFilePickerActivity extends AppCompatActivity {
         }
     }
 
-    private class SearchTask extends AsyncTask<Void, String, List<File>> {
 
-        @Override
-        protected List<File> doInBackground(Void... voids) {
-            List<File> found = new ArrayList<>();
-
-            File extStorage = Environment.getExternalStorageDirectory();
-            if (extStorage != null && extStorage.exists()) {
-                scanDir(extStorage, found);
-            }
-
-            File[] additionalRoots = {
-                    new File("/storage"),
-                    new File("/sdcard"),
-            };
-            for (File root : additionalRoots) {
-                if (root.exists() && root.isDirectory() && !root.equals(extStorage)) {
-                    scanDir(root, found);
-                }
-            }
-
-            return found;
-        }
-
-        private void scanDir(File dir, List<File> found) {
-            if (dir == null || !dir.exists() || !dir.isDirectory()) return;
-
-            String name = dir.getName().toLowerCase();
-            if (name.startsWith(".") || name.equals("android") || name.equals("obb") || name.equals("data") || name.equals("cache")) {
-                return;
-            }
-
-            File[] files = dir.listFiles();
-            if (files == null) return;
-
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    scanDir(f, found);
-                } else if (f.getName().toLowerCase().endsWith(".tt")) {
-                    found.add(f);
-                }
-            }
-        }
-
-        @Override
-        protected void onPostExecute(List<File> files) {
-            searchProgress.setVisibility(View.GONE);
-            btnSearchTt.setEnabled(true);
-
-            if (files.isEmpty()) {
-                Toast.makeText(CustomFilePickerActivity.this, R.string.no_tt_files_found, Toast.LENGTH_SHORT).show();
-                txtSearchStatus.setText(R.string.no_tt_files_found);
-                return;
-            }
-
-            isShowingSearchResults = true;
-            txtCurrentPath.setVisibility(View.GONE);
-            searchEditText.setVisibility(View.VISIBLE);
-            searchEditText.setText("");
-
-            lastSearchResults = new ArrayList<>();
-            for (File f : files) {
-                lastSearchResults.add(new FileItem(f, true));
-            }
-
-            sortFileList(lastSearchResults);
-
-            filesList.clear();
-            filesList.addAll(lastSearchResults);
-            adapter.notifyDataSetChanged();
-
-            updateSearchStatus();
-        }
-    }
 
     private static String formatFileSize(long bytes) {
         if (bytes <= 0) return "0 B";

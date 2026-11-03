@@ -379,22 +379,32 @@ public class UserAccountsActivity extends AppCompatActivity implements
             super(context, android.R.layout.simple_list_item_2, accounts);
         }
 
+        private class ViewHolder {
+            TextView text1;
+            TextView text2;
+        }
+
         @NonNull
         @Override
         public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+            ViewHolder holder;
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_2, parent, false);
+                holder = new ViewHolder();
+                holder.text1 = convertView.findViewById(android.R.id.text1);
+                holder.text2 = convertView.findViewById(android.R.id.text2);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
             }
             UserAccount account = getItem(position);
-            TextView text1 = convertView.findViewById(android.R.id.text1);
-            TextView text2 = convertView.findViewById(android.R.id.text2);
 
             if (account != null) {
                 String displayName = account.szUsername;
                 if (displayName == null || displayName.trim().isEmpty()) {
                     displayName = getContext().getString(R.string.anonymous_account);
                 }
-                text1.setText(displayName);
+                holder.text1.setText(displayName);
 
                 StringBuilder details = new StringBuilder();
                 if ((account.uUserType & UserType.USERTYPE_ADMIN) == UserType.USERTYPE_ADMIN) {
@@ -410,7 +420,7 @@ public class UserAccountsActivity extends AppCompatActivity implements
                 } else {
                     details.append("\n").append(getContext().getString(R.string.no_note));
                 }
-                text2.setText(details.toString());
+                holder.text2.setText(details.toString());
             }
             return convertView;
         }
