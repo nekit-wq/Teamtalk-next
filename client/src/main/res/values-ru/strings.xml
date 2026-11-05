@@ -52,6 +52,8 @@
     <string name="action_server_stats">Статистика сервера</string>
     <string name="action_settings">Настройки</string>
     <string name="action_start_recording">Начать запись</string>
+    <string name="action_pause_recording">Пауза записи</string>
+    <string name="action_resume_recording">Возобновить запись</string>
     <string name="action_stop">Стоп</string>
     <string name="action_stop_recording">Остановить запись</string>
     <string name="action_stream">Трансляция (Медиа и Радио)</string>

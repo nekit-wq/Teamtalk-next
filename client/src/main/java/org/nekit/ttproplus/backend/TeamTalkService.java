@@ -77,8 +77,14 @@ import org.nekit.ttproplus.data.ChatHistoryDbHelper;
 import org.nekit.ttproplus.data.ChatMessageEntry;
 import org.nekit.ttproplus.gui.Utils;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.RandomAccessFile;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
@@ -354,6 +360,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     };
     private volatile boolean manualDisconnect = false;
     private File currentRecordingFile = null;
+    private final List<File> recordingSessionSegments = new ArrayList<>();
+    private File masterRecordingFile = null;
+    private int recordingAudioFileFormat = AudioFileFormat.AFF_WAVE_FORMAT;
     private boolean isInternalAudioRunning = false;
     private String currentStreamPath = "";
     private boolean isStreamingMedia = false;
@@ -1081,6 +1090,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.ttclient.stopRecordingMuxedAudioFile();
             this.isRecording = false;
             this.isManualRecordingPaused = true;
+            if (this.currentRecordingFile != null && this.currentRecordingFile.exists() && this.currentRecordingFile.length() > 44) {
+                if (!this.recordingSessionSegments.contains(this.currentRecordingFile)) {
+                    this.recordingSessionSegments.add(this.currentRecordingFile);
+                }
+            }
+            this.currentRecordingFile = null;
             showRecordingToast(R.string.recording_silence_paused);
         }
     }
@@ -1103,7 +1118,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     public File getCurrentRecordingFile() {
-        return this.currentRecordingFile;
+        return this.currentRecordingFile != null ? this.currentRecordingFile : this.masterRecordingFile;
     }
 
     private void showRecordingToast(int resId) {
@@ -1151,9 +1166,16 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             this.lastVoiceActivityTime = now;
         } else if (this.lastVoiceActivityTime > 0 && (now - this.lastVoiceActivityTime >= timeoutSec * 1000L)) {
             Log.d("bearware", "Silence timeout reached (" + timeoutSec + "s), pausing recording");
+            this.recordingAccumulatedDurationMs += Math.max(0, SystemClock.elapsedRealtime() - this.recordingStartTimeMs);
             this.ttclient.stopRecordingMuxedAudioFile();
             this.isRecording = false;
             this.isRecordingPausedDueToSilence = true;
+            if (this.currentRecordingFile != null && this.currentRecordingFile.exists() && this.currentRecordingFile.length() > 44) {
+                if (!this.recordingSessionSegments.contains(this.currentRecordingFile)) {
+                    this.recordingSessionSegments.add(this.currentRecordingFile);
+                }
+            }
+            this.currentRecordingFile = null;
             showRecordingToast(R.string.recording_silence_paused);
         }
     }
@@ -1163,6 +1185,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (this.isRecordingPausedDueToSilence && this.mychannel != null) {
             Log.d("bearware", "Voice detected, resuming paused recording");
             this.isRecordingPausedDueToSilence = false;
+            this.recordingStartTimeMs = SystemClock.elapsedRealtime();
             startRecordingFileInternal(false);
             showRecordingToast(R.string.recording_silence_resumed);
         } else if (this.pendingAutoRecord && !this.isRecording && this.mychannel != null) {
@@ -1181,6 +1204,8 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.isManualRecordingPaused = false;
         this.recordingStartTimeMs = SystemClock.elapsedRealtime();
         this.recordingAccumulatedDurationMs = 0;
+        this.recordingSessionSegments.clear();
+        this.masterRecordingFile = null;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         this.isContinuousSessionActive = "continuous".equals(prefs.getString(Preferences.PREF_RECORDING_SESSION_MODE, "stop"));
         this.lastVoiceActivityTime = SystemClock.elapsedRealtime();
@@ -1190,7 +1215,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.recordingSilenceHandler.postDelayed(this.silenceCheckRunnable, 2000);
     }
 
-    private void startRecordingFileInternal(boolean showStartToast) {
+    private void startRecordingFileInternal(boolean isNewSession) {
         if (this.isRecording || this.mychannel == null) {
             return;
         }
@@ -1234,20 +1259,34 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             audioFileFormat = AudioFileFormat.AFF_CHANNELCODEC_FORMAT;
             extension = ".ogg";
         }
-        String name = prefix + sdf.format(new Date()) + extension;
-        File file = new File(dir, name);
+        this.recordingAudioFileFormat = audioFileFormat;
 
-        this.currentRecordingFile = file;
-        this.isRecording = this.ttclient.startRecordingMuxedAudioFile(this.mychannel.audiocodec, file.getAbsolutePath(), audioFileFormat);
+        File targetFile;
+        if (isNewSession || this.masterRecordingFile == null) {
+            String name = prefix + sdf.format(new Date()) + extension;
+            targetFile = new File(dir, name);
+            this.masterRecordingFile = targetFile;
+            this.recordingSessionSegments.clear();
+        } else {
+            File parentDir = this.masterRecordingFile.getParentFile();
+            if (parentDir == null || !parentDir.exists()) {
+                parentDir = dir;
+            }
+            String segName = ".seg_" + System.currentTimeMillis() + "_" + this.masterRecordingFile.getName();
+            targetFile = new File(parentDir, segName);
+        }
+
+        this.currentRecordingFile = targetFile;
+        this.isRecording = this.ttclient.startRecordingMuxedAudioFile(this.mychannel.audiocodec, targetFile.getAbsolutePath(), audioFileFormat);
 
         if (this.isRecording) {
-            Log.d("bearware", "Recording started: " + file.getAbsolutePath());
-            if (showStartToast) {
-                showRecordingToast(getString(R.string.recording_started, new Object[]{file.getName()}));
+            Log.d("bearware", "Recording started: " + targetFile.getAbsolutePath() + " (isNew=" + isNewSession + ")");
+            if (isNewSession) {
+                showRecordingToast(getString(R.string.recording_started, new Object[]{targetFile.getName()}));
             }
         } else {
             Log.e("bearware", "Failed to start recording");
-            if (showStartToast) {
+            if (isNewSession) {
                 showRecordingToast(R.string.recording_start_failed);
             }
             this.currentRecordingFile = null;
@@ -1263,37 +1302,279 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.recordingAccumulatedDurationMs = 0;
         this.recordingSilenceHandler.removeCallbacks(this.silenceCheckRunnable);
 
-        if (!this.isRecording && this.currentRecordingFile == null) {
-            return null;
-        }
-
         if (this.isRecording) {
             this.ttclient.stopRecordingMuxedAudioFile();
             this.isRecording = false;
+            if (this.currentRecordingFile != null && this.currentRecordingFile.exists() && this.currentRecordingFile.length() > 44) {
+                if (!this.recordingSessionSegments.contains(this.currentRecordingFile)) {
+                    this.recordingSessionSegments.add(this.currentRecordingFile);
+                }
+            }
+        } else if (this.currentRecordingFile != null && this.currentRecordingFile.exists() && this.currentRecordingFile.length() > 44) {
+            if (!this.recordingSessionSegments.contains(this.currentRecordingFile)) {
+                this.recordingSessionSegments.add(this.currentRecordingFile);
+            }
         }
-
-        File recordedFile = this.currentRecordingFile;
         this.currentRecordingFile = null;
 
-        if (recordedFile == null || !recordedFile.exists()) {
+        if (this.recordingSessionSegments.isEmpty() && this.masterRecordingFile != null && this.masterRecordingFile.exists() && this.masterRecordingFile.length() > 44) {
+            this.recordingSessionSegments.add(this.masterRecordingFile);
+        }
+
+        if (this.recordingSessionSegments.isEmpty()) {
+            this.masterRecordingFile = null;
             return null;
         }
 
-        if (recordedFile.length() <= 1024) {
-            Log.d("bearware", "Discarding empty recording (" + recordedFile.length() + " bytes): " + recordedFile.getName());
-            recordedFile.delete();
+        File finalRecordedFile = this.masterRecordingFile;
+        if (finalRecordedFile == null) {
+            finalRecordedFile = this.recordingSessionSegments.get(0);
+        }
+
+        if (this.recordingSessionSegments.size() > 1) {
+            mergeAudioSegments(new ArrayList<>(this.recordingSessionSegments), finalRecordedFile, this.recordingAudioFileFormat);
+        }
+
+        this.recordingSessionSegments.clear();
+        this.masterRecordingFile = null;
+
+        if (finalRecordedFile == null || !finalRecordedFile.exists()) {
+            return null;
+        }
+
+        if (finalRecordedFile.length() <= 1024) {
+            Log.d("bearware", "Discarding empty recording (" + finalRecordedFile.length() + " bytes): " + finalRecordedFile.getName());
+            finalRecordedFile.delete();
             return null;
         }
 
         try {
-            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{recordedFile.getAbsolutePath()}, null, null);
+            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{finalRecordedFile.getAbsolutePath()}, null, null);
         } catch (Exception e) {
             Log.e("bearware", "Failed to scan recorded file into media store", e);
         }
 
-        Log.d("bearware", "Recording stopped: " + recordedFile.getName());
+        Log.d("bearware", "Recording stopped: " + finalRecordedFile.getName());
         showRecordingToast(R.string.recording_stopped);
-        return recordedFile;
+        return finalRecordedFile;
+    }
+
+    private void mergeAudioSegments(List<File> segments, File outputFile, int audioFormat) {
+        if (segments == null || segments.isEmpty() || outputFile == null) {
+            return;
+        }
+
+        Log.d("bearware", "Merging " + segments.size() + " segments into " + outputFile.getAbsolutePath());
+
+        try {
+            if (audioFormat == AudioFileFormat.AFF_WAVE_FORMAT) {
+                mergeWavSegments(segments, outputFile);
+            } else if (audioFormat == AudioFileFormat.AFF_CHANNELCODEC_FORMAT) {
+                mergeGenericSegments(segments, outputFile);
+            } else {
+                mergeMp3Segments(segments, outputFile);
+            }
+        } catch (Exception e) {
+            Log.e("bearware", "Failed to merge recording segments", e);
+        } finally {
+            for (File seg : segments) {
+                if (seg != null && seg.exists() && !seg.getAbsolutePath().equals(outputFile.getAbsolutePath())) {
+                    try {
+                        seg.delete();
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+    }
+
+    private static int readIntLE(RandomAccessFile raf) throws IOException {
+        int b1 = raf.read();
+        int b2 = raf.read();
+        int b3 = raf.read();
+        int b4 = raf.read();
+        if ((b1 | b2 | b3 | b4) < 0) {
+            throw new java.io.EOFException();
+        }
+        return (b1 & 0xFF) | ((b2 & 0xFF) << 8) | ((b3 & 0xFF) << 16) | ((b4 & 0xFF) << 24);
+    }
+
+    private static void writeIntLE(RandomAccessFile raf, int value) throws IOException {
+        raf.write(value & 0xFF);
+        raf.write((value >> 8) & 0xFF);
+        raf.write((value >> 16) & 0xFF);
+        raf.write((value >> 24) & 0xFF);
+    }
+
+    private static long findDataChunkSizeOffset(RandomAccessFile raf) throws IOException {
+        raf.seek(12);
+        long fileLen = raf.length();
+        while (raf.getFilePointer() + 8 <= fileLen) {
+            byte[] tagBytes = new byte[4];
+            raf.readFully(tagBytes);
+            int chunkSize = readIntLE(raf);
+            String chunkTag = new String(tagBytes, 0, 4, "US-ASCII");
+            if ("data".equalsIgnoreCase(chunkTag)) {
+                return raf.getFilePointer() - 4;
+            }
+            if (chunkSize < 0) {
+                break;
+            }
+            long nextOffset = raf.getFilePointer() + chunkSize + (chunkSize & 1);
+            if (nextOffset > fileLen || nextOffset < raf.getFilePointer()) {
+                break;
+            }
+            raf.seek(nextOffset);
+        }
+        return -1;
+    }
+
+    private static void copyFileContents(File src, File dest) throws IOException {
+        try (FileInputStream in = new FileInputStream(src);
+             FileOutputStream out = new FileOutputStream(dest)) {
+            byte[] buffer = new byte[65536];
+            int read;
+            while ((read = in.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+            }
+            out.flush();
+        }
+    }
+
+    private void mergeWavSegments(List<File> segments, File outputFile) throws IOException {
+        File firstSeg = segments.get(0);
+        if (!firstSeg.getAbsolutePath().equals(outputFile.getAbsolutePath())) {
+            copyFileContents(firstSeg, outputFile);
+        }
+
+        try (RandomAccessFile raf = new RandomAccessFile(outputFile, "rw")) {
+            long dataSizeOffset = findDataChunkSizeOffset(raf);
+            long totalPcmSize;
+            long pcmStart;
+            if (dataSizeOffset >= 0) {
+                raf.seek(dataSizeOffset);
+                totalPcmSize = ((long) readIntLE(raf)) & 0xFFFFFFFFL;
+                pcmStart = dataSizeOffset + 4;
+            } else {
+                pcmStart = 44;
+                totalPcmSize = Math.max(0, raf.length() - 44);
+                dataSizeOffset = 40;
+            }
+
+            raf.seek(pcmStart + totalPcmSize);
+
+            for (int i = 1; i < segments.size(); i++) {
+                File seg = segments.get(i);
+                if (seg == null || !seg.exists() || seg.length() <= 44) {
+                    continue;
+                }
+                try (RandomAccessFile segRaf = new RandomAccessFile(seg, "r")) {
+                    long segDataSizeOffset = findDataChunkSizeOffset(segRaf);
+                    long segPcmStart;
+                    long segDataSize;
+                    if (segDataSizeOffset >= 0) {
+                        segRaf.seek(segDataSizeOffset);
+                        segDataSize = ((long) readIntLE(segRaf)) & 0xFFFFFFFFL;
+                        segPcmStart = segDataSizeOffset + 4;
+                        if (segPcmStart + segDataSize > segRaf.length()) {
+                            segDataSize = Math.max(0, segRaf.length() - segPcmStart);
+                        }
+                    } else {
+                        segPcmStart = 44;
+                        segDataSize = Math.max(0, segRaf.length() - 44);
+                    }
+
+                    if (segDataSize > 0) {
+                        segRaf.seek(segPcmStart);
+                        byte[] buffer = new byte[65536];
+                        long bytesLeft = segDataSize;
+                        while (bytesLeft > 0) {
+                            int toRead = (int) Math.min(buffer.length, bytesLeft);
+                            int read = segRaf.read(buffer, 0, toRead);
+                            if (read <= 0) break;
+                            raf.write(buffer, 0, read);
+                            bytesLeft -= read;
+                            totalPcmSize += read;
+                        }
+                    }
+                }
+            }
+
+            long totalFileLen = raf.length();
+            raf.seek(4);
+            writeIntLE(raf, (int) (totalFileLen - 8));
+            raf.seek(dataSizeOffset);
+            writeIntLE(raf, (int) totalPcmSize);
+        }
+    }
+
+    private void mergeMp3Segments(List<File> segments, File outputFile) throws IOException {
+        File firstSeg = segments.get(0);
+        if (!firstSeg.getAbsolutePath().equals(outputFile.getAbsolutePath())) {
+            copyFileContents(firstSeg, outputFile);
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(outputFile, true);
+             BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+            for (int i = 1; i < segments.size(); i++) {
+                File seg = segments.get(i);
+                if (seg == null || !seg.exists() || seg.length() == 0) {
+                    continue;
+                }
+                try (FileInputStream fis = new FileInputStream(seg);
+                     BufferedInputStream bis = new BufferedInputStream(fis)) {
+                    bis.mark(10);
+                    byte[] header = new byte[10];
+                    int readHdr = bis.read(header);
+                    if (readHdr == 10 && header[0] == 'I' && header[1] == 'D' && header[2] == '3') {
+                        int tagSize = ((header[6] & 0x7F) << 21)
+                                | ((header[7] & 0x7F) << 14)
+                                | ((header[8] & 0x7F) << 7)
+                                | (header[9] & 0x7F);
+                        long toSkip = tagSize;
+                        while (toSkip > 0) {
+                            long skipped = bis.skip(toSkip);
+                            if (skipped <= 0) break;
+                            toSkip -= skipped;
+                        }
+                    } else {
+                        bis.reset();
+                    }
+
+                    byte[] buffer = new byte[65536];
+                    int read;
+                    while ((read = bis.read(buffer)) > 0) {
+                        bos.write(buffer, 0, read);
+                    }
+                }
+            }
+            bos.flush();
+        }
+    }
+
+    private void mergeGenericSegments(List<File> segments, File outputFile) throws IOException {
+        File firstSeg = segments.get(0);
+        if (!firstSeg.getAbsolutePath().equals(outputFile.getAbsolutePath())) {
+            copyFileContents(firstSeg, outputFile);
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(outputFile, true);
+             BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+            for (int i = 1; i < segments.size(); i++) {
+                File seg = segments.get(i);
+                if (seg == null || !seg.exists() || seg.length() == 0) {
+                    continue;
+                }
+                try (FileInputStream fis = new FileInputStream(seg);
+                     BufferedInputStream bis = new BufferedInputStream(fis)) {
+                    byte[] buffer = new byte[65536];
+                    int read;
+                    while ((read = bis.read(buffer)) > 0) {
+                        bos.write(buffer, 0, read);
+                    }
+                }
+            }
+            bos.flush();
+        }
     }
 
     public boolean shouldShowRecordingDialog() {

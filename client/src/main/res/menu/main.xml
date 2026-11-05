@@ -75,6 +75,12 @@
                 android:id="@+id/action_start_recording"
                 android:title="@string/action_start_recording"/>
             <item
+                android:id="@+id/action_pause_recording"
+                android:title="@string/action_pause_recording"/>
+            <item
+                android:id="@+id/action_resume_recording"
+                android:title="@string/action_resume_recording"/>
+            <item
                 android:id="@+id/action_stop_recording"
                 android:title="@string/action_stop_recording"/>
             <item

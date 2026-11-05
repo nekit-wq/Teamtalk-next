@@ -454,13 +454,29 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         if (chatHistoryItem != null) chatHistoryItem.setEnabled(true).setVisible(true);
         MenuItem netMonItem = menu.findItem(R.id.action_network_monitor);
         if (netMonItem != null) netMonItem.setEnabled(true).setVisible(true);
-        boolean isRecording = getService() != null && getService().isRecording();
+        boolean isRecordingActive = getService() != null && getService().isRecordingActive();
+        boolean isRecordingPaused = getService() != null && getService().isRecordingPaused();
+        boolean isRecordingSession = isRecordingActive || isRecordingPaused;
+
         MenuItem startRecItem = menu.findItem(R.id.action_start_recording);
-        if (startRecItem != null) startRecItem.setEnabled(isLeaveable && !isRecording).setVisible(isLeaveable && !isRecording);
+        if (startRecItem != null) {
+            startRecItem.setEnabled(isLeaveable && !isRecordingSession);
+            startRecItem.setVisible(isLeaveable && !isRecordingSession);
+        }
+        MenuItem pauseRecItem = menu.findItem(R.id.action_pause_recording);
+        if (pauseRecItem != null) {
+            pauseRecItem.setEnabled(isLeaveable && isRecordingActive);
+            pauseRecItem.setVisible(isLeaveable && isRecordingActive);
+        }
+        MenuItem resumeRecItem = menu.findItem(R.id.action_resume_recording);
+        if (resumeRecItem != null) {
+            resumeRecItem.setEnabled(isLeaveable && isRecordingPaused);
+            resumeRecItem.setVisible(isLeaveable && isRecordingPaused);
+        }
         MenuItem stopRecItem = menu.findItem(R.id.action_stop_recording);
         if (stopRecItem != null) {
-            stopRecItem.setEnabled(isLeaveable && isRecording);
-            stopRecItem.setVisible(isLeaveable && isRecording);
+            stopRecItem.setEnabled(isLeaveable && isRecordingSession);
+            stopRecItem.setVisible(isLeaveable && isRecordingSession);
         }
         MenuItem recItem = menu.findItem(R.id.action_recordings);
         if (recItem != null) recItem.setEnabled(true).setVisible(true);
@@ -666,15 +682,37 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         if (itemId == R.id.action_start_recording) {
             if (getService() != null) {
                 getService().startRecording();
+                invalidateOptionsMenu();
+                return true;
+            }
+            return true;
+        }
+        if (itemId == R.id.action_pause_recording) {
+            if (getService() != null) {
+                getService().pauseRecording();
+                invalidateOptionsMenu();
+                return true;
+            }
+            return true;
+        }
+        if (itemId == R.id.action_resume_recording) {
+            if (getService() != null) {
+                getService().resumeRecording();
+                invalidateOptionsMenu();
                 return true;
             }
             return true;
         }
         if (itemId == R.id.action_stop_recording) {
-            if (getService() != null && (recordedFile = getService().stopRecording()) != null && getService().shouldShowRecordingDialog()) {
-                showRecordingCompleteDialog(recordedFile);
+            if (getService() != null) {
+                recordedFile = getService().stopRecording();
+                invalidateOptionsMenu();
+                if (recordedFile != null && getService().shouldShowRecordingDialog()) {
+                    showRecordingCompleteDialog(recordedFile);
+                }
                 return true;
             }
+            invalidateOptionsMenu();
             return true;
         }
         if (itemId == R.id.action_recordings) {
@@ -3985,6 +4023,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 if (srv != null) {
                     srv.toggleRecordingPause();
                     updateDockedPanels();
+                    invalidateOptionsMenu();
                 }
             });
         }
@@ -3992,8 +4031,12 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.btnRecBarStop.setOnClickListener(v -> {
                 TeamTalkService srv = getService();
                 if (srv != null) {
-                    srv.stopRecording();
+                    File recFile = srv.stopRecording();
                     updateDockedPanels();
+                    invalidateOptionsMenu();
+                    if (recFile != null && srv.shouldShowRecordingDialog()) {
+                        showRecordingCompleteDialog(recFile);
+                    }
                 }
             });
         }
