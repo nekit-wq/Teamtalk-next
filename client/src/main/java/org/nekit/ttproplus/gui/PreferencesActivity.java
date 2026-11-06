@@ -51,6 +51,7 @@ import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
+import org.nekit.ttproplus.data.AntiSpamStore;
 import org.nekit.ttproplus.data.AppInfo;
 import org.nekit.ttproplus.data.MicrophoneInputHelper;
 import org.nekit.ttproplus.data.Preferences;
@@ -824,6 +825,44 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_antispam);
+
+            Preference ignorePref = findPreference("pref_open_ignore_list");
+            if (ignorePref != null) {
+                ignorePref.setOnPreferenceClickListener(preference -> {
+                    Intent intent = new Intent(getActivity(), IgnoreListActivity.class);
+                    intent.putExtra(IgnoreListActivity.EXTRA_MODE, IgnoreListActivity.MODE_IGNORE);
+                    startActivity(intent);
+                    return true;
+                });
+            }
+            Preference whitelistPref = findPreference("pref_open_whitelist");
+            if (whitelistPref != null) {
+                whitelistPref.setOnPreferenceClickListener(preference -> {
+                    Intent intent = new Intent(getActivity(), IgnoreListActivity.class);
+                    intent.putExtra(IgnoreListActivity.EXTRA_MODE, IgnoreListActivity.MODE_WHITELIST);
+                    startActivity(intent);
+                    return true;
+                });
+            }
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            updateListSummaries();
+        }
+
+        private void updateListSummaries() {
+            Preference ignorePref = findPreference("pref_open_ignore_list");
+            if (ignorePref != null) {
+                ignorePref.setSummary(getString(R.string.pref_summary_antispam_ignore_list,
+                        AntiSpamStore.getNicks(getActivity(), Preferences.PREF_ANTISPAM_IGNORE_LIST).size()));
+            }
+            Preference whitelistPref = findPreference("pref_open_whitelist");
+            if (whitelistPref != null) {
+                whitelistPref.setSummary(getString(R.string.pref_summary_antispam_whitelist,
+                        AntiSpamStore.getNicks(getActivity(), Preferences.PREF_ANTISPAM_WHITELIST).size()));
+            }
         }
     }
 

@@ -100,7 +100,16 @@ public class Preferences {
     public static final String
             PREF_ANTISPAM_ENABLED = "antispam_enabled",
             PREF_ANTISPAM_MSG_LIMIT = "antispam_msg_limit",
-            PREF_ANTISPAM_UNSUB_ALL = "antispam_unsub_all";
+            PREF_ANTISPAM_UNSUB_ALL = "antispam_unsub_all",
+            PREF_ANTISPAM_IGNORE_ENABLED = "antispam_ignore_enabled",
+            PREF_ANTISPAM_IGNORE_LIST = "antispam_ignore_list",
+            PREF_ANTISPAM_IGNORE_UNSUB = "antispam_ignore_unsub",
+            PREF_ANTISPAM_WHITELIST = "antispam_whitelist",
+            PREF_ANTISPAM_AUTO_IGNORE = "antispam_auto_ignore",
+            PREF_ANTISPAM_PER_USER_LIMIT = "antispam_per_user_limit",
+            PREF_ANTISPAM_DUPLICATE_LIMIT = "antispam_duplicate_limit",
+            PREF_ANTISPAM_BLOCK_LINKS = "antispam_block_links",
+            PREF_ANTISPAM_BLOCK_CAPS = "antispam_block_caps";
 
     public static final String
             PREF_BG_MGMT_ENABLED = "bg_mgmt_enabled",

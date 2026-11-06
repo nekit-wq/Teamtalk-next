@@ -1,5 +1,7 @@
 package org.nekit.ttproplus.backend;
 
+import org.nekit.ttproplus.data.AntiSpamStore;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -64,6 +66,7 @@ import dk.bearware.SoundDeviceEffects;
 import dk.bearware.SoundLevel;
 import dk.bearware.TeamTalk5;
 import dk.bearware.TeamTalkBase;
+import dk.bearware.Subscription;
 import dk.bearware.TextMessage;
 import dk.bearware.User;
 import dk.bearware.UserAccount;
@@ -234,6 +237,10 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             if (Preferences.PREF_SOUNDSYSTEM_DUCKING_ENABLED.equals(key) || Preferences.PREF_SOUNDSYSTEM_DUCKING_LEVEL.equals(key) || Preferences.PREF_SOUNDSYSTEM_DUCKING_TRIGGER.equals(key)) {
                 TeamTalkService.this.checkAudioDucking();
             }
+            if (Preferences.PREF_ANTISPAM_IGNORE_LIST.equals(key) || Preferences.PREF_ANTISPAM_IGNORE_ENABLED.equals(key) || Preferences.PREF_ANTISPAM_IGNORE_UNSUB.equals(key) || Preferences.PREF_ANTISPAM_WHITELIST.equals(key)) {
+                TeamTalkService.this.antispam_lists_loaded = false;
+                TeamTalkService.this.applyIgnoreRulesToAllUsers();
+            }
         }
     };
     private long antispam_window_start = 0;
@@ -241,6 +248,14 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     private boolean antispam_triggered = false;
     private final HashSet<Integer> antispam_blocked = new HashSet<>();
     private final HashMap<Integer, Integer> antispam_user_counts = new HashMap<>();
+    private final HashSet<String> antispam_ignore_names = new HashSet<>();
+    private final HashSet<String> antispam_whitelist_names = new HashSet<>();
+    private final HashMap<Integer, String> antispam_last_text = new HashMap<>();
+    private final HashMap<Integer, Integer> antispam_dup_counts = new HashMap<>();
+    private final HashSet<Integer> antispam_filter_logged = new HashSet<>();
+    private boolean antispam_lists_loaded = false;
+    private static final int MESSAGE_SUBSCRIPTIONS = Subscription.SUBSCRIBE_USER_MSG | Subscription.SUBSCRIBE_CHANNEL_MSG | Subscription.SUBSCRIBE_BROADCAST_MSG;
+    private static final int ALL_SUBSCRIPTIONS = MESSAGE_SUBSCRIPTIONS | Subscription.SUBSCRIBE_VOICE | Subscription.SUBSCRIBE_VIDEOCAPTURE | Subscription.SUBSCRIBE_DESKTOP | Subscription.SUBSCRIBE_MEDIAFILE;
     private final MediaSessionCompat.Callback mMediaSessionCallback = new MediaSessionCompat.Callback() { 
         @Override
         public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
@@ -539,6 +554,10 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.antispam_window_start = 0L;
         this.antispam_blocked.clear();
         this.antispam_user_counts.clear();
+        this.antispam_last_text.clear();
+        this.antispam_dup_counts.clear();
+        this.antispam_filter_logged.clear();
+        this.antispam_lists_loaded = false;
         this.talkingPeerUserIds.clear();
         this.isMyselfTalking = false;
         this.duckingHandler.removeCallbacks(this.unduckRunnable);
@@ -2468,6 +2487,9 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     private void loginComplete() {
+        this.antispam_lists_loaded = false;
+        ensureAntiSpamLists();
+        applyIgnoreRulesToAllUsers();
         if (this.joinchannel == null) {
             if (this.ttserver.channel != null && !this.ttserver.channel.isEmpty()) {
                 int chanid = this.ttclient.getChannelIDFromPath(this.ttserver.channel);
@@ -2799,6 +2821,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         MyTextMessage msg = MyTextMessage.createLogMsg(Integer.MIN_VALUE, name + " " + getResources().getString(R.string.text_cmd_userloggedin));
         getChatLogTextMsgs().add(msg);
         syncFromUserCache(user);
+        applyIgnoreRulesToUser(user);
     }
 
     @Override
@@ -2822,6 +2845,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
         this.users.put(Integer.valueOf(user.nUserID), user);
         updateFloatingWindow();
+        applyIgnoreRulesToUser(user);
     }
 
     public void applyHearMyselfSubscription() {
@@ -2843,6 +2867,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public void onCmdUserJoinedChannel(User user) {
         MyTextMessage msg;
         this.users.put(Integer.valueOf(user.nUserID), user);
+        applyIgnoreRulesToUser(user);
         if (this.ttserver.rememberLastChannel && user.nUserID == this.ttclient.getMyUserID() && this.joinchannel != null) {
             this.ttserver.channel = this.ttclient.getChannelPath(this.joinchannel.nChannelID);
             this.ttserver.chanpasswd = this.joinchannel.szPassword;
@@ -2911,6 +2936,117 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
     }
 
+    private void ensureAntiSpamLists() {
+        if (this.antispam_lists_loaded) {
+            return;
+        }
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        this.antispam_ignore_names.clear();
+        for (String nick : pref.getStringSet(Preferences.PREF_ANTISPAM_IGNORE_LIST, java.util.Collections.<String>emptySet())) {
+            String normalized = AntiSpamStore.normalizeNick(nick);
+            if (!normalized.isEmpty()) {
+                this.antispam_ignore_names.add(normalized);
+            }
+        }
+        this.antispam_whitelist_names.clear();
+        for (String nick : pref.getStringSet(Preferences.PREF_ANTISPAM_WHITELIST, java.util.Collections.<String>emptySet())) {
+            String normalized = AntiSpamStore.normalizeNick(nick);
+            if (!normalized.isEmpty()) {
+                this.antispam_whitelist_names.add(normalized);
+            }
+        }
+        this.antispam_lists_loaded = true;
+    }
+
+    private int getAntispamInt(SharedPreferences pref, String key, int defaultValue) {
+        try {
+            int value = Integer.parseInt(pref.getString(key, String.valueOf(defaultValue)));
+            return value > 0 ? value : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private boolean isIgnoredNick(String nick) {
+        ensureAntiSpamLists();
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        return pref.getBoolean(Preferences.PREF_ANTISPAM_IGNORE_ENABLED, true)
+                && this.antispam_ignore_names.contains(AntiSpamStore.normalizeNick(nick));
+    }
+
+    private boolean isWhitelistedNick(String nick) {
+        ensureAntiSpamLists();
+        return this.antispam_whitelist_names.contains(AntiSpamStore.normalizeNick(nick));
+    }
+
+    private void applyIgnoreRulesToAllUsers() {
+        if (this.ttclient == null) {
+            return;
+        }
+        ensureAntiSpamLists();
+        for (User user : this.users.values().toArray(new User[0])) {
+            applyIgnoreRulesToUser(user);
+        }
+    }
+
+    private void applyIgnoreRulesToUser(User user) {
+        if (user == null || this.ttclient == null) {
+            return;
+        }
+        if (isIgnoredNick(user.szNickname)) {
+            applyIgnoreSubscription(user.nUserID, user.szNickname);
+        }
+    }
+
+    private void applyIgnoreSubscription(int uid, String nick) {
+        if (this.ttclient == null) {
+            return;
+        }
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (!pref.getBoolean(Preferences.PREF_ANTISPAM_IGNORE_UNSUB, true)) {
+            return;
+        }
+        User user = this.users.get(Integer.valueOf(uid));
+        if (user != null && (user.uLocalSubscriptions & ALL_SUBSCRIPTIONS) == 0) {
+            return;
+        }
+        int cmdid = this.ttclient.doUnsubscribe(uid, ALL_SUBSCRIPTIONS);
+        if (cmdid > 0) {
+            this.activecmds.put(cmdid, CmdComplete.CMD_COMPLETE_UNSUBSCRIBE);
+        }
+        Log.i("bearware", "ANTISPAM ignore: unsubscribed uid=" + uid + " nick=" + nick);
+    }
+
+    private void punishSpam(int uid, String nick, int limit) {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        this.antispam_triggered = true;
+        this.antispam_blocked.add(Integer.valueOf(uid));
+        boolean autoIgnore = pref.getBoolean(Preferences.PREF_ANTISPAM_AUTO_IGNORE, true) && !TextUtils.isEmpty(nick);
+        if (autoIgnore) {
+            AntiSpamStore.addNick(getApplicationContext(), Preferences.PREF_ANTISPAM_IGNORE_LIST, nick);
+            this.antispam_lists_loaded = false;
+            ensureAntiSpamLists();
+            applyIgnoreSubscription(uid, nick);
+            getChatLogTextMsgs().add(MyTextMessage.createLogMsg(1073741824, getString(R.string.antispam_auto_ignored, nick)));
+        } else {
+            int mask = pref.getBoolean(Preferences.PREF_ANTISPAM_UNSUB_ALL, true) ? ALL_SUBSCRIPTIONS : MESSAGE_SUBSCRIPTIONS;
+            if (this.ttclient != null) {
+                int cmdid = this.ttclient.doUnsubscribe(uid, mask);
+                if (cmdid > 0) {
+                    this.activecmds.put(cmdid, CmdComplete.CMD_COMPLETE_UNSUBSCRIBE);
+                }
+            }
+            getChatLogTextMsgs().add(MyTextMessage.createLogMsg(1073741824, getString(R.string.antispam_triggered, limit)));
+        }
+        Log.e("bearware", "ANTISPAM TRIGGERED uid=" + uid + " nick=" + nick + " limit=" + limit + " auto_ignore=" + autoIgnore);
+    }
+
+    private void logFilteredMessage(int uid, String nick, int stringRes) {
+        if (this.antispam_filter_logged.add(Integer.valueOf(uid))) {
+            getChatLogTextMsgs().add(MyTextMessage.createLogMsg(MyTextMessage.MSGTYPE_LOG_INFO, getString(stringRes, nick)));
+        }
+    }
+
     @Override
     public void onCmdUserTextMessage(TextMessage textmessage) {
         if (textmessage != null) {
@@ -2920,45 +3056,56 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 }
             } catch (Throwable ignored) {}
         }
-        int limit;
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if (pref.getBoolean(Preferences.PREF_ANTISPAM_ENABLED, false) && !this.antispam_blocked.isEmpty() && this.antispam_blocked.contains(Integer.valueOf(textmessage.nFromUserID))) {
+        ensureAntiSpamLists();
+        User sender = getUsers().get(Integer.valueOf(textmessage.nFromUserID));
+        String fromNick = textmessage.szFromUsername;
+        if (TextUtils.isEmpty(fromNick) && sender != null) {
+            fromNick = sender.szNickname;
+        }
+        if (isIgnoredNick(fromNick)) {
+            applyIgnoreSubscription(textmessage.nFromUserID, fromNick);
             return;
         }
-        if (pref.getBoolean(Preferences.PREF_ANTISPAM_ENABLED, false)) {
+        if (pref.getBoolean(Preferences.PREF_ANTISPAM_ENABLED, false)
+                && !this.antispam_blocked.contains(Integer.valueOf(textmessage.nFromUserID))
+                && !isWhitelistedNick(fromNick)) {
             int uid = textmessage.nFromUserID;
-            Integer cnt = this.antispam_user_counts.get(Integer.valueOf(uid));
-            if (cnt == null) {
-                cnt = 0;
-            }
-            this.antispam_user_counts.put(Integer.valueOf(uid), Integer.valueOf(cnt.intValue() + 1));
+            int limit = getAntispamInt(pref, Preferences.PREF_ANTISPAM_MSG_LIMIT, 20);
+            int perUserLimit = getAntispamInt(pref, Preferences.PREF_ANTISPAM_PER_USER_LIMIT, 5);
             long now = SystemClock.elapsedRealtime();
             if (now - this.antispam_window_start > 1000) {
                 this.antispam_count = 0;
                 this.antispam_window_start = now;
                 this.antispam_user_counts.clear();
+                this.antispam_last_text.clear();
+                this.antispam_dup_counts.clear();
             }
+            Integer cnt = this.antispam_user_counts.get(Integer.valueOf(uid));
+            cnt = Integer.valueOf(cnt == null ? 1 : cnt.intValue() + 1);
+            this.antispam_user_counts.put(Integer.valueOf(uid), cnt);
             this.antispam_count++;
-            try {
-                limit = Integer.parseInt(pref.getString(Preferences.PREF_ANTISPAM_MSG_LIMIT, "20"));
-            } catch (NumberFormatException e) {
-                limit = 20;
+            String text = textmessage.szMessage == null ? "" : textmessage.szMessage.trim();
+            Integer dup;
+            if (text.equals(this.antispam_last_text.get(Integer.valueOf(uid)))) {
+                Integer previous = this.antispam_dup_counts.get(Integer.valueOf(uid));
+                dup = Integer.valueOf(previous == null ? 2 : previous.intValue() + 1);
+            } else {
+                dup = Integer.valueOf(1);
+                this.antispam_last_text.put(Integer.valueOf(uid), text);
             }
-            if (cnt.intValue() + 1 >= 5 || this.antispam_count > limit) {
-                this.antispam_triggered = true;
-                this.antispam_blocked.add(Integer.valueOf(uid));
-                Log.e("bearware", "ANTISPAM TRIGGERED uid=" + uid + " msgs_from_user=" + (cnt.intValue() + 1) + " total=" + this.antispam_count + " limit=" + limit);
-                boolean z = pref.getBoolean(Preferences.PREF_ANTISPAM_UNSUB_ALL, true);
-                TeamTalkBase teamTalkBase = this.ttclient;
-                if (z) {
-                    teamTalkBase.doUnsubscribe(uid, 24838655);
-                } else {
-                    teamTalkBase.doUnsubscribe(uid, 15);
-                }
-                int text_flags = R.string.antispam_triggered;
-                String msg = String.format(getString(text_flags), Integer.valueOf(limit));
-                MyTextMessage log = MyTextMessage.createLogMsg(1073741824, msg);
-                getChatLogTextMsgs().add(log);
+            this.antispam_dup_counts.put(Integer.valueOf(uid), dup);
+            int duplicateLimit = getAntispamInt(pref, Preferences.PREF_ANTISPAM_DUPLICATE_LIMIT, 3);
+            if (cnt.intValue() >= perUserLimit || this.antispam_count > limit || dup.intValue() >= duplicateLimit) {
+                punishSpam(uid, fromNick, limit);
+                return;
+            }
+            if (pref.getBoolean(Preferences.PREF_ANTISPAM_BLOCK_LINKS, false) && AntiSpamStore.hasLink(textmessage.szMessage)) {
+                logFilteredMessage(uid, fromNick, R.string.antispam_filtered_links);
+                return;
+            }
+            if (pref.getBoolean(Preferences.PREF_ANTISPAM_BLOCK_CAPS, false) && AntiSpamStore.isShouting(textmessage.szMessage)) {
+                logFilteredMessage(uid, fromNick, R.string.antispam_filtered_caps);
                 return;
             }
         }
