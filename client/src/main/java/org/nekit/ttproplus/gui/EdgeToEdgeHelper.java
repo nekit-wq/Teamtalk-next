@@ -25,7 +25,6 @@ package org.nekit.ttproplus.gui;
 
 import android.app.Activity;
 import android.view.View;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -42,27 +41,12 @@ public class EdgeToEdgeHelper {
             return;
         }
 
-        // On modern Android (API 35+ / Android 15 & 16), edge-to-edge is enforced by the platform.
-        // If an Activity has an ActionBar / Toolbar at the top, the ActionBar is already below the status bar.
-        // We must NOT apply the status bar topInset to android.R.id.content, otherwise it creates
-        // a massive blank / gray gap between the top of the content and the ActionBar!
         ViewCompat.setOnApplyWindowInsetsListener(contentView, (v, insets) -> {
-            Insets sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            int topInset = sysBars.top;
+            int bottomInset = sysBars.bottom;
 
-            boolean hasActionBar = false;
-            if (activity instanceof AppCompatActivity) {
-                androidx.appcompat.app.ActionBar ab = ((AppCompatActivity) activity).getSupportActionBar();
-                hasActionBar = (ab != null && ab.isShowing());
-            } else if (activity instanceof PreferencesActivity) {
-                hasActionBar = true;
-            } else if (activity.getActionBar() != null && activity.getActionBar().isShowing()) {
-                hasActionBar = true;
-            }
-
-            int topPadding = hasActionBar ? 0 : sysBars.top;
-            int bottomPadding = sysBars.bottom;
-
-            v.setPadding(sysBars.left, topPadding, sysBars.right, bottomPadding);
+            v.setPadding(sysBars.left, topInset, sysBars.right, bottomInset);
             return insets;
         });
     }
