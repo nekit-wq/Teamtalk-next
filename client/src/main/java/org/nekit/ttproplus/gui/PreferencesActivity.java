@@ -215,7 +215,24 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         getDelegate().onPostCreate(savedInstanceState);
-        getDelegate().getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getDelegate().getSupportActionBar() != null) {
+            getDelegate().getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+        try {
+            View listView = findViewById(android.R.id.list);
+            if (listView != null) {
+                listView.setFitsSystemWindows(false);
+                listView.setVerticalScrollBarEnabled(true);
+                if (listView instanceof ViewGroup) {
+                    ((ViewGroup) listView).setClipToPadding(false);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @Override
+    public boolean onIsMultiPane() {
+        return false;
     }
 
     @Override
@@ -315,6 +332,14 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             Preference fileMgrPref = findPreference(Preferences.PREF_GENERAL_DEFAULT_FILE_MANAGER);
             if (fileMgrPref != null) {
                 PreferencesActivity.bindPreferenceSummaryToValue(fileMgrPref);
+            }
+
+            Preference showUsernamesPref = findPreference(Preferences.PREF_GENERAL_SHOWUSERNAMES);
+            if (showUsernamesPref != null) {
+                showUsernamesPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    Utils.invalidatePreferencesCache();
+                    return true;
+                });
             }
 
             Preference langPref = findPreference("app_language");

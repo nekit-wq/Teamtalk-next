@@ -41,6 +41,14 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <supports-screens
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true"
+        android:anyDensity="true"
+        android:resizeable="true" />
+
     <application
         android:name=".gui.TeamTalkApp"
         android:allowBackup="true"
@@ -51,7 +59,15 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
+        android:resizeableActivity="true"
         android:supportsRtl="true">
+
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.5" />
+        <meta-data
+            android:name="android.min_aspect"
+            android:value="1.0" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -193,6 +209,8 @@
 
         <activity
             android:name=".gui.PreferencesActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:resizeableActivity="true"
             android:label="@string/title_activity_preferences"
             android:exported="false">
         </activity>

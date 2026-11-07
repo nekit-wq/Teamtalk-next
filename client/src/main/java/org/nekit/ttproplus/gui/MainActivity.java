@@ -196,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     SparseArray<CmdComplete> activecmds = new SparseArray<>();
     TTSWrapper ttsWrapper = null;
     private ProgressBar cachedMicBar = null;
+    private long lastDockedPanelsUpdate = 0L;
     private final Handler micActivityHandler = new Handler(Looper.getMainLooper());
     private final Runnable micActivityRunnable = new Runnable() { 
         @Override
@@ -219,7 +220,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     }
                 }
             }
-            MainActivity.this.updateDockedPanels();
+            long now = SystemClock.uptimeMillis();
+            if (now - MainActivity.this.lastDockedPanelsUpdate >= 500L) {
+                MainActivity.this.lastDockedPanelsUpdate = now;
+                MainActivity.this.updateDockedPanels();
+            }
             MainActivity.this.micActivityHandler.postDelayed(this, 100L);
         }
     };
@@ -2503,132 +2508,155 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     .show();
         }
 
+        private boolean reloadPending = false;
+        private final Runnable reloadRunnable = new Runnable() {
+            @Override
+            public void run() {
+                PrivateChatsFragment.this.executeReloadDialogs();
+            }
+        };
+        private final ExecutorService reloadExecutor = Executors.newSingleThreadExecutor();
+
         public void reloadDialogs() {
             if (getActivity() == null || mainActivity == null || adapter == null) return;
-            mainActivity.runOnUiThread(() -> {
-                if (getActivity() == null || mainActivity == null) return;
-                TeamTalkService service = mainActivity.getService();
-                String serverKey = "";
-                if (service != null && service.getServerEntry() != null) {
-                    serverKey = service.getServerEntry().ipaddr + ":" + service.getServerEntry().tcpport;
-                }
+            if (!this.reloadPending) {
+                this.reloadPending = true;
+                mainActivity.handler.postDelayed(this.reloadRunnable, 50L);
+            }
+        }
 
-                Map<String, PrivateDialogEntry> map = new LinkedHashMap<>();
+        private void executeReloadDialogs() {
+            this.reloadPending = false;
+            if (getActivity() == null || mainActivity == null || adapter == null) return;
+            TeamTalkService service = mainActivity.getService();
+            String serverKey = "";
+            if (service != null && service.getServerEntry() != null) {
+                serverKey = service.getServerEntry().ipaddr + ":" + service.getServerEntry().tcpport;
+            }
+            final String finalServerKey = serverKey;
+            final int filterMode = this.currentFilterMode;
 
-                // If FILTER_ALL or FILTER_ONLINE, load history from local SQLite database
-                if (currentFilterMode == FILTER_ALL || currentFilterMode == FILTER_ONLINE) {
-                    ChatHistoryDbHelper dbHelper = ChatHistoryDbHelper.getInstance(mainActivity);
-                    List<PrivateDialogEntry> dbDialogs = dbHelper.getPrivateDialogs(serverKey);
-                    for (PrivateDialogEntry d : dbDialogs) {
-                        map.put(d.peerKey, d);
+            this.reloadExecutor.execute(() -> {
+                final Map<String, PrivateDialogEntry> map = new LinkedHashMap<>();
+                if (filterMode == FILTER_ALL || filterMode == FILTER_ONLINE) {
+                    if (mainActivity != null) {
+                        ChatHistoryDbHelper dbHelper = ChatHistoryDbHelper.getInstance(mainActivity);
+                        List<PrivateDialogEntry> dbDialogs = dbHelper.getPrivateDialogs(finalServerKey);
+                        for (PrivateDialogEntry d : dbDialogs) {
+                            map.put(d.peerKey, d);
+                        }
                     }
                 }
 
-                // Merge session private dialogs from current server connection
-                if (service != null) {
-                    Map<String, TeamTalkService.SessionDialogInfo> sessionDialogs = service.getSessionPrivateDialogs();
-                    for (Map.Entry<String, TeamTalkService.SessionDialogInfo> sEntry : sessionDialogs.entrySet()) {
-                        String key = sEntry.getKey();
-                        TeamTalkService.SessionDialogInfo info = sEntry.getValue();
+                if (mainActivity == null) return;
+                mainActivity.runOnUiThread(() -> {
+                    if (getActivity() == null || mainActivity == null || adapter == null) return;
+                    TeamTalkService s = mainActivity.getService();
+                    if (s != null) {
+                        Map<String, TeamTalkService.SessionDialogInfo> sessionDialogs = s.getSessionPrivateDialogs();
+                        for (Map.Entry<String, TeamTalkService.SessionDialogInfo> sEntry : sessionDialogs.entrySet()) {
+                            String key = sEntry.getKey();
+                            TeamTalkService.SessionDialogInfo info = sEntry.getValue();
 
-                        PrivateDialogEntry entry = map.get(key);
-                        if (entry == null) {
-                            entry = new PrivateDialogEntry();
-                            entry.peerKey = key;
-                            entry.peerUserId = info.userId;
-                            entry.peerUsername = info.username;
-                            entry.peerNickname = info.nickname;
-                            entry.lastMessage = info.lastMessage;
-                            entry.lastTimestamp = info.lastTimestamp;
-                            entry.lastIsOutgoing = info.lastIsOutgoing;
-                            entry.messageCount = info.messageCount;
-                            map.put(key, entry);
-                        } else {
-                            if (info.lastTimestamp >= entry.lastTimestamp) {
-                                entry.lastTimestamp = info.lastTimestamp;
+                            PrivateDialogEntry entry = map.get(key);
+                            if (entry == null) {
+                                entry = new PrivateDialogEntry();
+                                entry.peerKey = key;
+                                entry.peerUserId = info.userId;
+                                entry.peerUsername = info.username;
+                                entry.peerNickname = info.nickname;
                                 entry.lastMessage = info.lastMessage;
+                                entry.lastTimestamp = info.lastTimestamp;
                                 entry.lastIsOutgoing = info.lastIsOutgoing;
-                            }
-                            entry.messageCount = Math.max(entry.messageCount, info.messageCount);
-                        }
-                    }
-                }
-
-                // Check online status against active server users
-                allDialogs.clear();
-                int onlineCount = 0;
-                Map<Integer, User> liveUsers = service != null ? service.getUsers() : Collections.emptyMap();
-                Map<Integer, Channel> channels = service != null ? service.getChannels() : Collections.emptyMap();
-
-                for (PrivateDialogEntry d : map.values()) {
-                    d.isOnline = false;
-                    d.currentUserId = -1;
-                    d.channelName = "";
-
-                    if (!liveUsers.isEmpty()) {
-                        for (User u : liveUsers.values()) {
-                            if (u == null) continue;
-                            boolean matches = false;
-                            if (!TextUtils.isEmpty(d.peerUsername) && !TextUtils.isEmpty(u.szUsername)
-                                    && d.peerUsername.equalsIgnoreCase(u.szUsername.trim())) {
-                                matches = true;
-                            } else if (!TextUtils.isEmpty(d.peerNickname) && !TextUtils.isEmpty(u.szNickname)
-                                    && d.peerNickname.equalsIgnoreCase(u.szNickname.trim())) {
-                                matches = true;
-                            } else if (d.peerUserId > 0 && d.peerUserId == u.nUserID) {
-                                matches = true;
-                            }
-
-                            if (matches) {
-                                d.isOnline = true;
-                                d.currentUserId = u.nUserID;
-                                d.peerNickname = Utils.getDisplayName(mainActivity, u);
-                                if (!TextUtils.isEmpty(u.szUsername)) {
-                                    d.peerUsername = u.szUsername.trim();
+                                entry.messageCount = info.messageCount;
+                                map.put(key, entry);
+                            } else {
+                                if (info.lastTimestamp >= entry.lastTimestamp) {
+                                    entry.lastTimestamp = info.lastTimestamp;
+                                    entry.lastMessage = info.lastMessage;
+                                    entry.lastIsOutgoing = info.lastIsOutgoing;
                                 }
-                                Channel c = channels.get(u.nChannelID);
-                                if (c != null && !TextUtils.isEmpty(c.szName)) {
-                                    d.channelName = c.szName;
-                                }
-                                break;
+                                entry.messageCount = Math.max(entry.messageCount, info.messageCount);
                             }
                         }
                     }
 
-                    if (d.isOnline) {
-                        onlineCount++;
+                    // Check online status against active server users
+                    allDialogs.clear();
+                    int onlineCount = 0;
+                    Map<Integer, User> liveUsers = s != null ? s.getUsers() : Collections.emptyMap();
+                    Map<Integer, Channel> channels = s != null ? s.getChannels() : Collections.emptyMap();
+
+                    for (PrivateDialogEntry d : map.values()) {
+                        d.isOnline = false;
+                        d.currentUserId = -1;
+                        d.channelName = "";
+
+                        if (!liveUsers.isEmpty()) {
+                            for (User u : liveUsers.values()) {
+                                if (u == null) continue;
+                                boolean matches = false;
+                                if (!TextUtils.isEmpty(d.peerUsername) && !TextUtils.isEmpty(u.szUsername)
+                                        && d.peerUsername.equalsIgnoreCase(u.szUsername.trim())) {
+                                    matches = true;
+                                } else if (!TextUtils.isEmpty(d.peerNickname) && !TextUtils.isEmpty(u.szNickname)
+                                        && d.peerNickname.equalsIgnoreCase(u.szNickname.trim())) {
+                                    matches = true;
+                                } else if (d.peerUserId > 0 && d.peerUserId == u.nUserID) {
+                                    matches = true;
+                                }
+
+                                if (matches) {
+                                    d.isOnline = true;
+                                    d.currentUserId = u.nUserID;
+                                    d.peerNickname = Utils.getDisplayName(mainActivity, u);
+                                    if (!TextUtils.isEmpty(u.szUsername)) {
+                                        d.peerUsername = u.szUsername.trim();
+                                    }
+                                    Channel c = channels.get(u.nChannelID);
+                                    if (c != null && !TextUtils.isEmpty(c.szName)) {
+                                        d.channelName = c.szName;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (d.isOnline) {
+                            onlineCount++;
+                        }
+
+                        // If FILTER_ONLINE, only include online users
+                        if (currentFilterMode == FILTER_ONLINE && !d.isOnline) {
+                            continue;
+                        }
+
+                        allDialogs.add(d);
                     }
 
-                    // If FILTER_ONLINE, only include online users
-                    if (currentFilterMode == FILTER_ONLINE && !d.isOnline) {
-                        continue;
-                    }
+                    // Sort latest first
+                    allDialogs.sort((a, b) -> Long.compare(b.lastTimestamp, a.lastTimestamp));
 
-                    allDialogs.add(d);
-                }
-
-                // Sort latest first
-                allDialogs.sort((a, b) -> Long.compare(b.lastTimestamp, a.lastTimestamp));
-
-                // Update empty view strings according to filter
-                if (emptyView != null) {
-                    TextView emptyTitle = emptyView.findViewById(R.id.empty_title);
-                    TextView emptyDesc = emptyView.findViewById(R.id.empty_desc);
-                    if (emptyTitle != null && emptyDesc != null) {
-                        if (currentFilterMode == FILTER_SERVER) {
-                            emptyTitle.setText(R.string.private_chats_empty_server_title);
-                            emptyDesc.setText(R.string.private_chats_empty_server_desc);
-                        } else {
-                            emptyTitle.setText(R.string.private_chats_empty_title);
-                            emptyDesc.setText(R.string.private_chats_empty_desc);
+                    // Update empty view strings according to filter
+                    if (emptyView != null) {
+                        TextView emptyTitle = emptyView.findViewById(R.id.empty_title);
+                        TextView emptyDesc = emptyView.findViewById(R.id.empty_desc);
+                        if (emptyTitle != null && emptyDesc != null) {
+                            if (currentFilterMode == FILTER_SERVER) {
+                                emptyTitle.setText(R.string.private_chats_empty_server_title);
+                                emptyDesc.setText(R.string.private_chats_empty_server_desc);
+                            } else {
+                                emptyTitle.setText(R.string.private_chats_empty_title);
+                                emptyDesc.setText(R.string.private_chats_empty_desc);
+                            }
                         }
                     }
-                }
 
-                if (countText != null && isAdded()) {
-                    countText.setText(getString(R.string.private_chats_count_format, allDialogs.size(), onlineCount));
-                }
-                applyFilter();
+                    if (countText != null && isAdded()) {
+                        countText.setText(getString(R.string.private_chats_count_format, allDialogs.size(), onlineCount));
+                    }
+                    applyFilter();
+                });
             });
         }
 
@@ -2673,6 +2701,28 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
         }
 
+        private static class DialogViewHolder {
+            final TextView avatarView;
+            final View onlineBadge;
+            final TextView nicknameView;
+            final TextView usernameView;
+            final TextView statusView;
+            final TextView timeView;
+            final TextView messageView;
+            final TextView countBadge;
+
+            DialogViewHolder(View root) {
+                this.avatarView = root.findViewById(R.id.chat_avatar);
+                this.onlineBadge = root.findViewById(R.id.chat_online_badge);
+                this.nicknameView = root.findViewById(R.id.chat_nickname);
+                this.usernameView = root.findViewById(R.id.chat_username);
+                this.statusView = root.findViewById(R.id.chat_status);
+                this.timeView = root.findViewById(R.id.chat_time);
+                this.messageView = root.findViewById(R.id.chat_last_message);
+                this.countBadge = root.findViewById(R.id.chat_count_badge);
+            }
+        }
+
         private class PrivateChatsAdapter extends BaseAdapter {
             private final LayoutInflater inflater;
 
@@ -2697,42 +2747,38 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
+                DialogViewHolder holder;
                 if (convertView == null) {
                     convertView = inflater.inflate(R.layout.item_private_chat, parent, false);
+                    holder = new DialogViewHolder(convertView);
+                    convertView.setTag(holder);
+                } else {
+                    holder = (DialogViewHolder) convertView.getTag();
                 }
-
-                TextView avatarView = convertView.findViewById(R.id.chat_avatar);
-                View onlineBadge = convertView.findViewById(R.id.chat_online_badge);
-                TextView nicknameView = convertView.findViewById(R.id.chat_nickname);
-                TextView usernameView = convertView.findViewById(R.id.chat_username);
-                TextView statusView = convertView.findViewById(R.id.chat_status);
-                TextView timeView = convertView.findViewById(R.id.chat_time);
-                TextView messageView = convertView.findViewById(R.id.chat_last_message);
-                TextView countBadge = convertView.findViewById(R.id.chat_count_badge);
 
                 PrivateDialogEntry dialog = getItem(position);
                 if (dialog != null) {
                     String name = dialog.getDisplayName();
-                    nicknameView.setText(name);
+                    holder.nicknameView.setText(name);
 
                     // Avatar letter & color
                     String firstLetter = name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase(Locale.ROOT);
-                    avatarView.setText(firstLetter);
+                    holder.avatarView.setText(firstLetter);
                     int colorIndex = Math.abs(dialog.peerKey.hashCode()) % AVATAR_COLORS.length;
-                    GradientDrawable avatarBg = (GradientDrawable) avatarView.getBackground();
+                    GradientDrawable avatarBg = (GradientDrawable) holder.avatarView.getBackground();
                     if (avatarBg != null) {
                         avatarBg.setColor(AVATAR_COLORS[colorIndex]);
                     }
 
                     // Online indicator
-                    onlineBadge.setVisibility(dialog.isOnline ? View.VISIBLE : View.GONE);
+                    holder.onlineBadge.setVisibility(dialog.isOnline ? View.VISIBLE : View.GONE);
 
                     // Username (@username)
                     if (!TextUtils.isEmpty(dialog.peerUsername)) {
-                        usernameView.setText("@" + dialog.peerUsername);
-                        usernameView.setVisibility(View.VISIBLE);
+                        holder.usernameView.setText("@" + dialog.peerUsername);
+                        holder.usernameView.setVisibility(View.VISIBLE);
                     } else {
-                        usernameView.setVisibility(View.GONE);
+                        holder.usernameView.setVisibility(View.GONE);
                     }
 
                     // Status text
@@ -2741,30 +2787,30 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                         if (!TextUtils.isEmpty(dialog.channelName)) {
                             statusText += " · " + dialog.channelName;
                         }
-                        statusView.setText(statusText);
-                        statusView.setTextColor(0xFF43A047);
+                        holder.statusView.setText(statusText);
+                        holder.statusView.setTextColor(0xFF43A047);
                     } else {
-                        statusView.setText(R.string.user_offline);
-                        statusView.setTextColor(0xFF90A4AE);
+                        holder.statusView.setText(R.string.user_offline);
+                        holder.statusView.setTextColor(0xFF90A4AE);
                     }
 
                     // Time
-                    timeView.setText(formatTimestamp(dialog.lastTimestamp));
+                    holder.timeView.setText(formatTimestamp(dialog.lastTimestamp));
 
                     // Last message preview
                     String prefix = dialog.lastIsOutgoing ? getString(R.string.you_prefix) : "";
-                    messageView.setText(prefix + dialog.lastMessage);
+                    holder.messageView.setText(prefix + dialog.lastMessage);
 
                     // Message count badge
                     if (dialog.messageCount > 1) {
-                        countBadge.setText(String.valueOf(dialog.messageCount));
-                        GradientDrawable countBg = (GradientDrawable) countBadge.getBackground();
+                        holder.countBadge.setText(String.valueOf(dialog.messageCount));
+                        GradientDrawable countBg = (GradientDrawable) holder.countBadge.getBackground();
                         if (countBg != null) {
                             countBg.setColor(0xFF546E7A);
                         }
-                        countBadge.setVisibility(View.VISIBLE);
+                        holder.countBadge.setVisibility(View.VISIBLE);
                     } else {
-                        countBadge.setVisibility(View.GONE);
+                        holder.countBadge.setVisibility(View.GONE);
                     }
 
                     // Accessibility content description
@@ -2992,16 +3038,19 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return name1.compareToIgnoreCase(name2);
         }
 
+        private final Runnable updateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                ChannelListAdapter.this.pendingUpdate = false;
+                ChannelListAdapter.this.doNotifyDataSetChanged();
+            }
+        };
+
         @Override
         public void notifyDataSetChanged() {
             if (!this.pendingUpdate) {
                 this.pendingUpdate = true;
-                MainActivity.this.handler.post(new Runnable() { 
-                    @Override
-                    public final void run() {
-                        MainActivity.ChannelListAdapter.this.doNotifyDataSetChanged();
-                    }
-                });
+                MainActivity.this.handler.postDelayed(this.updateRunnable, 40L);
             }
         }
 
@@ -4107,13 +4156,21 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 }
 
                 if (isRecPaused) {
-                    if (this.recBarTitle != null) this.recBarTitle.setText(R.string.docked_recording_paused);
-                    if (this.recBarDuration != null) this.recBarDuration.setText(durationStr);
+                    if (this.recBarTitle != null && (this.recBarTitle.getText() == null || !getString(R.string.docked_recording_paused).contentEquals(this.recBarTitle.getText()))) {
+                        this.recBarTitle.setText(R.string.docked_recording_paused);
+                    }
+                    if (this.recBarDuration != null && (this.recBarDuration.getText() == null || !durationStr.contentEquals(this.recBarDuration.getText()))) {
+                        this.recBarDuration.setText(durationStr);
+                    }
                     if (this.recIndicatorIcon != null) this.recIndicatorIcon.setImageResource(R.drawable.ic_rec_dot_paused);
                     if (this.btnRecBarPause != null) this.btnRecBarPause.setImageResource(android.R.drawable.ic_media_play);
                 } else {
-                    if (this.recBarTitle != null) this.recBarTitle.setText(R.string.docked_recording_title);
-                    if (this.recBarDuration != null) this.recBarDuration.setText(durationStr);
+                    if (this.recBarTitle != null && (this.recBarTitle.getText() == null || !getString(R.string.docked_recording_title).contentEquals(this.recBarTitle.getText()))) {
+                        this.recBarTitle.setText(R.string.docked_recording_title);
+                    }
+                    if (this.recBarDuration != null && (this.recBarDuration.getText() == null || !durationStr.contentEquals(this.recBarDuration.getText()))) {
+                        this.recBarDuration.setText(durationStr);
+                    }
                     if (this.recIndicatorIcon != null) {
                         this.recDotBlinkState = !this.recDotBlinkState;
                         this.recIndicatorIcon.setImageResource(this.recDotBlinkState ? R.drawable.ic_rec_dot : R.drawable.ic_rec_dot_paused);
@@ -4149,7 +4206,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     title = getString(R.string.docked_streaming_title);
                 }
 
-                if (this.streamBarTitle != null) {
+                if (this.streamBarTitle != null && (this.streamBarTitle.getText() == null || !title.contentEquals(this.streamBarTitle.getText()))) {
                     this.streamBarTitle.setText(title);
                 }
 
@@ -4164,16 +4221,18 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     long totSec = (totalMs / 1000) % 60;
                     long totMin = (totalMs / (1000 * 60)) % 60;
                     String totStr = String.format(Locale.getDefault(), "%02d:%02d", totMin, totSec);
-                    if (this.streamBarDuration != null) {
-                        this.streamBarDuration.setText((isPaused ? getString(R.string.docked_streaming_paused) + " • " : "") + elStr + " / " + totStr);
+                    String durationDisplay = (isPaused ? getString(R.string.docked_streaming_paused) + " • " : "") + elStr + " / " + totStr;
+                    if (this.streamBarDuration != null && (this.streamBarDuration.getText() == null || !durationDisplay.contentEquals(this.streamBarDuration.getText()))) {
+                        this.streamBarDuration.setText(durationDisplay);
                     }
                     if (this.streamBarProgress != null) {
                         int prog = (int) ((elapsedMs * 1000) / totalMs);
                         this.streamBarProgress.setProgress(Math.min(1000, Math.max(0, prog)));
                     }
                 } else {
-                    if (this.streamBarDuration != null) {
-                        this.streamBarDuration.setText((isPaused ? getString(R.string.docked_streaming_paused) + " • " : "") + elStr);
+                    String durationDisplay = (isPaused ? getString(R.string.docked_streaming_paused) + " • " : "") + elStr;
+                    if (this.streamBarDuration != null && (this.streamBarDuration.getText() == null || !durationDisplay.contentEquals(this.streamBarDuration.getText()))) {
+                        this.streamBarDuration.setText(durationDisplay);
                     }
                     if (this.streamBarProgress != null) {
                         this.streamBarProgress.setProgress(0);

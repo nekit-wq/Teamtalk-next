@@ -1025,13 +1025,29 @@ public class Utils {
         return bitmap;
     }
     
+    private static volatile Boolean sShowUsernames = null;
+
+    public static void invalidatePreferencesCache() {
+        sShowUsernames = null;
+    }
+
     public static String getDisplayName(Context context, User user) {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context); 
-        if(pref.getBoolean(Preferences.PREF_GENERAL_SHOWUSERNAMES, false)) {
-            return user.szUsername;
+        if (user == null) {
+            return "";
+        }
+        if (sShowUsernames == null && context != null) {
+            try {
+                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+                sShowUsernames = pref.getBoolean(Preferences.PREF_GENERAL_SHOWUSERNAMES, false);
+            } catch (Exception ignored) {
+                sShowUsernames = false;
+            }
+        }
+        if (Boolean.TRUE.equals(sShowUsernames)) {
+            return user.szUsername != null ? user.szUsername : "";
         }
         if (TextUtils.isEmpty(user.szNickname)) {
-            return context.getString(R.string.pref_default_nickname) + " - #" + user.nUserID;
+            return (context != null ? context.getString(R.string.pref_default_nickname) : "User") + " - #" + user.nUserID;
         }
         return user.szNickname;
     }

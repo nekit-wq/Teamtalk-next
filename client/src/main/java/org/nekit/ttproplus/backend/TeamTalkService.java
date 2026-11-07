@@ -2421,7 +2421,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 }
             }
 
-            long delay = TeamTalkService.this.isConnected() ? 25L : 150L;
+            long delay;
+            if (TeamTalkService.this.isConnected()) {
+                delay = (events > 0) ? 20L : 40L;
+            } else {
+                delay = 150L;
+            }
             if (eventLoopRunning) {
                 eventHandlerLooper.postDelayed(this, delay);
             }
