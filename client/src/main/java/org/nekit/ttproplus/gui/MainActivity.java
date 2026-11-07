@@ -2434,12 +2434,16 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         private void setChipStyle(TextView view, boolean selected) {
             if (selected) {
                 view.setBackgroundResource(R.drawable.chip_filter_selected);
-                view.setTextColor(0xFFFFFFFF);
+                if (getContext() != null) {
+                    view.setTextColor(androidx.core.content.ContextCompat.getColor(getContext(), R.color.colorOnPrimary));
+                } else {
+                    view.setTextColor(0xFFFFFFFF);
+                }
                 view.setTypeface(null, android.graphics.Typeface.BOLD);
             } else {
                 view.setBackgroundResource(R.drawable.chip_filter_unselected);
                 if (getContext() != null) {
-                    view.setTextColor(getContext().getResources().getColor(R.color.textSecondary));
+                    view.setTextColor(androidx.core.content.ContextCompat.getColor(getContext(), R.color.textSecondary));
                 }
                 view.setTypeface(null, android.graphics.Typeface.NORMAL);
             }
@@ -3900,6 +3904,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         View txBtn = findViewById(R.id.transmit_voice);
         if (txBtn != null) {
             txBtn.setBackgroundResource(txEnabled ? R.drawable.bg_ptt_button_active : R.drawable.bg_ptt_button);
+            if (txBtn instanceof TextView) {
+                ((TextView) txBtn).setTextColor(txEnabled ? 0xFFFFFFFF : androidx.core.content.ContextCompat.getColor(this, R.color.colorOnPrimary));
+            }
             txBtn.setContentDescription(getString(txEnabled ? R.string.tx_on : R.string.tx_off));
         }
         if (this.curchannel != null && getClient() != null && getClient().getMyChannelID() == this.curchannel.nChannelID) {

@@ -83,10 +83,17 @@
         <item name="bottomNavigationStyle">@style/Widget.M3.BottomNavigationView</item>
     </style>
 
+    <!-- Compact Material 3 Bottom Navigation -->
     <style name="Widget.M3.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
-        <item name="itemActiveIndicatorStyle">@style/Widget.Material3.BottomNavigationView.ActiveIndicator</item>
-        <item name="elevation">6dp</item>
+        <item name="elevation">2dp</item>
         <item name="android:background">@color/windowBackground</item>
+        <item name="itemIconSize">20dp</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.M3.BottomNav</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.M3.BottomNav</item>
+    </style>
+
+    <style name="TextAppearance.M3.BottomNav" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">10sp</item>
     </style>
 
     <style name="ShapeAppearance.M3.Small" parent="ShapeAppearance.Material3.SmallComponent">
@@ -109,13 +116,13 @@
     <style name="ButtonDangerSmall" parent="Widget.Material3.Button">
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">#ffffff</item>
-        <item name="android:paddingTop">6dp</item>
-        <item name="android:paddingBottom">6dp</item>
-        <item name="android:minHeight">32dp</item>
-        <item name="android:paddingStart">12dp</item>
-        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:minHeight">28dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
         <item name="backgroundTint">#D32F2F</item>
-        <item name="cornerRadius">16dp</item>
+        <item name="cornerRadius">14dp</item>
     </style>
 
 </resources>

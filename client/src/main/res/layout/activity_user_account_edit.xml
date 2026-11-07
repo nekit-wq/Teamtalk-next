@@ -56,7 +56,7 @@
                 android:layout_height="48dp"
                 android:background="@drawable/bg_primary_action_btn"
                 android:text="@string/action_save"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/colorOnPrimary"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:textAllCaps="false" />

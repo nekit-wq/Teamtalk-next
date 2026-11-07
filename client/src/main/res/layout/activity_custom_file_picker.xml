@@ -57,6 +57,7 @@
 
         <Button
             android:id="@+id/btn_search_tt"
+            style="?attr/materialButtonOutlinedStyle"
             android:textSize="11sp"
             android:textColor="?colorPrimary"
             android:layout_width="wrap_content"

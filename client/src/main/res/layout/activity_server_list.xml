@@ -145,11 +145,11 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:text="@string/action_new_server"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/colorOnPrimary"
         app:icon="@drawable/ic_add"
-        app:iconTint="#FFFFFF"
+        app:iconTint="@color/colorOnPrimary"
         app:backgroundTint="@color/colorPrimary"
         app:cornerRadius="16dp"
-        app:elevation="4dp" />
+        app:elevation="3dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

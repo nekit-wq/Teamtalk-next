@@ -7,6 +7,6 @@
         <EditText android:id="@+id/simple_chat_edittext" android:background="@drawable/edit_text_background" android:padding="8dp" android:layout_width="0dp" android:layout_height="wrap_content" android:hint="@string/editmsg" android:singleLine="true" android:layout_weight="1.0" android:inputType="textCapSentences">
             <requestFocus />
         </EditText>
-        <Button android:textSize="14sp" android:id="@+id/simple_chat_sendbtn" android:paddingTop="8dp" android:paddingBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/button_send" android:paddingStart="20dp" android:paddingEnd="20dp" android:layout_marginStart="8dp" />
+        <Button android:textSize="14sp" android:id="@+id/simple_chat_sendbtn" android:textColor="@color/colorOnPrimary" android:paddingTop="8dp" android:paddingBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/button_send" android:paddingStart="20dp" android:paddingEnd="20dp" android:layout_marginStart="8dp" />
     </LinearLayout>
 </LinearLayout>

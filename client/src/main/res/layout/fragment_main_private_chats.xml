@@ -84,7 +84,7 @@
             android:textStyle="bold"
             android:layout_marginEnd="4dp"
             android:background="@drawable/chip_filter_selected"
-            android:textColor="#FFFFFF" />
+            android:textColor="@color/colorOnPrimary" />
 
         <TextView
             android:id="@+id/filter_btn_all"
