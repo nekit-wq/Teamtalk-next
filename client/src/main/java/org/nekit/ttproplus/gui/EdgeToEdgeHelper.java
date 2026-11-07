@@ -41,6 +41,18 @@ public class EdgeToEdgeHelper {
             return;
         }
 
+        if (activity instanceof PreferencesActivity) {
+            // PreferencesActivity uses framework PreferenceActivity with its own ActionBar.
+            // android.R.id.content already sits below the ActionBar. Applying status bar topInset
+            // to contentView adds a redundant top gap (gray bar). Only bottomInset is needed.
+            ViewCompat.setOnApplyWindowInsetsListener(contentView, (v, insets) -> {
+                Insets sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(sysBars.left, 0, sysBars.right, sysBars.bottom);
+                return insets;
+            });
+            return;
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(contentView, (v, insets) -> {
             Insets sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             int topInset = sysBars.top;
