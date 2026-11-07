@@ -86,6 +86,9 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.fragment.app.ListFragment;
 import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
+import com.google.android.material.badge.BadgeDrawable;
 import android.text.InputType;
 import dk.bearware.Channel;
 import dk.bearware.ChannelType;
@@ -175,6 +178,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     Sensor mSensor;
     SensorManager mSensorManager;
     TabLayout mTabLayout;
+    BottomNavigationView mBottomNav;
     ViewPager mViewPager;
     MediaAdapter mediaAdapter;
     MediaSectionFragment mediaFragment;
@@ -349,10 +353,38 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         this.mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         this.mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        this.mBottomNav = (BottomNavigationView) findViewById(R.id.bottom_navigation);
         this.mViewPager = (ViewPager) findViewById(R.id.pager);
         this.mViewPager.setAdapter(this.mSectionsPagerAdapter);
         this.mViewPager.addOnPageChangeListener(this.mSectionsPagerAdapter);
-        this.mTabLayout.setupWithViewPager(this.mViewPager);
+        if (this.mTabLayout != null) {
+            this.mTabLayout.setupWithViewPager(this.mViewPager);
+        }
+        if (this.mBottomNav != null) {
+            this.mBottomNav.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(MenuItem item) {
+                    int id = item.getItemId();
+                    if (id == R.id.nav_channels) {
+                        MainActivity.this.mViewPager.setCurrentItem(0, true);
+                        return true;
+                    } else if (id == R.id.nav_chat) {
+                        MainActivity.this.mViewPager.setCurrentItem(1, true);
+                        return true;
+                    } else if (id == R.id.nav_media) {
+                        MainActivity.this.mViewPager.setCurrentItem(2, true);
+                        return true;
+                    } else if (id == R.id.nav_files) {
+                        MainActivity.this.mViewPager.setCurrentItem(3, true);
+                        return true;
+                    } else if (id == R.id.nav_private) {
+                        MainActivity.this.mViewPager.setCurrentItem(4, true);
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        }
         setupButtons();
         setupDockedPanels();
         if (Build.VERSION.SDK_INT >= 26) {
@@ -1721,6 +1753,20 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
             }
             MainActivity.this.accessibilityAssistant.setVisiblePage(position);
+            if (MainActivity.this.mBottomNav != null) {
+                int itemId;
+                switch (position) {
+                    case 0: itemId = R.id.nav_channels; break;
+                    case 1: itemId = R.id.nav_chat; break;
+                    case 2: itemId = R.id.nav_media; break;
+                    case 3: itemId = R.id.nav_files; break;
+                    case 4: itemId = R.id.nav_private; break;
+                    default: itemId = R.id.nav_channels; break;
+                }
+                if (MainActivity.this.mBottomNav.getSelectedItemId() != itemId) {
+                    MainActivity.this.mBottomNav.setSelectedItemId(itemId);
+                }
+            }
         }
 
         @Override
@@ -2256,6 +2302,22 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 if (mainActivity.getFilesAdapter() != null) {
                     setListAdapter(mainActivity.getFilesAdapter());
                 }
+            }
+        }
+    }
+
+    public void updatePrivateBadge(int unreadCount) {
+        if (this.mBottomNav != null) {
+            try {
+                if (unreadCount > 0) {
+                    BadgeDrawable badge = this.mBottomNav.getOrCreateBadge(R.id.nav_private);
+                    badge.setNumber(unreadCount);
+                    badge.setVisible(true);
+                } else {
+                    this.mBottomNav.removeBadge(R.id.nav_private);
+                }
+            } catch (Throwable t) {
+                // Ignore badge error
             }
         }
     }
@@ -3790,10 +3852,10 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         if (btn == null) return;
         boolean isMute = getService() != null && getService().getCurrentMuteState();
         if (isMute) {
-            btn.setImageResource(R.drawable.mute_blue);
+            btn.setImageResource(R.drawable.ic_m3_volume_off);
             btn.setContentDescription(getString(R.string.speaker_unmute));
         } else {
-            btn.setImageResource(R.drawable.speaker_blue);
+            btn.setImageResource(R.drawable.ic_m3_volume_up);
             btn.setContentDescription(getString(R.string.speaker_mute));
         }
     }
@@ -3808,7 +3870,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 micLevel.setContentDescription(getString(R.string.vox_level_description, new Object[]{micLevel.getText()}));
             }
             if (voxSwitch != null) {
-                voxSwitch.setImageResource(R.drawable.microphone);
+                voxSwitch.setImageResource(R.drawable.ic_m3_mic_on);
                 voxSwitch.setContentDescription(getString(R.string.voice_activation_off));
             }
             if (micGainSeekBar != null && getClient() != null) {
@@ -3822,7 +3884,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             micLevel.setContentDescription(getString(R.string.mic_gain_description, new Object[]{micLevel.getText()}));
         }
         if (voxSwitch != null) {
-            voxSwitch.setImageResource(R.drawable.mic_green);
+            voxSwitch.setImageResource(R.drawable.ic_m3_mic_off);
             voxSwitch.setContentDescription(getString(R.string.voice_activation_on));
         }
         if (micGainSeekBar != null && getClient() != null) {
@@ -3837,7 +3899,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         View txBtn = findViewById(R.id.transmit_voice);
         if (txBtn != null) {
-            txBtn.setBackgroundColor(txEnabled ? -16711936 : 0xffff0000);
+            txBtn.setBackgroundResource(txEnabled ? R.drawable.bg_ptt_button_active : R.drawable.bg_ptt_button);
             txBtn.setContentDescription(getString(txEnabled ? R.string.tx_on : R.string.tx_off));
         }
         if (this.curchannel != null && getClient() != null && getClient().getMyChannelID() == this.curchannel.nChannelID) {

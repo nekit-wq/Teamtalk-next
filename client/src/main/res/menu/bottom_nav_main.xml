@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/nav_channels"
+        android:icon="@drawable/ic_nav_channels"
+        android:title="@string/title_section_channels" />
+
+    <item
+        android:id="@+id/nav_chat"
+        android:icon="@drawable/ic_nav_chat"
+        android:title="@string/title_section_chat" />
+
+    <item
+        android:id="@+id/nav_media"
+        android:icon="@drawable/ic_nav_media"
+        android:title="@string/title_section_media" />
+
+    <item
+        android:id="@+id/nav_files"
+        android:icon="@drawable/ic_nav_files"
+        android:title="@string/title_section_files" />
+
+    <item
+        android:id="@+id/nav_private"
+        android:icon="@drawable/ic_nav_private"
+        android:title="@string/title_section_private_tab" />
+
+</menu>

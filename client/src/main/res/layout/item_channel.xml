@@ -3,10 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?android:selectableItemBackground"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
 
     <ImageView
         android:id="@+id/channelicon"
@@ -14,7 +14,7 @@
         android:layout_height="40dp"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="14dp"
         android:importantForAccessibility="no"
         android:src="@drawable/channel_green" />
 
@@ -29,6 +29,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -44,17 +45,23 @@
                 android:id="@+id/population"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingEnd="4dp"
-                android:paddingStart="4dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/chip_filter_unselected"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
                 android:singleLine="true"
                 android:textColor="@color/textSecondary"
-                android:textSize="14sp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/chantopic"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:singleLine="true"
             android:textColor="@color/textTertiary"
             android:textSize="13sp" />
@@ -75,8 +82,8 @@
             android:clickable="true"
             android:focusable="false"
             android:minHeight="0dp"
-            android:paddingEnd="16dp"
             android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:text="@string/action_join"
             android:textColor="#FFFFFF"
             android:textSize="13sp" />

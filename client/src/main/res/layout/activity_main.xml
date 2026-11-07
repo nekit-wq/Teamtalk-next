@@ -1,19 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:app="http://schemas.android.com/apk/res-auto">
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tab_layout"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="@color/tabLayoutBackground"
-        app:tabIndicatorColor="@color/tabLayoutIndicatorColor"
-        app:tabIndicatorHeight="3dp"
-        app:tabIndicatorFullWidth="false"
-        app:tabSelectedTextColor="@color/colorPrimary"
-        app:tabTextColor="@color/tabLayoutTextColor"
-        app:tabRippleColor="?attr/colorControlHighlight"
-        app:tabMode="fixed" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <!-- Docked Mini-Panels (Telegram-style Audio Bar) -->
     <LinearLayout
@@ -45,7 +35,8 @@
                 android:layout_width="12dp"
                 android:layout_height="12dp"
                 android:src="@drawable/ic_rec_dot"
-                android:layout_marginEnd="10dp" />
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@null" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -115,11 +106,13 @@
                 android:paddingEnd="6dp">
 
                 <ImageView
-                    android:id="@+id/stream_bar_icon"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:src="@android:drawable/ic_media_play"
-                    android:layout_marginEnd="10dp" />
+                    android:id="@+id/stream_indicator_icon"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_play"
+                    android:tint="@color/colorPrimary"
+                    android:layout_marginEnd="10dp"
+                    android:contentDescription="@null" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -154,7 +147,8 @@
                     android:padding="6dp"
                     android:scaleType="fitCenter"
                     android:background="?android:selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_media_pause"
+                    android:src="@drawable/ic_pause"
+                    android:tint="?android:attr/textColorPrimary"
                     android:contentDescription="@string/action_pause" />
 
                 <ImageButton
@@ -178,45 +172,195 @@
                 android:progress="0" />
         </RelativeLayout>
     </LinearLayout>
-    <androidx.viewpager.widget.ViewPager android:id="@+id/pager" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.0" />
-    <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" />
-    <ProgressBar android:id="@+id/mic_activity_bar" android:visibility="gone" android:layout_width="match_parent" android:layout_height="8dp" android:max="100" android:progress="0" style="?android:progressBarStyleHorizontal" />
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@color/surfaceColor" android:padding="8dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+
+    <!-- Main ViewPager Content -->
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.0" />
+
+    <ProgressBar
+        android:id="@+id/mic_activity_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:max="100"
+        android:progress="0"
+        android:visibility="gone" />
+
+    <!-- Material You Voice Control Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/voice_control_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="1dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/dividerColor"
+        app:cardBackgroundColor="@color/surfaceColor">
+
         <LinearLayout
-            android:id="@+id/network_stats_container"
-            android:orientation="vertical"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:padding="2dp"
-            android:background="?android:selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true">
-            <TextView android:textSize="13sp" android:textStyle="bold" android:id="@+id/connectionstat_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:importantForAccessibility="yes" />
-            <TextView android:textSize="13sp" android:id="@+id/pingstat_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:importantForAccessibility="yes" />
-            <TextView android:textSize="13sp" android:id="@+id/totalstat_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:importantForAccessibility="yes" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp">
+
+            <!-- Network stats badge -->
+            <LinearLayout
+                android:id="@+id/network_stats_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:background="?android:selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="vertical"
+                android:padding="2dp">
+
+                <TextView
+                    android:id="@+id/connectionstat_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:importantForAccessibility="yes"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/pingstat_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:importantForAccessibility="yes"
+                    android:text=""
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/totalstat_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:importantForAccessibility="yes"
+                    android:text=""
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Master Volume column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/vollevel_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@color/textSecondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/master_volSeekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="24dp"
+                    android:contentDescription="@string/mastervolume"
+                    android:max="100"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:progressDrawable="@drawable/seekbar_progress_m3"
+                    android:thumb="@drawable/seekbar_thumb_m3" />
+
+                <ImageButton
+                    android:id="@+id/speakerBtn"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_tonal_icon_button"
+                    android:contentDescription="@string/speaker_mute"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_m3_volume_up"
+                    android:tint="@color/colorPrimary" />
+            </LinearLayout>
+
+            <!-- Mic Gain / VOX column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1.0"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/miclevel_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@color/textSecondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <SeekBar
+                    android:id="@+id/mic_gainSeekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="24dp"
+                    android:contentDescription="@string/micgain"
+                    android:max="100"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:progressDrawable="@drawable/seekbar_progress_m3"
+                    android:thumb="@drawable/seekbar_thumb_m3" />
+
+                <ImageButton
+                    android:id="@+id/voxSwitch"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_tonal_icon_button"
+                    android:contentDescription="@string/voice_activation_on"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_m3_mic_on"
+                    android:tint="@color/colorPrimary" />
+            </LinearLayout>
+
+            <!-- Material 3 PTT Button -->
+            <Button
+                android:id="@+id/transmit_voice"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/bg_ptt_button"
+                android:elevation="3dp"
+                android:stateListAnimator="@null"
+                android:text="@string/button_tx"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
         </LinearLayout>
-        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
-            <TextView android:textSize="13sp" android:gravity="center" android:id="@+id/vollevel_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" />
-            <SeekBar android:id="@+id/master_volSeekBar" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:contentDescription="@string/mastervolume" />
-            <ImageButton android:layout_gravity="center" android:id="@+id/speakerBtn" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/speaker_blue" android:contentDescription="@string/speaker_mute" />
-        </LinearLayout>
-        <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.0">
-            <TextView android:textSize="13sp" android:gravity="center" android:id="@+id/miclevel_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" />
-            <SeekBar android:id="@+id/mic_gainSeekBar" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:contentDescription="@string/micgain" />
-            <ImageButton android:layout_gravity="center" android:id="@+id/voxSwitch" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/mic_green" android:contentDescription="@string/voice_activation_on" />
-        </LinearLayout>
-        <Button
-            android:id="@+id/transmit_voice"
-            android:layout_width="68dp"
-            android:layout_height="68dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_ptt_button"
-            android:elevation="4dp"
-            android:stateListAnimator="@null"
-            android:text="@string/button_tx"
-            android:textColor="#ffffffff"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Material You Bottom Navigation Bar -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/windowBackground"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_main" />
+
 </LinearLayout>

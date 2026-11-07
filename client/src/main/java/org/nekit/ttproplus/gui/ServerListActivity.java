@@ -63,6 +63,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.core.view.ViewCompat;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -267,23 +268,56 @@ public class ServerListActivity extends AppCompatActivity
         recyclerView = findViewById(R.id.servers_recycler_view);
         searchEditText = findViewById(R.id.search_edit_text);
         emptyView = findViewById(R.id.empty_view);
+
+        ExtendedFloatingActionButton fabAddServer = findViewById(R.id.fab_add_server);
+        if (fabAddServer != null) {
+            fabAddServer.setOnClickListener(v -> {
+                Intent edit = new Intent(this, ServerEntryActivity.class);
+                startActivityForResult(edit, REQUEST_NEWSERVER);
+            });
+        }
+        View btnClearSearch = findViewById(R.id.btn_clear_search);
+        if (btnClearSearch != null) {
+            btnClearSearch.setOnClickListener(v -> {
+                if (searchEditText != null) {
+                    searchEditText.setText("");
+                }
+            });
+        }
     }
 
     private void setupRecyclerView() {
         adapter = new ServerListAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                ExtendedFloatingActionButton fab = findViewById(R.id.fab_add_server);
+                if (fab != null) {
+                    if (dy > 4 && fab.isExtended()) {
+                        fab.shrink();
+                    } else if (dy < -4 && !fab.isExtended()) {
+                        fab.extend();
+                    }
+                }
+            }
+        });
         updateEmptyView();
     }
 
     private void setupSearch() {
+        View btnClearSearch = findViewById(R.id.btn_clear_search);
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                adapter.filter(s.toString());
+                if (btnClearSearch != null) {
+                    btnClearSearch.setVisibility(s != null && s.length() > 0 ? View.VISIBLE : View.GONE);
+                }
+                adapter.filter(s != null ? s.toString() : "");
             }
 
             @Override

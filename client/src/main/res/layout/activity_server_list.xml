@@ -1,32 +1,155 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <EditText
-        android:id="@+id/search_edit_text"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/edit_text_background"
-        android:drawablePadding="10dp"
-        android:drawableStart="@android:drawable/ic_menu_search"
-        android:hint="@string/search_servers_hint"
-        android:imeOptions="actionSearch"
-        android:inputType="text"
-        android:maxLines="1"
-        android:paddingEnd="16dp"
-        android:paddingStart="16dp"
-        android:textColor="@color/textPrimary"
-        android:textColorHint="@color/textSecondary"
-        android:textSize="14sp" />
-    <androidx.recyclerview.widget.RecyclerView android:id="@+id/servers_recycler_view" android:scrollbars="vertical" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1.0" />
-    <TextView android:textAppearance="?android:textAppearanceLarge" android:gravity="center" android:id="@+id/empty_view" android:visibility="gone" android:layout_width="match_parent" android:layout_height="0dp" android:text="@string/server_list_empty" android:layout_weight="1.0" />
-    <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" />
-    <LinearLayout android:orientation="vertical" android:padding="12dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <TextView android:textAppearance="?android:textAppearanceSmall" android:textColor="@color/textSecondary" android:id="@+id/version_textview" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" />
-        <TextView android:textAppearance="?android:textAppearanceSmall" android:textColor="@color/textSecondary" android:id="@+id/dllversion_textview" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" />
-        <TextView android:textAppearance="?android:textAppearanceSmall" android:textColor="@color/textTertiary" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/text_translator" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Google-style Material 3 Search Bar Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="1dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/dividerColor"
+            app:cardBackgroundColor="@color/surfaceContainerHigh">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="8dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:src="@android:drawable/ic_menu_search"
+                    android:tint="@color/textSecondary" />
+
+                <EditText
+                    android:id="@+id/search_edit_text"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.0"
+                    android:background="@null"
+                    android:hint="@string/search_servers_hint"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="6dp"
+                    android:textColor="@color/textPrimary"
+                    android:textColorHint="@color/textSecondary"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/btn_clear_search"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?android:selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/action_clear_search"
+                    android:scaleType="centerInside"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    android:tint="@color/textSecondary"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Servers list and empty state -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.0">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/servers_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="84dp"
+                android:scrollbars="vertical" />
+
+            <TextView
+                android:id="@+id/empty_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:padding="24dp"
+                android:text="@string/server_list_empty"
+                android:textAppearance="?android:textAppearanceLarge"
+                android:textColor="@color/textSecondary"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <!-- Version footer -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/dividerColor" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:background="@color/surfaceColor">
+
+            <TextView
+                android:id="@+id/version_textview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textAppearance="?android:textAppearanceSmall"
+                android:textColor="@color/textSecondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/dllversion_textview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textAppearance="?android:textAppearanceSmall"
+                android:textColor="@color/textSecondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/text_translator"
+                android:textAppearance="?android:textAppearanceSmall"
+                android:textColor="@color/textTertiary"
+                android:textSize="10sp" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+
+    <!-- Material 3 Extended Floating Action Button -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_add_server"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:text="@string/action_newserverentry"
+        android:textColor="#FFFFFF"
+        app:icon="@drawable/ic_add"
+        app:iconTint="#FFFFFF"
+        app:backgroundTint="@color/colorPrimary"
+        app:cornerRadius="16dp"
+        app:elevation="4dp" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

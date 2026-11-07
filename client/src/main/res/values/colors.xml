@@ -2,21 +2,32 @@
 <resources>
     <!-- Material You (Material 3) Baseline Light Palette -->
     <color name="colorPrimary">#0B57D0</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
     <color name="colorPrimaryDark">#041E49</color>
     <color name="colorAccent">#0B57D0</color>
     <color name="colorPrimaryContainer">#D3E3FD</color>
     <color name="colorOnPrimaryContainer">#041E49</color>
+
     <color name="colorSecondary">#00639B</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
     <color name="colorSecondaryContainer">#C2E7FF</color>
+    <color name="colorOnSecondaryContainer">#001D32</color>
+
     <color name="colorTertiary">#006A6A</color>
+    <color name="colorOnTertiary">#FFFFFF</color>
     <color name="colorTertiaryContainer">#6FF7F7</color>
+    <color name="colorOnTertiaryContainer">#002020</color>
 
     <!-- Surfaces & Backgrounds -->
     <color name="windowBackground">#FDFBFE</color>
     <color name="surfaceColor">#F0F4F9</color>
+    <color name="surfaceVariant">#E1E2EC</color>
+    <color name="surfaceContainerLow">#F7F9FF</color>
     <color name="surfaceContainerHigh">#E9EEF6</color>
     <color name="surfaceContainerHighest">#E1E7F0</color>
     <color name="statusBarColor">#FDFBFE</color>
+
+    <!-- Legacy Tab support (if used) -->
     <color name="tabLayoutBackground">#FDFBFE</color>
     <color name="tabLayoutTextColor">#44474E</color>
     <color name="tabLayoutIndicatorColor">#0B57D0</color>
@@ -25,6 +36,7 @@
     <color name="textPrimary">#1F1F1F</color>
     <color name="textSecondary">#44474E</color>
     <color name="textTertiary">#74777F</color>
+    <color name="colorOutline">#74777F</color>
     <color name="dividerColor">#E0E3E7</color>
     <color name="editTextBackground">#EEF2F6</color>
 

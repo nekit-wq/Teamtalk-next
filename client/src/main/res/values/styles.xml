@@ -1,13 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.Bridge">
+    <style name="AppTheme" parent="Theme.Material3.DayNight">
         <!-- Brand & Material You Colors -->
         <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+        <item name="colorPrimaryContainer">@color/colorPrimaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/colorOnPrimaryContainer</item>
+
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorOnSecondary">@color/colorOnSecondary</item>
+        <item name="colorSecondaryContainer">@color/colorSecondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/colorOnSecondaryContainer</item>
+
+        <item name="colorTertiary">@color/colorTertiary</item>
+        <item name="colorOnTertiary">@color/colorOnTertiary</item>
+        <item name="colorTertiaryContainer">@color/colorTertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/colorOnTertiaryContainer</item>
+
         <item name="colorSurface">@color/surfaceColor</item>
         <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="colorSurfaceVariant">@color/surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/textSecondary</item>
+        <item name="colorOutline">@color/colorOutline</item>
+        <item name="colorOutlineVariant">@color/dividerColor</item>
+
+        <!-- Surfaces & Backgrounds -->
         <item name="android:windowBackground">@color/windowBackground</item>
         <item name="android:statusBarColor">@color/statusBarColor</item>
         <item name="android:navigationBarColor">@color/windowBackground</item>
@@ -19,39 +39,74 @@
 
         <!-- Dialogs -->
         <item name="alertDialogTheme">@style/Theme.M3.Dialog</item>
+
+        <!-- Bottom Navigation M3 styling -->
+        <item name="bottomNavigationStyle">@style/Widget.M3.BottomNavigationView</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+    <style name="AppTheme.NoActionBar" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+        <item name="colorPrimaryContainer">@color/colorPrimaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/colorOnPrimaryContainer</item>
+
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorOnSecondary">@color/colorOnSecondary</item>
+        <item name="colorSecondaryContainer">@color/colorSecondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/colorOnSecondaryContainer</item>
+
+        <item name="colorTertiary">@color/colorTertiary</item>
+        <item name="colorOnTertiary">@color/colorOnTertiary</item>
+        <item name="colorTertiaryContainer">@color/colorTertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/colorOnTertiaryContainer</item>
+
         <item name="colorSurface">@color/surfaceColor</item>
         <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="colorSurfaceVariant">@color/surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/textSecondary</item>
+        <item name="colorOutline">@color/colorOutline</item>
+        <item name="colorOutlineVariant">@color/dividerColor</item>
+
         <item name="android:windowBackground">@color/windowBackground</item>
         <item name="android:statusBarColor">@color/statusBarColor</item>
         <item name="android:navigationBarColor">@color/windowBackground</item>
+
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.M3.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.M3.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.M3.Large</item>
+
+        <item name="alertDialogTheme">@style/Theme.M3.Dialog</item>
+        <item name="bottomNavigationStyle">@style/Widget.M3.BottomNavigationView</item>
     </style>
 
-    <style name="ShapeAppearance.M3.Small" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+    <style name="Widget.M3.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemActiveIndicatorStyle">@style/Widget.Material3.BottomNavigationView.ActiveIndicator</item>
+        <item name="elevation">6dp</item>
+        <item name="android:background">@color/windowBackground</item>
+    </style>
+
+    <style name="ShapeAppearance.M3.Small" parent="ShapeAppearance.Material3.SmallComponent">
         <item name="cornerSize">12dp</item>
     </style>
 
-    <style name="ShapeAppearance.M3.Medium" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+    <style name="ShapeAppearance.M3.Medium" parent="ShapeAppearance.Material3.MediumComponent">
         <item name="cornerSize">16dp</item>
     </style>
 
-    <style name="ShapeAppearance.M3.Large" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+    <style name="ShapeAppearance.M3.Large" parent="ShapeAppearance.Material3.LargeComponent">
         <item name="cornerSize">28dp</item>
     </style>
 
-    <style name="Theme.M3.Dialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+    <style name="Theme.M3.Dialog" parent="Theme.Material3.DayNight.Dialog.Alert">
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.M3.Large</item>
         <item name="colorSurface">@color/surfaceColor</item>
     </style>
 
-    <style name="ButtonDangerSmall" parent="Widget.MaterialComponents.Button">
+    <style name="ButtonDangerSmall" parent="Widget.Material3.Button">
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">#ffffff</item>
         <item name="android:paddingTop">6dp</item>
