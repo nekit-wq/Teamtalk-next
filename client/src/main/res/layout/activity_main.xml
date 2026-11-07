@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.google.android.material.tabs.TabLayout android:textColor="@color/tabLayoutTextColor" android:id="@+id/tab_layout" android:background="@color/tabLayoutBackground" android:paddingTop="4dp" android:paddingBottom="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/tabLayoutBackground"
+        app:tabIndicatorColor="@color/tabLayoutIndicatorColor"
+        app:tabIndicatorHeight="3dp"
+        app:tabIndicatorFullWidth="false"
+        app:tabSelectedTextColor="@color/colorPrimary"
+        app:tabTextColor="@color/tabLayoutTextColor"
+        app:tabRippleColor="?attr/colorControlHighlight"
+        app:tabMode="fixed" />
 
     <!-- Docked Mini-Panels (Telegram-style Audio Bar) -->
     <LinearLayout
@@ -194,6 +206,17 @@
             <SeekBar android:id="@+id/mic_gainSeekBar" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:contentDescription="@string/micgain" />
             <ImageButton android:layout_gravity="center" android:id="@+id/voxSwitch" android:background="?android:selectableItemBackgroundBorderless" android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/mic_green" android:contentDescription="@string/voice_activation_on" />
         </LinearLayout>
-        <Button android:textSize="14sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@+id/transmit_voice" android:background="@android:color/holo_red_light" android:layout_width="72dp" android:layout_height="72dp" android:text="@string/button_tx" android:layout_marginStart="8dp" />
+        <Button
+            android:id="@+id/transmit_voice"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_ptt_button"
+            android:elevation="4dp"
+            android:stateListAnimator="@null"
+            android:text="@string/button_tx"
+            android:textColor="#ffffffff"
+            android:textSize="14sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>

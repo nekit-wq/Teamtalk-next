@@ -2282,9 +2282,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         private TextView btnFilterOnline;
 
         private static final int[] AVATAR_COLORS = {
-                0xFFE53935, 0xFF1E88E5, 0xFF43A047, 0xFFFB8C00, 0xFF8E24AA,
-                0xFF00ACC1, 0xFF3949AB, 0xFFD81B60, 0xFF546E7A, 0xFF6D4C41,
-                0xFFC0CA33, 0xFFF4511E, 0xFF00897B, 0xFF5C6BC0, 0xFFEC407A
+                0xFF0B57D0, 0xFF006A6A, 0xFF386A20, 0xFF984061, 0xFF705574,
+                0xFF8C4F27, 0xFF006874, 0xFF5B53A4, 0xFF904A43, 0xFF2F6B56,
+                0xFF6750A4, 0xFF7D5260, 0xFF43665E, 0xFF4F616E, 0xFF7E525D
         };
 
         @Override

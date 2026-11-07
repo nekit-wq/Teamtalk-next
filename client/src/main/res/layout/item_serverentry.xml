@@ -2,9 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    android:background="@drawable/card_surface_bg"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:background="?android:selectableItemBackground"
     android:padding="12dp">
 
     <CheckBox
@@ -37,6 +41,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
+            android:textColor="@color/textPrimary"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -56,6 +61,7 @@
         android:layout_height="wrap_content"
         android:paddingStart="8dp"
         android:paddingEnd="4dp"
+        android:textColor="@color/colorPrimary"
         android:textSize="13sp"
         android:textStyle="bold"
         android:visibility="gone" />

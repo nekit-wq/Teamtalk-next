@@ -1,33 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight">
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.Bridge">
+        <!-- Brand & Material You Colors -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorSurface">@color/surfaceColor</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
         <item name="android:windowBackground">@color/windowBackground</item>
         <item name="android:statusBarColor">@color/statusBarColor</item>
+        <item name="android:navigationBarColor">@color/windowBackground</item>
+
+        <!-- Rounded Shape Appearance (Material 3 style) -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.M3.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.M3.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.M3.Large</item>
+
+        <!-- Dialogs -->
+        <item name="alertDialogTheme">@style/Theme.M3.Dialog</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight">
+    <style name="AppTheme.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorSurface">@color/surfaceColor</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
         <item name="android:windowBackground">@color/windowBackground</item>
         <item name="android:statusBarColor">@color/statusBarColor</item>
+        <item name="android:navigationBarColor">@color/windowBackground</item>
     </style>
 
-    <style name="ButtonDangerSmall" parent="Widget.AppCompat.Button">
+    <style name="ShapeAppearance.M3.Small" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="ShapeAppearance.M3.Medium" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.M3.Large" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerSize">28dp</item>
+    </style>
+
+    <style name="Theme.M3.Dialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.M3.Large</item>
+        <item name="colorSurface">@color/surfaceColor</item>
+    </style>
+
+    <style name="ButtonDangerSmall" parent="Widget.MaterialComponents.Button">
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">#ffffff</item>
-        <item name="android:paddingTop">8dp</item>
-        <item name="android:paddingBottom">8dp</item>
-        <item name="android:minHeight">36dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:minHeight">32dp</item>
         <item name="android:paddingStart">12dp</item>
         <item name="android:paddingEnd">12dp</item>
-        <item name="android:backgroundTint">#c62828</item>
+        <item name="backgroundTint">#D32F2F</item>
+        <item name="cornerRadius">16dp</item>
     </style>
 
 </resources>

@@ -1,34 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorAccent">#ff84a0ae</color>
-    <color name="colorPrimary">#ff22272b</color>
-    <color name="colorPrimaryDark">#ff1a1a1a</color>
-    <color name="dividerColor">#ff37474f</color>
-    <color name="editTextBackground">#ff37474f</color>
-    <color name="infoBackground">#ff263238</color>
-    <color name="logBackground">#ff3e2723</color>
-    <color name="logTextColor">#ffffab91</color>
-    <color name="logTimeColor">#ff795548</color>
-    <color name="srvInfoBackground">#ff1b5e20</color>
-    <color name="srvInfoTextColor">#ffa5d6a7</color>
-    <color name="srvInfoTimeColor">#ff388e3c</color>
-    <color name="srvInfoTitleColor">#ff81c784</color>
-    <color name="statusBarColor">#ff000000</color>
-    <color name="surfaceColor">#ff263238</color>
-    <color name="tabLayoutBackground">#ff22272b</color>
-    <color name="tabLayoutTextColor">#ffcfd8dc</color>
-    <color name="textPrimary">#ffe0e0e0</color>
-    <color name="textSecondary">#ff90a4ae</color>
-    <color name="textTertiary">#ff607d8b</color>
-    <color name="windowBackground">#ff1a1a1a</color>
-    <color name="settingsCardBackground">#21262D</color>
-    <color name="settingsCardBorder">#30363D</color>
-    <color name="settingsInputBackground">#161B22</color>
-    <color name="settingsInputBorder">#30363D</color>
-    <color name="settingsSectionHeader">#64B5F6</color>
-    <color name="settingsAccent">#2196F3</color>
-    <color name="settingsAccentLight">#172635</color>
-    <color name="settingsWarningBg">#3E2723</color>
-    <color name="settingsWarningText">#FFB74D</color>
-    <color name="settingsDivider">#30363D</color>
+    <!-- Material You (Material 3) Baseline Dark Palette -->
+    <color name="colorPrimary">#A8C7FA</color>
+    <color name="colorPrimaryDark">#0842A0</color>
+    <color name="colorAccent">#A8C7FA</color>
+    <color name="colorPrimaryContainer">#0842A0</color>
+    <color name="colorOnPrimaryContainer">#D3E3FD</color>
+    <color name="colorSecondary">#7CDBFF</color>
+    <color name="colorSecondaryContainer">#004D74</color>
+    <color name="colorTertiary">#80D5D4</color>
+    <color name="colorTertiaryContainer">#004F4F</color>
+
+    <!-- Surfaces & Backgrounds -->
+    <color name="windowBackground">#111318</color>
+    <color name="surfaceColor">#1D2024</color>
+    <color name="surfaceContainerHigh">#282A2F</color>
+    <color name="surfaceContainerHighest">#33353A</color>
+    <color name="statusBarColor">#111318</color>
+    <color name="tabLayoutBackground">#111318</color>
+    <color name="tabLayoutTextColor">#C4C7C5</color>
+    <color name="tabLayoutIndicatorColor">#A8C7FA</color>
+
+    <!-- Typography & Outlines -->
+    <color name="textPrimary">#E2E2E6</color>
+    <color name="textSecondary">#C4C7D0</color>
+    <color name="textTertiary">#8E9199</color>
+    <color name="dividerColor">#44474F</color>
+    <color name="editTextBackground">#1F2228</color>
+
+    <!-- Logs & Server Info -->
+    <color name="logBackground">#2D1E16</color>
+    <color name="logTextColor">#FFB787</color>
+    <color name="logTimeColor">#9E8C83</color>
+    <color name="srvInfoBackground">#0E2E17</color>
+    <color name="srvInfoTitleColor">#7BD98F</color>
+    <color name="srvInfoTextColor">#A2E8B2</color>
+    <color name="srvInfoTimeColor">#5BB86E</color>
+
+    <!-- Settings / Cards -->
+    <color name="settingsCardBackground">#1D2024</color>
+    <color name="settingsCardBorder">#303338</color>
+    <color name="settingsInputBackground">#16181C</color>
+    <color name="settingsInputBorder">#44474F</color>
+    <color name="settingsSectionHeader">#A8C7FA</color>
+    <color name="settingsAccent">#A8C7FA</color>
+    <color name="settingsAccentLight">#0842A0</color>
+    <color name="settingsWarningBg">#3E201B</color>
+    <color name="settingsWarningText">#FFB4AB</color>
+    <color name="settingsDivider">#303338</color>
 </resources>
