@@ -2512,7 +2512,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         private final Runnable reloadRunnable = new Runnable() {
             @Override
             public void run() {
-                PrivateChatsFragment.this.executeReloadDialogs();
+                PrivateChatsSectionFragment.this.executeReloadDialogs();
             }
         };
         private final ExecutorService reloadExecutor = Executors.newSingleThreadExecutor();
