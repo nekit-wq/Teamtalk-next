@@ -14,6 +14,7 @@ client/*.jks
 !client/gradle/wrapper/gradle-wrapper.jar
 !client/src/main/jniLibs/**/*.so
 !client/release.keystore
+dist/
 
 # Python server virtualenv and caches
 server/**/.venv/
