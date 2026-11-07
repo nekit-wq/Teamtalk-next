@@ -106,7 +106,7 @@
                 android:paddingEnd="6dp">
 
                 <ImageView
-                    android:id="@+id/stream_indicator_icon"
+                    android:id="@+id/stream_bar_icon"
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_play"
