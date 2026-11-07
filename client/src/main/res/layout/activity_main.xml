@@ -5,6 +5,28 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <!-- Top Material You Tab Navigation (Classic Layout) -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/tabLayoutBackground"
+        app:tabIndicatorColor="@color/tabLayoutIndicatorColor"
+        app:tabIndicatorHeight="3dp"
+        app:tabIndicatorFullWidth="false"
+        app:tabMode="fixed"
+        app:tabGravity="fill"
+        app:tabSelectedTextColor="@color/tabLayoutIndicatorColor"
+        app:tabTextColor="@color/tabLayoutTextColor"
+        app:tabIconTint="@color/selector_nav_item"
+        app:tabRippleColor="?attr/colorControlHighlight"
+        app:tabTextAppearance="@style/TabTextAppearance" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/dividerColor" />
+
     <!-- Docked Mini-Panels (Telegram-style Audio Bar) -->
     <LinearLayout
         android:id="@+id/docked_panels_container"
@@ -197,7 +219,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginBottom="6dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="1dp"
         app:strokeWidth="1dp"
@@ -360,19 +382,5 @@
                 android:textStyle="bold" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
-
-    <!-- Compact Material You Bottom Navigation Bar (56dp height) -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@color/windowBackground"
-        app:itemIconSize="22dp"
-        app:itemIconTint="@color/selector_nav_item"
-        app:itemTextColor="@color/selector_nav_item"
-        app:itemPaddingTop="4dp"
-        app:itemPaddingBottom="4dp"
-        app:labelVisibilityMode="labeled"
-        app:menu="@menu/bottom_nav_main" />
 
 </LinearLayout>

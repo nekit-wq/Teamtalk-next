@@ -113,6 +113,12 @@
         <item name="colorSurface">@color/surfaceColor</item>
     </style>
 
+    <style name="TabTextAppearance" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="ButtonDangerSmall" parent="Widget.Material3.Button">
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">#ffffff</item>

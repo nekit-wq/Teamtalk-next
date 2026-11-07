@@ -799,7 +799,7 @@
     <string name="title_section_channels">Каналы</string>
     <string name="title_section_chat">Сообщения</string>
     <string name="title_section_files">Файлы</string>
-    <string name="title_section_media">Медиатрансляции</string>
+    <string name="title_section_media">Медиа</string>
     <string name="title_section_noaudio">Без звука</string>
     <string name="title_section_opus">OPUS</string>
     <string name="title_section_private_messages">Личные сообщения</string>

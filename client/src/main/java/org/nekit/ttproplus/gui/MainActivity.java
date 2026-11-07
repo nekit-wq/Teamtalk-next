@@ -353,37 +353,25 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         this.mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         this.mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        this.mBottomNav = (BottomNavigationView) findViewById(R.id.bottom_navigation);
+        this.mBottomNav = null;
         this.mViewPager = (ViewPager) findViewById(R.id.pager);
         this.mViewPager.setAdapter(this.mSectionsPagerAdapter);
         this.mViewPager.addOnPageChangeListener(this.mSectionsPagerAdapter);
         if (this.mTabLayout != null) {
             this.mTabLayout.setupWithViewPager(this.mViewPager);
-        }
-        if (this.mBottomNav != null) {
-            this.mBottomNav.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
-                @Override
-                public boolean onNavigationItemSelected(MenuItem item) {
-                    int id = item.getItemId();
-                    if (id == R.id.nav_channels) {
-                        MainActivity.this.mViewPager.setCurrentItem(0, true);
-                        return true;
-                    } else if (id == R.id.nav_chat) {
-                        MainActivity.this.mViewPager.setCurrentItem(1, true);
-                        return true;
-                    } else if (id == R.id.nav_media) {
-                        MainActivity.this.mViewPager.setCurrentItem(2, true);
-                        return true;
-                    } else if (id == R.id.nav_files) {
-                        MainActivity.this.mViewPager.setCurrentItem(3, true);
-                        return true;
-                    } else if (id == R.id.nav_private) {
-                        MainActivity.this.mViewPager.setCurrentItem(4, true);
-                        return true;
-                    }
-                    return false;
+            int[] navIcons = {
+                R.drawable.ic_nav_channels,
+                R.drawable.ic_nav_chat,
+                R.drawable.ic_nav_media,
+                R.drawable.ic_nav_files,
+                R.drawable.ic_nav_private
+            };
+            for (int i = 0; i < navIcons.length && i < this.mTabLayout.getTabCount(); i++) {
+                TabLayout.Tab tab = this.mTabLayout.getTabAt(i);
+                if (tab != null) {
+                    tab.setIcon(navIcons[i]);
                 }
-            });
+            }
         }
         setupButtons();
         setupDockedPanels();
@@ -1724,18 +1712,17 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         @Override
         public CharSequence getPageTitle(int position) {
-            Locale l = Locale.getDefault();
             switch (position) {
                 case 0:
-                    return MainActivity.this.getString(R.string.title_section_channels).toUpperCase(l);
+                    return MainActivity.this.getString(R.string.title_section_channels);
                 case 1:
-                    return MainActivity.this.getString(R.string.title_section_chat).toUpperCase(l);
+                    return MainActivity.this.getString(R.string.title_section_chat);
                 case 2:
-                    return MainActivity.this.getString(R.string.title_section_media).toUpperCase(l);
+                    return MainActivity.this.getString(R.string.title_section_media);
                 case 3:
-                    return MainActivity.this.getString(R.string.title_section_files).toUpperCase(l);
+                    return MainActivity.this.getString(R.string.title_section_files);
                 case 4:
-                    return MainActivity.this.getString(R.string.title_section_private_tab).toUpperCase(l);
+                    return MainActivity.this.getString(R.string.title_section_private_tab);
                 default:
                     return null;
             }
@@ -1753,20 +1740,6 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
             }
             MainActivity.this.accessibilityAssistant.setVisiblePage(position);
-            if (MainActivity.this.mBottomNav != null) {
-                int itemId;
-                switch (position) {
-                    case 0: itemId = R.id.nav_channels; break;
-                    case 1: itemId = R.id.nav_chat; break;
-                    case 2: itemId = R.id.nav_media; break;
-                    case 3: itemId = R.id.nav_files; break;
-                    case 4: itemId = R.id.nav_private; break;
-                    default: itemId = R.id.nav_channels; break;
-                }
-                if (MainActivity.this.mBottomNav.getSelectedItemId() != itemId) {
-                    MainActivity.this.mBottomNav.setSelectedItemId(itemId);
-                }
-            }
         }
 
         @Override
@@ -2307,14 +2280,17 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     public void updatePrivateBadge(int unreadCount) {
-        if (this.mBottomNav != null) {
+        if (this.mTabLayout != null) {
             try {
-                if (unreadCount > 0) {
-                    BadgeDrawable badge = this.mBottomNav.getOrCreateBadge(R.id.nav_private);
-                    badge.setNumber(unreadCount);
-                    badge.setVisible(true);
-                } else {
-                    this.mBottomNav.removeBadge(R.id.nav_private);
+                TabLayout.Tab tab = this.mTabLayout.getTabAt(4);
+                if (tab != null) {
+                    if (unreadCount > 0) {
+                        BadgeDrawable badge = tab.getOrCreateBadge();
+                        badge.setNumber(unreadCount);
+                        badge.setVisible(true);
+                    } else {
+                        tab.removeBadge();
+                    }
                 }
             } catch (Throwable t) {
                 // Ignore badge error
