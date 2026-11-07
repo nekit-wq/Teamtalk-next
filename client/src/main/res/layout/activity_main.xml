@@ -262,19 +262,20 @@
                 <!-- Row 1: Speaker + Master Volume -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="24dp"
+                    android:layout_height="28dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <ImageButton
                         android:id="@+id/speakerBtn"
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:background="?android:selectableItemBackgroundBorderless"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/bg_tonal_icon_button"
                         android:contentDescription="@string/speaker_mute"
-                        android:padding="3dp"
+                        android:padding="4dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/ic_m3_volume_up"
+                        app:tint="@color/colorPrimary"
                         android:tint="@color/colorPrimary" />
 
                     <SeekBar
@@ -303,19 +304,20 @@
                 <!-- Row 2: Mic / VOX + Mic Gain -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="24dp"
+                    android:layout_height="28dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <ImageButton
                         android:id="@+id/voxSwitch"
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:background="?android:selectableItemBackgroundBorderless"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/bg_tonal_icon_button"
                         android:contentDescription="@string/voice_activation_on"
-                        android:padding="3dp"
+                        android:padding="4dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/ic_m3_mic_on"
+                        app:tint="@color/colorPrimary"
                         android:tint="@color/colorPrimary" />
 
                     <SeekBar
@@ -359,15 +361,17 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Compact Material You Bottom Navigation Bar (52dp height) -->
+    <!-- Compact Material You Bottom Navigation Bar (56dp height) -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="56dp"
         android:background="@color/windowBackground"
-        app:itemIconSize="20dp"
-        app:itemPaddingTop="2dp"
-        app:itemPaddingBottom="2dp"
+        app:itemIconSize="22dp"
+        app:itemIconTint="@color/selector_nav_item"
+        app:itemTextColor="@color/selector_nav_item"
+        app:itemPaddingTop="4dp"
+        app:itemPaddingBottom="4dp"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav_main" />
 

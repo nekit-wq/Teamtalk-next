@@ -3855,11 +3855,14 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         public void adjustMuteButton(ImageButton btn) {
         if (btn == null) return;
         boolean isMute = getService() != null && getService().getCurrentMuteState();
+        int iconColor = androidx.core.content.ContextCompat.getColor(this, R.color.colorPrimary);
         if (isMute) {
             btn.setImageResource(R.drawable.ic_m3_volume_off);
+            btn.setColorFilter(iconColor);
             btn.setContentDescription(getString(R.string.speaker_unmute));
         } else {
             btn.setImageResource(R.drawable.ic_m3_volume_up);
+            btn.setColorFilter(iconColor);
             btn.setContentDescription(getString(R.string.speaker_mute));
         }
     }
@@ -3868,6 +3871,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         ImageButton voxSwitch = (ImageButton) findViewById(R.id.voxSwitch);
         TextView micLevel = (TextView) findViewById(R.id.miclevel_text);
         SeekBar micGainSeekBar = (SeekBar) findViewById(R.id.mic_gainSeekBar);
+        int iconColor = androidx.core.content.ContextCompat.getColor(this, R.color.colorPrimary);
         if (voiceActivationEnabled) {
             if (micLevel != null) {
                 micLevel.setText(level + "%");
@@ -3875,6 +3879,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
             if (voxSwitch != null) {
                 voxSwitch.setImageResource(R.drawable.ic_m3_mic_on);
+                voxSwitch.setColorFilter(iconColor);
                 voxSwitch.setContentDescription(getString(R.string.voice_activation_off));
             }
             if (micGainSeekBar != null && getClient() != null) {
@@ -3889,6 +3894,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
         if (voxSwitch != null) {
             voxSwitch.setImageResource(R.drawable.ic_m3_mic_off);
+            voxSwitch.setColorFilter(iconColor);
             voxSwitch.setContentDescription(getString(R.string.voice_activation_on));
         }
         if (micGainSeekBar != null && getClient() != null) {
