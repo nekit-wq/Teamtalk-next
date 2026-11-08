@@ -25,6 +25,14 @@ package org.nekit.ttproplus.gui;
 import org.nekit.ttproplus.BuildConfig;
 import org.nekit.ttproplus.R;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -119,6 +127,11 @@ public class ServerListActivity extends AppCompatActivity
     private TextView emptyView;
     private ExecutorService executorService;
     private ProgressDialog connectingDialog;
+    
+    private final Map<String, Long> pingCache = new ConcurrentHashMap<>();
+    private final Map<String, Long> pingTimestamp = new ConcurrentHashMap<>();
+    private final Set<String> inFlightPings = Collections.synchronizedSet(new HashSet<>());
+    private ExecutorService pingExecutor;
     
     private final Vector<ServerEntry> servers = new Vector<>();
 
@@ -252,6 +265,7 @@ public class ServerListActivity extends AppCompatActivity
         }
         setTitle(R.string.title_activity_server_list);
         executorService = Executors.newFixedThreadPool(2);
+        pingExecutor = Executors.newFixedThreadPool(4);
 
         // Check for app updates from GitHub Releases
         AppUpdateManager.checkUpdate(this, false);
@@ -460,6 +474,9 @@ public class ServerListActivity extends AppCompatActivity
 
         if (executorService != null) {
             executorService.shutdown();
+        }
+        if (pingExecutor != null) {
+            pingExecutor.shutdownNow();
         }
 
         // Unbind from the service
@@ -866,6 +883,27 @@ public class ServerListActivity extends AppCompatActivity
         }
 
         @Override
+        public void onBindViewHolder(@NonNull ServerViewHolder holder, int position, @NonNull List<Object> payloads) {
+            if (!payloads.isEmpty() && payloads.contains("PING_UPDATE")) {
+                ServerEntry entry = filteredServers.get(position);
+                holder.updatePing(entry);
+            } else {
+                super.onBindViewHolder(holder, position, payloads);
+            }
+        }
+
+        public int findPositionOf(ServerEntry entry) {
+            if (entry == null) return -1;
+            for (int i = 0; i < filteredServers.size(); i++) {
+                ServerEntry e = filteredServers.get(i);
+                if (e == entry || (e.ipaddr != null && e.ipaddr.equalsIgnoreCase(entry.ipaddr) && e.tcpport == entry.tcpport)) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        @Override
         public int getItemCount() {
             return filteredServers.size();
         }
@@ -927,6 +965,7 @@ public class ServerListActivity extends AppCompatActivity
             private final ImageView serverIcon;
             private final TextView serverName;
             private final TextView serverSummary;
+            private final TextView serverPing;
 
             public ServerViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -934,6 +973,7 @@ public class ServerListActivity extends AppCompatActivity
                 serverIcon = itemView.findViewById(R.id.servericon);
                 serverName = itemView.findViewById(R.id.server_name);
                 serverSummary = itemView.findViewById(R.id.server_summary);
+                serverPing = itemView.findViewById(R.id.server_ping);
             }
 
             public void bind(ServerEntry entry, int position) {
@@ -941,6 +981,7 @@ public class ServerListActivity extends AppCompatActivity
                 setServerIcon(entry);
                 serverSummary.setText(getString(R.string.text_server_summary, 
                     entry.ipaddr, entry.tcpport, entry.stats_usercount, entry.stats_country));
+                updatePing(entry);
 
                 if (isSelectionMode) {
                     if (serverCheckbox != null) {
@@ -1031,7 +1072,88 @@ public class ServerListActivity extends AppCompatActivity
                         break;
                 }
             }
+
+            public void updatePing(ServerEntry entry) {
+                if (serverPing == null) return;
+                boolean showPing = PreferenceManager.getDefaultSharedPreferences(ServerListActivity.this)
+                        .getBoolean(Preferences.PREF_DISPLAY_SHOW_PING_NO_SERVER, true);
+                if (!showPing || entry == null || entry.ipaddr == null || entry.ipaddr.trim().isEmpty()) {
+                    serverPing.setVisibility(View.GONE);
+                    return;
+                }
+                serverPing.setVisibility(View.VISIBLE);
+                int port = entry.tcpport > 0 ? entry.tcpport : 10333;
+                String key = entry.ipaddr.trim() + ":" + port;
+                Long pingMs = pingCache.get(key);
+                if (pingMs == null) {
+                    serverPing.setText("...");
+                    serverPing.setTextColor(0xFF888888);
+                    serverPing.setContentDescription(getString(R.string.label_ping));
+                    triggerPing(entry);
+                } else if (pingMs.longValue() < 0) {
+                    serverPing.setText("timeout");
+                    serverPing.setTextColor(0xFFF44336);
+                    serverPing.setContentDescription(getString(R.string.label_ping) + " timeout");
+                } else {
+                    long ms = pingMs.longValue();
+                    serverPing.setText(ms + " ms");
+                    if (ms < 120) {
+                        serverPing.setTextColor(0xFF4CAF50);
+                    } else if (ms < 300) {
+                        serverPing.setTextColor(0xFFFF9800);
+                    } else {
+                        serverPing.setTextColor(0xFFF44336);
+                    }
+                    serverPing.setContentDescription(getString(R.string.label_ping) + " " + ms + " ms");
+                }
+            }
         }
+    }
+
+    private void triggerPing(ServerEntry entry) {
+        if (entry == null || entry.ipaddr == null || entry.ipaddr.trim().isEmpty() || pingExecutor == null || pingExecutor.isShutdown()) {
+            return;
+        }
+        final String ip = entry.ipaddr.trim();
+        final int port = entry.tcpport > 0 ? entry.tcpport : 10333;
+        final String key = ip + ":" + port;
+        if (inFlightPings.contains(key)) {
+            return;
+        }
+        Long lastTime = pingTimestamp.get(key);
+        if (lastTime != null && (SystemClock.elapsedRealtime() - lastTime.longValue()) < 60000L) {
+            return;
+        }
+        inFlightPings.add(key);
+        pingExecutor.execute(() -> {
+            long startTime = SystemClock.elapsedRealtime();
+            boolean reachable = false;
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(ip, port), 1500);
+                reachable = true;
+            } catch (Exception ignored) {
+                try {
+                    reachable = InetAddress.getByName(ip).isReachable(1500);
+                } catch (Exception ignored2) {}
+            }
+            long elapsed = SystemClock.elapsedRealtime() - startTime;
+            final long result = reachable ? elapsed : -1L;
+            pingCache.put(key, result);
+            pingTimestamp.put(key, SystemClock.elapsedRealtime());
+            inFlightPings.remove(key);
+
+            runOnUiThread(() -> {
+                if (isFinishing() || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && isDestroyed())) {
+                    return;
+                }
+                if (adapter != null) {
+                    int pos = adapter.findPositionOf(entry);
+                    if (pos != -1) {
+                        adapter.notifyItemChanged(pos, "PING_UPDATE");
+                    }
+                }
+            });
+        });
     }
 
     private SharedPreferences getServerListSharedPreferences() {

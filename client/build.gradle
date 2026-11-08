@@ -15,9 +15,9 @@ android {
         applicationId = 'org.nekit.ttproplus'
         minSdk = 21
         targetSdk = 36
-        versionCode = 445
+        versionCode = 446
         // Single source of truth: the value is also injected into TeamTalk client name.
-        versionName = '5.29.0'
+        versionName = '5.29.1'
 
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     }

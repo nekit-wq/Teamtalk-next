@@ -1536,4 +1536,40 @@ By: %3$s"</string>
     <string name="section_messages_files">Messages and Files</string>
     <string name="section_channels_admin">Channels and Administration</string>
     <string name="section_system_rights">System Rights</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="action_copy_all_user_data">Copy all data</string>
+    <string name="user_data_copied">User data copied to clipboard</string>
+
+    <!-- Debug & Crash History -->
+    <string name="pref_header_debug">Debug &amp; Crash History</string>
+    <string name="pref_debug_category_actions">Log Actions</string>
+    <string name="pref_debug_copy_all">Copy all error logs</string>
+    <string name="pref_debug_copy_all_summary">Copy all saved crash and error reports to clipboard</string>
+    <string name="pref_debug_share_all">Share error logs</string>
+    <string name="pref_debug_share_all_summary">Share all error reports via another app</string>
+    <string name="pref_debug_view_all">View full crash log</string>
+    <string name="pref_debug_view_all_summary">Open formatted text view of all errors</string>
+    <string name="pref_debug_clear">Clear error history</string>
+    <string name="pref_debug_clear_summary">Delete all saved crash and error reports</string>
+    <string name="pref_debug_clear_confirm">Are you sure you want to delete all saved crash logs?</string>
+    <string name="pref_debug_clear_success">Error history cleared</string>
+    <string name="pref_debug_category_history">Error History</string>
+    <string name="pref_debug_no_crashes">No errors recorded</string>
+    <string name="pref_debug_no_crashes_summary">App is running smoothly, no crashes recorded</string>
+    <string name="pref_debug_category_tools">Testing &amp; Diagnostics</string>
+    <string name="pref_debug_test_crash">Trigger test crash</string>
+    <string name="pref_debug_test_crash_summary">Throw an unhandled exception to test crash logging</string>
+    <string name="pref_debug_test_crash_confirm">This will crash the application to test error reporting. Continue?</string>
+    <string name="pref_debug_test_error">Record test error</string>
+    <string name="pref_debug_test_error_summary">Log a non-fatal error without crashing the app</string>
+    <string name="pref_debug_test_error_toast">Test error added to crash log</string>
+    <string name="pref_debug_copied_toast">Error details copied to clipboard</string>
+    <string name="pref_debug_all_copied_toast">All error logs copied to clipboard</string>
+    <string name="pref_debug_empty_toast">Error log is empty, nothing to copy</string>
+    <string name="pref_debug_delete_entry">Delete this record</string>
+    <string name="pref_debug_delete_entry_confirm">Delete this error record?</string>
+    <string name="pref_debug_deleted_toast">Record deleted</string>
+    <string name="user_field_copied">Copied: %s</string>
+    <string name="tap_to_copy_hint">Tap to copy</string>
 </resources>

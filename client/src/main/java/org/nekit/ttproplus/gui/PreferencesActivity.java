@@ -4,11 +4,14 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import org.nekit.ttproplus.data.ServerEntry;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Typeface;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.media.projection.MediaProjectionManager;
@@ -36,6 +39,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatCallback;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -237,7 +242,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
 
     @Override
     protected boolean isValidFragment(String fragmentName) {
-        return GeneralPreferenceFragment.class.getName().equals(fragmentName) || BackgroundMgmtPreferenceFragment.class.getName().equals(fragmentName) || SoundEventsPreferenceFragment.class.getName().equals(fragmentName) || ConnectionPreferenceFragment.class.getName().equals(fragmentName) || ServerListPreferenceFragment.class.getName().equals(fragmentName) || TtsPreferenceFragment.class.getName().equals(fragmentName) || SoundSystemPreferenceFragment.class.getName().equals(fragmentName) || AntiSpamPreferenceFragment.class.getName().equals(fragmentName) || AboutPreferenceFragment.class.getName().equals(fragmentName) || SoundPacksPreferenceFragment.class.getName().equals(fragmentName) || RecordingPreferenceFragment.class.getName().equals(fragmentName) || DisplayPreferenceFragment.class.getName().equals(fragmentName) || PerformancePreferenceFragment.class.getName().equals(fragmentName);
+        return GeneralPreferenceFragment.class.getName().equals(fragmentName) || BackgroundMgmtPreferenceFragment.class.getName().equals(fragmentName) || SoundEventsPreferenceFragment.class.getName().equals(fragmentName) || ConnectionPreferenceFragment.class.getName().equals(fragmentName) || ServerListPreferenceFragment.class.getName().equals(fragmentName) || TtsPreferenceFragment.class.getName().equals(fragmentName) || SoundSystemPreferenceFragment.class.getName().equals(fragmentName) || AntiSpamPreferenceFragment.class.getName().equals(fragmentName) || AboutPreferenceFragment.class.getName().equals(fragmentName) || SoundPacksPreferenceFragment.class.getName().equals(fragmentName) || RecordingPreferenceFragment.class.getName().equals(fragmentName) || DisplayPreferenceFragment.class.getName().equals(fragmentName) || PerformancePreferenceFragment.class.getName().equals(fragmentName) || DebugPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     @Override
@@ -1114,6 +1119,222 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                     pref.setSummary(R.string.pref_summary_ignore_battery);
                 }
             }
+        }
+    }
+
+    public static class DebugPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_debug);
+            refreshUI();
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            refreshUI();
+        }
+
+        private void refreshUI() {
+            final Activity activity = getActivity();
+            if (activity == null) return;
+
+            final List<CrashHistoryManager.CrashEntry> crashes = CrashHistoryManager.getCrashes(activity);
+
+            Preference prefCopyAll = findPreference("pref_debug_copy_all");
+            if (prefCopyAll != null) {
+                if (crashes.isEmpty()) {
+                    prefCopyAll.setSummary(R.string.pref_debug_no_crashes_summary);
+                } else {
+                    prefCopyAll.setSummary(getString(R.string.pref_debug_copy_all_summary) + " (" + crashes.size() + ")");
+                }
+                prefCopyAll.setOnPreferenceClickListener(preference -> {
+                    if (crashes.isEmpty()) {
+                        Toast.makeText(activity, R.string.pref_debug_empty_toast, Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                    String text = CrashHistoryManager.getAllCrashesFormatted(activity);
+                    ClipboardManager cm = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null) {
+                        cm.setPrimaryClip(ClipData.newPlainText("TeamTalk Crash History", text));
+                        Toast.makeText(activity, R.string.pref_debug_all_copied_toast, Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                });
+            }
+
+            Preference prefShareAll = findPreference("pref_debug_share_all");
+            if (prefShareAll != null) {
+                prefShareAll.setOnPreferenceClickListener(preference -> {
+                    if (crashes.isEmpty()) {
+                        Toast.makeText(activity, R.string.pref_debug_empty_toast, Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                    String text = CrashHistoryManager.getAllCrashesFormatted(activity);
+                    Intent intent = new Intent(Intent.ACTION_SEND);
+                    intent.setType("text/plain");
+                    intent.putExtra(Intent.EXTRA_SUBJECT, "TeamTalk Next Crash Log");
+                    intent.putExtra(Intent.EXTRA_TEXT, text);
+                    startActivity(Intent.createChooser(intent, getString(R.string.pref_debug_share_all)));
+                    return true;
+                });
+            }
+
+            Preference prefViewAll = findPreference("pref_debug_view_all");
+            if (prefViewAll != null) {
+                prefViewAll.setOnPreferenceClickListener(preference -> {
+                    if (crashes.isEmpty()) {
+                        Toast.makeText(activity, R.string.pref_debug_empty_toast, Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                    showFullLogDialog(activity, CrashHistoryManager.getAllCrashesFormatted(activity));
+                    return true;
+                });
+            }
+
+            Preference prefClear = findPreference("pref_debug_clear");
+            if (prefClear != null) {
+                prefClear.setOnPreferenceClickListener(preference -> {
+                    if (crashes.isEmpty()) {
+                        Toast.makeText(activity, R.string.pref_debug_empty_toast, Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                    new AlertDialog.Builder(activity)
+                            .setTitle(R.string.pref_debug_clear)
+                            .setMessage(R.string.pref_debug_clear_confirm)
+                            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                                CrashHistoryManager.clearAll(activity);
+                                Toast.makeText(activity, R.string.pref_debug_clear_success, Toast.LENGTH_SHORT).show();
+                                refreshUI();
+                            })
+                            .setNegativeButton(R.string.button_cancel, null)
+                            .show();
+                    return true;
+                });
+            }
+
+            PreferenceCategory catHistory = (PreferenceCategory) findPreference("pref_category_crash_history");
+            if (catHistory != null) {
+                catHistory.removeAll();
+                if (crashes.isEmpty()) {
+                    catHistory.setTitle(getString(R.string.pref_debug_category_history));
+                    Preference emptyPref = new Preference(activity);
+                    emptyPref.setTitle(R.string.pref_debug_no_crashes);
+                    emptyPref.setSummary(R.string.pref_debug_no_crashes_summary);
+                    emptyPref.setEnabled(false);
+                    catHistory.addPreference(emptyPref);
+                } else {
+                    catHistory.setTitle(getString(R.string.pref_debug_category_history) + " (" + crashes.size() + ")");
+                    for (final CrashHistoryManager.CrashEntry entry : crashes) {
+                        Preference pref = new Preference(activity);
+                        String icon = entry.fatal ? "💥 " : "⚠️ ";
+                        pref.setTitle(icon + entry.dateStr + " — " + entry.exceptionClass);
+                        String summary = entry.message != null && !entry.message.isEmpty()
+                                ? entry.message
+                                : "Поток: " + entry.threadName;
+                        pref.setSummary(summary);
+                        pref.setOnPreferenceClickListener(p -> {
+                            showCrashDetailsDialog(activity, entry);
+                            return true;
+                        });
+                        catHistory.addPreference(pref);
+                    }
+                }
+            }
+
+            Preference prefTestCrash = findPreference("pref_debug_test_crash");
+            if (prefTestCrash != null) {
+                prefTestCrash.setOnPreferenceClickListener(preference -> {
+                    new AlertDialog.Builder(activity)
+                            .setTitle(R.string.pref_debug_test_crash)
+                            .setMessage(R.string.pref_debug_test_crash_confirm)
+                            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                                throw new RuntimeException("Тестовый краш из меню отладки (Test crash from Debug Settings)");
+                            })
+                            .setNegativeButton(R.string.button_cancel, null)
+                            .show();
+                    return true;
+                });
+            }
+
+            Preference prefTestError = findPreference("pref_debug_test_error");
+            if (prefTestError != null) {
+                prefTestError.setOnPreferenceClickListener(preference -> {
+                    CrashHistoryManager.logHandledException(activity,
+                            new Exception("Тестовая нефатальная ошибка (Test handled exception)"),
+                            "Зафиксировано пользователем в меню отладки");
+                    Toast.makeText(activity, R.string.pref_debug_test_error_toast, Toast.LENGTH_SHORT).show();
+                    refreshUI();
+                    return true;
+                });
+            }
+        }
+
+        private void showCrashDetailsDialog(final Activity activity, final CrashHistoryManager.CrashEntry entry) {
+            final String formatted = entry.getFormattedText();
+
+            ScrollView scrollView = new ScrollView(activity);
+            TextView textView = new TextView(activity);
+            textView.setText(formatted);
+            textView.setTextIsSelectable(true);
+            textView.setTypeface(Typeface.MONOSPACE);
+            textView.setTextSize(12f);
+            int padding = (int) (16 * activity.getResources().getDisplayMetrics().density);
+            textView.setPadding(padding, padding, padding, padding);
+            scrollView.addView(textView);
+
+            new AlertDialog.Builder(activity)
+                    .setTitle(entry.dateStr + " (" + (entry.fatal ? "Краш" : "Ошибка") + ")")
+                    .setView(scrollView)
+                    .setPositiveButton(R.string.text_copy, (dialog, which) -> {
+                        ClipboardManager cm = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+                        if (cm != null) {
+                            cm.setPrimaryClip(ClipData.newPlainText("TeamTalk Crash Report", formatted));
+                            Toast.makeText(activity, R.string.pref_debug_copied_toast, Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNeutralButton(R.string.recordings_action_share, (dialog, which) -> {
+                        Intent intent = new Intent(Intent.ACTION_SEND);
+                        intent.setType("text/plain");
+                        intent.putExtra(Intent.EXTRA_SUBJECT, "TeamTalk Crash Report " + entry.dateStr);
+                        intent.putExtra(Intent.EXTRA_TEXT, formatted);
+                        startActivity(Intent.createChooser(intent, getString(R.string.recordings_action_share)));
+                    })
+                    .setNegativeButton(R.string.button_close, null)
+                    .show();
+        }
+
+        private void showFullLogDialog(final Activity activity, final String allText) {
+            ScrollView scrollView = new ScrollView(activity);
+            TextView textView = new TextView(activity);
+            textView.setText(allText);
+            textView.setTextIsSelectable(true);
+            textView.setTypeface(Typeface.MONOSPACE);
+            textView.setTextSize(11f);
+            int padding = (int) (16 * activity.getResources().getDisplayMetrics().density);
+            textView.setPadding(padding, padding, padding, padding);
+            scrollView.addView(textView);
+
+            new AlertDialog.Builder(activity)
+                    .setTitle(R.string.pref_debug_view_all)
+                    .setView(scrollView)
+                    .setPositiveButton(R.string.text_copy, (dialog, which) -> {
+                        ClipboardManager cm = (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+                        if (cm != null) {
+                            cm.setPrimaryClip(ClipData.newPlainText("TeamTalk Crash History", allText));
+                            Toast.makeText(activity, R.string.pref_debug_all_copied_toast, Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNeutralButton(R.string.recordings_action_share, (dialog, which) -> {
+                        Intent intent = new Intent(Intent.ACTION_SEND);
+                        intent.setType("text/plain");
+                        intent.putExtra(Intent.EXTRA_SUBJECT, "TeamTalk Crash History");
+                        intent.putExtra(Intent.EXTRA_TEXT, allText);
+                        startActivity(Intent.createChooser(intent, getString(R.string.recordings_action_share)));
+                    })
+                    .setNegativeButton(R.string.button_close, null)
+                    .show();
         }
     }
 

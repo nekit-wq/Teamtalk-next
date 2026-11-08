@@ -14,4 +14,5 @@
     <header android:title="@string/pref_header_recording" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$RecordingPreferenceFragment" />
     <header android:title="@string/pref_header_performance" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$PerformancePreferenceFragment" />
     <header android:title="@string/pref_cat_about" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$AboutPreferenceFragment" />
+    <header android:title="@string/pref_header_debug" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$DebugPreferenceFragment" />
 </preference-headers>

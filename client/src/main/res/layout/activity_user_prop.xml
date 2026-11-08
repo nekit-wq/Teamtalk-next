@@ -1,16 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     <LinearLayout android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <TextView android:textSize="16sp" android:textStyle="bold" android:id="@+id/user_nickname" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
-        <TextView android:textSize="14sp" android:id="@+id/user_username" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <TextView android:textSize="14sp" android:id="@+id/user_userid" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <TextView android:textSize="14sp" android:id="@+id/user_statusmsg" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:id="@+id/user_clientname" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:id="@+id/user_clientversion" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:id="@+id/user_ipaddress" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
-        <TextView android:textSize="14sp" android:textColor="@color/textSecondary" android:id="@+id/user_location" android:padding="4dp" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/user_nickname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="4dp" android:layout_marginBottom="4dp" />
+        <TextView
+            android:id="@+id/user_username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <TextView
+            android:id="@+id/user_userid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <TextView
+            android:id="@+id/user_statusmsg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <TextView
+            android:id="@+id/user_clientname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:textColor="@color/textSecondary"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <TextView
+            android:id="@+id/user_clientversion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:textColor="@color/textSecondary"
+            android:padding="8dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <TextView
+            android:id="@+id/user_ipaddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:textColor="@color/textSecondary"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <TextView
+            android:id="@+id/user_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:textColor="@color/textSecondary"
+            android:padding="8dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <TextView
+            android:id="@+id/user_channel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="44dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:textColor="@color/textSecondary"
+            android:padding="8dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_copy_all_user_data"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp"
+            android:text="@string/action_copy_all_user_data"
+            app:icon="@drawable/ic_copy"
+            app:iconGravity="textStart" />
         <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="12dp" android:layout_marginBottom="12dp" />
         <TextView android:textSize="14sp" android:textStyle="bold" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_voice_volume" />
         <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="4dp">

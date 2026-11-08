@@ -61,17 +61,37 @@
                 android:textColor="@color/textPrimary"
                 android:layout_marginBottom="6dp" />
 
-            <EditText
-                android:id="@+id/edit_account_password"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="46dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:background="@drawable/bg_settings_input"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
-                android:textSize="15sp"
-                android:inputType="textPassword" />
+                android:background="@drawable/bg_settings_input">
+
+                <EditText
+                    android:id="@+id/edit_account_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_toStartOf="@+id/btn_toggle_account_password"
+                    android:background="@null"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp"
+                    android:textColor="@color/textPrimary"
+                    android:textColorHint="@color/textSecondary"
+                    android:textSize="15sp"
+                    android:inputType="textPassword" />
+
+                <ImageButton
+                    android:id="@+id/btn_toggle_account_password"
+                    android:layout_width="44dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentEnd="true"
+                    android:background="?android:selectableItemBackgroundBorderless"
+                    android:padding="10dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_visibility"
+                    android:tint="@color/textSecondary"
+                    app:tint="@color/textSecondary"
+                    android:contentDescription="@string/show_password" />
+            </RelativeLayout>
 
             <TextView
                 android:layout_width="wrap_content"

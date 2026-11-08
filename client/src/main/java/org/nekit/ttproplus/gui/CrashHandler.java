@@ -56,6 +56,12 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
                     + "Thread: " + thread.getName() + "\n"
                     + "Time: " + dateStr;
 
+            try {
+                CrashHistoryManager.saveCrash(context, thread, throwable, stackTrace, deviceInfo, true);
+            } catch (Throwable logErr) {
+                Log.e(TAG, "Failed to save crash log to history", logErr);
+            }
+
             Intent crashIntent = new Intent(context, CrashReportActivity.class);
             crashIntent.putExtra(CrashReportActivity.EXTRA_ERROR_TEXT, stackTrace);
             crashIntent.putExtra(CrashReportActivity.EXTRA_DEVICE_INFO, deviceInfo);

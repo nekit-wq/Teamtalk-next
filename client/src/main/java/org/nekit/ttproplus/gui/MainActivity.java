@@ -79,6 +79,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
+import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.core.view.accessibility.AccessibilityEventCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -166,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     SoundPool audioIcons;
     AudioManager audioManager;
     ChannelListAdapter channelsAdapter;
+    ListView channelsListView;
     ChannelsSectionFragment channelsFragment;
     ChatSectionFragment chatFragment;
     PrivateChatsSectionFragment privateChatsFragment;
@@ -2055,12 +2057,21 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 }
                 ListView channelsList = (ListView) rootView.findViewById(R.id.listChannels);
                 if (channelsList != null && this.mainActivity.getChannelsAdapter() != null) {
+                    this.mainActivity.channelsListView = channelsList;
                     channelsList.setAdapter((ListAdapter) this.mainActivity.getChannelsAdapter());
                     channelsList.setOnItemClickListener(this.mainActivity);
                     channelsList.setOnItemLongClickListener(this.mainActivity);
                 }
             }
             return rootView;
+        }
+
+        @Override
+        public void onDestroyView() {
+            super.onDestroyView();
+            if (this.mainActivity != null && this.mainActivity.channelsListView != null) {
+                this.mainActivity.channelsListView = null;
+            }
         }
     }
 
@@ -2899,6 +2910,78 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         invalidateOptionsMenu();
     }
 
+    private static class SavedFocusInfo {
+        long itemId = Long.MIN_VALUE;
+        int subviewId = View.NO_ID;
+    }
+
+    private SavedFocusInfo captureAccessibilityFocus() {
+        if (this.channelsListView == null || this.channelsAdapter == null) {
+            return null;
+        }
+        for (int i = 0; i < this.channelsListView.getChildCount(); i++) {
+            View row = this.channelsListView.getChildAt(i);
+            View focused = findAccessibilityFocusedView(row);
+            if (focused != null) {
+                int position = this.channelsListView.getPositionForView(row);
+                if (position != ListView.INVALID_POSITION && position < this.channelsAdapter.getCount()) {
+                    SavedFocusInfo info = new SavedFocusInfo();
+                    info.itemId = this.channelsAdapter.getItemId(position);
+                    info.subviewId = (focused != row) ? focused.getId() : View.NO_ID;
+                    return info;
+                }
+            }
+        }
+        return null;
+    }
+
+    private View findAccessibilityFocusedView(View view) {
+        if (view == null) return null;
+        if (view.isAccessibilityFocused()) {
+            return view;
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                View child = findAccessibilityFocusedView(vg.getChildAt(i));
+                if (child != null) return child;
+            }
+        }
+        return null;
+    }
+
+    private void restoreAccessibilityFocus(SavedFocusInfo focus) {
+        if (focus == null || this.channelsListView == null || this.channelsAdapter == null) {
+            return;
+        }
+        int newPosition = -1;
+        for (int i = 0; i < this.channelsAdapter.getCount(); i++) {
+            if (this.channelsAdapter.getItemId(i) == focus.itemId) {
+                newPosition = i;
+                break;
+            }
+        }
+        if (newPosition != -1) {
+            int first = this.channelsListView.getFirstVisiblePosition();
+            int last = this.channelsListView.getLastVisiblePosition();
+            if (newPosition >= first && newPosition <= last) {
+                View row = this.channelsListView.getChildAt(newPosition - first);
+                if (row != null) {
+                    View target = row;
+                    if (focus.subviewId != View.NO_ID) {
+                        View sub = row.findViewById(focus.subviewId);
+                        if (sub != null && sub.isShown()) {
+                            target = sub;
+                        }
+                    }
+                    if (!target.isAccessibilityFocused()) {
+                        target.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
+                    }
+                }
+            }
+        }
+    }
+
     public class ChannelListAdapter extends BaseAdapter {
         private static final int CHANNEL_VIEW_TYPE = 1;
         private static final int INFO_VIEW_TYPE = 3;
@@ -2971,6 +3054,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 }
                 return;
             }
+            SavedFocusInfo savedFocus = MainActivity.this.captureAccessibilityFocus();
             if (MainActivity.this.accessibilityAssistant != null) {
                 MainActivity.this.accessibilityAssistant.lockEvents();
             }
@@ -3016,20 +3100,6 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     return name1.compareToIgnoreCase(name2);
                 }
             });
-            final Map<Integer, String> nameCache = new HashMap<>();
-            Iterator<User> it = this.currentusers.iterator();
-            while (it.hasNext()) {
-                User u = it.next();
-                nameCache.put(Integer.valueOf(u.nUserID), Utils.getDisplayName(MainActivity.this.getBaseContext(), u));
-            }
-            Collections.sort(this.currentusers, new Comparator() { 
-                @Override
-                public final int compare(Object obj, Object obj2) {
-                    int lambda$doNotifyDataSetChanged$2;
-                    lambda$doNotifyDataSetChanged$2 = MainActivity.ChannelListAdapter.this.lambda$doNotifyDataSetChanged$2(nameCache, (User) obj, (User) obj2);
-                    return lambda$doNotifyDataSetChanged$2;
-                }
-            });
             if (MainActivity.this.getClient() != null) {
                 this.cachedMyUserId = MainActivity.this.getClient().getMyUserID();
                 UserAccount myAccount = new UserAccount();
@@ -3052,6 +3122,20 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 this.cachedQuickKickChan = Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_KICK_CHAN, true));
                 this.cachedQuickBanChan = Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_QUICK_BAN_CHAN, true));
             }
+            final Map<Integer, String> nameCache = new HashMap<>();
+            Iterator<User> it = this.currentusers.iterator();
+            while (it.hasNext()) {
+                User u = it.next();
+                nameCache.put(Integer.valueOf(u.nUserID), Utils.getDisplayName(MainActivity.this.getBaseContext(), u));
+            }
+            Collections.sort(this.currentusers, new Comparator() { 
+                @Override
+                public final int compare(Object obj, Object obj2) {
+                    int lambda$doNotifyDataSetChanged$2;
+                    lambda$doNotifyDataSetChanged$2 = MainActivity.ChannelListAdapter.this.lambda$doNotifyDataSetChanged$2(nameCache, (User) obj, (User) obj2);
+                    return lambda$doNotifyDataSetChanged$2;
+                }
+            });
             this.channelPopulationMap.clear();
             if (MainActivity.this.getService() != null && MainActivity.this.getService().getUsers() != null) {
                 for (User u : MainActivity.this.getService().getUsers().values()) {
@@ -3061,15 +3145,29 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             }
 
             super.notifyDataSetChanged();
-            MainActivity.this.accessibilityAssistant.unlockEvents();
+            if (MainActivity.this.accessibilityAssistant != null) {
+                MainActivity.this.accessibilityAssistant.unlockEvents();
+            }
+            if (savedFocus != null && MainActivity.this.channelsListView != null) {
+                final SavedFocusInfo focusToRestore = savedFocus;
+                MainActivity.this.channelsListView.post(() -> MainActivity.this.restoreAccessibilityFocus(focusToRestore));
+            }
         }
 
         public int lambda$doNotifyDataSetChanged$2(Map nameCache, User u1, User u2) {
             if (((Boolean) MainActivity.this.prefs.get("movetalk_checkbox", true)).booleanValue()) {
-                if ((u1.uUserState & 1) != 0 && (u2.uUserState & 1) == 0) {
+                boolean u1Talking = (u1.uUserState & 1) != 0;
+                if (u1.nUserID == this.cachedMyUserId && MainActivity.this.getService() != null) {
+                    u1Talking |= MainActivity.this.getService().isVoiceTransmitting();
+                }
+                boolean u2Talking = (u2.uUserState & 1) != 0;
+                if (u2.nUserID == this.cachedMyUserId && MainActivity.this.getService() != null) {
+                    u2Talking |= MainActivity.this.getService().isVoiceTransmitting();
+                }
+                if (u1Talking && !u2Talking) {
                     return -1;
                 }
-                if ((u1.uUserState & 1) == 0 && (u2.uUserState & 1) != 0) {
+                if (!u1Talking && u2Talking) {
                     return 1;
                 }
             }
@@ -3156,7 +3254,26 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
 
         @Override
+        public boolean hasStableIds() {
+            return true;
+        }
+
+        @Override
         public long getItemId(int position) {
+            Object item = getItem(position);
+            if (item instanceof User) {
+                return 1000000000L + (long) ((User) item).nUserID;
+            } else if (item instanceof Channel) {
+                Channel c = (Channel) item;
+                int type = getItemViewType(position);
+                if (type == 0) {
+                    return -1L;
+                } else if (type == 3) {
+                    return -1000000000L - (long) c.nChannelID;
+                } else {
+                    return (long) c.nChannelID;
+                }
+            }
             return position;
         }
 
@@ -3502,7 +3619,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             this.val$connection.setText(MainActivity.this.getString(R.string.label_connection) + " " + con);
             this.val$connection.setTextColor(con_color);
             if ((flags & 32768) != 32768) {
-                if (MainActivity.this.prefs != null && Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_PING_NO_SERVER, false))) {
+                if (MainActivity.this.prefs != null && Boolean.TRUE.equals(MainActivity.this.prefs.get(Preferences.PREF_DISPLAY_SHOW_PING_NO_SERVER, true))) {
                     ServerEntry entry = MainActivity.this.getService() != null ? MainActivity.this.getService().getServerEntry() : null;
                     if (entry != null && entry.ipaddr != null) {
                         final String ip = entry.ipaddr;
@@ -4879,16 +4996,18 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     @Override
     public void onUserStateChange(User user) {
         this.users.put(Integer.valueOf(user.nUserID), user);
-        if (this.curchannel != null && user.nChannelID == this.curchannel.nChannelID) {
-            this.accessibilityAssistant.lockEvents();
+        int currentChanId = this.curchannel != null ? this.curchannel.nChannelID : 0;
+        if (user.nChannelID == currentChanId && this.channelsAdapter != null) {
             this.channelsAdapter.notifyDataSetChanged();
-            this.accessibilityAssistant.unlockEvents();
         }
     }
 
     @Override
     public void onVoiceTransmissionToggle(boolean voiceTransmissionEnabled, boolean isSuspended) {
         adjustTxState(voiceTransmissionEnabled);
+        if (this.channelsAdapter != null) {
+            this.channelsAdapter.notifyDataSetChanged();
+        }
         if (!isSuspended) {
             boolean ptt_vibrate = ((Boolean) this.prefs.get("vibrate_checkbox", true)).booleanValue() && Permissions.VIBRATE.request(this);
             if (voiceTransmissionEnabled) {
@@ -4934,6 +5053,9 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             @Override
             public void run() {
                 adjustTxState(transmitting);
+                if (MainActivity.this.channelsAdapter != null) {
+                    MainActivity.this.channelsAdapter.notifyDataSetChanged();
+                }
             }
         });
     }

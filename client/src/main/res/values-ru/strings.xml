@@ -1532,4 +1532,40 @@
     <string name="section_messages_files">Сообщения и файлы</string>
     <string name="section_channels_admin">Каналы и администрирование</string>
     <string name="section_system_rights">Системные права</string>
+    <string name="show_password">Показать пароль</string>
+    <string name="hide_password">Скрыть пароль</string>
+    <string name="action_copy_all_user_data">Копировать все данные</string>
+    <string name="user_data_copied">Все данные пользователя скопированы в буфер</string>
+
+    <!-- Debug & Crash History -->
+    <string name="pref_header_debug">Отладка (Debug)</string>
+    <string name="pref_debug_category_actions">Действия с журналом</string>
+    <string name="pref_debug_copy_all">Копировать всю историю ошибок</string>
+    <string name="pref_debug_copy_all_summary">Скопировать все сохранённые краши и ошибки в буфер обмена</string>
+    <string name="pref_debug_share_all">Поделиться журналом ошибок</string>
+    <string name="pref_debug_share_all_summary">Отправить отчёт через другое приложение</string>
+    <string name="pref_debug_view_all">Просмотреть весь журнал</string>
+    <string name="pref_debug_view_all_summary">Открыть полный текст всех ошибок</string>
+    <string name="pref_debug_clear">Очистить историю ошибок</string>
+    <string name="pref_debug_clear_summary">Удалить все сохранённые записи крашей</string>
+    <string name="pref_debug_clear_confirm">Вы действительно хотите удалить всю историю ошибок?</string>
+    <string name="pref_debug_clear_success">История ошибок очищена</string>
+    <string name="pref_debug_category_history">История ошибок и вылетов</string>
+    <string name="pref_debug_no_crashes">Ошибок не зафиксировано</string>
+    <string name="pref_debug_no_crashes_summary">Приложение работает стабильно, вылетов не было</string>
+    <string name="pref_debug_category_tools">Тестирование и диагностика</string>
+    <string name="pref_debug_test_crash">Вызвать тестовый краш</string>
+    <string name="pref_debug_test_crash_summary">Спровоцировать неперехваченную ошибку для проверки перехватчика</string>
+    <string name="pref_debug_test_crash_confirm">Это принудительно завершит приложение с ошибкой для проверки перехватчика. Продолжить?</string>
+    <string name="pref_debug_test_error">Записать тестовую ошибку</string>
+    <string name="pref_debug_test_error_summary">Добавить запись об ошибке в журнал без падения приложения</string>
+    <string name="pref_debug_test_error_toast">Тестовая ошибка добавлена в журнал</string>
+    <string name="pref_debug_copied_toast">Отчёт об ошибке скопирован в буфер обмена</string>
+    <string name="pref_debug_all_copied_toast">Вся история ошибок скопирована в буфер обмена</string>
+    <string name="pref_debug_empty_toast">Журнал ошибок пуст, нечего копировать</string>
+    <string name="pref_debug_delete_entry">Удалить эту запись</string>
+    <string name="pref_debug_delete_entry_confirm">Удалить эту запись об ошибке?</string>
+    <string name="pref_debug_deleted_toast">Запись удалена</string>
+    <string name="user_field_copied">Скопировано: %s</string>
+    <string name="tap_to_copy_hint">Нажмите для копирования</string>
 </resources>

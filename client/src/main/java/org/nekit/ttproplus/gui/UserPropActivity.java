@@ -74,6 +74,10 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
     private TextView tvClientversion;
     private TextView tvIpaddress;
     private TextView tvLocation;
+    private TextView tvChannel;
+    private String currentClientNameDisplay = "";
+    private String currentLocationDisplay = "";
+    private String currentChannelDisplay = "";
     private SeekBar voiceVol;
     private Button defVoiceBtn;
     private SwitchCompat voiceMute;
@@ -151,6 +155,7 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         this.tvClientversion = findViewById(R.id.user_clientversion);
         this.tvIpaddress = findViewById(R.id.user_ipaddress);
         this.tvLocation = findViewById(R.id.user_location);
+        this.tvChannel = findViewById(R.id.user_channel);
         this.voiceVol = findViewById(R.id.user_vol_voiceSeekBar);
         this.defVoiceBtn = findViewById(R.id.defVoiceVolBtn);
         this.voiceMute = findViewById(R.id.user_mutevoiceSwitch);
@@ -183,6 +188,97 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         if (this.voiceVol != null) this.voiceVol.setMax(100);
         if (this.mediaVol != null) this.mediaVol.setMax(100);
         if (this.tvClientversion != null) this.tvClientversion.setVisibility(View.GONE);
+
+        Button btnCopyAll = findViewById(R.id.btn_copy_all_user_data);
+        if (btnCopyAll != null) {
+            btnCopyAll.setOnClickListener(v -> copyAllUserData());
+        }
+
+        setupCopyableFields();
+    }
+
+    private void copyToClipboard(String label, String value) {
+        if (value == null || value.trim().isEmpty()) return;
+        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            android.content.ClipData clip = android.content.ClipData.newPlainText(label, value);
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(this, getString(R.string.user_field_copied, value), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void setupCopyableFields() {
+        View.OnClickListener clickListener = v -> {
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
+            String valueToCopy = "";
+            String label = "";
+            if (v == tvNickname) {
+                valueToCopy = user.szNickname != null ? user.szNickname : "";
+                label = getString(R.string.user_prop_title_nickname);
+            } else if (v == tvUsername) {
+                valueToCopy = user.szUsername != null ? user.szUsername : "";
+                label = getString(R.string.user_prop_title_username);
+            } else if (v == tvUserid) {
+                valueToCopy = String.valueOf(user.nUserID);
+                label = getString(R.string.user_prop_title_userid);
+            } else if (v == tvStatusmsg) {
+                valueToCopy = user.szStatusMsg != null ? user.szStatusMsg : "";
+                label = getString(R.string.user_prop_title_statusmsg);
+            } else if (v == tvClientname) {
+                valueToCopy = (currentClientNameDisplay != null && !currentClientNameDisplay.isEmpty()) ? currentClientNameDisplay : (user.szClientName != null ? user.szClientName : "");
+                label = getString(R.string.user_prop_title_clientname);
+            } else if (v == tvIpaddress) {
+                valueToCopy = user.szIPAddress != null ? user.szIPAddress : "";
+                label = getString(R.string.user_prop_title_ipaddress);
+            } else if (v == tvLocation) {
+                valueToCopy = (currentLocationDisplay != null && !currentLocationDisplay.isEmpty()) ? currentLocationDisplay : "";
+                label = getString(R.string.user_prop_title_location);
+            } else if (v == tvChannel) {
+                valueToCopy = (currentChannelDisplay != null && !currentChannelDisplay.isEmpty()) ? currentChannelDisplay : "";
+                label = getString(R.string.pref_title_channel);
+            }
+
+            if (!valueToCopy.isEmpty()) {
+                copyToClipboard(label, valueToCopy);
+            } else if (v instanceof TextView) {
+                CharSequence text = ((TextView) v).getText();
+                if (text != null && text.length() > 0) {
+                    copyToClipboard(label, text.toString());
+                }
+            }
+        };
+
+        View.OnLongClickListener longClickListener = v -> {
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
+            if (v instanceof TextView) {
+                CharSequence text = ((TextView) v).getText();
+                if (text != null && text.length() > 0) {
+                    copyToClipboard("Field", text.toString());
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        this.tvNickname.setOnClickListener(clickListener);
+        this.tvUsername.setOnClickListener(clickListener);
+        this.tvUserid.setOnClickListener(clickListener);
+        this.tvStatusmsg.setOnClickListener(clickListener);
+        this.tvClientname.setOnClickListener(clickListener);
+        this.tvIpaddress.setOnClickListener(clickListener);
+        this.tvLocation.setOnClickListener(clickListener);
+        if (this.tvChannel != null) {
+            this.tvChannel.setOnClickListener(clickListener);
+            this.tvChannel.setOnLongClickListener(longClickListener);
+        }
+
+        this.tvNickname.setOnLongClickListener(longClickListener);
+        this.tvUsername.setOnLongClickListener(longClickListener);
+        this.tvUserid.setOnLongClickListener(longClickListener);
+        this.tvStatusmsg.setOnLongClickListener(longClickListener);
+        this.tvClientname.setOnLongClickListener(longClickListener);
+        this.tvIpaddress.setOnLongClickListener(longClickListener);
+        this.tvLocation.setOnLongClickListener(longClickListener);
     }
 
     private void applyVoiceVolume(int progress) {
@@ -378,8 +474,59 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
+        } else if (item.getItemId() == R.id.action_copy_all_user_data) {
+            copyAllUserData();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void copyAllUserData() {
+        StringBuilder sb = new StringBuilder();
+        if (user.szNickname != null && !user.szNickname.isEmpty()) {
+            sb.append(getString(R.string.user_prop_title_nickname)).append(" ").append(user.szNickname).append("\n");
+        }
+        if (user.szUsername != null && !user.szUsername.isEmpty()) {
+            sb.append(getString(R.string.user_prop_title_username)).append(" ").append(user.szUsername).append("\n");
+        }
+        sb.append(getString(R.string.user_prop_title_userid)).append(" ").append(user.nUserID).append("\n");
+        if (user.szStatusMsg != null && !user.szStatusMsg.isEmpty()) {
+            sb.append(getString(R.string.user_prop_title_statusmsg)).append(" ").append(user.szStatusMsg).append("\n");
+        }
+        if (tvClientname != null && tvClientname.getText() != null) {
+            sb.append(tvClientname.getText().toString()).append("\n");
+        }
+        if (user.szIPAddress != null && !user.szIPAddress.isEmpty()) {
+            sb.append(getString(R.string.user_prop_title_ipaddress)).append(" ").append(user.szIPAddress).append("\n");
+        }
+        if (tvLocation != null && tvLocation.getVisibility() == View.VISIBLE && tvLocation.getText() != null) {
+            sb.append(tvLocation.getText().toString()).append("\n");
+        }
+        TeamTalkService srv = getService();
+        if (srv != null && srv.getChannels() != null) {
+            Channel chan = srv.getChannels().get(user.nChannelID);
+            if (chan != null) {
+                sb.append(getString(R.string.pref_title_channel)).append(": ").append(chan.szName).append(" (ID: ").append(chan.nChannelID).append(")\n");
+            }
+        }
+        sb.append(getString(R.string.user_prop_title_voice_volume)).append(": ").append(Utils.refVolumeToPercent(user.nVolumeVoice)).append("%");
+        if ((user.uUserState & UserState.USERSTATE_MUTE_VOICE) != 0) {
+            sb.append(" [").append(getString(R.string.user_prop_title_mute_voice)).append("]");
+        }
+        sb.append("\n");
+
+        sb.append(getString(R.string.user_prop_title_media_volume)).append(": ").append(Utils.refVolumeToPercent(user.nVolumeMediaFile)).append("%");
+        if ((user.uUserState & UserState.USERSTATE_MUTE_MEDIAFILE) != 0) {
+            sb.append(" [").append(getString(R.string.user_prop_title_mute_media)).append("]");
+        }
+        sb.append("\n");
+
+        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            android.content.ClipData clip = android.content.ClipData.newPlainText("User Info", sb.toString().trim());
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(this, R.string.user_data_copied, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -424,10 +571,20 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
 
         this.isUpdatingUi = true;
         try {
-            this.tvNickname.setText(getString(R.string.user_prop_title_nickname) + " " + (user.szNickname != null ? user.szNickname : ""));
-            this.tvUsername.setText(getString(R.string.user_prop_title_username) + " " + (user.szUsername != null ? user.szUsername : ""));
+            String nick = user.szNickname != null ? user.szNickname : "";
+            this.tvNickname.setText(getString(R.string.user_prop_title_nickname) + " " + nick);
+            this.tvNickname.setContentDescription(getString(R.string.user_prop_title_nickname) + ": " + nick + ". " + getString(R.string.tap_to_copy_hint));
+
+            String uname = user.szUsername != null ? user.szUsername : "";
+            this.tvUsername.setText(getString(R.string.user_prop_title_username) + " " + uname);
+            this.tvUsername.setContentDescription(getString(R.string.user_prop_title_username) + ": " + uname + ". " + getString(R.string.tap_to_copy_hint));
+
             this.tvUserid.setText(getString(R.string.user_prop_title_userid) + " " + user.nUserID);
-            this.tvStatusmsg.setText(getString(R.string.user_prop_title_statusmsg) + " " + (user.szStatusMsg != null ? user.szStatusMsg : ""));
+            this.tvUserid.setContentDescription(getString(R.string.user_prop_title_userid) + ": " + user.nUserID + ". " + getString(R.string.tap_to_copy_hint));
+
+            String smsg = user.szStatusMsg != null ? user.szStatusMsg : "";
+            this.tvStatusmsg.setText(getString(R.string.user_prop_title_statusmsg) + " " + smsg);
+            this.tvStatusmsg.setContentDescription(getString(R.string.user_prop_title_statusmsg) + ": " + smsg + ". " + getString(R.string.tap_to_copy_hint));
 
             String clientNameText = (user.szClientName != null && !user.szClientName.isEmpty()) ? user.szClientName : "TeamTalk";
             String fullDisplay;
@@ -437,20 +594,29 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
             } else {
                 fullDisplay = clientNameText;
             }
+            this.currentClientNameDisplay = fullDisplay;
             this.tvClientname.setText(getString(R.string.user_prop_title_clientname) + " " + fullDisplay);
-            this.tvIpaddress.setText(getString(R.string.user_prop_title_ipaddress) + " " + (user.szIPAddress != null ? user.szIPAddress : ""));
+            this.tvClientname.setContentDescription(getString(R.string.user_prop_title_clientname) + ": " + fullDisplay + ". " + getString(R.string.tap_to_copy_hint));
+
+            String ip = user.szIPAddress != null ? user.szIPAddress : "";
+            this.tvIpaddress.setText(getString(R.string.user_prop_title_ipaddress) + " " + ip);
+            this.tvIpaddress.setContentDescription(getString(R.string.user_prop_title_ipaddress) + ": " + ip + ". " + getString(R.string.tap_to_copy_hint));
 
             UserAccount myAccount = new UserAccount();
             if (client.getMyUserAccount(myAccount) &&
                 (myAccount.uUserRights & UserRight.USERRIGHT_VIEW_ALL_USERS) != 0 &&
                 user.szIPAddress != null && !user.szIPAddress.isEmpty()) {
                 this.tvLocation.setVisibility(View.VISIBLE);
-                this.tvLocation.setText(getString(R.string.user_prop_title_location) + " " + getString(R.string.location_unknown));
-                final String ip = user.szIPAddress;
+                this.currentLocationDisplay = getString(R.string.location_unknown);
+                this.tvLocation.setText(getString(R.string.user_prop_title_location) + " " + this.currentLocationDisplay);
+                this.tvLocation.setContentDescription(getString(R.string.user_prop_title_location) + ": " + this.currentLocationDisplay + ". " + getString(R.string.tap_to_copy_hint));
+                final String ipAddr = user.szIPAddress;
                 this.tvLocation.post(() -> {
-                    IpGeoLocator.getLocation(ip, UserPropActivity.this, result -> {
+                    IpGeoLocator.getLocation(ipAddr, UserPropActivity.this, result -> {
                         if (result != null && !result.isEmpty()) {
+                            UserPropActivity.this.currentLocationDisplay = result;
                             UserPropActivity.this.tvLocation.setText(getString(R.string.user_prop_title_location) + " " + result);
+                            UserPropActivity.this.tvLocation.setContentDescription(getString(R.string.user_prop_title_location) + ": " + result + ". " + getString(R.string.tap_to_copy_hint));
                         } else {
                             UserPropActivity.this.tvLocation.setVisibility(View.GONE);
                         }
@@ -458,6 +624,19 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
                 });
             } else {
                 this.tvLocation.setVisibility(View.GONE);
+            }
+
+            TeamTalkService srv = getService();
+            Channel chan = (srv != null && srv.getChannels() != null) ? srv.getChannels().get(user.nChannelID) : null;
+            if (this.tvChannel != null) {
+                if (chan != null) {
+                    this.tvChannel.setVisibility(View.VISIBLE);
+                    this.currentChannelDisplay = chan.szName + " (ID: " + chan.nChannelID + ")";
+                    this.tvChannel.setText(getString(R.string.pref_title_channel) + ": " + this.currentChannelDisplay);
+                    this.tvChannel.setContentDescription(getString(R.string.pref_title_channel) + ": " + this.currentChannelDisplay + ". " + getString(R.string.tap_to_copy_hint));
+                } else {
+                    this.tvChannel.setVisibility(View.GONE);
+                }
             }
 
             this.voiceVol.setProgress(Utils.refVolumeToPercent(user.nVolumeVoice));
@@ -489,8 +668,6 @@ public class UserPropActivity extends AppCompatActivity implements TeamTalkConne
             this.subscribeInterceptdesk.setChecked((user.uLocalSubscriptions & Subscription.SUBSCRIBE_INTERCEPT_DESKTOP) != 0);
             this.subscribeInterceptmedia.setChecked((user.uLocalSubscriptions & Subscription.SUBSCRIBE_INTERCEPT_MEDIAFILE) != 0);
 
-            TeamTalkService srv = getService();
-            Channel chan = (srv != null && srv.getChannels() != null) ? srv.getChannels().get(user.nChannelID) : null;
             if (chan != null) {
                 this.transmitVoice.setChecked(Utils.isTransmitAllowed(user, chan, StreamType.STREAMTYPE_VOICE));
                 this.transmitVid.setChecked(Utils.isTransmitAllowed(user, chan, StreamType.STREAMTYPE_VIDEOCAPTURE));

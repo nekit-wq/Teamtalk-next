@@ -305,6 +305,25 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             View v = inflater.inflate(R.layout.fragment_user_account_basic, container, false);
             editUser = v.findViewById(R.id.edit_account_username);
             editPass = v.findViewById(R.id.edit_account_password);
+            android.widget.ImageButton btnTogglePass = v.findViewById(R.id.btn_toggle_account_password);
+            if (btnTogglePass != null) {
+                btnTogglePass.setOnClickListener(view -> {
+                    int selStart = editPass.getSelectionStart();
+                    int selEnd = editPass.getSelectionEnd();
+                    if (editPass.getTransformationMethod() instanceof android.text.method.PasswordTransformationMethod) {
+                        editPass.setTransformationMethod(android.text.method.HideReturnsTransformationMethod.getInstance());
+                        btnTogglePass.setImageResource(R.drawable.ic_visibility_off);
+                        btnTogglePass.setContentDescription(getString(R.string.hide_password));
+                    } else {
+                        editPass.setTransformationMethod(android.text.method.PasswordTransformationMethod.getInstance());
+                        btnTogglePass.setImageResource(R.drawable.ic_visibility);
+                        btnTogglePass.setContentDescription(getString(R.string.show_password));
+                    }
+                    if (selStart >= 0 && selEnd >= 0) {
+                        editPass.setSelection(selStart, selEnd);
+                    }
+                });
+            }
             editNote = v.findViewById(R.id.edit_account_note);
             editInitChan = v.findViewById(R.id.edit_account_init_chan);
             btnSelectInitChan = v.findViewById(R.id.btn_select_init_chan);
