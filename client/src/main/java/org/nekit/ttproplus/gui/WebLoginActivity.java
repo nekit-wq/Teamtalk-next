@@ -1,19 +1,26 @@
 package org.nekit.ttproplus.gui;
+
 import org.nekit.ttproplus.R;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.preference.PreferenceManager;
+import android.text.InputType;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -21,6 +28,7 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -33,47 +41,19 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.nekit.ttproplus.data.AppInfo;
-import org.nekit.ttproplus.data.Preferences;
+import org.nekit.ttproplus.data.BearWareAccount;
+import org.nekit.ttproplus.data.BearWareAccountManager;
 
 public class WebLoginActivity extends AppCompatActivity {
 
-    void setupUI() {
+    private LinearLayout accountsContainer;
+    private TextView noAccountsText;
+    private EditText bearwareIdEdit;
+    private EditText bearwarePasswdEdit;
+    private ImageButton btnTogglePassword;
+    private boolean isPasswordVisible = false;
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-
-        String username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
-
-        Button createBtn = findViewById(R.id.createbearwareidbutton);
-        Button resetBtn = findViewById(R.id.resetbearwareidbutton);
-        Button loginBtn = findViewById(R.id.bearwareloginbutton);
-
-        createBtn.setOnClickListener(createClick);
-        resetBtn.setOnClickListener(resetClick);
-        loginBtn.setOnClickListener(loginClick);
-
-        EditText bearwareid = findViewById(R.id.bearwareidedit);
-        TextView passwdlabel = findViewById(R.id.bearwarepasswdlabel);
-        EditText bearwarepasswd = findViewById(R.id.bearwarepasswdedit);
-
-        if (username.length() > 0) {
-            createBtn.setVisibility(View.GONE);
-            bearwareid.setEnabled(false);
-            bearwarepasswd.setVisibility(View.GONE);
-            resetBtn.setVisibility(View.VISIBLE);
-            loginBtn.setVisibility(View.GONE);
-            passwdlabel.setVisibility(View.GONE);
-        }
-        else {
-            createBtn.setVisibility(View.VISIBLE);
-            bearwareid.setEnabled(true);
-            bearwarepasswd.setVisibility(View.VISIBLE);
-            resetBtn.setVisibility(View.GONE);
-            loginBtn.setVisibility(View.VISIBLE);
-            passwdlabel.setVisibility(View.VISIBLE);
-        }
-
-        bearwareid.setText(username);
-    }
+    private final ExecutorService loginExecutor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,57 +63,133 @@ public class WebLoginActivity extends AppCompatActivity {
 
         EdgeToEdgeHelper.enableEdgeToEdge(this);
 
+        accountsContainer = findViewById(R.id.accounts_container);
+        noAccountsText = findViewById(R.id.no_accounts_text);
+        bearwareIdEdit = findViewById(R.id.bearwareidedit);
+        bearwarePasswdEdit = findViewById(R.id.bearwarepasswdedit);
+        btnTogglePassword = findViewById(R.id.btn_toggle_password);
+
+        Button createBtn = findViewById(R.id.createbearwareidbutton);
+        Button loginBtn = findViewById(R.id.bearwareloginbutton);
+
+        createBtn.setOnClickListener(v -> {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(AppInfo.BEARWARE_REGISTRATION_WEBSITE));
+            startActivity(browserIntent);
+        });
+
+        loginBtn.setOnClickListener(v -> performValidateLogin());
+
+        if (btnTogglePassword != null && bearwarePasswdEdit != null) {
+            btnTogglePassword.setOnClickListener(v -> togglePasswordVisibility());
+        }
+
         setupUI();
     }
 
-    View.OnClickListener createClick = view -> {
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(AppInfo.BEARWARE_REGISTRATION_WEBSITE));
-        startActivity(browserIntent);
-    };
+    private void togglePasswordVisibility() {
+        isPasswordVisible = !isPasswordVisible;
+        if (isPasswordVisible) {
+            bearwarePasswdEdit.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+            btnTogglePassword.setImageResource(R.drawable.ic_visibility_off);
+            btnTogglePassword.setContentDescription(getString(R.string.hide_password));
+        } else {
+            bearwarePasswdEdit.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            btnTogglePassword.setImageResource(R.drawable.ic_visibility);
+            btnTogglePassword.setContentDescription(getString(R.string.show_password));
+        }
+        bearwarePasswdEdit.setSelection(bearwarePasswdEdit.getText().length());
+    }
 
-    View.OnClickListener resetClick = view -> {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
-        editor.putString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
-        editor.apply();
-        setupUI();
-    };
+    private void setupUI() {
+        if (accountsContainer == null) return;
+        accountsContainer.removeAllViews();
 
-    private final ExecutorService loginExecutor = Executors.newSingleThreadExecutor();
+        BearWareAccountManager manager = BearWareAccountManager.getInstance(this);
+        List<BearWareAccount> accounts = manager.getAccounts();
+        BearWareAccount activeAccount = manager.getActiveAccount();
 
-    View.OnClickListener loginClick = view -> performValidateLogin();
+        if (accounts.isEmpty()) {
+            if (noAccountsText != null) noAccountsText.setVisibility(View.VISIBLE);
+        } else {
+            if (noAccountsText != null) noAccountsText.setVisibility(View.GONE);
+            LayoutInflater inflater = LayoutInflater.from(this);
+
+            for (BearWareAccount account : accounts) {
+                View itemView = inflater.inflate(R.layout.item_bearware_account, accountsContainer, false);
+                MaterialCardView card = itemView.findViewById(R.id.card_account);
+                RadioButton radio = itemView.findViewById(R.id.account_radio);
+                TextView usernameView = itemView.findViewById(R.id.account_username);
+                TextView nicknameView = itemView.findViewById(R.id.account_nickname);
+                ImageButton deleteBtn = itemView.findViewById(R.id.btn_delete_account);
+
+                usernameView.setText(account.username);
+                boolean isActive = activeAccount != null && account.username.equalsIgnoreCase(activeAccount.username);
+                radio.setChecked(isActive);
+
+                if (account.nickname != null && !account.nickname.trim().isEmpty() && !account.nickname.equalsIgnoreCase(account.username)) {
+                    nicknameView.setText(account.nickname + (isActive ? " • " + getString(R.string.text_active_account) : ""));
+                } else {
+                    nicknameView.setText(isActive ? getString(R.string.text_active_account) : "");
+                }
+
+                card.setOnClickListener(v -> {
+                    manager.setActiveAccount(account.username);
+                    setupUI();
+                });
+
+                deleteBtn.setOnClickListener(v -> {
+                    new MaterialAlertDialogBuilder(this)
+                            .setTitle(R.string.action_remove_account)
+                            .setMessage(getString(R.string.msg_confirm_remove_account, account.username))
+                            .setPositiveButton(R.string.action_remove_account, (dialog, which) -> {
+                                manager.removeAccount(account.username);
+                                setupUI();
+                            })
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show();
+                });
+
+                accountsContainer.addView(itemView);
+            }
+        }
+    }
 
     private void performValidateLogin() {
-        EditText bearwareid = findViewById(R.id.bearwareidedit);
-        EditText bearwarepasswd = findViewById(R.id.bearwarepasswdedit);
-        final String inputUser = bearwareid.getText().toString();
-        final String inputPasswd = bearwarepasswd.getText().toString();
+        if (bearwareIdEdit == null || bearwarePasswdEdit == null) return;
+        final String inputUser = bearwareIdEdit.getText().toString().trim();
+        final String inputPasswd = bearwarePasswdEdit.getText().toString();
+
+        if (inputUser.isEmpty()) {
+            Toast.makeText(this, R.string.bwidlab, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         loginExecutor.execute(() -> {
             String xml = Utils.getURL(AppInfo.getBearWareTokenUrl(getBaseContext(), inputUser, inputPasswd));
-            Log.d(AppInfo.TAG, xml);
+            Log.d(AppInfo.TAG, "BearWare auth response: " + xml);
 
             String parsedUser = inputUser;
             String parsedNick = "";
             String parsedToken = "";
 
             try {
-                InputSource src = new InputSource(new StringReader(xml));
-                DocumentBuilderFactory dbf = Utils.createSecureDocumentBuilderFactory();
-                DocumentBuilder db = dbf.newDocumentBuilder();
-                Document document = db.parse(src);
-                XPathFactory factory = XPathFactory.newInstance();
-                XPath xPath = factory.newXPath();
+                if (xml != null && !xml.isEmpty()) {
+                    InputSource src = new InputSource(new StringReader(xml));
+                    DocumentBuilderFactory dbf = Utils.createSecureDocumentBuilderFactory();
+                    DocumentBuilder db = dbf.newDocumentBuilder();
+                    Document document = db.parse(src);
+                    XPathFactory factory = XPathFactory.newInstance();
+                    XPath xPath = factory.newXPath();
 
-                parsedUser = (String) xPath.evaluate("/teamtalk/bearware/username", document, XPathConstants.STRING);
-                parsedNick = (String) xPath.evaluate("/teamtalk/bearware/nickname", document, XPathConstants.STRING);
-                parsedToken = (String) xPath.evaluate("/teamtalk/bearware/token", document, XPathConstants.STRING);
+                    parsedUser = (String) xPath.evaluate("/teamtalk/bearware/username", document, XPathConstants.STRING);
+                    parsedNick = (String) xPath.evaluate("/teamtalk/bearware/nickname", document, XPathConstants.STRING);
+                    parsedToken = (String) xPath.evaluate("/teamtalk/bearware/token", document, XPathConstants.STRING);
+                }
             } catch (XPathExpressionException | ParserConfigurationException | IOException | SAXException e) {
                 Log.e(AppInfo.TAG, "XML parse failed: " + e);
             }
 
-            final String finalUser = parsedUser;
+            final String finalUser = (parsedUser != null && !parsedUser.isEmpty()) ? parsedUser : inputUser;
             final String finalNick = parsedNick;
             final String finalToken = parsedToken;
 
@@ -141,22 +197,28 @@ public class WebLoginActivity extends AppCompatActivity {
                 if (isFinishing()) return;
 
                 if (finalToken != null && finalToken.length() > 0) {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(WebLoginActivity.this.getBaseContext());
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, finalUser);
-                    editor.putString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, finalToken);
-                    editor.apply();
+                    BearWareAccountManager.getInstance(WebLoginActivity.this)
+                            .addOrUpdateAccount(finalUser, finalToken, finalNick);
 
-                    String msg = WebLoginActivity.this.getResources().getString(R.string.text_bearwarelogin_success, finalNick, finalUser);
+                    bearwarePasswdEdit.setText("");
+                    bearwareIdEdit.setText("");
+
+                    String msg = getResources().getString(R.string.text_bearwarelogin_success, finalNick, finalUser);
                     Toast.makeText(WebLoginActivity.this, msg, Toast.LENGTH_LONG).show();
 
-                    WebLoginActivity.this.setupUI();
+                    setupUI();
                     setResult(RESULT_OK);
                 } else {
-                    String msg = WebLoginActivity.this.getResources().getString(R.string.text_bearwarelogin_failed, finalNick, finalUser);
+                    String msg = getResources().getString(R.string.text_bearwarelogin_failed, finalNick, finalUser);
                     Toast.makeText(WebLoginActivity.this, msg, Toast.LENGTH_LONG).show();
                 }
             });
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        loginExecutor.shutdown();
     }
 }

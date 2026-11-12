@@ -18,7 +18,7 @@
             android:text="@string/tab_bandwidth_limits"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="@color/settingsSectionHeader"
+            android:textColor="?attr/colorPrimary"
             android:textAllCaps="true"
             android:layout_marginBottom="6dp" />
 
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:text="Ограничения скорости передачи данных в байтах в секунду (0 — без ограничений):"
             android:textSize="12sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginBottom="14dp" />
 
         <!-- Voice Bandwidth -->
@@ -37,7 +37,7 @@
             android:text="@string/label_voice_bw"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -47,8 +47,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number"
             android:layout_marginBottom="14dp" />
@@ -60,7 +60,7 @@
             android:text="@string/label_video_bw"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -70,8 +70,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number"
             android:layout_marginBottom="14dp" />
@@ -83,7 +83,7 @@
             android:text="@string/label_media_bw"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -93,8 +93,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number"
             android:layout_marginBottom="14dp" />
@@ -106,7 +106,7 @@
             android:text="@string/label_desktop_bw"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -116,8 +116,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number"
             android:layout_marginBottom="14dp" />
@@ -129,7 +129,7 @@
             android:text="@string/label_total_bw"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -139,8 +139,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number" />
     </LinearLayout>

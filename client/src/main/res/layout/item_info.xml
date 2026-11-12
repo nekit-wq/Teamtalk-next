@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout android:orientation="vertical" android:background="?android:selectableItemBackground" android:padding="10dp" android:layout_width="match_parent" android:layout_height="wrap_content"
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <TextView android:textSize="14sp" android:textStyle="bold" android:textColor="#ff616161" android:id="@+id/titletext" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" />
-    <TextView android:textSize="13sp" android:textColor="@color/textTertiary" android:id="@+id/infodetails" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="" />
+    <TextView android:textSize="14sp" android:textStyle="bold" android:textColor="?attr/colorOnSurface" android:id="@+id/titletext" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" />
+    <TextView android:textSize="13sp" android:textColor="?attr/colorOutline" android:id="@+id/infodetails" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="" />
 </LinearLayout>

@@ -15,9 +15,9 @@ android {
         applicationId = 'org.nekit.ttproplus'
         minSdk = 21
         targetSdk = 36
-        versionCode = 446
+        versionCode = 447
         // Single source of truth: the value is also injected into TeamTalk client name.
-        versionName = '5.29.1'
+        versionName = '5.29.2'
 
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -78,7 +78,7 @@ android {
     lint {
         abortOnError = false
         checkReleaseBuilds = false
-        disable += ['MissingTranslation', 'ExtraTranslation']
+        disable += ['MissingTranslation', 'ExtraTranslation', 'GestureBackNavigation', 'WrongConstant']
     }
 }
 

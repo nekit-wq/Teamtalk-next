@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -53,7 +53,7 @@
                 android:paddingTop="1dp"
                 android:paddingBottom="1dp"
                 android:singleLine="true"
-                android:textColor="@color/textSecondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:singleLine="true"
-            android:textColor="@color/textTertiary"
+            android:textColor="?attr/colorOutline"
             android:textSize="13sp" />
     </LinearLayout>
 
@@ -86,7 +86,8 @@
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:text="@string/action_join"
-            android:textColor="@color/colorOnPrimary"
+            android:textColor="?attr/colorOnPrimary"
+            app:backgroundTint="?attr/colorPrimary"
             android:textSize="13sp"
             app:cornerRadius="17dp" />
     </LinearLayout>

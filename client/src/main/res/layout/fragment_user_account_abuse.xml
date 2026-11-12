@@ -18,7 +18,7 @@
             android:text="@string/tab_abuse_prevention"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="@color/settingsSectionHeader"
+            android:textColor="?attr/colorPrimary"
             android:textAllCaps="true"
             android:layout_marginBottom="6dp" />
 
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:text="Ограничение частоты команд для защиты сервера от флуда со стороны клиента:"
             android:textSize="12sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginBottom="14dp" />
 
         <TextView
@@ -36,7 +36,7 @@
             android:text="@string/label_cmd_limit"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -46,8 +46,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number"
             android:layout_marginBottom="14dp" />
@@ -58,7 +58,7 @@
             android:text="@string/label_cmd_interval"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -68,8 +68,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number" />
 
@@ -79,6 +79,6 @@
             android:layout_marginTop="8dp"
             android:text="Например: 10 команд за 1000 мс (1 секунду)."
             android:textSize="12sp"
-            android:textColor="@color/textSecondary" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 </ScrollView>

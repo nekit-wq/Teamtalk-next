@@ -16,7 +16,7 @@
             android:clickable="true"
             android:focusable="true"
             android:background="?attr/selectableItemBackground" />
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="4dp" android:layout_marginBottom="4dp" />
+        <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="4dp" android:layout_marginBottom="4dp" />
         <TextView
             android:id="@+id/user_username"
             android:layout_width="match_parent"
@@ -57,7 +57,7 @@
             android:minHeight="44dp"
             android:gravity="center_vertical"
             android:textSize="14sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:padding="8dp"
             android:clickable="true"
             android:focusable="true"
@@ -69,7 +69,7 @@
             android:minHeight="44dp"
             android:gravity="center_vertical"
             android:textSize="14sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:padding="8dp"
             android:visibility="gone"
             android:clickable="true"
@@ -82,7 +82,7 @@
             android:minHeight="44dp"
             android:gravity="center_vertical"
             android:textSize="14sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:padding="8dp"
             android:clickable="true"
             android:focusable="true"
@@ -94,7 +94,7 @@
             android:minHeight="44dp"
             android:gravity="center_vertical"
             android:textSize="14sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:padding="8dp"
             android:visibility="gone"
             android:clickable="true"
@@ -107,7 +107,7 @@
             android:minHeight="44dp"
             android:gravity="center_vertical"
             android:textSize="14sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:padding="8dp"
             android:visibility="gone"
             android:clickable="true"
@@ -123,7 +123,7 @@
             android:text="@string/action_copy_all_user_data"
             app:icon="@drawable/ic_copy"
             app:iconGravity="textStart" />
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="12dp" android:layout_marginBottom="12dp" />
+        <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="12dp" android:layout_marginBottom="12dp" />
         <TextView android:textSize="14sp" android:textStyle="bold" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_voice_volume" />
         <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="4dp">
             <SeekBar android:id="@+id/user_vol_voiceSeekBar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:contentDescription="@string/voicevolume" />
@@ -143,7 +143,7 @@
             android:layout_height="wrap_content" 
             android:text="@string/user_prop_voice_right_speaker" />
 
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
+        <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
         <TextView android:textSize="14sp" android:textStyle="bold" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_media_volume" />
         <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="4dp">
             <SeekBar android:id="@+id/user_vol_mediaSeekBar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:contentDescription="@string/mediavolume" />
@@ -162,7 +162,7 @@
             android:layout_width="match_parent" 
             android:layout_height="wrap_content" 
             android:text="@string/user_prop_media_right_speaker" />
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
+        <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribetxtmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_txtmsg" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribechanmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_chanmsg" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribebcastmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_bcastmsg" />
@@ -170,14 +170,14 @@
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribevidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_vid" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribedeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_desk" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribemediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_media" />
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
+        <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeintercepttxtmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_txtmsg" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptchanmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_chanmsg" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptvoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_voice" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptvidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_vid" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptdeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_desk" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptmediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_media" />
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
+        <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_transmitvoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_voice" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_transmitvidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_vid" />
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_transmitdeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_desk" />

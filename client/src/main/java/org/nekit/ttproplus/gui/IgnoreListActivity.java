@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.data.AntiSpamStore;
@@ -104,7 +105,7 @@ public class IgnoreListActivity extends AppCompatActivity {
         wrapper.setPadding(padding, padding / 2, padding, 0);
         wrapper.addView(input);
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(whitelistMode
                         ? R.string.antispam_add_whitelist_title
                         : R.string.antispam_add_ignore_title)
@@ -137,7 +138,7 @@ public class IgnoreListActivity extends AppCompatActivity {
     }
 
     private void confirmRemove(final String nick) {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.antispam_remove_title, nick))
                 .setPositiveButton(R.string.action_delete, (dialog, which) -> {
                     AntiSpamStore.removeNick(this, prefKey, nick);

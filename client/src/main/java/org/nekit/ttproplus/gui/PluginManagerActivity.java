@@ -1,6 +1,6 @@
 package org.nekit.ttproplus.gui;
 
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
@@ -200,7 +200,7 @@ public class PluginManagerActivity extends AppCompatActivity implements PluginMa
         } catch (Throwable t) {
             Log.e("PluginManagerActivity", "Failed to install plugin: " + fileName, t);
             String errorMsg = t.getLocalizedMessage() != null ? t.getLocalizedMessage() : t.getClass().getSimpleName();
-            new AlertDialog.Builder(this)
+            new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.plugin_install_error_title)
                     .setMessage(getString(R.string.plugin_install_error_message, fileName, errorMsg))
                     .setPositiveButton(android.R.string.ok, null)
@@ -300,7 +300,7 @@ public class PluginManagerActivity extends AppCompatActivity implements PluginMa
             }
 
             btnDelete.setOnClickListener(v -> {
-                new AlertDialog.Builder(PluginManagerActivity.this)
+                new MaterialAlertDialogBuilder(PluginManagerActivity.this)
                         .setMessage(getString(R.string.plugin_delete_confirm, info.getName()))
                         .setPositiveButton(R.string.button_remove, (dialog, which) -> {
                             PluginManager.getInstance().deletePlugin(info.getId());

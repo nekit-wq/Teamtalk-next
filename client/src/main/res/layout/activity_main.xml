@@ -10,14 +10,14 @@
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/tabLayoutBackground"
-        app:tabIndicatorColor="@color/tabLayoutIndicatorColor"
+        android:background="?attr/colorSurface"
+        app:tabIndicatorColor="?attr/colorPrimary"
         app:tabIndicatorHeight="3dp"
         app:tabIndicatorFullWidth="false"
         app:tabMode="fixed"
         app:tabGravity="fill"
-        app:tabSelectedTextColor="@color/tabLayoutIndicatorColor"
-        app:tabTextColor="@color/tabLayoutTextColor"
+        app:tabSelectedTextColor="?attr/colorPrimary"
+        app:tabTextColor="?attr/colorOnSurfaceVariant"
         app:tabIconTint="@color/selector_nav_item"
         app:tabRippleColor="?attr/colorControlHighlight"
         app:tabTextAppearance="@style/TabTextAppearance" />
@@ -25,7 +25,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/dividerColor" />
+        android:background="?attr/colorOutlineVariant" />
 
     <!-- Docked Mini-Panels (Telegram-style Audio Bar) -->
     <LinearLayout
@@ -132,7 +132,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_play"
-                    android:tint="@color/colorPrimary"
+                    app:tint="?attr/colorPrimary"
                     android:layout_marginEnd="10dp"
                     android:contentDescription="@null" />
 
@@ -170,7 +170,7 @@
                     android:scaleType="fitCenter"
                     android:background="?android:selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_pause"
-                    android:tint="?android:attr/textColorPrimary"
+                    app:tint="?android:attr/textColorPrimary"
                     android:contentDescription="@string/action_pause" />
 
                 <ImageButton
@@ -209,6 +209,7 @@
         android:layout_height="4dp"
         android:max="100"
         android:progress="0"
+        android:progressTint="?attr/colorPrimary"
         android:visibility="gone" />
 
     <!-- Compact Material You Voice Control Card -->
@@ -221,10 +222,10 @@
         android:layout_marginTop="2dp"
         android:layout_marginBottom="6dp"
         app:cardCornerRadius="16dp"
-        app:cardElevation="1dp"
+        app:cardElevation="0dp"
         app:strokeWidth="1dp"
-        app:strokeColor="@color/dividerColor"
-        app:cardBackgroundColor="@color/surfaceColor">
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:cardBackgroundColor="?attr/colorSurfaceContainer">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -297,8 +298,7 @@
                         android:padding="4dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/ic_m3_volume_up"
-                        app:tint="@color/colorPrimary"
-                        android:tint="@color/colorPrimary" />
+                        app:tint="?attr/colorPrimary" />
 
                     <SeekBar
                         android:id="@+id/master_volSeekBar"
@@ -318,7 +318,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="end|center_vertical"
                         android:text=""
-                        android:textColor="@color/textSecondary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -339,8 +339,7 @@
                         android:padding="4dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/ic_m3_mic_on"
-                        app:tint="@color/colorPrimary"
-                        android:tint="@color/colorPrimary" />
+                        app:tint="?attr/colorPrimary" />
 
                     <SeekBar
                         android:id="@+id/mic_gainSeekBar"
@@ -360,26 +359,34 @@
                         android:layout_height="wrap_content"
                         android:gravity="end|center_vertical"
                         android:text=""
-                        android:textColor="@color/textSecondary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Compact Material 3 PTT Button -->
-            <Button
+            <!-- Compact Material 3 PTT Icon Button -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/transmit_voice"
                 android:layout_width="54dp"
-                android:layout_height="46dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="6dp"
                 android:background="@drawable/bg_ptt_button"
                 app:backgroundTint="@null"
+                app:icon="@drawable/ic_ptt_mic"
+                app:iconTint="@android:color/white"
+                app:iconSize="24dp"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:padding="0dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
                 android:elevation="2dp"
                 android:stateListAnimator="@null"
-                android:text="@string/button_tx"
-                android:textColor="@color/colorOnPrimary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:text=""
+                android:contentDescription="@string/button_tx" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

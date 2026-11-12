@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:singleLine="true"
-                android:textColor="@color/textTertiary"
+                android:textColor="?attr/colorOutline"
                 android:textSize="13sp" />
         </LinearLayout>
 
@@ -65,10 +65,10 @@
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:text="@string/button_msg"
-            android:textColor="@color/colorPrimary"
+            android:textColor="?attr/colorPrimary"
             android:textSize="13sp"
             app:cornerRadius="17dp"
-            app:strokeColor="@color/dividerColor"
+            app:strokeColor="?attr/colorOutlineVariant"
             app:strokeWidth="1dp" />
     </RelativeLayout>
 

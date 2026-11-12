@@ -24,7 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/chk_right_all"
-                android:textColor="@color/settingsAccent"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -44,7 +44,7 @@
                 android:text="@string/section_voice_media"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="10dp" />
 
@@ -55,13 +55,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_voice"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_video"
@@ -70,13 +70,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_video"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_desktop"
@@ -85,13 +85,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_desktop"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_desktop_access"
@@ -100,13 +100,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_desktop_access"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_media_audio"
@@ -115,13 +115,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_media_audio"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_media_video"
@@ -130,13 +130,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_media_video"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_record_voice"
@@ -145,7 +145,7 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_record_voice"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
         </LinearLayout>
 
@@ -164,7 +164,7 @@
                 android:text="@string/section_messages_files"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="10dp" />
 
@@ -175,13 +175,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_text_user"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_text_chan"
@@ -190,13 +190,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_text_chan"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_text_broadcast"
@@ -205,13 +205,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_text_broadcast"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_upload_files"
@@ -220,13 +220,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_upload_files"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_download_files"
@@ -235,7 +235,7 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_download_files"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
         </LinearLayout>
 
@@ -254,7 +254,7 @@
                 android:text="@string/section_channels_admin"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="10dp" />
 
@@ -265,13 +265,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_create_chan"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_modify_chan"
@@ -280,13 +280,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_modify_chan"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_operator_enable"
@@ -295,13 +295,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_operator_enable"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_kick"
@@ -310,13 +310,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_kick"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_ban"
@@ -325,13 +325,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_ban"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_move_users"
@@ -340,7 +340,7 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_move_users"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
         </LinearLayout>
 
@@ -359,7 +359,7 @@
                 android:text="@string/section_system_rights"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="10dp" />
 
@@ -370,13 +370,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_view_all"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_view_hidden"
@@ -385,13 +385,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_view_hidden"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_multi_login"
@@ -400,13 +400,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_multi_login"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_change_nickname"
@@ -415,13 +415,13 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_change_nickname"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider" />
+                android:background="?attr/colorOutlineVariant" />
 
             <CheckBox
                 android:id="@+id/chk_right_update_server_props"
@@ -430,7 +430,7 @@
                 android:paddingTop="9dp"
                 android:paddingBottom="9dp"
                 android:text="@string/chk_right_update_server_props"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
         </LinearLayout>
     </LinearLayout>

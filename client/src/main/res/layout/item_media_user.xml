@@ -4,6 +4,6 @@
     <TextView android:textSize="15sp" android:id="@+id/media_nickname_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/no_nickname" android:layout_centerVertical="true" android:paddingStart="8dp" android:layout_alignParentStart="true" />
     <LinearLayout android:gravity="center_vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
         <ImageView android:id="@+id/mediaicon" android:padding="2dp" android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/board_blue" android:importantForAccessibility="no" />
-        <TextView android:textSize="13sp" android:textColor="@color/textSecondary" android:id="@+id/mediainfo_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingStart="4dp" android:paddingEnd="4dp" />
+        <TextView android:textSize="13sp" android:textColor="?attr/colorOnSurfaceVariant" android:id="@+id/mediainfo_textview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingStart="4dp" android:paddingEnd="4dp" />
     </LinearLayout>
 </RelativeLayout>

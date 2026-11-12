@@ -27,7 +27,7 @@
             android:key="audio_ducking_enabled"
             android:summary="@string/pref_summary_audio_ducking_enabled"
             android:defaultValue="false" />
-        <ListPreference
+        <org.nekit.ttproplus.gui.MaterialListPreference
             android:title="@string/pref_title_audio_ducking_level"
             android:key="audio_ducking_level"
             android:summary="@string/pref_summary_audio_ducking_level"
@@ -35,7 +35,7 @@
             android:defaultValue="30"
             android:entries="@array/audio_ducking_level_entries"
             android:entryValues="@array/audio_ducking_level_values" />
-        <ListPreference
+        <org.nekit.ttproplus.gui.MaterialListPreference
             android:title="@string/pref_title_audio_ducking_trigger"
             android:key="audio_ducking_trigger"
             android:summary="@string/pref_summary_audio_ducking_trigger"

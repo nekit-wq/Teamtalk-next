@@ -3,16 +3,18 @@
 
     <PreferenceCategory android:title="@string/pref_recording_category_general">
         <Preference
+            android:icon="@drawable/ic_recordings"
             android:key="pref_open_recordings_manager"
             android:title="@string/pref_open_recordings_manager_title"
             android:summary="@string/pref_open_recordings_manager_summary" />
 
         <Preference
+            android:icon="@drawable/ic_folder"
             android:key="recording_path"
             android:title="@string/pref_recording_path_title"
             android:summary="@string/pref_recording_path_summary" />
 
-        <ListPreference
+        <org.nekit.ttproplus.gui.MaterialListPreference
             android:key="recording_format"
             android:title="@string/pref_recording_format_title"
             android:summary="@string/pref_recording_format_summary"
@@ -20,7 +22,7 @@
             android:entryValues="@array/recording_format_values"
             android:defaultValue="wav" />
 
-        <ListPreference
+        <org.nekit.ttproplus.gui.MaterialListPreference
             android:key="recording_mp3_bitrate"
             android:title="@string/pref_recording_mp3_bitrate_title"
             android:summary="@string/pref_recording_mp3_bitrate_summary"
@@ -34,7 +36,7 @@
             android:summary="@string/pref_recording_create_server_folder_summary"
             android:defaultValue="false" />
 
-        <ListPreference
+        <org.nekit.ttproplus.gui.MaterialListPreference
             android:key="recording_session_mode"
             android:title="@string/pref_recording_session_mode_title"
             android:summary="@string/pref_recording_session_mode_summary"
@@ -50,7 +52,7 @@
             android:summary="@string/pref_auto_record_conversations_summary"
             android:defaultValue="false" />
 
-        <ListPreference
+        <org.nekit.ttproplus.gui.MaterialListPreference
             android:key="recording_silence_pause"
             android:title="@string/pref_recording_silence_pause_title"
             android:summary="@string/pref_recording_silence_pause_summary"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.google.android.material.tabs.TabLayout android:textColor="@color/tabLayoutTextColor" android:id="@+id/tab_layout" android:background="@color/tabLayoutBackground" android:paddingTop="4dp" android:paddingBottom="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
+    <com.google.android.material.tabs.TabLayout android:textColor="?attr/colorOnSurfaceVariant" android:id="@+id/tab_layout" android:background="?attr/colorSurface" android:paddingTop="4dp" android:paddingBottom="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" />
     <androidx.viewpager.widget.ViewPager android:id="@+id/pager" android:layout_width="match_parent" android:layout_height="match_parent" />
 </LinearLayout>

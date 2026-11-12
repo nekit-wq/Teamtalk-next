@@ -35,6 +35,8 @@ public class Preferences {
             PREF_GENERAL_BEARWARE_CHECKED = "bearwareid_checkbox",
             PREF_GENERAL_BEARWARE_USERNAME = "bearware_username",
             PREF_GENERAL_BEARWARE_TOKEN = "bearware_token",
+            PREF_GENERAL_BEARWARE_ACCOUNTS_JSON = "bearware_accounts_json",
+            PREF_GENERAL_BEARWARE_ACTIVE_USERNAME = "bearware_active_username",
             PREF_GENERAL_GENDER = "gender_checkbox",
             PREF_GENERAL_CLIENTNAME = "clientname_text",
             PREF_GENERAL_LANGUAGE = "app_language",
@@ -135,6 +137,8 @@ public class Preferences {
             PREF_RECORDING_AUTO = "auto_record_conversations";
 
     public static final String
+            PREF_DISPLAY_ACCENT_COLOR = "accent_color_preference",
+            PREF_DISPLAY_DYNAMIC_COLOR = "dynamic_color_enabled",
             PREF_DISPLAY_SHOW_MIC_ACTIVITY = "display_show_mic_activity",
             PREF_DISPLAY_SHOW_PING_NO_SERVER = "display_show_ping_no_server",
             PREF_DISPLAY_SHOW_ROOT_USERS = "display_show_root_users",

@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:orientation="horizontal" android:background="?android:selectableItemBackground" android:padding="10dp" android:layout_width="match_parent" android:layout_height="wrap_content"
-  xmlns:android="http://schemas.android.com/apk/res/android">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:selectableItemBackground"
+    android:padding="10dp">
     <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_toStartOf="@id/buttons_container" android:layout_alignParentStart="true">
-        <TextView android:textSize="15sp" android:id="@+id/filename" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
-        <TextView android:textSize="13sp" android:textColor="@color/textSecondary" android:id="@+id/fileinfo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
+        <TextView android:textSize="15sp" android:textStyle="bold" android:textColor="?attr/colorOnSurface" android:id="@+id/filename" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
+        <TextView android:textSize="13sp" android:textColor="?attr/colorOnSurfaceVariant" android:id="@+id/fileinfo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
     </LinearLayout>
     <LinearLayout android:orientation="horizontal" android:id="@+id/buttons_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
-        <Button android:textSize="13sp" android:id="@+id/download_btn" android:textColor="@color/colorOnPrimary" android:paddingTop="4dp" android:paddingBottom="4dp" android:focusable="false" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/button_download" />
-        <Button style="@style/ButtonDangerSmall" android:textSize="13sp" android:id="@+id/remove_btn" android:focusable="false" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/button_remove" android:layout_marginStart="4dp" />
+        <com.google.android.material.button.MaterialButton style="@style/Widget.Material3.Button" app:backgroundTint="?attr/colorPrimary" android:textColor="?attr/colorOnPrimary" app:cornerRadius="14dp" android:textSize="13sp" android:id="@+id/download_btn" android:paddingTop="4dp" android:paddingBottom="4dp" android:focusable="false" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/button_download" />
+        <com.google.android.material.button.MaterialButton style="@style/ButtonDangerSmall" android:textSize="13sp" android:id="@+id/remove_btn" android:focusable="false" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/button_remove" android:layout_marginStart="4dp" />
     </LinearLayout>
 </RelativeLayout>

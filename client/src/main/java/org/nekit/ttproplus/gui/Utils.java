@@ -26,7 +26,7 @@ import org.nekit.ttproplus.R;
 
 import android.content.Context;
 import android.app.Activity;
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -1065,7 +1065,7 @@ public class Utils {
         } else if ("builtin".equals(defaultManager)) {
             openBuiltinFilePicker(activity, requestCodeBuiltin, folderMode);
         } else {
-            new AlertDialog.Builder(activity)
+            new MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.title_choose_file_manager)
                 .setItems(new String[]{activity.getString(R.string.option_builtin_file_manager), activity.getString(R.string.option_system_file_manager)}, (dialog, which) -> {
                     if (which == 0) {
@@ -1090,7 +1090,7 @@ public class Utils {
         } else if ("builtin".equals(defaultManager)) {
             openBuiltinFilePicker(fragment, requestCodeBuiltin, folderMode);
         } else {
-            new AlertDialog.Builder(activity)
+            new MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.title_choose_file_manager)
                 .setItems(new String[]{activity.getString(R.string.option_builtin_file_manager), activity.getString(R.string.option_system_file_manager)}, (dialog, which) -> {
                     if (which == 0) {

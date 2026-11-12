@@ -54,7 +54,7 @@
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
-        android:icon="@drawable/teamtalk_blue"
+        android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
@@ -88,7 +88,7 @@
 
         <activity
             android:name=".gui.ServerListActivity"
-            android:icon="@drawable/teamtalk_blue"
+            android:icon="@drawable/ic_launcher"
             android:launchMode="singleTop"
             android:exported="true">
 

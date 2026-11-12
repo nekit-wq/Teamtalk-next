@@ -1572,4 +1572,25 @@ By: %3$s"</string>
     <string name="pref_debug_deleted_toast">Record deleted</string>
     <string name="user_field_copied">Copied: %s</string>
     <string name="tap_to_copy_hint">Tap to copy</string>
+
+    <!-- Accent Color -->
+    <string name="pref_title_accent_color">Accent color</string>
+    <string name="pref_summary_accent_color">Choose UI accent color</string>
+    <string name="accent_color_palette_title">Palette</string>
+    <string name="accent_color_custom_hex_title">Custom color (HEX)</string>
+    <string name="accent_color_hex_hint">#0B57D0</string>
+    <string name="accent_color_invalid_hex">Invalid HEX format (e.g. #0B57D0)</string>
+
+    <!-- BearWare Multi-Account -->
+    <string name="title_select_bearware_account">Select BearWare account</string>
+    <string name="text_active_account">Active</string>
+    <string name="action_manage_accounts">Manage accounts</string>
+    <string name="action_add_account">Add account</string>
+    <string name="action_login">Log in</string>
+    <string name="text_bearware_accounts_list">Connected BearWare accounts</string>
+    <string name="text_bearware_no_accounts">No BearWare accounts added yet</string>
+    <string name="text_switch_account">Switch account</string>
+    <string name="action_remove_account">Remove</string>
+    <string name="msg_confirm_remove_account">Remove account \"%1$s\" from this device?</string>
+    <string name="connection_cancelled">Connection cancelled</string>
 </resources>

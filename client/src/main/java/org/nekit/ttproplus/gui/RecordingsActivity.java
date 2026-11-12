@@ -1,6 +1,6 @@
 package org.nekit.ttproplus.gui;
 
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -444,7 +444,7 @@ public class RecordingsActivity extends AppCompatActivity {
     }
 
     private void showRenameDialog(final RecordingItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.recordings_rename_title);
 
         String currentName = item.file.getName();
@@ -460,7 +460,7 @@ public class RecordingsActivity extends AppCompatActivity {
         input.setText(currentName);
         input.setSelection(currentName.length());
         input.setHint(R.string.recordings_rename_hint);
-        builder.setView(input);
+        builder.setView(ThemeHelper.wrapForDialog(input, this));
 
         builder.setPositiveButton(R.string.recording_rename_save, (dialog, which) -> {
             String newBase = input.getText().toString().trim();
@@ -485,7 +485,7 @@ public class RecordingsActivity extends AppCompatActivity {
     }
 
     private void showDeleteDialog(final RecordingItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.recordings_delete_title);
         builder.setMessage(getString(R.string.recordings_delete_message, item.name));
 

@@ -1,6 +1,6 @@
 package org.nekit.ttproplus.gui;
 
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -188,7 +188,7 @@ public class ChatHistoryActivity extends AppCompatActivity implements TeamTalkCo
                 getString(R.string.history_action_share)
         };
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(msg.getSenderDisplayName());
         builder.setItems(options, (dialog, which) -> {
             ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
@@ -216,7 +216,7 @@ public class ChatHistoryActivity extends AppCompatActivity implements TeamTalkCo
     }
 
     private void showClearConfirmDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.history_clear_dialog_title);
         builder.setMessage(R.string.history_clear_dialog_message);
         builder.setPositiveButton(R.string.history_action_clear, (dialog, which) -> {

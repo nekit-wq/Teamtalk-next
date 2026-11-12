@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -97,7 +98,7 @@ public class ChannelBannedUsersActivity extends AppCompatActivity implements Tea
             return;
         }
 
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.action_unban)
                 .setMessage(getResources().getQuantityString(R.plurals.confirm_unban_user_plural, selectedPositions.size(), selectedPositions.size()))
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {

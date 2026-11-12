@@ -1,6 +1,6 @@
 package org.nekit.ttproplus.gui;
 
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -300,7 +300,7 @@ public class SelectUsersActivity extends AppCompatActivity implements TeamTalkCo
             categoryTitles[i] = categories.get(i).title;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(getString(R.string.bulk_users_actions_title, selectedUserIds.size()));
         builder.setItems(categoryTitles, (dialog, which) -> {
             CategoryItem selectedCat = categories.get(which);
@@ -382,7 +382,7 @@ public class SelectUsersActivity extends AppCompatActivity implements TeamTalkCo
 
         if (actionTitles.isEmpty()) return;
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(getString(R.string.bulk_users_actions_title, selectedUserIds.size()));
         builder.setItems(actionTitles.toArray(new String[0]), (dialog, which) -> {
             actionRunnables.get(which).run();
@@ -392,11 +392,11 @@ public class SelectUsersActivity extends AppCompatActivity implements TeamTalkCo
     }
 
     private void performSendPm() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(getString(R.string.bulk_send_pm_title, selectedUserIds.size()));
         final EditText input = new EditText(this);
         input.setHint(R.string.bulk_send_pm_hint);
-        builder.setView(input);
+        builder.setView(ThemeHelper.wrapForDialog(input, this));
         builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
             String text = input.getText().toString().trim();
             if (TextUtils.isEmpty(text)) return;
@@ -434,13 +434,12 @@ public class SelectUsersActivity extends AppCompatActivity implements TeamTalkCo
     }
 
     private void performSetVolume() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.bulk_action_set_volume);
         final SeekBar seekBar = new SeekBar(this);
         seekBar.setMax(100);
         seekBar.setProgress(50);
-        seekBar.setPadding(30, 20, 30, 20);
-        builder.setView(seekBar);
+        builder.setView(ThemeHelper.wrapForDialog(seekBar, this));
         builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
             int vol = seekBar.getProgress();
             TeamTalkBase client = getClient();
@@ -472,7 +471,7 @@ public class SelectUsersActivity extends AppCompatActivity implements TeamTalkCo
             channelNames[i] = channels.get(i).szName;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.bulk_move_channel_title);
         builder.setItems(channelNames, (dialog, which) -> {
             int targetChanId = channels.get(which).nChannelID;

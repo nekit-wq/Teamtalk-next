@@ -1,7 +1,10 @@
 package org.nekit.ttproplus.gui;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import com.google.android.material.color.DynamicColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import org.nekit.ttproplus.data.BearWareAccount;
+import org.nekit.ttproplus.data.BearWareAccountManager;
 import android.app.Fragment;
 import org.nekit.ttproplus.data.ServerEntry;
 import android.content.ClipData;
@@ -406,11 +409,22 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             public void onResume() {
                 super.onResume();
                 if (getActivity() == null) return;
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getBaseContext());
-                String username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
+                BearWareAccountManager manager = BearWareAccountManager.getInstance(getActivity());
+                boolean hasAccounts = manager.hasAccounts();
                 CheckBoxPreference preference = (CheckBoxPreference) findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
                 if (preference != null) {
-                    preference.setChecked(username.length() > 0);
+                    preference.setChecked(hasAccounts);
+                    if (hasAccounts) {
+                        BearWareAccount active = manager.getActiveAccount();
+                        int count = manager.getAccounts().size();
+                        String summary = active != null ? active.getDisplayName() : "";
+                        if (count > 1) {
+                            summary += " (" + count + ")";
+                        }
+                        preference.setSummary(summary);
+                    } else {
+                        preference.setSummary(R.string.pref_summary_bearwareid);
+                    }
                 }
             }
         }
@@ -504,7 +518,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             for (int i = 0; i < labelResIds.length; i++) {
                 eventLabels[i] = context.getString(labelResIds[i]);
             }
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
             builder.setTitle(R.string.sound_assign_title);
             builder.setItems(eventLabels, new DialogInterface.OnClickListener() { 
                 @Override
@@ -694,7 +708,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 detectedMicsPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        new AlertDialog.Builder(getActivity())
+                        new MaterialAlertDialogBuilder(getActivity())
                                 .setTitle(R.string.pref_title_detected_microphones)
                                 .setMessage(MicrophoneInputHelper.buildDetectedMicrophonesReport(getActivity()))
                                 .setPositiveButton(android.R.string.ok, null)
@@ -733,7 +747,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                     selectedIdx = i;
                 }
             }
-            new AlertDialog.Builder(getActivity())
+            new MaterialAlertDialogBuilder(getActivity())
                     .setTitle(R.string.pref_title_experimental_capture_mode)
                     .setSingleChoiceItems(titles, selectedIdx, new DialogInterface.OnClickListener() {
                         @Override
@@ -767,7 +781,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                     selectedIdx = i;
                 }
             }
-            new AlertDialog.Builder(getActivity())
+            new MaterialAlertDialogBuilder(getActivity())
                     .setTitle(R.string.pref_title_experimental_input_device)
                     .setSingleChoiceItems(titles, selectedIdx, new DialogInterface.OnClickListener() {
                         @Override
@@ -802,7 +816,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                     selectedIdx = i;
                 }
             }
-            new AlertDialog.Builder(getActivity())
+            new MaterialAlertDialogBuilder(getActivity())
                     .setTitle(R.string.pref_title_screenshare_audio_mode)
                     .setSingleChoiceItems(titles, selectedIdx, new DialogInterface.OnClickListener() {
                         @Override
@@ -1200,7 +1214,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                         Toast.makeText(activity, R.string.pref_debug_empty_toast, Toast.LENGTH_SHORT).show();
                         return true;
                     }
-                    new AlertDialog.Builder(activity)
+                    new MaterialAlertDialogBuilder(activity)
                             .setTitle(R.string.pref_debug_clear)
                             .setMessage(R.string.pref_debug_clear_confirm)
                             .setPositiveButton(android.R.string.ok, (dialog, which) -> {
@@ -1246,7 +1260,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             Preference prefTestCrash = findPreference("pref_debug_test_crash");
             if (prefTestCrash != null) {
                 prefTestCrash.setOnPreferenceClickListener(preference -> {
-                    new AlertDialog.Builder(activity)
+                    new MaterialAlertDialogBuilder(activity)
                             .setTitle(R.string.pref_debug_test_crash)
                             .setMessage(R.string.pref_debug_test_crash_confirm)
                             .setPositiveButton(android.R.string.ok, (dialog, which) -> {
@@ -1284,7 +1298,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             textView.setPadding(padding, padding, padding, padding);
             scrollView.addView(textView);
 
-            new AlertDialog.Builder(activity)
+            new MaterialAlertDialogBuilder(activity)
                     .setTitle(entry.dateStr + " (" + (entry.fatal ? "Краш" : "Ошибка") + ")")
                     .setView(scrollView)
                     .setPositiveButton(R.string.text_copy, (dialog, which) -> {
@@ -1316,7 +1330,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             textView.setPadding(padding, padding, padding, padding);
             scrollView.addView(textView);
 
-            new AlertDialog.Builder(activity)
+            new MaterialAlertDialogBuilder(activity)
                     .setTitle(R.string.pref_debug_view_all)
                     .setView(scrollView)
                     .setPositiveButton(R.string.text_copy, (dialog, which) -> {

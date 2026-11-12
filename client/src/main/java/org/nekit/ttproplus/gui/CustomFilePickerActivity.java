@@ -1,7 +1,7 @@
 package org.nekit.ttproplus.gui;
 
 import android.Manifest;
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -193,13 +193,13 @@ public class CustomFilePickerActivity extends AppCompatActivity {
             return;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.dialog_create_folder_title);
 
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         input.setHint(R.string.hint_folder_name);
-        builder.setView(input);
+        builder.setView(ThemeHelper.wrapForDialog(input, this));
 
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
@@ -230,7 +230,7 @@ public class CustomFilePickerActivity extends AppCompatActivity {
                 getString(R.string.sort_size_asc)
         };
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.btn_sort);
         builder.setSingleChoiceItems(options, currentSortMode, new DialogInterface.OnClickListener() {
             @Override

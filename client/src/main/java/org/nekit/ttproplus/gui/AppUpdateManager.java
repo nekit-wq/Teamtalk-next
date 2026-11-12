@@ -17,7 +17,8 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
@@ -224,7 +225,7 @@ public class AppUpdateManager {
     private static void showUpdateDialog(final Activity activity, final String tagName, final String releaseName,
                                          final String releaseNotes, final String downloadUrl, final String apkName,
                                          final long apkSize) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
         builder.setTitle(activity.getString(R.string.update_available_title, tagName));
 
         View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_update, null);
@@ -256,7 +257,7 @@ public class AppUpdateManager {
     }
 
     private static void downloadAndInstall(final Activity activity, final String downloadUrl, final String apkName, final long totalBytesExpected) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
         builder.setTitle(R.string.update_downloading_title);
         builder.setCancelable(false);
 

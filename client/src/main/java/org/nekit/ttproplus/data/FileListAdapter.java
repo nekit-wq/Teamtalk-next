@@ -25,7 +25,7 @@ package org.nekit.ttproplus.data;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -251,7 +251,7 @@ implements Comparator<RemoteFile>, ClientEventListener.OnFileTransferListener {
                         if (safeName.isEmpty()) safeName = "file_" + remoteFile.nFileID;
                         final File localFile = new File(dlPath, safeName);
                         if (localFile.exists()) {
-                            AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                            MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(context);
                             alert.setMessage(context.getString(R.string.alert_file_override, localFile.getAbsolutePath()));
                             alert.setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
                                 if (localFile.delete()) {
@@ -282,7 +282,7 @@ implements Comparator<RemoteFile>, ClientEventListener.OnFileTransferListener {
                     }
                 }
             } else if (id == R.id.remove_btn) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(context);
                 alert.setMessage(context.getString(R.string.remote_file_remove_confirmation, remoteFile.szFileName));
                 alert.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 

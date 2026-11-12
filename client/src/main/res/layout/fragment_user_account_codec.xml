@@ -18,7 +18,7 @@
             android:text="@string/tab_codec_limitations"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="@color/settingsSectionHeader"
+            android:textColor="?attr/colorPrimary"
             android:textAllCaps="true"
             android:layout_marginBottom="6dp" />
 
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:text="Максимальный битрейт аудиокодека, разрешенный данной учетной записи (в бит/с, 0 — без ограничений):"
             android:textSize="12sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginBottom="12dp" />
 
         <TextView
@@ -36,7 +36,7 @@
             android:text="@string/label_audio_bps_limit"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -46,8 +46,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number" />
 
@@ -57,6 +57,6 @@
             android:layout_marginTop="8dp"
             android:text="Примеры: 16000 (16 кбит/с), 32000 (32 кбит/с), 64000 (64 кбит/с), 128000 (128 кбит/с)."
             android:textSize="12sp"
-            android:textColor="@color/textSecondary" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 </ScrollView>

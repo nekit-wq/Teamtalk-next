@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     <LinearLayout android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="wrap_content">
         <LinearLayout
             android:id="@+id/layout_chan_id"
@@ -60,8 +62,8 @@
                 <EditText android:id="@+id/chandiskquota" android:background="@drawable/edit_text_background" android:padding="10dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/diskquotalab" android:ems="10" android:inputType="number" />
             </LinearLayout>
         </LinearLayout>
-        <Button android:id="@+id/setup_audcodec_btn" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:text="@string/title_activity_audio_codec" />
-        <View android:background="@color/dividerColor" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginBottom="12dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/setup_audcodec_btn" style="@style/Widget.Material3.Button.OutlinedButton" android:textColor="?attr/colorPrimary" app:strokeColor="?attr/colorOutlineVariant" app:cornerRadius="20dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:text="@string/title_activity_audio_codec" />
+        <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginBottom="12dp" />
         <CheckBox android:id="@+id/chan_permanent" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/channel_prop_title_permanent" />
         <CheckBox android:id="@+id/chan_nointerrupt" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/channel_prop_title_nointerrupt" />
         <CheckBox android:id="@+id/chan_classroom" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/channel_prop_title_classroom" />

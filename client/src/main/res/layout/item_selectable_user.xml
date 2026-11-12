@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="15sp"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:textStyle="bold" />
 
         <TextView
@@ -36,7 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
-            android:textColor="@color/textSecondary" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 
 </LinearLayout>

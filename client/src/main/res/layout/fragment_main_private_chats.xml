@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/windowBackground">
+    android:background="?attr/colorSurface">
 
     <!-- Search bar container (compact) -->
     <LinearLayout
@@ -15,7 +16,7 @@
         android:paddingEnd="8dp"
         android:paddingTop="6dp"
         android:paddingBottom="4dp"
-        android:background="@color/surfaceColor">
+        android:background="?attr/colorSurface">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -31,7 +32,7 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@android:drawable/ic_menu_search"
-                android:tint="@color/textSecondary"
+                app:tint="?attr/colorOnSurfaceVariant"
                 android:contentDescription="@null" />
 
             <EditText
@@ -41,8 +42,8 @@
                 android:layout_weight="1"
                 android:background="@null"
                 android:hint="@string/private_chats_search_hint"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="13sp"
                 android:paddingStart="6dp"
                 android:paddingEnd="4dp"
@@ -55,7 +56,7 @@
                 android:layout_height="28dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:tint="@color/textSecondary"
+                app:tint="?attr/colorOnSurfaceVariant"
                 android:contentDescription="@string/action_clear_search"
                 android:visibility="gone" />
         </LinearLayout>
@@ -71,7 +72,7 @@
         android:paddingEnd="8dp"
         android:paddingTop="2dp"
         android:paddingBottom="4dp"
-        android:background="@color/surfaceColor">
+        android:background="?attr/colorSurface">
 
         <TextView
             android:id="@+id/filter_btn_server"
@@ -84,7 +85,7 @@
             android:textStyle="bold"
             android:layout_marginEnd="4dp"
             android:background="@drawable/chip_filter_selected"
-            android:textColor="@color/colorOnPrimary" />
+            android:textColor="?attr/colorOnPrimary" />
 
         <TextView
             android:id="@+id/filter_btn_all"
@@ -97,7 +98,7 @@
             android:layout_marginStart="2dp"
             android:layout_marginEnd="2dp"
             android:background="@drawable/chip_filter_unselected"
-            android:textColor="@color/textSecondary" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <TextView
             android:id="@+id/filter_btn_online"
@@ -109,7 +110,7 @@
             android:textSize="12sp"
             android:layout_marginStart="4dp"
             android:background="@drawable/chip_filter_unselected"
-            android:textColor="@color/textSecondary" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 
     <!-- Subtitle count info (compact) -->
@@ -122,14 +123,14 @@
         android:paddingTop="2dp"
         android:paddingBottom="2dp"
         android:textSize="11sp"
-        android:textColor="@color/textSecondary"
-        android:background="@color/surfaceColor"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:background="?attr/colorSurface"
         android:text="" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/dividerColor" />
+        android:background="?attr/colorOutlineVariant" />
 
     <!-- List & Empty state -->
     <FrameLayout
@@ -141,7 +142,7 @@
             android:id="@+id/private_chats_listview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:divider="@color/dividerColor"
+            android:divider="?attr/colorOutlineVariant"
             android:dividerHeight="1dp"
             android:clipToPadding="false"
             android:scrollbarStyle="outsideOverlay" />
@@ -159,7 +160,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:src="@drawable/ic_private_messages"
-                android:tint="@color/textTertiary"
+                app:tint="?attr/colorOutline"
                 android:contentDescription="@null" />
 
             <TextView
@@ -168,7 +169,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/private_chats_empty_title"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -179,7 +180,7 @@
                 android:layout_marginTop="6dp"
                 android:gravity="center"
                 android:text="@string/private_chats_empty_desc"
-                android:textColor="@color/textSecondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="13sp" />
         </LinearLayout>
     </FrameLayout>

@@ -1,6 +1,6 @@
 package org.nekit.ttproplus.gui;
 
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -368,7 +368,7 @@ public class StreamMediaActivity extends AppCompatActivity implements TeamTalkCo
     }
 
     private void showAddStationDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.dialog_add_station_title);
 
         LinearLayout layout = new LinearLayout(this);

@@ -18,7 +18,7 @@
             android:text="@string/tab_srv_abuse_prevention"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="@color/settingsSectionHeader"
+            android:textColor="?attr/colorPrimary"
             android:textAllCaps="true"
             android:layout_marginBottom="6dp" />
 
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:text="Защита сервера от атак подбора паролей, спама подключениями и неактивных сессий:"
             android:textSize="12sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginBottom="14dp" />
 
         <!-- Max Login Attempts -->
@@ -37,7 +37,7 @@
             android:text="@string/label_max_login_attempts"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -47,8 +47,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number"
             android:layout_marginBottom="14dp" />
@@ -60,7 +60,7 @@
             android:text="@string/label_login_delay"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -70,8 +70,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number"
             android:layout_marginBottom="14dp" />
@@ -83,7 +83,7 @@
             android:text="@string/label_user_timeout"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:layout_marginBottom="6dp" />
 
         <EditText
@@ -93,8 +93,8 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:background="@drawable/bg_settings_input"
-            android:textColor="@color/textPrimary"
-            android:textColorHint="@color/textSecondary"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="15sp"
             android:inputType="number" />
     </LinearLayout>

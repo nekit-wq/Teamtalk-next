@@ -3,8 +3,8 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     <Preference android:title="@string/pref_master_tts_toggle" android:key="pref_master_tts_toggle" />
     <PreferenceCategory android:title="@string/pref_cat_tts" android:key="tts_def">
-        <ListPreference android:title="@string/pref_title_speech_engine" android:key="pref_speech_engine" android:summary="@string/pref_summary_speech_engine" />
-        <ListPreference android:entries="@array/pref_tts_language_behavior_entries" android:title="@string/pref_tts_language_behavior_title" android:key="pref_tts_language_behavior" android:summary="@string/pref_tts_language_behavior_summary" android:defaultValue="follow_app" android:entryValues="@array/pref_tts_language_behavior_values" />
+        <org.nekit.ttproplus.gui.MaterialListPreference android:title="@string/pref_title_speech_engine" android:key="pref_speech_engine" android:summary="@string/pref_summary_speech_engine" />
+        <org.nekit.ttproplus.gui.MaterialListPreference android:entries="@array/pref_tts_language_behavior_entries" android:title="@string/pref_tts_language_behavior_title" android:key="pref_tts_language_behavior" android:summary="@string/pref_tts_language_behavior_summary" android:defaultValue="follow_app" android:entryValues="@array/pref_tts_language_behavior_values" />
         <CheckBoxPreference android:title="@string/pref_title_a11y_volume" android:key="pref_a11y_volume" android:summary="@string/pref_summary_a11y_volume" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_use_announcements" android:key="pref_use_announcements" android:summary="@string/pref_summary_use_announcements" android:defaultValue="false" />
     </PreferenceCategory>

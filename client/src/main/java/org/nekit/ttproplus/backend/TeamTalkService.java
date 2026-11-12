@@ -111,6 +111,8 @@ import javax.xml.xpath.XPathFactory;
 import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.backend.BluetoothHeadsetHelper;
 import org.nekit.ttproplus.data.AppInfo;
+import org.nekit.ttproplus.data.BearWareAccount;
+import org.nekit.ttproplus.data.BearWareAccountManager;
 import org.nekit.ttproplus.data.MyTextMessage;
 import org.nekit.ttproplus.data.Preferences;
 import org.nekit.ttproplus.data.ServerEntry;
@@ -343,6 +345,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
     };
 
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.S)
     private static class ServiceTelephonyCallback extends TelephonyCallback implements TelephonyCallback.CallStateListener {
         private final TeamTalkService service;
         ServiceTelephonyCallback(TeamTalkService service) {
@@ -2193,17 +2196,38 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
 
     private final java.util.concurrent.ExecutorService connectionExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private final java.util.concurrent.atomic.AtomicInteger connectionGeneration = new java.util.concurrent.atomic.AtomicInteger(0);
+
+    public void cancelReconnect() {
+        this.connectionGeneration.incrementAndGet();
+        this.manualDisconnect = true;
+        this.reconnectHandler.removeCallbacks(this.seamlessReconnectRunnable);
+        this.reconnectHandler.removeCallbacks(this.reconnectTimer);
+        if (this.ttclient != null) {
+            this.ttclient.disconnect();
+        }
+    }
 
     public void reconnectAsync(final ConnectionCallback callback) {
+        final int gen = this.connectionGeneration.incrementAndGet();
         connectionExecutor.execute(new Runnable() {
             @Override
             public void run() {
+                if (gen != connectionGeneration.get()) return;
                 final boolean success = reconnect();
+                if (gen != connectionGeneration.get()) {
+                    if (ttclient != null) {
+                        ttclient.disconnect();
+                    }
+                    return;
+                }
                 if (callback != null) {
                     reconnectHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            callback.onConnectionResult(success);
+                            if (gen == connectionGeneration.get()) {
+                                callback.onConnectionResult(success);
+                            }
                         }
                     });
                 }
@@ -3271,9 +3295,14 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
 
     private void requestWebLoginAccessToken() {
         connectionExecutor.execute(() -> {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(TeamTalkService.this.getBaseContext());
-            String username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
-            String token = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
+            BearWareAccount active = BearWareAccountManager.getInstance(TeamTalkService.this).getActiveAccount();
+            String username = active != null ? active.username : "";
+            String token = active != null ? active.token : "";
+            if (username.isEmpty() || token.isEmpty()) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(TeamTalkService.this.getBaseContext());
+                username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
+                token = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
+            }
             String accesstoken = "";
             ServerProperties srvprop = new ServerProperties();
             if (TeamTalkService.this.ttclient != null && TeamTalkService.this.ttclient.getServerProperties(srvprop)) {

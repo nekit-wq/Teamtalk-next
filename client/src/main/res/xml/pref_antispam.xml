@@ -3,8 +3,8 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/pref_cat_antispam" android:key="antispam_def">
         <CheckBoxPreference android:title="@string/pref_title_antispam_enabled" android:key="antispam_enabled" android:summary="@string/pref_summary_antispam_enabled" android:defaultValue="false" />
-        <EditTextPreference android:title="@string/pref_title_antispam_msg_limit" android:key="antispam_msg_limit" android:summary="@string/pref_summary_antispam_msg_limit" android:defaultValue="20" android:inputType="number" />
-        <EditTextPreference android:title="@string/pref_title_antispam_per_user_limit" android:key="antispam_per_user_limit" android:summary="@string/pref_summary_antispam_per_user_limit" android:defaultValue="5" android:inputType="number" />
+        <org.nekit.ttproplus.gui.MaterialEditTextPreference android:title="@string/pref_title_antispam_msg_limit" android:key="antispam_msg_limit" android:summary="@string/pref_summary_antispam_msg_limit" android:defaultValue="20" android:inputType="number" />
+        <org.nekit.ttproplus.gui.MaterialEditTextPreference android:title="@string/pref_title_antispam_per_user_limit" android:key="antispam_per_user_limit" android:summary="@string/pref_summary_antispam_per_user_limit" android:defaultValue="5" android:inputType="number" />
         <CheckBoxPreference android:title="@string/pref_title_antispam_unsub_all" android:key="antispam_unsub_all" android:summary="@string/pref_summary_antispam_unsub_all" android:defaultValue="true" />
         <CheckBoxPreference android:title="@string/pref_title_antispam_auto_ignore" android:key="antispam_auto_ignore" android:summary="@string/pref_summary_antispam_auto_ignore" android:defaultValue="true" />
     </PreferenceCategory>
@@ -17,7 +17,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_cat_antispam_filters" android:key="antispam_filters_def">
-        <EditTextPreference android:title="@string/pref_title_antispam_duplicate_limit" android:key="antispam_duplicate_limit" android:summary="@string/pref_summary_antispam_duplicate_limit" android:defaultValue="3" android:inputType="number" />
+        <org.nekit.ttproplus.gui.MaterialEditTextPreference android:title="@string/pref_title_antispam_duplicate_limit" android:key="antispam_duplicate_limit" android:summary="@string/pref_summary_antispam_duplicate_limit" android:defaultValue="3" android:inputType="number" />
         <CheckBoxPreference android:title="@string/pref_title_antispam_block_links" android:key="antispam_block_links" android:summary="@string/pref_summary_antispam_block_links" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_antispam_block_caps" android:key="antispam_block_caps" android:summary="@string/pref_summary_antispam_block_caps" android:defaultValue="false" />
     </PreferenceCategory>

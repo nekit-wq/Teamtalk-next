@@ -1,7 +1,10 @@
 package org.nekit.ttproplus.gui;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import org.nekit.ttproplus.data.BearWareAccount;
+import org.nekit.ttproplus.data.BearWareAccountManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -308,6 +311,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     private String appliedTheme;
+    private String appliedAccent;
 
 
 
@@ -318,6 +322,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         this.ctx = getApplicationContext();
         this.prefs = new PrefsHelper(this.ctx);
         this.appliedTheme = (String) this.prefs.get(ThemeHelper.THEME_PREF_KEY, "dark");
+        this.appliedAccent = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.ACCENT_COLOR_PREF_KEY, "blue") + "_" + androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.ACCENT_COLOR_CUSTOM_HEX_KEY, "");
         this.accessibilityAssistant = new AccessibilityAssistant(this);
         this.channelsAdapter = new ChannelListAdapter(this);
         this.filesAdapter = new FileListAdapter(this, this, this.accessibilityAssistant);
@@ -326,17 +331,17 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         this.mConnection = new TeamTalkConnection(this);
         this.ttsWrapper = new TTSWrapper(this, (String) this.prefs.get("pref_speech_engine", TTSWrapper.defaultEngineName));
 
-        this.mSensorManager = (SensorManager) getSystemService("sensor");
+        this.mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (this.mSensorManager != null) {
-            this.mSensor = this.mSensorManager.getDefaultSensor(8);
+            this.mSensor = this.mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         }
         this.restarting = savedInstanceState != null;
-        this.audioManager = (AudioManager) getSystemService("audio");
-        this.notificationManager = (NotificationManager) getSystemService("notification");
-        PowerManager pm = (PowerManager) getSystemService("power");
+        this.audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         if (pm != null) {
-            this.wakeLock = pm.newWakeLock(1, "bearware:TeamTalk5");
-            this.proximityWakeLock = pm.newWakeLock(32, "bearware:TeamTalk5");
+            this.wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "bearware:TeamTalk5");
+            this.proximityWakeLock = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, "bearware:TeamTalk5");
             this.wakeLock.setReferenceCounted(false);
             this.proximityWakeLock.setReferenceCounted(false);
         }
@@ -532,7 +537,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     public boolean onOptionsItemSelected(MenuItem item) {
         Channel parentChannel;
         File recordedFile;
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(this);
         int itemId = item.getItemId();
         if (itemId == R.id.action_voice_changer) {
             showVoiceChangerDialog();
@@ -633,7 +638,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 }
             });
             alert.setNegativeButton(android.R.string.no, (DialogInterface.OnClickListener) null);
-            alert.setView(input);
+            alert.setView(ThemeHelper.wrapForDialog(input, this));
             alert.show();
             return true;
         }
@@ -864,7 +869,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         modeGroup.check(modeGroup.getChildAt(checkedItem).getId());
         layout.addView(modeGroup);
 
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.action_statusnick)
                 .setView(layout)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -913,50 +918,41 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return;
         }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        String username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
-        String token = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
-
-        if (username.isEmpty() || token.isEmpty()) {
-            Toast.makeText(this, R.string.err_publish_server_login, Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(this, WebLoginActivity.class);
-            startActivity(intent);
-            return;
-        }
-
         final ServerEntry finalEntry = entry;
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setTitle(R.string.title_publish_server);
-        alert.setMessage(getString(R.string.msg_publish_server_confirmation, finalEntry.servername));
-        alert.setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
-            new Thread(() -> {
-                String serverXml = Utils.generateServerEntryXml(finalEntry);
-                String response = Utils.postURL(AppInfo.getPublishServerUrl(MainActivity.this, username, token), serverXml);
-                final boolean finalSuccess = response != null && !response.isEmpty();
+        BearWareAccountManager.getInstance(this).selectAccountAndExecute(this, getString(R.string.title_select_bearware_account), account -> {
+            new MaterialAlertDialogBuilder(MainActivity.this)
+                    .setTitle(R.string.title_publish_server)
+                    .setMessage(getString(R.string.msg_publish_server_confirmation, finalEntry.servername))
+                    .setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
+                        new Thread(() -> {
+                            String serverXml = Utils.generateServerEntryXml(finalEntry);
+                            String response = Utils.postURL(AppInfo.getPublishServerUrl(MainActivity.this, account.username, account.token), serverXml);
+                            final boolean finalSuccess = response != null && !response.isEmpty();
 
-                runOnUiThread(() -> {
-                    if (finalSuccess) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                        builder.setTitle(R.string.text_publish_server_success);
-                        builder.setMessage(R.string.msg_publish_server_verification_detail);
-                        builder.setPositiveButton(android.R.string.ok, null);
-                        builder.setNeutralButton(R.string.action_copy_tag, (d, w) -> {
-                            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                            ClipData clip = ClipData.newPlainText(getString(R.string.tag_clipboard), getString(R.string.tag_publish_server));
-                            if (clipboard != null) {
-                                clipboard.setPrimaryClip(clip);
-                            }
-                            Toast.makeText(MainActivity.this, getString(R.string.text_copied_to_clipboard, getString(R.string.tag_publish_server)), Toast.LENGTH_SHORT).show();
-                        });
-                        builder.show();
-                    } else {
-                        Toast.makeText(MainActivity.this, R.string.err_publish_server_failed, Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }).start();
+                            runOnUiThread(() -> {
+                                if (finalSuccess) {
+                                    new MaterialAlertDialogBuilder(MainActivity.this)
+                                            .setTitle(R.string.text_publish_server_success)
+                                            .setMessage(R.string.msg_publish_server_verification_detail)
+                                            .setPositiveButton(android.R.string.ok, null)
+                                            .setNeutralButton(R.string.action_copy_tag, (d, w) -> {
+                                                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                                ClipData clip = ClipData.newPlainText(getString(R.string.tag_clipboard), getString(R.string.tag_publish_server));
+                                                if (clipboard != null) {
+                                                    clipboard.setPrimaryClip(clip);
+                                                }
+                                                Toast.makeText(MainActivity.this, getString(R.string.text_copied_to_clipboard, getString(R.string.tag_publish_server)), Toast.LENGTH_SHORT).show();
+                                            })
+                                            .show();
+                                } else {
+                                    Toast.makeText(MainActivity.this, R.string.err_publish_server_failed, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }).start();
+                    })
+                    .setNegativeButton(android.R.string.no, null)
+                    .show();
         });
-        alert.setNegativeButton(android.R.string.no, null);
-        alert.show();
     }
 
         public void lambda$onOptionsItemSelected$1(final EditText input, DialogInterface dialog, int whichButton) {
@@ -1041,6 +1037,12 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         String currentTheme = (String) this.prefs.get(ThemeHelper.THEME_PREF_KEY, "dark");
         if (this.appliedTheme != null && !this.appliedTheme.equals(currentTheme)) {
             this.appliedTheme = currentTheme;
+            recreate();
+            return;
+        }
+        String currentAccent = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.ACCENT_COLOR_PREF_KEY, "blue") + "_" + androidx.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.ACCENT_COLOR_CUSTOM_HEX_KEY, "");
+        if (this.appliedAccent != null && !this.appliedAccent.equals(currentAccent)) {
+            this.appliedAccent = currentAccent;
             recreate();
             return;
         }
@@ -1213,7 +1215,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             return;
         }
         if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(this);
             alert.setMessage(R.string.disconnect_alert);
             alert.setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
                 this.filesAdapter.cancelAllTransfers();
@@ -1223,7 +1225,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             alert.show();
             return;
         }
-        finish();
+        super.onBackPressed();
     }
 
     @Override
@@ -1408,7 +1410,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 getString(R.string.voice_effect_ghost)
         };
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.voice_changer_title);
         builder.setSingleChoiceItems(effectNames, current, new DialogInterface.OnClickListener() {
             @Override
@@ -1492,7 +1494,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_echo_reverb_title)
                 .setView(view)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -1532,7 +1534,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 getString(R.string.screenshare_audio_mode_mic_only)
         };
 
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.pref_title_screenshare_audio_mode)
                 .setSingleChoiceItems(modes, current, new DialogInterface.OnClickListener() {
                     @Override
@@ -1804,7 +1806,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
     private void joinChannel(final Channel channel, final String passwd) {
         if (this.filesAdapter.getActiveTransfersCount() > 0) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(this);
             alert.setMessage(R.string.channel_change_alert);
             alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() { 
                 @Override
@@ -1826,14 +1828,14 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         public void joinChannel(final Channel channel) {
         if (channel.bPassword) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(this);
             alert.setTitle(R.string.pref_title_join_channel);
             alert.setMessage(R.string.channel_password_prompt);
             final EditText input = new EditText(this);
             input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             input.setText(channel.szPassword);
             input.requestFocus();
-            alert.setView(input);
+            alert.setView(ThemeHelper.wrapForDialog(input, this));
             alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() { 
                 @Override
                 public final void onClick(DialogInterface dialogInterface, int i) {
@@ -1866,7 +1868,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     public void showJoinChannelByIdDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.dialog_join_channel_id_title);
 
         LinearLayout layout = new LinearLayout(this);
@@ -1939,7 +1941,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
 
         if (this.filesAdapter != null && this.filesAdapter.getActiveTransfersCount() > 0) {
-            new AlertDialog.Builder(this)
+            new MaterialAlertDialogBuilder(this)
                 .setMessage(R.string.channel_change_alert)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
@@ -2503,7 +2505,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     getString(R.string.action_delete_dialog)
             };
 
-            new AlertDialog.Builder(getActivity())
+            new MaterialAlertDialogBuilder(getActivity())
                     .setTitle(dialog.getDisplayName())
                     .setItems(options, (d, which) -> {
                         switch (which) {
@@ -2530,7 +2532,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
         private void confirmDeleteDialog(final PrivateDialogEntry dialog) {
             if (getActivity() == null) return;
-            new AlertDialog.Builder(getActivity())
+            new MaterialAlertDialogBuilder(getActivity())
                     .setTitle(R.string.action_delete_dialog)
                     .setMessage(getString(R.string.dialog_delete_confirm, dialog.getDisplayName()))
                     .setPositiveButton(android.R.string.yes, (d, which) -> {
@@ -3535,7 +3537,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
 
         private void showQuickKickDialog(final User user, final int channelId) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+            MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(MainActivity.this);
             alert.setMessage(MainActivity.this.getString(R.string.kick_confirmation, new Object[]{user.szNickname}));
             alert.setPositiveButton(android.R.string.yes, (dialogInterface, i) -> {
                 if (MainActivity.this.getClient() != null) {
@@ -3547,7 +3549,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         }
 
         private void showQuickBanDialog(final User user, final int channelId) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+            MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(MainActivity.this);
             alert.setMessage(MainActivity.this.getString(R.string.ban_confirmation, new Object[]{user.szNickname}));
             alert.setPositiveButton(android.R.string.yes, (dialogInterface, i) -> {
                 if (MainActivity.this.getClient() != null) {
@@ -3766,7 +3768,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(this);
         int itemId = item.getItemId();
         if (itemId == R.id.action_banchan) {
             alert.setMessage(getString(R.string.ban_confirmation, new Object[]{this.selectedUser.szNickname}));
@@ -3833,7 +3835,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     }
                 });
                 alert.setNegativeButton(android.R.string.no, (DialogInterface.OnClickListener) null);
-                alert.setView(input);
+                alert.setView(ThemeHelper.wrapForDialog(input, this));
                 alert.show();
             }
         } else if (itemId == R.id.action_move) {
@@ -4003,8 +4005,12 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         View txBtn = findViewById(R.id.transmit_voice);
         if (txBtn != null) {
             txBtn.setBackgroundResource(txEnabled ? R.drawable.bg_ptt_button_active : R.drawable.bg_ptt_button);
-            if (txBtn instanceof TextView) {
-                ((TextView) txBtn).setTextColor(txEnabled ? 0xFFFFFFFF : androidx.core.content.ContextCompat.getColor(this, R.color.colorOnPrimary));
+            if (txBtn instanceof com.google.android.material.button.MaterialButton) {
+                com.google.android.material.button.MaterialButton mBtn = (com.google.android.material.button.MaterialButton) txBtn;
+                mBtn.setIconResource(R.drawable.ic_ptt_mic);
+                mBtn.setIconTint(android.content.res.ColorStateList.valueOf(0xFFFFFFFF));
+            } else if (txBtn instanceof TextView) {
+                ((TextView) txBtn).setTextColor(0xFFFFFFFF);
             }
             txBtn.setContentDescription(getString(txEnabled ? R.string.tx_on : R.string.tx_off));
         }
@@ -5063,7 +5069,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     private void showRecordingCompleteDialog(final File recordedFile) {
         String fileName = recordedFile.getName();
         final String nameWithoutExt = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf(46)) : fileName;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.recording_rename_title);
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.VERTICAL);

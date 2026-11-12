@@ -3,7 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentStart="true">
         <TextView android:textSize="15sp" android:id="@+id/filename" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
-        <TextView android:textSize="13sp" android:textColor="@color/textSecondary" android:id="@+id/progress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
+        <TextView android:textSize="13sp" android:textColor="?attr/colorOnSurfaceVariant" android:id="@+id/progress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:singleLine="true" />
     </LinearLayout>
     <Button style="@style/ButtonDangerSmall" android:textSize="13sp" android:id="@+id/cancel_btn" android:focusable="false" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@android:string/cancel" android:layout_centerVertical="true" android:layout_alignParentEnd="true" />
 </RelativeLayout>

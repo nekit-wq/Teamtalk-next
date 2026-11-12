@@ -1,7 +1,9 @@
 package org.nekit.ttproplus.backend;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioAttributes;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -20,6 +22,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.SystemClock;
+import androidx.annotation.RequiresApi;
 import androidx.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -733,7 +736,7 @@ public final class ExperimentalAudioCapture {
     }
 
     private CaptureSession openSessionForConfig(Config config) {
-        AudioDeviceInfo preferredDevice = findPreferredInputDevice(config.preferredInputDeviceId);
+        AudioDeviceInfo preferredDevice = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) ? findPreferredInputDevice(config.preferredInputDeviceId) : null;
 
         boolean isCallMic = MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_CALL.equals(config.preferredInputDeviceId);
 
@@ -803,6 +806,7 @@ public final class ExperimentalAudioCapture {
         return null;
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private AudioDeviceInfo findPreferredInputDevice(String deviceId) {
         if (this.audioManager != null && !TextUtils.isEmpty(deviceId)
                 && !MicrophoneInputHelper.EXPERIMENTAL_INPUT_DEVICE_DEFAULT.equals(deviceId)
@@ -819,6 +823,7 @@ public final class ExperimentalAudioCapture {
         return null;
     }
 
+    @SuppressLint({"MissingPermission", "NewApi"})
     private CaptureSession buildCaptureSession(Config config, AudioDeviceInfo preferredDevice, int sampleRate, int audioSource, int channelMask) {
         int channels = (channelMask == AudioFormat.CHANNEL_IN_STEREO) ? 2 : 1;
         int frameSamples = (sampleRate * Math.max(20, config.frameDurationMs)) / 1000;
@@ -860,9 +865,9 @@ public final class ExperimentalAudioCapture {
         if (projection != null && Build.VERSION.SDK_INT >= 29) {
             try {
                 AudioPlaybackCaptureConfiguration playbackConfig = new AudioPlaybackCaptureConfiguration.Builder(projection)
-                        .addMatchingUsage(1)  // USAGE_MEDIA
-                        .addMatchingUsage(14) // USAGE_GAME
-                        .addMatchingUsage(0)  // USAGE_UNKNOWN
+                        .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
+                        .addMatchingUsage(AudioAttributes.USAGE_GAME)
+                        .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN)
                         .excludeUid(Process.myUid())
                         .build();
 

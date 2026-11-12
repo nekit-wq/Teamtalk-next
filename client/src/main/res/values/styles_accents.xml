@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="ThemeOverlay.Accent" parent="" />
+
+    <!-- Blue (Default) -->
+    <style name="ThemeOverlay.Accent.Blue">
+        <item name="colorPrimary">#0B57D0</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#041E49</item>
+        <item name="colorAccent">#0B57D0</item>
+        <item name="colorPrimaryContainer">#D3E3FD</item>
+        <item name="colorOnPrimaryContainer">#041E49</item>
+    </style>
+
+    <!-- Indigo -->
+    <style name="ThemeOverlay.Accent.Indigo">
+        <item name="colorPrimary">#3F51B5</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#303F9F</item>
+        <item name="colorAccent">#3F51B5</item>
+        <item name="colorPrimaryContainer">#E0E0FF</item>
+        <item name="colorOnPrimaryContainer">#00105C</item>
+    </style>
+
+    <!-- Deep Purple -->
+    <style name="ThemeOverlay.Accent.DeepPurple">
+        <item name="colorPrimary">#673AB7</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#512DA8</item>
+        <item name="colorAccent">#673AB7</item>
+        <item name="colorPrimaryContainer">#E9DDFF</item>
+        <item name="colorOnPrimaryContainer">#22005D</item>
+    </style>
+
+    <!-- Purple -->
+    <style name="ThemeOverlay.Accent.Purple">
+        <item name="colorPrimary">#9C27B0</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#7B1FA2</item>
+        <item name="colorAccent">#9C27B0</item>
+        <item name="colorPrimaryContainer">#FFD6FE</item>
+        <item name="colorOnPrimaryContainer">#350040</item>
+    </style>
+
+    <!-- Pink -->
+    <style name="ThemeOverlay.Accent.Pink">
+        <item name="colorPrimary">#E91E63</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#C2185B</item>
+        <item name="colorAccent">#E91E63</item>
+        <item name="colorPrimaryContainer">#FFD9E2</item>
+        <item name="colorOnPrimaryContainer">#3F0018</item>
+    </style>
+
+    <!-- Red -->
+    <style name="ThemeOverlay.Accent.Red">
+        <item name="colorPrimary">#D32F2F</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#B71C1C</item>
+        <item name="colorAccent">#D32F2F</item>
+        <item name="colorPrimaryContainer">#FFDAD6</item>
+        <item name="colorOnPrimaryContainer">#410002</item>
+    </style>
+
+    <!-- Crimson -->
+    <style name="ThemeOverlay.Accent.Crimson">
+        <item name="colorPrimary">#880E4F</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#4C0027</item>
+        <item name="colorAccent">#880E4F</item>
+        <item name="colorPrimaryContainer">#FFD8E4</item>
+        <item name="colorOnPrimaryContainer">#3D0020</item>
+    </style>
+
+    <!-- Deep Orange -->
+    <style name="ThemeOverlay.Accent.DeepOrange">
+        <item name="colorPrimary">#F4511E</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#D84315</item>
+        <item name="colorAccent">#F4511E</item>
+        <item name="colorPrimaryContainer">#FFDBCE</item>
+        <item name="colorOnPrimaryContainer">#3B0B00</item>
+    </style>
+
+    <!-- Orange -->
+    <style name="ThemeOverlay.Accent.Orange">
+        <item name="colorPrimary">#FB8C00</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#EF6C00</item>
+        <item name="colorAccent">#FB8C00</item>
+        <item name="colorPrimaryContainer">#FFDCC2</item>
+        <item name="colorOnPrimaryContainer">#301400</item>
+    </style>
+
+    <!-- Amber -->
+    <style name="ThemeOverlay.Accent.Amber">
+        <item name="colorPrimary">#FFA000</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#FF8F00</item>
+        <item name="colorAccent">#FFA000</item>
+        <item name="colorPrimaryContainer">#FFDF9D</item>
+        <item name="colorOnPrimaryContainer">#281800</item>
+    </style>
+
+    <!-- Yellow -->
+    <style name="ThemeOverlay.Accent.Yellow">
+        <item name="colorPrimary">#FBC02D</item>
+        <item name="colorOnPrimary">#211B00</item>
+        <item name="colorPrimaryDark">#F57F17</item>
+        <item name="colorAccent">#FBC02D</item>
+        <item name="colorPrimaryContainer">#FFE264</item>
+        <item name="colorOnPrimaryContainer">#211B00</item>
+    </style>
+
+    <!-- Lime -->
+    <style name="ThemeOverlay.Accent.Lime">
+        <item name="colorPrimary">#689F38</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#558B2F</item>
+        <item name="colorAccent">#689F38</item>
+        <item name="colorPrimaryContainer">#C7F096</item>
+        <item name="colorOnPrimaryContainer">#102000</item>
+    </style>
+
+    <!-- Green -->
+    <style name="ThemeOverlay.Accent.Green">
+        <item name="colorPrimary">#2E7D32</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#1B5E20</item>
+        <item name="colorAccent">#2E7D32</item>
+        <item name="colorPrimaryContainer">#A3F5AA</item>
+        <item name="colorOnPrimaryContainer">#002108</item>
+    </style>
+
+    <!-- Teal -->
+    <style name="ThemeOverlay.Accent.Teal">
+        <item name="colorPrimary">#00897B</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#00695C</item>
+        <item name="colorAccent">#00897B</item>
+        <item name="colorPrimaryContainer">#74F8E5</item>
+        <item name="colorOnPrimaryContainer">#00201C</item>
+    </style>
+
+    <!-- Cyan -->
+    <style name="ThemeOverlay.Accent.Cyan">
+        <item name="colorPrimary">#0097A7</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#00838F</item>
+        <item name="colorAccent">#0097A7</item>
+        <item name="colorPrimaryContainer">#A3EEFF</item>
+        <item name="colorOnPrimaryContainer">#001F25</item>
+    </style>
+
+    <!-- Light Blue -->
+    <style name="ThemeOverlay.Accent.LightBlue">
+        <item name="colorPrimary">#0288D1</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#0277BD</item>
+        <item name="colorAccent">#0288D1</item>
+        <item name="colorPrimaryContainer">#CBE6FF</item>
+        <item name="colorOnPrimaryContainer">#001E30</item>
+    </style>
+
+    <!-- Brown -->
+    <style name="ThemeOverlay.Accent.Brown">
+        <item name="colorPrimary">#6D4C41</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#4E342E</item>
+        <item name="colorAccent">#6D4C41</item>
+        <item name="colorPrimaryContainer">#FFDAD3</item>
+        <item name="colorOnPrimaryContainer">#33110A</item>
+    </style>
+
+    <!-- Blue Grey -->
+    <style name="ThemeOverlay.Accent.BlueGrey">
+        <item name="colorPrimary">#546E7A</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryDark">#37474F</item>
+        <item name="colorAccent">#546E7A</item>
+        <item name="colorPrimaryContainer">#CCE7F4</item>
+        <item name="colorOnPrimaryContainer">#031E28</item>
+    </style>
+
+</resources>

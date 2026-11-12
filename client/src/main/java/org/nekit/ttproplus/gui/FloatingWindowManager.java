@@ -1,6 +1,7 @@
 package org.nekit.ttproplus.gui;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.os.Looper;
 import androidx.preference.PreferenceManager;
 import android.provider.Settings;
 import android.view.ContextThemeWrapper;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -79,7 +81,7 @@ public class FloatingWindowManager {
     public FloatingWindowManager(TeamTalkService service) {
         this.service = service;
         this.context = service.getApplicationContext();
-        this.windowManager = (WindowManager) this.context.getSystemService("window");
+        this.windowManager = (WindowManager) this.context.getSystemService(Context.WINDOW_SERVICE);
         this.prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
         initView();
     }
@@ -98,7 +100,7 @@ public class FloatingWindowManager {
             this.params.setTitle(this.context.getString(R.string.desc_floating_window));
             this.floatingView.setAccessibilityPaneTitle(this.context.getString(R.string.desc_floating_window));
         }
-        this.params.gravity = 8388659;
+        this.params.gravity = Gravity.TOP | Gravity.START;
         this.params.x = 100;
         this.params.y = 200;
         this.dragHandle.setOnTouchListener(new View.OnTouchListener() { 
@@ -267,12 +269,12 @@ public class FloatingWindowManager {
         public void updateUIInternal() {
         String stateStr;
         int stateColor;
-        this.btnVoice.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_VOICE, true) ? 0 : 8);
-        this.btnMute.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_MUTE, true) ? 0 : 8);
-        this.btnChat.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_CHAT, true) ? 0 : 8);
-        this.btnChannels.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_CHANNELS, true) ? 0 : 8);
-        this.btnServers.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_SERVERS, true) ? 0 : 8);
-        this.txtPing.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_PING, true) ? 0 : 8);
+        this.btnVoice.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_VOICE, true) ? View.VISIBLE : View.GONE);
+        this.btnMute.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_MUTE, true) ? View.VISIBLE : View.GONE);
+        this.btnChat.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_CHAT, true) ? View.VISIBLE : View.GONE);
+        this.btnChannels.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_CHANNELS, true) ? View.VISIBLE : View.GONE);
+        this.btnServers.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_SERVERS, true) ? View.VISIBLE : View.GONE);
+        this.txtPing.setVisibility(this.prefs.getBoolean(Preferences.PREF_BG_MGMT_SHOW_PING, true) ? View.VISIBLE : View.GONE);
         boolean isTransmitting = this.service.isVoiceTransmitting();
         this.btnVoice.setImageResource(isTransmitting ? R.drawable.mic_green : R.drawable.microphone);
         this.btnVoice.setContentDescription(this.context.getString(isTransmitting ? R.string.desc_voice_transmitting : R.string.desc_voice_silent));
@@ -308,7 +310,7 @@ public class FloatingWindowManager {
         User me = this.service.getUsers().get(Integer.valueOf(this.service.getTTInstance().getMyUserID()));
         boolean isAdmin = !(me == null || (me.uUserType & 2) == 0) || (this.service.getTTInstance().getMyUserAccount(myAccount) && (myAccount.uUserType & 2) != 0);
         Context themedContext = new ContextThemeWrapper(this.context, R.style.AppTheme);
-        AlertDialog.Builder builder = new AlertDialog.Builder(themedContext);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(themedContext);
         builder.setTitle(R.string.chat_dialog_title);
         List<String> options = new ArrayList<>();
         options.add(this.context.getString(R.string.chat_option_global));
@@ -366,7 +368,7 @@ public class FloatingWindowManager {
             userNames[i] = Utils.getDisplayName(this.context, onlineUsers.get(i));
         }
         Context themedContext = new ContextThemeWrapper(this.context, R.style.AppTheme);
-        AlertDialog.Builder builder = new AlertDialog.Builder(themedContext);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(themedContext);
         builder.setTitle(R.string.chat_select_user);
         builder.setItems(userNames, new DialogInterface.OnClickListener() { 
             @Override
@@ -392,7 +394,7 @@ public class FloatingWindowManager {
         String titleStr;
         final TextMessageAdapter adapter;
         Context themedContext = new ContextThemeWrapper(this.context, R.style.AppTheme);
-        AlertDialog.Builder builder = new AlertDialog.Builder(themedContext);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(themedContext);
         if ("global".equals(type)) {
             titleStr = this.context.getString(R.string.chat_option_global);
         } else {
@@ -586,11 +588,11 @@ public class FloatingWindowManager {
     private void joinChannelHelper(Context themedContext, final Channel selected) {
         final TeamTalkBase ttclient = this.service.getTTInstance();
         if (selected.bPassword) {
-            AlertDialog.Builder passBuilder = new AlertDialog.Builder(themedContext);
+            MaterialAlertDialogBuilder passBuilder = new MaterialAlertDialogBuilder(themedContext);
             passBuilder.setTitle(R.string.chanpswlab);
             final EditText input = new EditText(themedContext);
             input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            passBuilder.setView(input);
+            passBuilder.setView(ThemeHelper.wrapForDialog(input, themedContext));
             passBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() { 
                 @Override
                 public final void onClick(DialogInterface dialogInterface, int i) {
@@ -629,7 +631,7 @@ public class FloatingWindowManager {
             return;
         }
         final Context themedContext = new ContextThemeWrapper(this.context, R.style.AppTheme);
-        AlertDialog.Builder builder = new AlertDialog.Builder(themedContext);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(themedContext);
         builder.setTitle(R.string.desc_btn_channels);
         ListView listView = new ListView(themedContext);
         builder.setView(listView);
@@ -750,7 +752,7 @@ public class FloatingWindowManager {
                 refreshList.run();
                 return;
             }
-            AlertDialog.Builder choiceBuilder = new AlertDialog.Builder(themedContext);
+            MaterialAlertDialogBuilder choiceBuilder = new MaterialAlertDialogBuilder(themedContext);
             choiceBuilder.setTitle(c.szName);
             String[] options = {themedContext.getString(R.string.action_join_channel), themedContext.getString(R.string.action_open_channel)};
             choiceBuilder.setItems(options, new DialogInterface.OnClickListener() { 
@@ -898,7 +900,7 @@ public class FloatingWindowManager {
         for (int i = 0; i < savedServers.size(); i++) {
             serverNames[i] = savedServers.get(i).servername;
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(themedContext);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(themedContext);
         builder.setTitle(R.string.title_select_server);
         builder.setItems(serverNames, new DialogInterface.OnClickListener() { 
             @Override

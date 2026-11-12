@@ -25,7 +25,7 @@ import org.nekit.ttproplus.R;
 
 import android.content.Context;
 import android.content.Intent;
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -117,7 +117,7 @@ public class OnlineUsersActivity extends AppCompatActivity implements
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View v, int position, long id) {
                 User selectedUser = onlineUsers.get(position);
-                AlertDialog.Builder alert = new AlertDialog.Builder(OnlineUsersActivity.this);
+                MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(OnlineUsersActivity.this);
                 UserAccount myuseraccount = new UserAccount();
                 getClient().getMyUserAccount(myuseraccount);
                 boolean banRight = (myuseraccount.uUserRights & UserRight.USERRIGHT_BAN_USERS) != UserRight.USERRIGHT_NONE;
@@ -168,7 +168,7 @@ public class OnlineUsersActivity extends AppCompatActivity implements
                         alert.setPositiveButton(android.R.string.yes, (dialog, whichButton) ->
                                 getClient().doChannelOpEx(selectedUser.nUserID, selectedUser.nChannelID, input.getText().toString(), !isOp));
                         alert.setNegativeButton(android.R.string.no, null);
-                        alert.setView(input);
+                        alert.setView(ThemeHelper.wrapForDialog(input, OnlineUsersActivity.this));
                         alert.show();
                         return true;
                     } else {
@@ -211,7 +211,7 @@ public class OnlineUsersActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    private void confirmAction(AlertDialog.Builder alert, int messageResId, User user, Runnable action) {
+    private void confirmAction(MaterialAlertDialogBuilder alert, int messageResId, User user, Runnable action) {
         alert.setMessage(getString(messageResId, user.szNickname));
         alert.setPositiveButton(android.R.string.yes, (dialog, which) -> action.run());
         alert.setNegativeButton(android.R.string.no, null);

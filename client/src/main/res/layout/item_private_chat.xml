@@ -50,7 +50,7 @@
             android:id="@+id/chat_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="11sp" />
 
         <TextView
@@ -94,7 +94,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -105,7 +105,7 @@
                 android:layout_marginStart="4dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/textTertiary"
+                android:textColor="?attr/colorOutline"
                 android:textSize="11sp"
                 android:visibility="gone" />
         </LinearLayout>
@@ -128,7 +128,7 @@
             android:layout_marginTop="1dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
     </LinearLayout>
 </RelativeLayout>

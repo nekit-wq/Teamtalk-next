@@ -25,7 +25,7 @@
                 android:text="@string/tab_server_properties"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="12dp" />
 
@@ -35,7 +35,7 @@
                 android:text="@string/label_server_name"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginBottom="6dp" />
 
             <EditText
@@ -45,8 +45,8 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
                 android:background="@drawable/bg_settings_input"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="15sp"
                 android:inputType="text"
                 android:layout_marginBottom="14dp" />
@@ -57,7 +57,7 @@
                 android:text="@string/label_motd"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginBottom="6dp" />
 
             <EditText
@@ -68,8 +68,8 @@
                 android:padding="12dp"
                 android:gravity="top|start"
                 android:background="@drawable/bg_settings_input"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp"
                 android:inputType="textMultiLine"
                 android:layout_marginBottom="14dp" />
@@ -87,7 +87,7 @@
                     android:layout_weight="1"
                     android:text="@string/label_server_version"
                     android:textSize="14sp"
-                    android:textColor="@color/textPrimary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/text_server_version"
@@ -95,13 +95,13 @@
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="@color/settingsAccent" />
+                    android:textColor="?attr/colorPrimary" />
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
-                android:background="@color/settingsDivider"
+                android:background="?attr/colorOutlineVariant"
                 android:layout_marginBottom="10dp" />
 
             <CheckBox
@@ -109,7 +109,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/label_autosave"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
         </LinearLayout>
 
@@ -128,7 +128,7 @@
                 android:text="ЛИМИТЫ ПОЛЬЗОВАТЕЛЕЙ"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="12dp" />
 
@@ -138,7 +138,7 @@
                 android:text="@string/label_max_users"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginBottom="6dp" />
 
             <EditText
@@ -148,8 +148,8 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
                 android:background="@drawable/bg_settings_input"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="15sp"
                 android:inputType="number"
                 android:layout_marginBottom="14dp" />
@@ -160,7 +160,7 @@
                 android:text="@string/label_max_logins_per_ip"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginBottom="6dp" />
 
             <EditText
@@ -170,8 +170,8 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
                 android:background="@drawable/bg_settings_input"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="15sp"
                 android:inputType="number" />
         </LinearLayout>
@@ -191,7 +191,7 @@
                 android:text="СЕТЕВЫЕ ПОРТЫ"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="12dp" />
 
@@ -213,7 +213,7 @@
                         android:text="@string/label_tcp_port"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@color/textPrimary"
+                        android:textColor="?attr/colorOnSurface"
                         android:layout_marginBottom="6dp" />
 
                     <EditText
@@ -223,8 +223,8 @@
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
                         android:background="@drawable/bg_settings_input"
-                        android:textColor="@color/textPrimary"
-                        android:textColorHint="@color/textSecondary"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/colorOnSurfaceVariant"
                         android:textSize="15sp"
                         android:inputType="number" />
                 </LinearLayout>
@@ -242,7 +242,7 @@
                         android:text="@string/label_udp_port"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@color/textPrimary"
+                        android:textColor="?attr/colorOnSurface"
                         android:layout_marginBottom="6dp" />
 
                     <EditText
@@ -252,8 +252,8 @@
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
                         android:background="@drawable/bg_settings_input"
-                        android:textColor="@color/textPrimary"
-                        android:textColorHint="@color/textSecondary"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/colorOnSurfaceVariant"
                         android:textSize="15sp"
                         android:inputType="number" />
                 </LinearLayout>

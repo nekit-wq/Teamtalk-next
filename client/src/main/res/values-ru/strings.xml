@@ -1568,4 +1568,25 @@
     <string name="pref_debug_deleted_toast">Запись удалена</string>
     <string name="user_field_copied">Скопировано: %s</string>
     <string name="tap_to_copy_hint">Нажмите для копирования</string>
+
+    <!-- Accent Color -->
+    <string name="pref_title_accent_color">Акцентный цвет</string>
+    <string name="pref_summary_accent_color">Выбор акцентного цвета интерфейса</string>
+    <string name="accent_color_palette_title">Палитра</string>
+    <string name="accent_color_custom_hex_title">Произвольный цвет (HEX)</string>
+    <string name="accent_color_hex_hint">#0B57D0</string>
+    <string name="accent_color_invalid_hex">Неверный формат HEX (например: #0B57D0)</string>
+
+    <!-- BearWare Multi-Account -->
+    <string name="title_select_bearware_account">Выберите аккаунт BearWare</string>
+    <string name="text_active_account">Активный</string>
+    <string name="action_manage_accounts">Управление аккаунтами</string>
+    <string name="action_add_account">Добавить аккаунт</string>
+    <string name="action_login">Войти</string>
+    <string name="text_bearware_accounts_list">Подключенные аккаунты BearWare</string>
+    <string name="text_bearware_no_accounts">Нет добавленных аккаунтов BearWare</string>
+    <string name="text_switch_account">Сменить аккаунт</string>
+    <string name="action_remove_account">Удалить</string>
+    <string name="msg_confirm_remove_account">Удалить аккаунт «%1$s» с этого устройства?</string>
+    <string name="connection_cancelled">Подключение отменено</string>
 </resources>

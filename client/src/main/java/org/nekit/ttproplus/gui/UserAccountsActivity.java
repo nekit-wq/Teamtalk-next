@@ -1,7 +1,7 @@
 package org.nekit.ttproplus.gui;
 import org.nekit.ttproplus.R;
 
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -241,7 +241,7 @@ public class UserAccountsActivity extends AppCompatActivity implements
             getString(R.string.action_export_tt),
             getString(R.string.action_delete),
         };
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.title_options_for, account.szUsername))
                 .setItems(options, (dialog, which) -> handleAccountOption(account, which))
                 .show();
@@ -282,10 +282,10 @@ public class UserAccountsActivity extends AppCompatActivity implements
         input.setText(defaultName);
         input.setSelection(input.getText().length());
 
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.action_export_tt)
                 .setMessage(R.string.title_export_tt_filename)
-                .setView(input)
+                .setView(ThemeHelper.wrapForDialog(input, this))
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                     String chosenName = input.getText().toString().trim();
                     chosenName = chosenName.replaceAll("[\\\\/:*?\"<>|\\r\\n\\t]", "_").trim();
@@ -353,7 +353,7 @@ public class UserAccountsActivity extends AppCompatActivity implements
     }
 
     private void confirmDelete(UserAccount account) {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_confirm_delete)
                 .setMessage(getString(R.string.msg_confirm_delete_account, account.szUsername))
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/windowBackground">
+    android:background="?attr/colorSurface">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -40,7 +40,7 @@
                         android:text="@string/net_card_status"
                         android:textSize="15sp"
                         android:textStyle="bold"
-                        android:textColor="@color/textPrimary" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <TextView
                         android:id="@+id/net_quality_badge"
@@ -62,7 +62,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -70,7 +70,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -78,7 +78,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -86,7 +86,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
             <!-- Card 2: Latency & Jitter -->
@@ -104,7 +104,7 @@
                     android:text="@string/net_card_latency"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
@@ -112,7 +112,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -120,7 +120,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -128,7 +128,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -136,7 +136,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
             <!-- Card 3: Voice & Media Streams -->
@@ -154,7 +154,7 @@
                     android:text="@string/net_card_packet_loss"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
@@ -162,7 +162,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -170,7 +170,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -178,7 +178,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -186,7 +186,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -194,7 +194,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
             <!-- Card 4: Bandwidth & Streams -->
@@ -212,7 +212,7 @@
                     android:text="@string/net_card_bandwidth"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
@@ -221,7 +221,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="3dp" />
 
                 <TextView
@@ -229,13 +229,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="8dp" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@color/dividerColor"
+                    android:background="?attr/colorOutlineVariant"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
@@ -243,7 +243,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="2dp" />
 
                 <TextView
@@ -251,7 +251,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="2dp" />
 
                 <TextView
@@ -259,7 +259,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
-                    android:textColor="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="2dp" />
 
                 <TextView
@@ -267,7 +267,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
-                    android:textColor="@color/textSecondary" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
         </LinearLayout>
@@ -276,7 +276,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/dividerColor" />
+        android:background="?attr/colorOutlineVariant" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -284,7 +284,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="8dp"
-        android:background="@color/surfaceColor">
+        android:background="?attr/colorSurface">
 
         <CheckBox
             android:id="@+id/net_chk_auto_refresh"

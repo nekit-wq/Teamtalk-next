@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/windowBackground">
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:id="@+id/rec_top_panel"
@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="8dp"
-        android:background="@color/surfaceColor"
+        android:background="?attr/colorSurface"
         android:layout_alignParentTop="true">
 
         <LinearLayout
@@ -27,6 +27,8 @@
                 android:layout_weight="1"
                 android:background="@drawable/edit_text_background"
                 android:hint="@string/recordings_search_hint"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp"
                 android:padding="8dp"
                 android:singleLine="true"
@@ -39,7 +41,7 @@
                 android:layout_height="40dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_delete"
-                android:tint="@color/textSecondary"
+                app:tint="?attr/colorOnSurfaceVariant"
                 android:contentDescription="@string/action_clear_search"
                 android:visibility="gone" />
         </LinearLayout>
@@ -58,7 +60,7 @@
                 android:layout_weight="1"
                 android:text="@string/recordings_empty"
                 android:textSize="13sp"
-                android:textColor="@color/textSecondary" />
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <Spinner
                 android:id="@+id/rec_filter_spinner"
@@ -88,7 +90,7 @@
             android:layout_gravity="center"
             android:text="@string/recordings_empty"
             android:textSize="16sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
 
     </FrameLayout>
@@ -119,7 +121,7 @@
                 android:text="Now Playing: Channel.ogg"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:singleLine="true"
                 android:ellipsize="middle" />
 
@@ -129,7 +131,7 @@
                 android:layout_height="32dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_delete"
-                android:tint="@color/textSecondary"
+                app:tint="?attr/colorOnSurfaceVariant"
                 android:contentDescription="@android:string/cancel" />
 
         </LinearLayout>
@@ -147,7 +149,7 @@
                 android:layout_height="wrap_content"
                 android:text="00:00"
                 android:textSize="12sp"
-                android:textColor="@color/textSecondary" />
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <SeekBar
                 android:id="@+id/rec_player_seekbar"
@@ -163,7 +165,7 @@
                 android:layout_height="wrap_content"
                 android:text="00:00"
                 android:textSize="12sp"
-                android:textColor="@color/textSecondary" />
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>
 
@@ -182,7 +184,7 @@
                 android:textSize="12sp"
                 style="?android:attr/borderlessButtonStyle"
                 app:backgroundTint="@null"
-                android:textColor="@color/colorPrimary" />
+                android:textColor="?attr/colorPrimary" />
 
             <ImageButton
                 android:id="@+id/rec_player_btn_play_pause"
@@ -190,7 +192,7 @@
                 android:layout_height="48dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_play"
-                android:tint="@color/colorPrimary"
+                app:tint="?attr/colorPrimary"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:contentDescription="@string/recordings_action_play" />
@@ -203,7 +205,7 @@
                 android:textSize="12sp"
                 style="?android:attr/borderlessButtonStyle"
                 app:backgroundTint="@null"
-                android:textColor="@color/colorPrimary" />
+                android:textColor="?attr/colorPrimary" />
 
         </LinearLayout>
 

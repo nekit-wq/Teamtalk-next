@@ -1,7 +1,7 @@
 package org.nekit.ttproplus.gui;
 import org.nekit.ttproplus.R;
 
-import android.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -423,7 +423,7 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             paths.add("__MANUAL__");
             displayNames.add(activity.getString(R.string.manual_input_channel));
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
             builder.setTitle(R.string.title_select_init_channel);
             builder.setItems(displayNames.toArray(new String[0]), (dialog, which) -> {
                 String selectedPath = paths.get(which);
@@ -445,9 +445,9 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                 input.setSelection(input.getText().length());
             }
 
-            new AlertDialog.Builder(activity)
+            new MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.title_select_init_channel)
-                .setView(input)
+                .setView(ThemeHelper.wrapForDialog(input, activity))
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                     if (editInitChan != null) {
                         editInitChan.setText(input.getText().toString().trim());
@@ -666,7 +666,7 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
                 names.add(activity.getString(R.string.manual_input_channel_id));
                 ids.add(-1);
 
-                new AlertDialog.Builder(activity)
+                new MaterialAlertDialogBuilder(activity)
                     .setTitle(R.string.title_add_operator_channel)
                     .setItems(names.toArray(new String[0]), (dialog, which) -> {
                         int selectedId = ids.get(which);
@@ -688,10 +688,10 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
             final EditText input = new EditText(activity);
             input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
             input.setHint("1");
-            new AlertDialog.Builder(activity)
+            new MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.title_add_operator_channel)
                 .setMessage("Channel ID:")
-                .setView(input)
+                .setView(ThemeHelper.wrapForDialog(input, activity))
                 .setPositiveButton(android.R.string.ok, (d, w) -> {
                     try {
                         int cid = Integer.parseInt(input.getText().toString().trim());

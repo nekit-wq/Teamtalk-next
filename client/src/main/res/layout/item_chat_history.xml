@@ -24,7 +24,7 @@
             android:layout_weight="1"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/colorOnSurface"
             android:singleLine="true" />
 
         <TextView
@@ -32,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginStart="6dp"
             android:layout_marginEnd="6dp" />
 
@@ -41,7 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="11sp"
-            android:textColor="@color/textTertiary" />
+            android:textColor="?attr/colorOutline" />
     </LinearLayout>
 
     <TextView
@@ -49,6 +49,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        android:textColor="@color/textPrimary"
+        android:textColor="?attr/colorOnSurface"
         android:lineSpacingMultiplier="1.15" />
 </LinearLayout>

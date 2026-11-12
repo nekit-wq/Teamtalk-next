@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/windowBackground">
+    android:background="?attr/colorSurface">
 
     <EditText
         android:id="@+id/search_user_input"
@@ -17,20 +17,21 @@
         android:inputType="text"
         android:padding="10dp"
         android:textSize="14sp"
-        android:textColor="@color/textPrimary"
-        android:textColorHint="@color/textSecondary" />
+        android:background="@drawable/edit_text_background"
+        android:textColor="?attr/colorOnSurface"
+        android:textColorHint="?attr/colorOnSurfaceVariant" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/dividerColor" />
+        android:background="?attr/colorOutlineVariant" />
 
     <ListView
         android:id="@+id/users_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:divider="@color/dividerColor"
+        android:divider="?attr/colorOutlineVariant"
         android:dividerHeight="1dp" />
 
 </LinearLayout>

@@ -19,7 +19,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
@@ -404,7 +405,7 @@ public class TextMessageAdapter extends BaseAdapter {
             }
             urls.add(url);
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
         builder.setTitle(R.string.message_options_title);
         List<String> options = new ArrayList<>();
         options.add(context.getString(R.string.message_option_copy));
@@ -454,7 +455,7 @@ public class TextMessageAdapter extends BaseAdapter {
     }
 
     public void showLinkSelectionDialog(final Context context, final List<String> urls) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
         builder.setTitle(R.string.message_select_link);
         builder.setItems(urls.toArray(new String[0]), new DialogInterface.OnClickListener() {
             @Override

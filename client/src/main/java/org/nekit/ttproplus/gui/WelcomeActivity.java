@@ -133,7 +133,8 @@ public class WelcomeActivity extends AppCompatActivity {
         if (current > 0) {
             this.viewPager.setCurrentItem(current - 1);
         } else {
-            finishWelcome();
+            this.prefs.edit().putBoolean(Preferences.PREF_WELCOME_SHOWN, true).apply();
+            super.onBackPressed();
         }
     }
 

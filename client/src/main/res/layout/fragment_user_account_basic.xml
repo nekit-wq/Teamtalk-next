@@ -26,7 +26,7 @@
                 android:text="@string/tab_basic_info"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="12dp" />
 
@@ -36,7 +36,7 @@
                 android:text="@string/label_username"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginBottom="6dp" />
 
             <EditText
@@ -46,8 +46,8 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
                 android:background="@drawable/bg_settings_input"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="15sp"
                 android:inputType="text"
                 android:layout_marginBottom="14dp" />
@@ -58,7 +58,7 @@
                 android:text="@string/label_password"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginBottom="6dp" />
 
             <RelativeLayout
@@ -74,8 +74,8 @@
                     android:background="@null"
                     android:paddingStart="12dp"
                     android:paddingEnd="8dp"
-                    android:textColor="@color/textPrimary"
-                    android:textColorHint="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
                     android:textSize="15sp"
                     android:inputType="textPassword" />
 
@@ -88,8 +88,7 @@
                     android:padding="10dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_visibility"
-                    android:tint="@color/textSecondary"
-                    app:tint="@color/textSecondary"
+                    app:tint="?attr/colorOnSurfaceVariant"
                     android:contentDescription="@string/show_password" />
             </RelativeLayout>
 
@@ -99,7 +98,7 @@
                 android:layout_marginTop="6dp"
                 android:text="@string/hint_password_edit"
                 android:textSize="12sp"
-                android:textColor="@color/textSecondary" />
+                android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 
         <!-- Card: Account Type -->
@@ -117,7 +116,7 @@
                 android:text="@string/label_user_type"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="10dp" />
 
@@ -134,7 +133,7 @@
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     android:text="@string/radio_type_default"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="14sp" />
 
                 <RadioButton
@@ -144,7 +143,7 @@
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     android:text="@string/radio_type_admin"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="14sp" />
 
                 <RadioButton
@@ -154,7 +153,7 @@
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     android:text="@string/radio_type_none"
-                    android:textColor="@color/textPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="14sp" />
             </RadioGroup>
 
@@ -164,8 +163,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:padding="10dp"
-                android:background="@color/settingsAccentLight"
-                android:textColor="@color/settingsAccent"
+                android:background="?attr/colorPrimaryContainer"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="12sp"
                 android:text="@string/note_admin_full_rights"
                 android:visibility="gone" />
@@ -198,7 +197,7 @@
                 android:text="@string/label_init_channel"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="6dp" />
 
@@ -207,7 +206,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/hint_init_channel"
                 android:textSize="12sp"
-                android:textColor="@color/textSecondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:layout_marginBottom="10dp" />
 
             <LinearLayout
@@ -224,8 +223,8 @@
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"
                     android:background="@drawable/bg_settings_input"
-                    android:textColor="@color/textPrimary"
-                    android:textColorHint="@color/textSecondary"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp"
                     android:clickable="true"
                     android:cursorVisible="false"
@@ -250,7 +249,7 @@
                 android:background="@drawable/bg_secondary_action_btn"
                 app:backgroundTint="@null"
                 android:text="@string/btn_select_channel"
-                android:textColor="@color/settingsAccent"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textAllCaps="false" />
@@ -271,7 +270,7 @@
                 android:text="@string/label_note"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/settingsSectionHeader"
+                android:textColor="?attr/colorPrimary"
                 android:textAllCaps="true"
                 android:layout_marginBottom="8dp" />
 
@@ -283,8 +282,8 @@
                 android:padding="12dp"
                 android:gravity="top|start"
                 android:background="@drawable/bg_settings_input"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="@color/textSecondary"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp"
                 android:inputType="textMultiLine" />
         </LinearLayout>

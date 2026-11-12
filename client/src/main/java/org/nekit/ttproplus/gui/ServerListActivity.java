@@ -33,7 +33,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import org.nekit.ttproplus.data.BearWareAccount;
+import org.nekit.ttproplus.data.BearWareAccountManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -111,7 +114,6 @@ import org.nekit.ttproplus.data.Permissions;
 import org.nekit.ttproplus.data.Preferences;
 import org.nekit.ttproplus.data.ServerEntry;
 import dk.bearware.events.ClientEventListener;
-import android.app.ProgressDialog;
 
 public class ServerListActivity extends AppCompatActivity
         implements TeamTalkConnectionListener,
@@ -126,7 +128,8 @@ public class ServerListActivity extends AppCompatActivity
     private EditText searchEditText;
     private TextView emptyView;
     private ExecutorService executorService;
-    private ProgressDialog connectingDialog;
+    private AlertDialog connectingDialog;
+    private volatile boolean isConnectionCancelled = false;
     
     private final Map<String, Long> pingCache = new ConcurrentHashMap<>();
     private final Map<String, Long> pingTimestamp = new ConcurrentHashMap<>();
@@ -144,6 +147,7 @@ public class ServerListActivity extends AppCompatActivity
     private static final String POSITION_NAME = "pos";
 
     private String appliedTheme;
+    private String appliedAccent;
     private ActionMode mActionMode;
 
     private void updateActionModeTitle() {
@@ -174,10 +178,8 @@ public class ServerListActivity extends AppCompatActivity
                 if (exportItem != null) {
                     int resId = (count == 1) ? R.string.action_exportsrv : R.string.action_export_serverlist;
                     exportItem.setTitle(resId);
-                    exportItem.setContentDescription(getString(resId));
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        exportItem.setTooltipText(getString(resId));
-                    }
+                    androidx.core.view.MenuItemCompat.setContentDescription(exportItem, getString(resId));
+                    androidx.core.view.MenuItemCompat.setTooltipText(exportItem, getString(resId));
                 }
             }
             return true;
@@ -250,6 +252,7 @@ public class ServerListActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         this.appliedTheme = PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.THEME_PREF_KEY, "dark");
+        this.appliedAccent = PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.ACCENT_COLOR_PREF_KEY, "blue") + "_" + PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.ACCENT_COLOR_CUSTOM_HEX_KEY, "");
         super.onCreate(savedInstanceState);
 
         mConnection = new TeamTalkConnection(this);
@@ -366,6 +369,13 @@ public class ServerListActivity extends AppCompatActivity
             return;
         }
 
+        String currentAccent = PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.ACCENT_COLOR_PREF_KEY, "blue") + "_" + PreferenceManager.getDefaultSharedPreferences(this).getString(ThemeHelper.ACCENT_COLOR_CUSTOM_HEX_KEY, "");
+        if (this.appliedAccent != null && !this.appliedAccent.equals(currentAccent)) {
+            this.appliedAccent = currentAccent;
+            recreate();
+            return;
+        }
+
         handleIncomingIntent(getIntent());
 
         synchronized (servers) {
@@ -454,6 +464,10 @@ public class ServerListActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
+
+        if (connectingDialog != null && connectingDialog.isShowing() && isFinishing()) {
+            cancelConnection();
+        }
 
         if (isFinishing() && mConnection.isBound()) {
             boolean isConnected = getClient() != null && (getClient().getFlags() & 1) != 0;
@@ -615,22 +629,44 @@ public class ServerListActivity extends AppCompatActivity
         connectToServerAsync(entry);
     }
 
+    private void cancelConnection() {
+        this.isConnectionCancelled = true;
+        this.serverentry = null;
+        if (getService() != null) {
+            getService().cancelReconnect();
+        }
+        if (getClient() != null) {
+            getClient().disconnect();
+        }
+        if (connectingDialog != null && connectingDialog.isShowing()) {
+            try { connectingDialog.dismiss(); } catch (Exception ignored) {}
+        }
+        showToast(getString(R.string.connection_cancelled));
+    }
+
     private void connectToServerAsync(final ServerEntry entry) {
         if (entry == null || getService() == null) return;
+        this.isConnectionCancelled = false;
+        this.serverentry = entry;
         getService().setServerEntry(entry);
 
         if (connectingDialog != null && connectingDialog.isShowing()) {
             try { connectingDialog.dismiss(); } catch (Exception ignored) {}
         }
 
-        connectingDialog = new ProgressDialog(this);
-        connectingDialog.setMessage(getString(R.string.connecting_to_server_async) + "\n" + entry.servername);
-        connectingDialog.setCancelable(true);
-        connectingDialog.setOnCancelListener(dialog -> {
-            if (getClient() != null) {
-                getClient().disconnect();
-            }
-        });
+        View progressView = LayoutInflater.from(this).inflate(R.layout.dialog_progress_m3, null);
+        TextView msgView = progressView.findViewById(R.id.progress_message);
+        if (msgView != null) {
+            msgView.setText(getString(R.string.connecting_to_server_async) + "\n" + entry.servername);
+        }
+
+        connectingDialog = new MaterialAlertDialogBuilder(this)
+                .setView(progressView)
+                .setCancelable(true)
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> cancelConnection())
+                .setOnCancelListener(dialog -> cancelConnection())
+                .create();
+        connectingDialog.setCanceledOnTouchOutside(true);
         try {
             connectingDialog.show();
         } catch (Exception ignored) {}
@@ -638,7 +674,7 @@ public class ServerListActivity extends AppCompatActivity
         getService().reconnectAsync(new TeamTalkService.ConnectionCallback() {
             @Override
             public void onConnectionResult(boolean success) {
-                if (isFinishing() || isDestroyed()) return;
+                if (isFinishing() || isDestroyed() || isConnectionCancelled) return;
                 if (!success) {
                     if (connectingDialog != null && connectingDialog.isShowing()) {
                         try { connectingDialog.dismiss(); } catch (Exception ignored) {}
@@ -677,12 +713,12 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     private void confirmAndPublishServer(ServerEntry entry) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setTitle(R.string.title_publish_server);
-        alert.setMessage(getString(R.string.msg_publish_server_confirmation, entry.servername));
-        alert.setPositiveButton(android.R.string.yes, (dialog, whichButton) -> publishServer(entry));
-        alert.setNegativeButton(android.R.string.no, null);
-        alert.show();
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.title_publish_server)
+                .setMessage(getString(R.string.msg_publish_server_confirmation, entry.servername))
+                .setPositiveButton(android.R.string.yes, (dialog, whichButton) -> publishServer(entry))
+                .setNegativeButton(android.R.string.no, null)
+                .show();
     }
 
     private void publishServer(ServerEntry entry) {
@@ -691,40 +727,31 @@ public class ServerListActivity extends AppCompatActivity
             return;
         }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        String username = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_USERNAME, "");
-        String token = prefs.getString(Preferences.PREF_GENERAL_BEARWARE_TOKEN, "");
+        BearWareAccountManager.getInstance(this).selectAccountAndExecute(this, getString(R.string.title_select_bearware_account), account -> {
+            executorService.execute(() -> {
+                String serverXml = Utils.generateServerEntryXml(entry);
+                String response = Utils.postURL(AppInfo.getPublishServerUrl(ServerListActivity.this, account.username, account.token), serverXml);
+                final boolean finalSuccess = response != null && !response.isEmpty();
 
-        if (username.isEmpty() || token.isEmpty()) {
-            showToast(getString(R.string.err_publish_server_login));
-            Intent intent = new Intent(this, WebLoginActivity.class);
-            startActivity(intent);
-            return;
-        }
-
-        executorService.execute(() -> {
-            String serverXml = Utils.generateServerEntryXml(entry);
-            String response = Utils.postURL(AppInfo.getPublishServerUrl(ServerListActivity.this, username, token), serverXml);
-            final boolean finalSuccess = response != null && !response.isEmpty();
-
-            runOnUiThread(() -> {
-                if (finalSuccess) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle(R.string.text_publish_server_success);
-                    builder.setMessage(R.string.msg_publish_server_verification_detail);
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setNeutralButton(R.string.action_copy_tag, (dialog, which) -> {
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                        ClipData clip = ClipData.newPlainText(getString(R.string.tag_clipboard), getString(R.string.tag_publish_server));
-                        if (clipboard != null) {
-                            clipboard.setPrimaryClip(clip);
-                        }
-                        showToast(getString(R.string.text_copied_to_clipboard, getString(R.string.tag_publish_server)));
-                    });
-                    builder.show();
-                } else {
-                    showToast(getString(R.string.err_publish_server_failed));
-                }
+                runOnUiThread(() -> {
+                    if (finalSuccess) {
+                        new MaterialAlertDialogBuilder(ServerListActivity.this)
+                                .setTitle(R.string.text_publish_server_success)
+                                .setMessage(R.string.msg_publish_server_verification_detail)
+                                .setPositiveButton(android.R.string.ok, null)
+                                .setNeutralButton(R.string.action_copy_tag, (dialog, which) -> {
+                                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                    ClipData clip = ClipData.newPlainText(getString(R.string.tag_clipboard), getString(R.string.tag_publish_server));
+                                    if (clipboard != null) {
+                                        clipboard.setPrimaryClip(clip);
+                                    }
+                                    showToast(getString(R.string.text_copied_to_clipboard, getString(R.string.tag_publish_server)));
+                                })
+                                .show();
+                    } else {
+                        showToast(getString(R.string.err_publish_server_failed));
+                    }
+                });
             });
         });
     }
@@ -1380,6 +1407,12 @@ public class ServerListActivity extends AppCompatActivity
 
     @Override
     public void onCmdMyselfLoggedIn(int my_userid, UserAccount useraccount) {
+        if (isConnectionCancelled) {
+            if (getClient() != null) {
+                getClient().disconnect();
+            }
+            return;
+        }
         if (connectingDialog != null && connectingDialog.isShowing()) {
             try { connectingDialog.dismiss(); } catch (Exception ignored) {}
         }
@@ -1456,7 +1489,7 @@ public class ServerListActivity extends AppCompatActivity
             return;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.tt_file_action_title);
 
         StringBuilder sb = new StringBuilder();
@@ -1536,7 +1569,7 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     private void fileSelectionStart() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle(R.string.import_method_title);
         String[] options = {
             getString(R.string.import_method_custom),
@@ -1605,7 +1638,7 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     private void showFileOverrideDialog(Vector<ServerEntry> entries, File ttFile, String filePath, int successMsgId) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(this);
         alert.setMessage(getString(R.string.alert_file_override, filePath));
         alert.setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
             if (ttFile.delete()) {
@@ -1646,7 +1679,7 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     private void showRemoveServerDialog(ServerEntry entry) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(this);
         alert.setMessage(getString(R.string.server_remove_confirmation, entry.servername));
         alert.setPositiveButton(android.R.string.yes, (dialog, whichButton) -> {
             servers.remove(entry);
@@ -1659,13 +1692,13 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     private void enterJoinCode() {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(this);
         alert.setTitle(R.string.action_enter_joincode);
         alert.setMessage(R.string.text_specify_joincode);
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         input.requestFocus();
-        alert.setView(input);
+        alert.setView(ThemeHelper.wrapForDialog(input, this));
         alert.setPositiveButton(android.R.string.ok, (dialog, whichButton) -> {
             InputMethodManager im = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             im.hideSoftInputFromWindow(input.getWindowToken(), 0);
@@ -1709,10 +1742,16 @@ public class ServerListActivity extends AppCompatActivity
 
 
     private void performBulkServerPing(final List<ServerEntry> selected) {
-        final ProgressDialog pd = new ProgressDialog(this);
-        pd.setMessage(getString(R.string.net_quality_calculating));
-        pd.setCancelable(false);
-        pd.show();
+        View progressView = LayoutInflater.from(this).inflate(R.layout.dialog_progress_m3, null);
+        TextView msgView = progressView.findViewById(R.id.progress_message);
+        if (msgView != null) {
+            msgView.setText(R.string.net_quality_calculating);
+        }
+
+        final AlertDialog pd = new MaterialAlertDialogBuilder(this)
+                .setView(progressView)
+                .setCancelable(false)
+                .show();
 
         new Thread(() -> {
             final StringBuilder report = new StringBuilder();
@@ -1739,7 +1778,7 @@ public class ServerListActivity extends AppCompatActivity
 
             runOnUiThread(() -> {
                 try { pd.dismiss(); } catch (Exception ignored) {}
-                new AlertDialog.Builder(ServerListActivity.this)
+                new MaterialAlertDialogBuilder(ServerListActivity.this)
                     .setTitle(R.string.bulk_servers_ping)
                     .setMessage(report.toString().trim())
                     .setPositiveButton(android.R.string.ok, null)
@@ -1773,7 +1812,7 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     private void performBulkServerDelete(final List<ServerEntry> selected, final ActionMode mode) {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
             .setTitle(R.string.action_removesrv)
             .setMessage(getString(R.string.bulk_servers_delete_confirm, selected.size()))
             .setPositiveButton(android.R.string.yes, (dialog, which) -> {

@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <ListPreference
+    <org.nekit.ttproplus.gui.MaterialListPreference
+        android:icon="@drawable/ic_pref_theme"
         android:entries="@array/theme_entries"
         android:title="@string/pref_title_theme"
         android:key="theme_preference"
         android:summary="@string/pref_summary_theme"
         android:defaultValue="dark"
         android:entryValues="@array/theme_values" />
+    <org.nekit.ttproplus.gui.AccentColorPreference
+        android:icon="@drawable/ic_pref_display"
+        android:key="accent_color_preference"
+        android:title="@string/pref_title_accent_color"
+        android:summary="@string/pref_summary_accent_color" />
     <PreferenceCategory android:title="@string/pref_category_display_indicators" android:key="display_indicators">
         <CheckBoxPreference android:title="@string/pref_title_display_show_mic_activity" android:key="display_show_mic_activity" android:summary="@string/pref_summary_display_show_mic_activity" android:defaultValue="false" />
         <CheckBoxPreference android:title="@string/pref_title_display_show_ping_no_server" android:key="display_show_ping_no_server" android:summary="@string/pref_summary_display_show_ping_no_server" android:defaultValue="true" />

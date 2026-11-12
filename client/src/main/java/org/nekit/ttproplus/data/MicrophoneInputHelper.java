@@ -6,6 +6,7 @@ import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.media.MicrophoneInfo;
 import android.os.Build;
+import androidx.annotation.RequiresApi;
 import android.text.TextUtils;
 import dk.bearware.SoundDevice;
 import dk.bearware.TeamTalkBase;
@@ -90,6 +91,7 @@ public final class MicrophoneInputHelper {
         return sb.toString();
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private static String formatCleanDeviceSummary(Context context, AudioDeviceInfo audioDeviceInfo) {
         int type = audioDeviceInfo.getType();
         if (type == AudioDeviceInfo.TYPE_WIRED_HEADSET || type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES) {
@@ -110,6 +112,7 @@ public final class MicrophoneInputHelper {
         return getTypeLabel(context, type);
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private static String formatCleanDeviceTitle(Context context, AudioDeviceInfo audioDeviceInfo) {
         int type = audioDeviceInfo.getType();
         CharSequence productName = audioDeviceInfo.getProductName();
@@ -141,7 +144,7 @@ public final class MicrophoneInputHelper {
         list.add(new InputDeviceOption(EXPERIMENTAL_INPUT_DEVICE_DEFAULT, context.getString(R.string.pref_experimental_input_device_default_title), context.getString(R.string.pref_experimental_input_device_default_summary)));
         list.add(new InputDeviceOption(EXPERIMENTAL_INPUT_DEVICE_CALL, context.getString(R.string.pref_experimental_input_device_call_title), context.getString(R.string.pref_experimental_input_device_call_summary)));
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        if (audioManager != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && audioManager != null) {
             AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
             if (devices != null) {
                 for (AudioDeviceInfo dev : devices) {
@@ -300,6 +303,7 @@ public final class MicrophoneInputHelper {
         return getExperimentalCaptureMode(prefs) != 0;
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private static boolean isValidUserSelectableInput(AudioDeviceInfo dev) {
         int type = dev.getType();
         if (type == AudioDeviceInfo.TYPE_BUILTIN_MIC ||

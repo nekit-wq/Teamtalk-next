@@ -10,8 +10,8 @@
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
     app:strokeWidth="1dp"
-    app:strokeColor="@color/dividerColor"
-    app:cardBackgroundColor="@color/surfaceColor"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
     app:rippleColor="?attr/colorControlHighlight">
 
     <LinearLayout
@@ -51,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -62,7 +62,7 @@
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:textColor="@color/textSecondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="13sp" />
         </LinearLayout>
 
@@ -75,7 +75,7 @@
             android:paddingEnd="8dp"
             android:paddingTop="3dp"
             android:paddingBottom="3dp"
-            android:textColor="@color/colorPrimary"
+            android:textColor="?attr/colorPrimary"
             android:textSize="12sp"
             android:textStyle="bold"
             android:visibility="gone" />
