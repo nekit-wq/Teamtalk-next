@@ -286,7 +286,7 @@
         android:padding="8dp"
         android:background="?attr/colorSurface">
 
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/net_chk_auto_refresh"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

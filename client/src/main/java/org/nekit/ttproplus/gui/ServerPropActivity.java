@@ -8,7 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -174,7 +174,7 @@ public class ServerPropActivity extends AppCompatActivity implements TeamTalkCon
 
     public static class GeneralPropFragment extends Fragment implements ServerPropFragment {
         EditText editName, editMOTD, editMaxUsers, editMaxLogins, editTcp, editUdp;
-        CheckBox chkAutoSave;
+        MaterialSwitch chkAutoSave;
         TextView txtServerVersion;
 
         @Override
@@ -313,7 +313,7 @@ public class ServerPropActivity extends AppCompatActivity implements TeamTalkCon
     }
 
     public static class LoggingPropFragment extends Fragment implements ServerPropFragment {
-        CheckBox chkLogin, chkKick, chkChan, chkSrv, chkFile;
+        MaterialSwitch chkLogin, chkKick, chkChan, chkSrv, chkFile;
 
         @Override
         public View onCreateView(@NonNull android.view.LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

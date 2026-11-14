@@ -11,7 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -285,7 +285,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
         public static class SettingsFragment extends Fragment {
         private EditText clientNameEdit;
-        private CheckBox genderFemale;
+        private MaterialSwitch genderFemale;
         private EditText nicknameEdit;
         private EditText statusMsgEdit;
 
@@ -295,7 +295,7 @@ public class WelcomeActivity extends AppCompatActivity {
             this.nicknameEdit = (EditText) view.findViewById(R.id.welcome_nickname);
             this.statusMsgEdit = (EditText) view.findViewById(R.id.welcome_status_msg);
             this.clientNameEdit = (EditText) view.findViewById(R.id.welcome_client_name);
-            this.genderFemale = (CheckBox) view.findViewById(R.id.welcome_gender_female);
+            this.genderFemale = (MaterialSwitch) view.findViewById(R.id.welcome_gender_female);
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
             this.nicknameEdit.setText(prefs.getString(Preferences.PREF_GENERAL_NICKNAME, ""));
             this.statusMsgEdit.setText(prefs.getString(Preferences.PREF_GENERAL_STATUSMSG, ""));

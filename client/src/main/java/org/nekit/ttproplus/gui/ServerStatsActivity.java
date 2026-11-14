@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,7 +24,7 @@ public class ServerStatsActivity extends AppCompatActivity implements TeamTalkCo
 
     private TeamTalkConnection mConnection;
     private TextView txtTotal, txtVoice, txtVideo, txtMedia, txtDesktop, txtUptime;
-    private CheckBox chkAutoRefresh;
+    private MaterialSwitch chkAutoRefresh;
     private Button btnRefresh;
     private Handler handler = new Handler();
     private Runnable refreshRunnable;

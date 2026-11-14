@@ -3,6 +3,7 @@ package org.nekit.ttproplus.gui;
 import android.content.Context;
 import android.preference.ListPreference;
 import android.util.AttributeSet;
+import android.view.View;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class MaterialListPreference extends ListPreference {
@@ -21,6 +22,12 @@ public class MaterialListPreference extends ListPreference {
 
     public MaterialListPreference(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void onBindView(View view) {
+        super.onBindView(view);
+        PreferenceDependencyHelper.onBindPreferenceView(this, view);
     }
 
     @Override

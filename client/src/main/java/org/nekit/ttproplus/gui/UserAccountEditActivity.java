@@ -10,7 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -476,7 +476,7 @@ public class UserAccountEditActivity extends AppCompatActivity implements TeamTa
     }
 
     public static class UserRightsFragment extends Fragment implements AccountEditFragment {
-        CheckBox chkAll, chkML, chkCN, chkVA, chkVC, chkCC, chkMC, chkESP, chkK, chkB,
+        MaterialSwitch chkAll, chkML, chkCN, chkVA, chkVC, chkCC, chkMC, chkESP, chkK, chkB,
                  chkMU, chkOE, chkU, chkD, chkRec, chkV, chkVid, chkDsk, chkDskAcc,
                  chkMA, chkMV, chkTU, chkTC, chkTB;
 

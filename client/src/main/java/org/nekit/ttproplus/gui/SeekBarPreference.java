@@ -46,6 +46,12 @@ public class SeekBarPreference extends DialogPreference implements OnSeekBarChan
     }
 
     @Override
+    protected void onBindView(android.view.View view) {
+        super.onBindView(view);
+        PreferenceDependencyHelper.onBindPreferenceView(this, view);
+    }
+
+    @Override
     protected void onClick() {
         Context context = getContext();
         final int initialValue = getPersistedInt(value);
@@ -67,6 +73,7 @@ public class SeekBarPreference extends DialogPreference implements OnSeekBarChan
         layout.addView(valText);
 
         SeekBar seekBar = new SeekBar(context);
+        seekBar.setSplitTrack(false);
         seekBar.setMax(100);
         seekBar.setProgress(initialValue);
         seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {

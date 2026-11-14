@@ -3,7 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <LinearLayout android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:animateLayoutChanges="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
         <TextView
             android:id="@+id/user_nickname"
             android:layout_width="match_parent"
@@ -129,14 +134,14 @@
             <SeekBar android:id="@+id/user_vol_voiceSeekBar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:contentDescription="@string/voicevolume" />
             <Button android:textSize="13sp" android:id="@+id/defVoiceVolBtn" android:paddingTop="4dp" android:paddingBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/default_" />
         </LinearLayout>
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_mutevoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_mute_voice" />
-        <androidx.appcompat.widget.SwitchCompat 
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_mutevoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_mute_voice" />
+        <com.google.android.material.materialswitch.MaterialSwitch 
             android:id="@+id/user_voice_left_speaker_switch" 
             android:padding="4dp" 
             android:layout_width="match_parent" 
             android:layout_height="wrap_content" 
             android:text="@string/user_prop_voice_left_speaker" />
-        <androidx.appcompat.widget.SwitchCompat 
+        <com.google.android.material.materialswitch.MaterialSwitch 
             android:id="@+id/user_voice_right_speaker_switch" 
             android:padding="4dp" 
             android:layout_width="match_parent" 
@@ -149,39 +154,39 @@
             <SeekBar android:id="@+id/user_vol_mediaSeekBar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.0" android:contentDescription="@string/mediavolume" />
             <Button android:textSize="13sp" android:id="@+id/defMfVolBtn" android:paddingTop="4dp" android:paddingBottom="4dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="0dp" android:text="@string/default_" />
         </LinearLayout>
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_mutemediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_mute_media" />
-        <androidx.appcompat.widget.SwitchCompat 
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_mutemediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_mute_media" />
+        <com.google.android.material.materialswitch.MaterialSwitch 
             android:id="@+id/user_media_left_speaker_switch" 
             android:padding="4dp" 
             android:layout_width="match_parent" 
             android:layout_height="wrap_content" 
             android:text="@string/user_prop_media_left_speaker" />
-        <androidx.appcompat.widget.SwitchCompat 
+        <com.google.android.material.materialswitch.MaterialSwitch 
             android:id="@+id/user_media_right_speaker_switch" 
             android:padding="4dp" 
             android:layout_width="match_parent" 
             android:layout_height="wrap_content" 
             android:text="@string/user_prop_media_right_speaker" />
         <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribetxtmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_txtmsg" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribechanmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_chanmsg" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribebcastmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_bcastmsg" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribevoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_voice" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribevidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_vid" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribedeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_desk" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribemediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_media" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribetxtmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_txtmsg" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribechanmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_chanmsg" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribebcastmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_bcastmsg" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribevoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_voice" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribevidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_vid" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribedeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_desk" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribemediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_media" />
         <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeintercepttxtmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_txtmsg" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptchanmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_chanmsg" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptvoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_voice" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptvidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_vid" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptdeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_desk" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_subscribeinterceptmediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_media" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribeintercepttxtmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_txtmsg" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribeinterceptchanmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_chanmsg" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribeinterceptvoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_voice" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribeinterceptvidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_vid" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribeinterceptdeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_desk" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_subscribeinterceptmediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_subscribe_intercept_media" />
         <View android:background="?attr/colorOutlineVariant" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_transmitvoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_voice" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_transmitvidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_vid" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_transmitdeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_desk" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_transmitmediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_media" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/user_transmitchanmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_chanmsg" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_transmitvoiceSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_voice" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_transmitvidSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_vid" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_transmitdeskSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_desk" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_transmitmediaSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_media" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/user_transmitchanmsgSwitch" android:padding="4dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/user_prop_title_transmit_chanmsg" />
     </LinearLayout>
 </ScrollView>

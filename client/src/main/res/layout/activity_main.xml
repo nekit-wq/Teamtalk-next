@@ -309,6 +309,7 @@
                         android:max="100"
                         android:paddingStart="4dp"
                         android:paddingEnd="4dp"
+                        android:splitTrack="false"
                         android:progressDrawable="@drawable/seekbar_progress_m3"
                         android:thumb="@drawable/seekbar_thumb_m3" />
 
@@ -350,6 +351,7 @@
                         android:max="100"
                         android:paddingStart="4dp"
                         android:paddingEnd="4dp"
+                        android:splitTrack="false"
                         android:progressDrawable="@drawable/seekbar_progress_m3"
                         android:thumb="@drawable/seekbar_thumb_m3" />
 

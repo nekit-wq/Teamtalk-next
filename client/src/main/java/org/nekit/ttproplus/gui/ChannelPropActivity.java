@@ -49,7 +49,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -187,13 +187,13 @@ implements TeamTalkConnectionListener, ClientEventListener.OnCmdErrorListener, C
         EditText chanOpPasswd = findViewById(R.id.chanoppasswd);
         EditText chanMaxUsers = findViewById(R.id.chanmaxusers);
         EditText chanDiskQuota = findViewById(R.id.chandiskquota);
-        CheckBox chanPermanent = findViewById(R.id.chan_permanent);
-        CheckBox chanNoInterrupt = findViewById(R.id.chan_nointerrupt);
-        CheckBox chanClassroom = findViewById(R.id.chan_classroom);
-        CheckBox chanOpRecvOnly = findViewById(R.id.chan_oprecvonly);
-        CheckBox chanNoVoiceAct = findViewById(R.id.chan_novoiceact);
-        CheckBox chanNoAudioRec = findViewById(R.id.chan_noaudiorecord);
-        CheckBox chanHidden = findViewById(R.id.chan_hidden);
+        MaterialSwitch chanPermanent = findViewById(R.id.chan_permanent);
+        MaterialSwitch chanNoInterrupt = findViewById(R.id.chan_nointerrupt);
+        MaterialSwitch chanClassroom = findViewById(R.id.chan_classroom);
+        MaterialSwitch chanOpRecvOnly = findViewById(R.id.chan_oprecvonly);
+        MaterialSwitch chanNoVoiceAct = findViewById(R.id.chan_novoiceact);
+        MaterialSwitch chanNoAudioRec = findViewById(R.id.chan_noaudiorecord);
+        MaterialSwitch chanHidden = findViewById(R.id.chan_hidden);
 
         if (store) {
             channel.szName = chanName.getText().toString();

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.preference.EditTextPreference;
 import android.text.InputType;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -26,6 +27,12 @@ public class MaterialEditTextPreference extends EditTextPreference {
 
     public MaterialEditTextPreference(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void onBindView(View view) {
+        super.onBindView(view);
+        PreferenceDependencyHelper.onBindPreferenceView(this, view);
     }
 
     @Override

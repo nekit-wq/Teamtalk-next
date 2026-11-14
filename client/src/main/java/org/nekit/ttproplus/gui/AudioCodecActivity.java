@@ -32,7 +32,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -284,8 +284,8 @@ public class AudioCodecActivity extends AppCompatActivity {
             Spinner app = rootView.findViewById(R.id.opus_appSpin);
             Spinner sr = rootView.findViewById(R.id.opus_samplerateSpin);
             Spinner audchan = rootView.findViewById(R.id.opus_audchanSpin);
-            CheckBox dtx = rootView.findViewById(R.id.opus_dtxCheckBox);
-            CheckBox vbr = rootView.findViewById(R.id.opus_vbrCheckBox);
+            MaterialSwitch dtx = rootView.findViewById(R.id.opus_dtxCheckBox);
+            MaterialSwitch vbr = rootView.findViewById(R.id.opus_vbrCheckBox);
             SeekBar bitrate = rootView.findViewById(R.id.opus_bitrateSeekBar);
             final TextView bitrateText = rootView.findViewById(R.id.opus_brTextView);
             Spinner framesize = rootView.findViewById(R.id.opus_fsmsecSpin);
@@ -491,7 +491,7 @@ public class AudioCodecActivity extends AppCompatActivity {
             SeekBar quality = rootView.findViewById(R.id.speexvbr_qualitySeekBar);
             SeekBar bitrate = rootView.findViewById(R.id.speexvbr_maxbrSeekBar);
             final TextView bitrateText = rootView.findViewById(R.id.speexvbr_brTextView);
-            CheckBox dtx = rootView.findViewById(R.id.speexvbr_dtxCheckBox);
+            MaterialSwitch dtx = rootView.findViewById(R.id.speexvbr_dtxCheckBox);
             SeekBar txinterval = rootView.findViewById(R.id.speexvbr_txintervalSeekBar);
             final TextView txintervalText = rootView.findViewById(R.id.speexvbr_txintervalTextView);
 

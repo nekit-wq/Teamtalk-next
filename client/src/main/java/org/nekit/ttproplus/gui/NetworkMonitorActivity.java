@@ -15,7 +15,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -71,7 +71,7 @@ public class NetworkMonitorActivity extends AppCompatActivity implements TeamTal
     private TextView txtStreamVideo;
     private TextView txtStreamDesktop;
 
-    private CheckBox chkAutoRefresh;
+    private MaterialSwitch chkAutoRefresh;
     private Button btnReset;
     private Button btnCopyReport;
 

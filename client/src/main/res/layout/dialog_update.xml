@@ -15,9 +15,11 @@
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:textColor="?attr/colorOnSurface"
-            android:lineSpacingExtra="4dp" />
+            android:textColorLink="?attr/colorPrimary"
+            android:lineSpacingMultiplier="1.2"
+            android:linksClickable="true" />
 
-        <com.google.android.material.checkbox.MaterialCheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/update_dont_show_again"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

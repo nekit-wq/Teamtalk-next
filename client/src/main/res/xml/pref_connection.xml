@@ -2,17 +2,17 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/pref_cat_connection_general" android:key="con_general_def">
-        <CheckBoxPreference android:title="@string/pref_title_auto_join_root" android:key="auto_join_root_checkbox" android:summary="@string/pref_summary_auto_join_root" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_title_seamless_reconnect" android:key="seamless_reconnect" android:summary="@string/pref_summary_seamless_reconnect" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_title_hear_myself" android:key="hear_myself_checkbox" android:summary="@string/pref_summary_hear_myself" android:defaultValue="false" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_auto_join_root" android:key="auto_join_root_checkbox" android:summary="@string/pref_summary_auto_join_root" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_seamless_reconnect" android:key="seamless_reconnect" android:summary="@string/pref_summary_seamless_reconnect" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_hear_myself" android:key="hear_myself_checkbox" android:summary="@string/pref_summary_hear_myself" android:defaultValue="false" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_cat_subscriptions" android:key="subscriptions_def">
-        <CheckBoxPreference android:title="@string/pref_title_sub_txtmsg" android:key="sub_txtmsg_checkbox" android:summary="@string/pref_summary_sub_txtmsg" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_title_sub_chanmsg" android:key="sub_chanmsg_checkbox" android:summary="@string/pref_summary_sub_chanmsg" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_title_sub_bcastmsg" android:key="sub_bcastmsg_checkbox" android:summary="@string/pref_summary_sub_bcastmsg" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_title_sub_voice" android:key="sub_voice_checkbox" android:summary="@string/pref_summary_sub_voice" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_title_sub_video" android:key="sub_video_checkbox" android:summary="@string/pref_summary_sub_video" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_title_sub_desktop" android:key="sub_desktop_checkbox" android:summary="@string/pref_summary_sub_desktop" android:defaultValue="true" />
-        <CheckBoxPreference android:title="@string/pref_title_sub_mediafile" android:key="sub_mediafile_checkbox" android:summary="@string/pref_summary_sub_mediafile" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_sub_txtmsg" android:key="sub_txtmsg_checkbox" android:summary="@string/pref_summary_sub_txtmsg" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_sub_chanmsg" android:key="sub_chanmsg_checkbox" android:summary="@string/pref_summary_sub_chanmsg" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_sub_bcastmsg" android:key="sub_bcastmsg_checkbox" android:summary="@string/pref_summary_sub_bcastmsg" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_sub_voice" android:key="sub_voice_checkbox" android:summary="@string/pref_summary_sub_voice" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_sub_video" android:key="sub_video_checkbox" android:summary="@string/pref_summary_sub_video" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_sub_desktop" android:key="sub_desktop_checkbox" android:summary="@string/pref_summary_sub_desktop" android:defaultValue="true" />
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_sub_mediafile" android:key="sub_mediafile_checkbox" android:summary="@string/pref_summary_sub_mediafile" android:defaultValue="true" />
     </PreferenceCategory>
 </PreferenceScreen>

@@ -11,7 +11,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -30,23 +30,24 @@ import org.nekit.ttproplus.data.Preferences;
 public class EqualizerActivity extends AppCompatActivity implements TeamTalkConnectionListener {
     private BassBoost bassBoost;
     private Button btnReset;
-    private CheckBox chkEqEnable;
+    private MaterialSwitch chkEqEnable;
+    private View containerPlaybackEq;
 
     // Mic DSP controls
     private Spinner spinnerDspEngine;
-    private CheckBox chkMicNs;
+    private MaterialSwitch chkMicNs;
     private LinearLayout containerNsWebrtc;
     private Spinner spinnerNsLevel;
     private LinearLayout containerNsSpeex;
     private TextView labelSpeexNs;
     private SeekBar seekBarSpeexNs;
 
-    private CheckBox chkMicAec;
+    private MaterialSwitch chkMicAec;
     private LinearLayout containerAecSpeex;
     private TextView labelSpeexAec;
     private SeekBar seekBarSpeexAec;
 
-    private CheckBox chkMicAgc;
+    private MaterialSwitch chkMicAgc;
     private LinearLayout containerAgc;
     private LinearLayout layoutAgcMode;
     private Spinner spinnerAgcMode;
@@ -59,11 +60,11 @@ public class EqualizerActivity extends AppCompatActivity implements TeamTalkConn
     private TextView labelAgcHeadroom;
     private SeekBar seekBarAgcHeadroom;
 
-    private CheckBox chkMicPreamp;
+    private MaterialSwitch chkMicPreamp;
     private LinearLayout containerPreamp;
     private TextView labelPreamp;
     private SeekBar seekBarPreamp;
-    private CheckBox chkMicHwEffects;
+    private MaterialSwitch chkMicHwEffects;
     private LinearLayout containerMicBands;
 
     // Playback and general controls
@@ -105,6 +106,7 @@ public class EqualizerActivity extends AppCompatActivity implements TeamTalkConn
     private void initViews() {
         // Playback Views
         this.chkEqEnable = findViewById(R.id.eq_enable_checkbox);
+        this.containerPlaybackEq = findViewById(R.id.container_playback_eq);
         this.spinnerPreset = findViewById(R.id.eq_preset_spinner);
         this.containerBands = findViewById(R.id.eq_bands_container);
         this.labelBass = findViewById(R.id.eq_bass_label);
@@ -484,6 +486,7 @@ public class EqualizerActivity extends AppCompatActivity implements TeamTalkConn
             TextView label = new TextView(this);
             label.setText(formatMicFrequency(frequencies[band], saved));
             SeekBar seekBar = new SeekBar(this);
+            seekBar.setSplitTrack(false);
             seekBar.setMax(24);
             seekBar.setProgress(Math.max(0, Math.min(24, saved + 12)));
             seekBar.setContentDescription(label.getText());
@@ -546,6 +549,9 @@ public class EqualizerActivity extends AppCompatActivity implements TeamTalkConn
     }
 
     private void updateControlStates(boolean enabled) {
+        if (this.containerPlaybackEq != null) {
+            this.containerPlaybackEq.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        }
         this.containerBands.setAlpha(enabled ? 1.0f : 0.5f);
         this.spinnerPreset.setEnabled(enabled);
         this.seekBarBass.setEnabled(enabled);
@@ -590,6 +596,7 @@ public class EqualizerActivity extends AppCompatActivity implements TeamTalkConn
                     bandLayout.addView(freqLabel);
 
                     SeekBar bandSeekBar = new SeekBar(this);
+                    bandSeekBar.setSplitTrack(false);
                     bandSeekBar.setMax(this.maxEqLevel - this.minEqLevel);
                     bandSeekBar.setProgress(currentLevel - this.minEqLevel);
                     bandSeekBar.setContentDescription(freqLabel.getText());

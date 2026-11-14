@@ -8,6 +8,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
         android:orientation="vertical">
 
         <!-- PLAYBACK SECTION -->
@@ -20,7 +21,7 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/eq_enable_checkbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -29,60 +30,67 @@
             android:textSize="16sp" />
 
         <LinearLayout
+            android:id="@+id/container_playback_eq"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="@string/eq_preset_label"
+                    android:textSize="16sp" />
+
+                <Spinner
+                    android:id="@+id/eq_preset_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.0" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/eq_bands_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/eq_bass_label"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:text="@string/eq_preset_label"
+                android:layout_marginBottom="4dp"
+                android:text="@string/eq_bass_boost"
                 android:textSize="16sp" />
 
-            <Spinner
-                android:id="@+id/eq_preset_spinner"
-                android:layout_width="0dp"
+            <SeekBar
+                android:id="@+id/eq_bass_seekbar"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.0" />
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:id="@+id/eq_virtualizer_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="@string/eq_virtualizer"
+                android:textSize="16sp" />
+
+            <SeekBar
+                android:id="@+id/eq_virtualizer_seekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp" />
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/eq_bands_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:orientation="vertical" />
-
-        <TextView
-            android:id="@+id/eq_bass_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="@string/eq_bass_boost"
-            android:textSize="16sp" />
-
-        <SeekBar
-            android:id="@+id/eq_bass_seekbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" />
-
-        <TextView
-            android:id="@+id/eq_virtualizer_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="@string/eq_virtualizer"
-            android:textSize="16sp" />
-
-        <SeekBar
-            android:id="@+id/eq_virtualizer_seekbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp" />
 
         <!-- MICROPHONE DSP SECTION -->
         <TextView
@@ -117,7 +125,7 @@
         </LinearLayout>
 
         <!-- Noise Suppression -->
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/eq_mic_ns_checkbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -172,7 +180,7 @@
         </LinearLayout>
 
         <!-- Echo Cancellation -->
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/eq_mic_aec_checkbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -204,7 +212,7 @@
         </LinearLayout>
 
         <!-- Automatic Gain Control (AGC) -->
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/eq_mic_agc_checkbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -300,7 +308,7 @@
         </LinearLayout>
 
         <!-- Pre-Amplifier -->
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/eq_mic_preamp_checkbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -331,7 +339,7 @@
         </LinearLayout>
 
         <!-- Hardware Device Effects -->
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/eq_mic_hw_effects_checkbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

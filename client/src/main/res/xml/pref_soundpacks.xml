@@ -2,5 +2,5 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
     <org.nekit.ttproplus.gui.MaterialListPreference android:entries="@array/sound_pack_entries" android:title="@string/pref_title_sound_pack" android:key="sound_pack_preference" android:summary="@string/pref_summary_sound_pack" android:defaultValue="default" android:entryValues="@array/sound_pack_values" />
-    <Preference android:title="@string/pref_title_import_sounds" android:key="import_sound_pack" android:summary="@string/pref_summary_import_sounds" />
+    <org.nekit.ttproplus.gui.MaterialPreference android:title="@string/pref_title_import_sounds" android:key="import_sound_pack" android:summary="@string/pref_summary_import_sounds" />
 </PreferenceScreen>

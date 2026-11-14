@@ -30,7 +30,7 @@
             android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginBottom="14dp" />
 
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/chk_log_user_login"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
             android:layout_height="0.5dp"
             android:background="?attr/colorOutlineVariant" />
 
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/chk_log_user_kick"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,7 +60,7 @@
             android:layout_height="0.5dp"
             android:background="?attr/colorOutlineVariant" />
 
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/chk_log_channel_create"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -75,7 +75,7 @@
             android:layout_height="0.5dp"
             android:background="?attr/colorOutlineVariant" />
 
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/chk_log_server_update"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -90,7 +90,7 @@
             android:layout_height="0.5dp"
             android:background="?attr/colorOutlineVariant" />
 
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/chk_log_file_transfer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

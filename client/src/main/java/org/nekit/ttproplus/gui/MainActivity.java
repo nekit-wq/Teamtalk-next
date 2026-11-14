@@ -30,7 +30,7 @@ import android.media.SoundPool;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import org.nekit.ttproplus.backend.VoiceChanger;
 import org.nekit.ttproplus.data.ScreenShareAudioHelper;
 import org.nekit.ttproplus.utils.ScreenShareManager;
@@ -130,10 +130,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.function.Consumer;
 import org.nekit.ttproplus.R;
@@ -1439,11 +1441,13 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         LayoutInflater inflater = LayoutInflater.from(this);
         View view = inflater.inflate(R.layout.dialog_echo_reverb, null);
 
-        final CheckBox chkEcho = view.findViewById(R.id.chk_echo);
+        final MaterialSwitch chkEcho = view.findViewById(R.id.chk_echo);
+        final View containerEcho = view.findViewById(R.id.container_echo_controls);
         final TextView tvEchoLevel = view.findViewById(R.id.tv_echo_level);
         final SeekBar sbEchoLevel = view.findViewById(R.id.sb_echo_level);
 
-        final CheckBox chkReverb = view.findViewById(R.id.chk_reverb);
+        final MaterialSwitch chkReverb = view.findViewById(R.id.chk_reverb);
+        final View containerReverb = view.findViewById(R.id.container_reverb_controls);
         final TextView tvReverbLevel = view.findViewById(R.id.tv_reverb_level);
         final SeekBar sbReverbLevel = view.findViewById(R.id.sb_reverb_level);
 
@@ -1456,11 +1460,27 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         int reverbVal = prefs.getInt(Preferences.PREF_VOICE_REVERB_LEVEL, 50);
         int roomVal = prefs.getInt(Preferences.PREF_VOICE_REVERB_ROOM_SIZE, 60);
 
+        if (containerEcho != null) {
+            containerEcho.setVisibility(echoOn ? View.VISIBLE : View.GONE);
+        }
         chkEcho.setChecked(echoOn);
+        chkEcho.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (containerEcho != null) {
+                containerEcho.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+        });
         sbEchoLevel.setProgress(echoVal / 5);
         tvEchoLevel.setText(getString(R.string.label_echo_level, echoVal));
 
+        if (containerReverb != null) {
+            containerReverb.setVisibility(reverbOn ? View.VISIBLE : View.GONE);
+        }
         chkReverb.setChecked(reverbOn);
+        chkReverb.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (containerReverb != null) {
+                containerReverb.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+        });
         sbReverbLevel.setProgress(reverbVal / 5);
         tvReverbLevel.setText(getString(R.string.label_reverb_level, reverbVal));
 
@@ -2995,6 +3015,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
         Vector<Channel> stickychannels = new Vector<>();
         Vector<User> currentusers = new Vector<>();
         private boolean pendingUpdate = false;
+        private final Set<Integer> knownUserIds = new HashSet<>();
+        private int lastChannelId = -999;
 
         private final SparseIntArray channelPopulationMap = new SparseIntArray();
         private boolean cachedShowQuickActions = true;
@@ -3144,6 +3166,21 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                     int cid = u.nChannelID;
                     this.channelPopulationMap.put(cid, this.channelPopulationMap.get(cid, 0) + 1);
                 }
+            }
+
+            int curChanId = MainActivity.this.curchannel != null ? MainActivity.this.curchannel.nChannelID : 0;
+            if (curChanId != this.lastChannelId) {
+                this.lastChannelId = curChanId;
+                this.knownUserIds.clear();
+                for (User u : this.currentusers) {
+                    this.knownUserIds.add(Integer.valueOf(u.nUserID));
+                }
+            } else {
+                Set<Integer> currentIds = new HashSet<>();
+                for (User u : this.currentusers) {
+                    currentIds.add(Integer.valueOf(u.nUserID));
+                }
+                this.knownUserIds.retainAll(currentIds);
             }
 
             super.notifyDataSetChanged();
@@ -3476,6 +3513,41 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 holder.status.setContentDescription(away + " " + (user.szStatusMsg != null ? user.szStatusMsg : ""));
                 holder.usericon.setImageResource(icon_resource);
                 holder.usericon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                if (talking) {
+                    if (holder.usericon.getAnimation() == null) {
+                        android.view.animation.ScaleAnimation pulse = new android.view.animation.ScaleAnimation(
+                                1.0f, 1.15f, 1.0f, 1.15f,
+                                android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+                                android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f);
+                        pulse.setDuration(350);
+                        pulse.setRepeatMode(android.view.animation.Animation.REVERSE);
+                        pulse.setRepeatCount(android.view.animation.Animation.INFINITE);
+                        pulse.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+                        holder.usericon.startAnimation(pulse);
+                    }
+                } else {
+                    if (holder.usericon.getAnimation() != null) {
+                        holder.usericon.clearAnimation();
+                        holder.usericon.setScaleX(1.0f);
+                        holder.usericon.setScaleY(1.0f);
+                    }
+                }
+
+                if (!this.knownUserIds.contains(Integer.valueOf(user.nUserID))) {
+                    this.knownUserIds.add(Integer.valueOf(user.nUserID));
+                    convertView.setAlpha(0f);
+                    convertView.setTranslationY(30f);
+                    convertView.animate()
+                            .alpha(1f)
+                            .translationY(0f)
+                            .setDuration(280)
+                            .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                            .start();
+                } else {
+                    convertView.setAlpha(1f);
+                    convertView.setTranslationY(0f);
+                }
 
                 holder.sndmsg.setOnClickListener(v -> {
                     Intent intent = new Intent(MainActivity.this, (Class<?>) TextMessageActivity.class);

@@ -72,7 +72,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <CheckBox
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/chk_auto_refresh"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

@@ -11,10 +11,11 @@ import android.os.Handler;
 import android.os.Looper;
 import androidx.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.CheckBox;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
@@ -28,6 +29,7 @@ import org.json.JSONObject;
 import org.nekit.ttproplus.BuildConfig;
 import org.nekit.ttproplus.R;
 import org.nekit.ttproplus.data.Preferences;
+import org.nekit.ttproplus.utils.MarkdownFormatter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,7 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AppUpdateManager {
     private static final String TAG = "AppUpdateManager";
-    private static final String GITHUB_API_LATEST_RELEASE = "https://api.github.com/repos/nekit-wq/Teamtalk-pro-plus/releases/latest";
+    private static final String GITHUB_API_LATEST_RELEASE = "https://api.github.com/repos/nekit-wq/Teamtalk-next/releases/latest";
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -54,12 +56,7 @@ public class AppUpdateManager {
         executor.execute(() -> {
             try {
                 URL url = new URL(GITHUB_API_LATEST_RELEASE);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/vnd.github.v3+json");
-                conn.setRequestProperty("User-Agent", "TeamTalkProPlus-Android/" + BuildConfig.VERSION_NAME);
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
+                HttpURLConnection conn = openConnectionFollowRedirects(url, "application/vnd.github.v3+json");
 
                 int responseCode = conn.getResponseCode();
                 if (responseCode != HttpURLConnection.HTTP_OK) {
@@ -230,10 +227,12 @@ public class AppUpdateManager {
 
         View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_update, null);
         TextView tvNotes = dialogView.findViewById(R.id.update_notes);
-        CheckBox chkDontShow = dialogView.findViewById(R.id.update_dont_show_again);
+        MaterialSwitch chkDontShow = dialogView.findViewById(R.id.update_dont_show_again);
 
         if (!TextUtils.isEmpty(releaseNotes)) {
-            tvNotes.setText(releaseNotes);
+            tvNotes.setText(MarkdownFormatter.format(activity, releaseNotes));
+            tvNotes.setMovementMethod(LinkMovementMethod.getInstance());
+            tvNotes.setLinksClickable(true);
         } else {
             tvNotes.setText(releaseName);
         }
@@ -389,8 +388,15 @@ public class AppUpdateManager {
     }
 
     private static HttpURLConnection openConnectionFollowRedirects(URL url) throws Exception {
+        return openConnectionFollowRedirects(url, null);
+    }
+
+    private static HttpURLConnection openConnectionFollowRedirects(URL url, String acceptHeader) throws Exception {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestProperty("User-Agent", "TeamTalkProPlus-Android/" + BuildConfig.VERSION_NAME);
+        if (acceptHeader != null) {
+            conn.setRequestProperty("Accept", acceptHeader);
+        }
         conn.setConnectTimeout(15000);
         conn.setReadTimeout(15000);
         conn.setInstanceFollowRedirects(true);
@@ -407,6 +413,9 @@ public class AppUpdateManager {
                 url = new URL(newUrl);
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("User-Agent", "TeamTalkProPlus-Android/" + BuildConfig.VERSION_NAME);
+                if (acceptHeader != null) {
+                    conn.setRequestProperty("Accept", acceptHeader);
+                }
                 conn.setConnectTimeout(15000);
                 conn.setReadTimeout(15000);
                 redirects++;

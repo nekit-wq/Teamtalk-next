@@ -11,6 +11,6 @@
         <TextView android:textSize="14sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_clientname" />
         <EditText android:id="@+id/welcome_client_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:hint="@string/pref_title_clientname" android:inputType="text" />
         <TextView android:textSize="14sp" android:textStyle="bold" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4dp" android:text="@string/pref_title_gender" />
-        <CheckBox android:id="@+id/welcome_gender_female" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:text="@string/pref_summary_gender" />
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/welcome_gender_female" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:text="@string/pref_summary_gender" />
     </LinearLayout>
 </ScrollView>

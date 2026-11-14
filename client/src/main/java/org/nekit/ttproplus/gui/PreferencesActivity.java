@@ -23,7 +23,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.PowerManager;
-import android.preference.CheckBoxPreference;
+import android.preference.SwitchPreference;
+import android.preference.TwoStatePreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -411,7 +412,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 if (getActivity() == null) return;
                 BearWareAccountManager manager = BearWareAccountManager.getInstance(getActivity());
                 boolean hasAccounts = manager.hasAccounts();
-                CheckBoxPreference preference = (CheckBoxPreference) findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
+                SwitchPreference preference = (SwitchPreference) findPreference(Preferences.PREF_GENERAL_BEARWARE_CHECKED);
                 if (preference != null) {
                     preference.setChecked(hasAccounts);
                     if (hasAccounts) {
@@ -426,6 +427,12 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                         preference.setSummary(R.string.pref_summary_bearwareid);
                     }
                 }
+            }
+
+            @Override
+            public void onViewCreated(View view, Bundle savedInstanceState) {
+                super.onViewCreated(view, savedInstanceState);
+                PreferenceDependencyHelper.setup(this);
             }
         }
 
@@ -582,6 +589,12 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_connection);
         }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            PreferenceDependencyHelper.setup(this);
+        }
     }
 
         public static class TtsPreferenceFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -634,7 +647,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             enginePrefs.setEntries((CharSequence[]) entries.toArray(new CharSequence[engines.size()]));
             enginePrefs.setEntryValues((CharSequence[]) values.toArray(new CharSequence[engines.size()]));
             if (Build.VERSION.SDK_INT <= 26) {
-                CheckBoxPreference mTtsPref = (CheckBoxPreference) findPreference("pref_a11y_volume");
+                SwitchPreference mTtsPref = (SwitchPreference) findPreference("pref_a11y_volume");
                 PreferenceCategory mTtsCat = (PreferenceCategory) findPreference("tts_def");
                 mTtsCat.removePreference(mTtsPref);
             }
@@ -645,6 +658,12 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             PreferencesActivity.toggleAll(getPreferenceScreen(), !allChecked);
             PreferencesActivity.updateMasterToggleText(masterToggle, getPreferenceScreen());
             return true;
+        }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            PreferenceDependencyHelper.setup(this);
         }
     }
 
@@ -854,6 +873,12 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             }
             return true;
         }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            PreferenceDependencyHelper.setup(this);
+        }
     }
 
         public static class AboutPreferenceFragment extends PreferenceFragment {
@@ -907,6 +932,12 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 whitelistPref.setSummary(getString(R.string.pref_summary_antispam_whitelist,
                         AntiSpamStore.getNicks(getActivity(), Preferences.PREF_ANTISPAM_WHITELIST).size()));
             }
+        }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            PreferenceDependencyHelper.setup(this);
         }
     }
 
@@ -997,6 +1028,12 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                 return null;
             }
         }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            PreferenceDependencyHelper.setup(this);
+        }
     }
 
     @Override
@@ -1013,7 +1050,7 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_background_mgmt);
             PreferencesActivity.bindPreferenceSummaryToValue(findPreference(Preferences.PREF_BG_MGMT_DISPLAY_TYPE));
-            CheckBoxPreference bgMgmtPref = (CheckBoxPreference) findPreference(Preferences.PREF_BG_MGMT_ENABLED);
+            SwitchPreference bgMgmtPref = (SwitchPreference) findPreference(Preferences.PREF_BG_MGMT_ENABLED);
             if (bgMgmtPref != null) {
                 bgMgmtPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() { 
                     @Override
@@ -1041,13 +1078,19 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         @Override
         public void onResume() {
             super.onResume();
-            CheckBoxPreference bgMgmtPref = (CheckBoxPreference) findPreference(Preferences.PREF_BG_MGMT_ENABLED);
+            SwitchPreference bgMgmtPref = (SwitchPreference) findPreference(Preferences.PREF_BG_MGMT_ENABLED);
             if (bgMgmtPref != null) {
                 String type = PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(Preferences.PREF_BG_MGMT_DISPLAY_TYPE, "window");
                 if (Build.VERSION.SDK_INT >= 23 && "window".equals(type) && !Settings.canDrawOverlays(getActivity())) {
                     bgMgmtPref.setChecked(false);
                 }
             }
+        }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            PreferenceDependencyHelper.setup(this);
         }
     }
 
@@ -1071,6 +1114,12 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
                     return true;
                 });
             }
+        }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            PreferenceDependencyHelper.setup(this);
         }
     }
 
@@ -1363,8 +1412,8 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         for (int i = 0; i < group.getPreferenceCount(); i++) {
             Preference p = group.getPreference(i);
             if (!"pref_master_tts_toggle".equals(p.getKey()) && !"pref_master_sound_toggle".equals(p.getKey())) {
-                if (p instanceof CheckBoxPreference) {
-                    if (!((CheckBoxPreference) p).isChecked()) {
+                if (p instanceof TwoStatePreference) {
+                    if (!((TwoStatePreference) p).isChecked()) {
                         return false;
                     }
                 } else if ((p instanceof PreferenceGroup) && !isAllChecked((PreferenceGroup) p)) {
@@ -1379,8 +1428,8 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         for (int i = 0; i < group.getPreferenceCount(); i++) {
             Preference p = group.getPreference(i);
             if (!"pref_master_tts_toggle".equals(p.getKey()) && !"pref_master_sound_toggle".equals(p.getKey())) {
-                if (p instanceof CheckBoxPreference) {
-                    ((CheckBoxPreference) p).setChecked(check);
+                if (p instanceof TwoStatePreference) {
+                    ((TwoStatePreference) p).setChecked(check);
                 } else if (p instanceof PreferenceGroup) {
                     toggleAll((PreferenceGroup) p, check);
                 }

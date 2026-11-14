@@ -77,34 +77,16 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          TAG_NAME="${{ github.ref_name }}"
+          TAG_NAME="${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.3' }}"
           git archive --format=zip --output=TeamTalkNext-${TAG_NAME}-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          tag_name: ${{ github.ref_name }}
-          name: "TeamTalk Next ${{ github.ref_name }}"
-          body: |
-            ### TeamTalk Next v5.29.2
-
-            #### 🎨 Динамические цвета Monet и Material You:
-            - **Поддержка Monet / Dynamic Color:** интерфейс адаптируется под системную палитру обоев (Android 12+), включая карточки, диалоги, индикаторы и панели управления.
-            - **Полная адаптация Material You:** диалоговые окна переведены на MaterialAlertDialogBuilder, карточки и элементы управления обновлены в едином стиле Material 3.
-
-            #### 👥 Несколько аккаунтов BearWare:
-            - Одновременный вход в несколько учетных записей BearWare.
-            - Меню быстрого выбора аккаунта при публикации сервера и других действиях.
-
-            #### 🔘 Диалог подключения и интерфейс:
-            - **Отмена подключения:** добавлена кнопка «Отмена» в диалог соединения, мгновенный сброс попыток подключения при нажатии «Назад» или касании вне диалога.
-            - **Новая иконка приложения:** современная 3D-иконка в стиле Material You, при этом для официальных серверов в списке сохранена их классическая иконка.
-            - **Векторные иконки в настройках:** обновлены тематические иконки для всех разделов настроек.
-
-            #### 📦 Версии:
-            - **Версия приложения:** `5.29.2` (код сборки `447`).
-            - **Версия нативной библиотеки:** `5.29.2`.
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.3' }}
+          name: "TeamTalk Next ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.3' }}"
+          body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
           files: |

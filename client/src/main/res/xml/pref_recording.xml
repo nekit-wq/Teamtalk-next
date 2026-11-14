@@ -30,7 +30,7 @@
             android:entryValues="@array/recording_mp3_bitrate_values"
             android:defaultValue="128" />
 
-        <CheckBoxPreference
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference
             android:key="recording_create_server_folder"
             android:title="@string/pref_recording_create_server_folder_title"
             android:summary="@string/pref_recording_create_server_folder_summary"
@@ -46,7 +46,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_recording_category_automation">
-        <CheckBoxPreference
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference
             android:key="auto_record_conversations"
             android:title="@string/pref_auto_record_conversations_title"
             android:summary="@string/pref_auto_record_conversations_summary"
@@ -56,25 +56,27 @@
             android:key="recording_silence_pause"
             android:title="@string/pref_recording_silence_pause_title"
             android:summary="@string/pref_recording_silence_pause_summary"
+            android:dependency="auto_record_conversations"
             android:entries="@array/pref_recording_silence_pause_entries"
             android:entryValues="@array/pref_recording_silence_pause_values"
             android:defaultValue="0" />
 
-        <CheckBoxPreference
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference
             android:key="recording_multitrack"
             android:title="@string/pref_recording_multitrack_title"
             android:summary="@string/pref_recording_multitrack_summary"
+            android:dependency="auto_record_conversations"
             android:defaultValue="false" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_recording_category_notifications">
-        <CheckBoxPreference
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference
             android:key="recording_show_dialog_after"
             android:title="@string/pref_recording_show_dialog_title"
             android:summary="@string/pref_recording_show_dialog_summary"
             android:defaultValue="true" />
 
-        <CheckBoxPreference
+        <org.nekit.ttproplus.gui.MaterialSwitchPreference
             android:key="recording_show_toast_notifications"
             android:title="@string/pref_recording_show_toast_title"
             android:summary="@string/pref_recording_show_toast_summary"
