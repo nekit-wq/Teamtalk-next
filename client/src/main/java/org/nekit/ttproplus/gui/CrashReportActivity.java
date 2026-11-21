@@ -4,7 +4,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,8 +23,10 @@ public class CrashReportActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crash_report);
+        EdgeToEdgeHelper.enableEdgeToEdge(this);
 
         Intent intent = getIntent();
         if (intent != null) {

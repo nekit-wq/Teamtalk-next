@@ -284,6 +284,13 @@
             android:name=".gui.RecordingsActivity"
             android:label="@string/title_activity_recordings"
             android:theme="@style/AppTheme"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:exported="false" />
+
+        <service
+            android:name=".gui.RecordingPlaybackService"
+            android:foregroundServiceType="mediaPlayback"
+            android:enabled="true"
             android:exported="false" />
 
         <receiver android:name=".gui.MediaButtonEventReceiver"
@@ -309,7 +316,8 @@
         <activity
             android:name=".gui.CrashReportActivity"
             android:label="@string/crash_title"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
             android:process=":crash"
             android:launchMode="singleTask"
             android:exported="false" />

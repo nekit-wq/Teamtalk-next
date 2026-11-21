@@ -1,5 +1,8 @@
 package org.nekit.ttproplus.gui;
 
+import android.app.Activity;
+import android.app.Application;
+import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
@@ -78,12 +81,45 @@ public class FloatingWindowManager {
         }
     };
 
+    private int startedActivityCount = 0;
+    private final Application.ActivityLifecycleCallbacks activityLifecycleCallbacks = new Application.ActivityLifecycleCallbacks() {
+        @Override
+        public void onActivityStarted(Activity activity) {
+            startedActivityCount++;
+            if (isCloseOnAppOpen()) {
+                hide();
+            }
+        }
+
+        @Override
+        public void onActivityStopped(Activity activity) {
+            startedActivityCount = Math.max(0, startedActivityCount - 1);
+            if (startedActivityCount == 0) {
+                checkAndShow();
+            }
+        }
+
+        @Override
+        public void onActivityCreated(Activity activity, Bundle savedInstanceState) {}
+        @Override
+        public void onActivityResumed(Activity activity) {}
+        @Override
+        public void onActivityPaused(Activity activity) {}
+        @Override
+        public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
+        @Override
+        public void onActivityDestroyed(Activity activity) {}
+    };
+
     public FloatingWindowManager(TeamTalkService service) {
         this.service = service;
         this.context = service.getApplicationContext();
         this.windowManager = (WindowManager) this.context.getSystemService(Context.WINDOW_SERVICE);
         this.prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
         initView();
+        if (this.context instanceof Application) {
+            ((Application) this.context).registerActivityLifecycleCallbacks(this.activityLifecycleCallbacks);
+        }
     }
 
     private void initView() {
@@ -189,10 +225,22 @@ public class FloatingWindowManager {
         showServerSelectionDialog();
     }
 
+    public boolean isCloseOnAppOpen() {
+        return this.prefs.getBoolean(Preferences.PREF_BG_MGMT_CLOSE_ON_APP_OPEN, false);
+    }
+
+    public boolean isAppInForeground() {
+        return this.startedActivityCount > 0;
+    }
+
     public void checkAndShow() {
         boolean enabled = this.prefs.getBoolean(Preferences.PREF_BG_MGMT_ENABLED, false);
         String displayType = this.prefs.getString(Preferences.PREF_BG_MGMT_DISPLAY_TYPE, "window");
         if (!enabled || !"window".equals(displayType)) {
+            hide();
+            return;
+        }
+        if (isCloseOnAppOpen() && isAppInForeground()) {
             hide();
             return;
         }
@@ -246,8 +294,17 @@ public class FloatingWindowManager {
     }
 
     public void hideIfAppOpened() {
-        if (this.prefs.getBoolean(Preferences.PREF_BG_MGMT_CLOSE_ON_APP_OPEN, false)) {
+        if (isCloseOnAppOpen()) {
             hide();
+        }
+    }
+
+    public void destroy() {
+        hide();
+        if (this.context instanceof Application) {
+            try {
+                ((Application) this.context).unregisterActivityLifecycleCallbacks(this.activityLifecycleCallbacks);
+            } catch (Throwable ignored) {}
         }
     }
 

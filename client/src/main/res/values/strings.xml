@@ -256,6 +256,7 @@ By: %3$s"</string>
     <string name="err_play_media">Failed to play media file</string>
     <string name="err_retrieve_public_server_list">Failed to retrieve public server list</string>
     <string name="err_save_tt_file_failed">Failed to save .tt file</string>
+    <string name="err_invalid_tt_file">Invalid or corrupted .tt file</string>
     <string name="err_send_text_message">Failed to send text message</string>
     <string name="err_server_banned">Your IP address is banned</string>
     <string name="err_service_not_available">Service not available</string>
@@ -1148,6 +1149,13 @@ By: %3$s"</string>
     <string name="recordings_rename_hint">Enter new file name</string>
     <string name="recordings_now_playing">Now Playing:</string>
     <string name="recordings_play_error">Failed to play audio file</string>
+    <string name="recordings_playback_channel_name">Recordings Playback</string>
+    <string name="recordings_playback_channel_desc">Playback controls for recorded audio files</string>
+    <string name="recordings_playback_playing">Playing</string>
+    <string name="recordings_playback_paused">Paused</string>
+    <string name="recordings_playback_rewind">-5s</string>
+    <string name="recordings_playback_forward">+5s</string>
+    <string name="recordings_playback_stop">Close</string>
 
     <!-- TeamTalk 5.23 Additions -->
     <string name="action_resume">Resume stream</string>

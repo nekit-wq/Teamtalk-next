@@ -575,7 +575,7 @@ public class ServerListActivity extends AppCompatActivity
                             Vector<ServerEntry> entries = Utils.getXmlServerEntries(xml.toString());
                             processImportedServers(entries);
                         } catch (Exception e) {
-                            Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, R.string.err_invalid_tt_file, Toast.LENGTH_LONG).show();
                         }
                     }
                 }
@@ -781,7 +781,7 @@ public class ServerListActivity extends AppCompatActivity
             if (entries != null && !entries.isEmpty()) {
                 processImportedServers(entries);
             } else {
-                Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.err_invalid_tt_file, Toast.LENGTH_SHORT).show();
             }
             return;
         }
@@ -1485,7 +1485,7 @@ public class ServerListActivity extends AppCompatActivity
 
     private void processImportedServers(final Vector<ServerEntry> entries) {
         if (entries == null || entries.isEmpty()) {
-            Toast.makeText(this, R.string.err_stream_media, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.err_invalid_tt_file, Toast.LENGTH_LONG).show();
             return;
         }
 

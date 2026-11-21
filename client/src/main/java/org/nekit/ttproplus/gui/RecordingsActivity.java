@@ -2,14 +2,10 @@ package org.nekit.ttproplus.gui;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -43,7 +39,6 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -114,29 +109,46 @@ public class RecordingsActivity extends AppCompatActivity {
     private final List<RecordingItem> displayedItems = new ArrayList<>();
     private RecordingsAdapter adapter;
 
-    private MediaPlayer mediaPlayer = null;
-    private RecordingItem currentPlayingItem = null;
-    private final Handler playerHandler = new Handler(Looper.getMainLooper());
     private boolean isUserSeeking = false;
 
-    private final Runnable playerProgressRunnable = new Runnable() {
+    private final RecordingPlayerManager.PlaybackListener playbackListener = new RecordingPlayerManager.PlaybackListener() {
         @Override
-        public void run() {
-            if (mediaPlayer != null && mediaPlayer.isPlaying() && !isUserSeeking) {
-                int current = mediaPlayer.getCurrentPosition();
-                playerSeekBar.setProgress(current);
-                playerCurTime.setText(formatDuration(current));
+        public void onPlaybackStateChanged(boolean isPlaying, File file, String title) {
+            syncPlayerUI();
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
             }
-            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                playerHandler.postDelayed(this, 250);
+        }
+
+        @Override
+        public void onPlaybackProgress(int currentMs, int totalMs) {
+            if (!isUserSeeking) {
+                if (totalMs > 0 && playerSeekBar.getMax() != totalMs) {
+                    playerSeekBar.setMax(totalMs);
+                }
+                playerSeekBar.setProgress(currentMs);
+                playerCurTime.setText(formatDuration(currentMs));
+                playerTotalTime.setText(formatDuration(totalMs));
+            }
+        }
+
+        @Override
+        public void onPlaybackCompleted() {
+            btnPlayPause.setImageResource(R.drawable.ic_play);
+            playerSeekBar.setProgress(playerSeekBar.getMax());
+            playerCurTime.setText(playerTotalTime.getText());
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
             }
         }
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recordings);
+        EdgeToEdgeHelper.enableEdgeToEdge(this);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -147,6 +159,34 @@ public class RecordingsActivity extends AppCompatActivity {
         initViews();
         setupListeners();
         loadRecordings();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        RecordingPlayerManager.getInstance().addListener(playbackListener);
+        syncPlayerUI();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        syncPlayerUI();
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        RecordingPlayerManager.getInstance().removeListener(playbackListener);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        RecordingPlayerManager.getInstance().removeListener(playbackListener);
     }
 
     private void initViews() {
@@ -198,27 +238,13 @@ public class RecordingsActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        this.btnPlayPause.setOnClickListener(v -> togglePlayPause());
+        this.btnPlayPause.setOnClickListener(v -> RecordingPlayerManager.getInstance().togglePlayPause());
 
-        this.btnClosePlayer.setOnClickListener(v -> stopPlayback());
+        this.btnClosePlayer.setOnClickListener(v -> RecordingPlayerManager.getInstance().stop());
 
-        this.btnRewind.setOnClickListener(v -> {
-            if (mediaPlayer != null) {
-                int pos = Math.max(0, mediaPlayer.getCurrentPosition() - 5000);
-                mediaPlayer.seekTo(pos);
-                playerSeekBar.setProgress(pos);
-                playerCurTime.setText(formatDuration(pos));
-            }
-        });
+        this.btnRewind.setOnClickListener(v -> RecordingPlayerManager.getInstance().rewind(5000));
 
-        this.btnForward.setOnClickListener(v -> {
-            if (mediaPlayer != null) {
-                int pos = Math.min(mediaPlayer.getDuration(), mediaPlayer.getCurrentPosition() + 5000);
-                mediaPlayer.seekTo(pos);
-                playerSeekBar.setProgress(pos);
-                playerCurTime.setText(formatDuration(pos));
-            }
-        });
+        this.btnForward.setOnClickListener(v -> RecordingPlayerManager.getInstance().forward(5000));
 
         this.playerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -236,9 +262,7 @@ public class RecordingsActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 isUserSeeking = false;
-                if (mediaPlayer != null) {
-                    mediaPlayer.seekTo(seekBar.getProgress());
-                }
+                RecordingPlayerManager.getInstance().seekTo(seekBar.getProgress());
             }
         });
 
@@ -247,6 +271,26 @@ public class RecordingsActivity extends AppCompatActivity {
                 playItem(displayedItems.get(position));
             }
         });
+    }
+
+    private void syncPlayerUI() {
+        RecordingPlayerManager mgr = RecordingPlayerManager.getInstance();
+        if (mgr.hasActiveTrack()) {
+            playerPanel.setVisibility(View.VISIBLE);
+            playerTitle.setText(mgr.getCurrentTitle());
+            btnPlayPause.setImageResource(mgr.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+
+            int dur = mgr.getDuration();
+            int pos = mgr.getCurrentPosition();
+            if (dur > 0) {
+                playerSeekBar.setMax(dur);
+            }
+            playerSeekBar.setProgress(pos);
+            playerCurTime.setText(formatDuration(pos));
+            playerTotalTime.setText(formatDuration(dur));
+        } else {
+            playerPanel.setVisibility(View.GONE);
+        }
     }
 
     private void loadRecordings() {
@@ -335,73 +379,7 @@ public class RecordingsActivity extends AppCompatActivity {
             return;
         }
 
-        if (this.currentPlayingItem != null && this.currentPlayingItem.file.equals(item.file) && this.mediaPlayer != null) {
-            togglePlayPause();
-            return;
-        }
-
-        stopPlayback();
-
-        try {
-            this.mediaPlayer = new MediaPlayer();
-            this.mediaPlayer.setDataSource(item.file.getAbsolutePath());
-            this.mediaPlayer.prepare();
-            this.mediaPlayer.start();
-
-            this.currentPlayingItem = item;
-            this.playerPanel.setVisibility(View.VISIBLE);
-            this.playerTitle.setText(item.name);
-            this.btnPlayPause.setImageResource(R.drawable.ic_pause);
-
-            int duration = this.mediaPlayer.getDuration();
-            this.playerSeekBar.setMax(duration);
-            this.playerSeekBar.setProgress(0);
-            this.playerCurTime.setText("00:00");
-            this.playerTotalTime.setText(formatDuration(duration));
-
-            this.mediaPlayer.setOnCompletionListener(mp -> {
-                btnPlayPause.setImageResource(R.drawable.ic_play);
-                playerSeekBar.setProgress(playerSeekBar.getMax());
-                playerCurTime.setText(playerTotalTime.getText());
-                adapter.notifyDataSetChanged();
-            });
-
-            this.playerHandler.post(this.playerProgressRunnable);
-            this.adapter.notifyDataSetChanged();
-        } catch (Exception e) {
-            Log.e("bearware", "Error playing recording", e);
-            Toast.makeText(this, R.string.recordings_play_error, Toast.LENGTH_SHORT).show();
-            stopPlayback();
-        }
-    }
-
-    private void togglePlayPause() {
-        if (this.mediaPlayer == null) return;
-        if (this.mediaPlayer.isPlaying()) {
-            this.mediaPlayer.pause();
-            this.btnPlayPause.setImageResource(R.drawable.ic_play);
-        } else {
-            this.mediaPlayer.start();
-            this.btnPlayPause.setImageResource(R.drawable.ic_pause);
-            this.playerHandler.post(this.playerProgressRunnable);
-        }
-        this.adapter.notifyDataSetChanged();
-    }
-
-    private void stopPlayback() {
-        if (this.mediaPlayer != null) {
-            try {
-                if (this.mediaPlayer.isPlaying()) {
-                    this.mediaPlayer.stop();
-                }
-                this.mediaPlayer.release();
-            } catch (Exception ignored) {}
-            this.mediaPlayer = null;
-        }
-        this.currentPlayingItem = null;
-        this.playerPanel.setVisibility(View.GONE);
-        this.playerHandler.removeCallbacks(this.playerProgressRunnable);
-        this.adapter.notifyDataSetChanged();
+        RecordingPlayerManager.getInstance().play(this, item.file, item.name);
     }
 
     private void shareFile(RecordingItem item) {
@@ -470,8 +448,9 @@ public class RecordingsActivity extends AppCompatActivity {
             File newFile = new File(item.file.getParentFile(), newName);
             if (item.file.renameTo(newFile)) {
                 MediaScannerConnection.scanFile(this, new String[]{newFile.getAbsolutePath(), item.file.getAbsolutePath()}, null, null);
-                if (currentPlayingItem != null && currentPlayingItem.file.equals(item.file)) {
-                    stopPlayback();
+                File cur = RecordingPlayerManager.getInstance().getCurrentFile();
+                if (cur != null && cur.equals(item.file)) {
+                    RecordingPlayerManager.getInstance().stop();
                 }
                 loadRecordings();
                 Toast.makeText(RecordingsActivity.this, getString(R.string.recording_renamed_success, newName), Toast.LENGTH_SHORT).show();
@@ -490,8 +469,9 @@ public class RecordingsActivity extends AppCompatActivity {
         builder.setMessage(getString(R.string.recordings_delete_message, item.name));
 
         builder.setPositiveButton(R.string.recordings_action_delete, (dialog, which) -> {
-            if (currentPlayingItem != null && currentPlayingItem.file.equals(item.file)) {
-                stopPlayback();
+            File cur = RecordingPlayerManager.getInstance().getCurrentFile();
+            if (cur != null && cur.equals(item.file)) {
+                RecordingPlayerManager.getInstance().stop();
             }
             if (item.file.delete()) {
                 MediaScannerConnection.scanFile(this, new String[]{item.file.getAbsolutePath()}, null, null);
@@ -505,6 +485,7 @@ public class RecordingsActivity extends AppCompatActivity {
     }
 
     private String formatDuration(int millis) {
+        if (millis < 0) millis = 0;
         int seconds = (millis / 1000) % 60;
         int minutes = (millis / (1000 * 60)) % 60;
         int hours = (millis / (1000 * 60 * 60));
@@ -521,18 +502,6 @@ public class RecordingsActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        stopPlayback();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopPlayback();
     }
 
     private class RecordingsAdapter extends BaseAdapter {
@@ -582,7 +551,8 @@ public class RecordingsActivity extends AppCompatActivity {
 
             holder.details.setText(item.dateFormatted + " · " + item.sizeFormatted);
 
-            boolean isThisPlaying = (mediaPlayer != null && mediaPlayer.isPlaying() && currentPlayingItem != null && currentPlayingItem.file.equals(item.file));
+            RecordingPlayerManager mgr = RecordingPlayerManager.getInstance();
+            boolean isThisPlaying = (mgr.isPlaying() && mgr.getCurrentFile() != null && mgr.getCurrentFile().equals(item.file));
             holder.btnPlay.setImageResource(isThisPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
 
             holder.btnPlay.setOnClickListener(v -> playItem(item));

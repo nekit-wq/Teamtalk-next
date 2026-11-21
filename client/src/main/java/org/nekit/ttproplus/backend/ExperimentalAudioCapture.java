@@ -422,6 +422,7 @@ public final class ExperimentalAudioCapture {
         Thread threadToJoin = null;
         synchronized (this.lock) {
             if (client != null) {
+                flushEmptyAudioBlockToClient(client);
                 this.ttclients.remove(client);
             }
             if (this.ttclients.isEmpty() || releaseClient) {
@@ -460,11 +461,20 @@ public final class ExperimentalAudioCapture {
             }
         }
         CaptureSession session = this.captureSession;
-        this.captureSession = null;
-        this.audioRecord = null;
         if (flushBlank) {
             flushEmptyAudioBlock();
+        } else {
+            for (TeamTalkBase client : this.ttclients) {
+                if (client != null) {
+                    try {
+                        client.closeSoundInputDevice();
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
         }
+        this.captureSession = null;
+        this.audioRecord = null;
         this.active = false;
         this.activeChannels = 0;
         this.activeSampleRate = 0;
@@ -472,15 +482,32 @@ public final class ExperimentalAudioCapture {
         return session;
     }
 
-    private void flushEmptyAudioBlock() {
-        AudioBlock block = new AudioBlock();
-        for (TeamTalkBase client : this.ttclients) {
-            if (client != null) {
-                try {
-                    client.insertAudioBlock(block);
-                } catch (Throwable ignored) {
-                }
+    private void flushEmptyAudioBlockToClient(TeamTalkBase client) {
+        if (client == null) return;
+        try {
+            CaptureSession session = this.captureSession;
+            if (session != null && session.streamId > 0 && session.sampleRate > 0 && session.channels > 0) {
+                AudioBlock block = new AudioBlock();
+                block.nStreamID = session.streamId;
+                block.nSampleRate = session.sampleRate;
+                block.nChannels = session.channels;
+                block.nSamples = 0;
+                block.uStreamTypes = 1;
+                client.insertAudioBlock(block);
             }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to flush empty AudioBlock to client", t);
+        }
+        try {
+            client.closeSoundInputDevice();
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to close sound input device on client flush", t);
+        }
+    }
+
+    private void flushEmptyAudioBlock() {
+        for (TeamTalkBase client : this.ttclients) {
+            flushEmptyAudioBlockToClient(client);
         }
     }
 

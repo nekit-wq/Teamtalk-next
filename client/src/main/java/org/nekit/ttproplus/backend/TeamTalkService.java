@@ -54,6 +54,7 @@ import dk.bearware.AudioPreprocessorType;
 import dk.bearware.Channel;
 import dk.bearware.ClientErrorMsg;
 import dk.bearware.Codec;
+import dk.bearware.Constants;
 import dk.bearware.EncryptionContext;
 import dk.bearware.FileTransfer;
 import dk.bearware.MediaFileInfo;
@@ -66,6 +67,7 @@ import dk.bearware.SoundDeviceEffects;
 import dk.bearware.SoundLevel;
 import dk.bearware.TeamTalk5;
 import dk.bearware.TeamTalkBase;
+import dk.bearware.StreamType;
 import dk.bearware.Subscription;
 import dk.bearware.TextMessage;
 import dk.bearware.User;
@@ -206,7 +208,15 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     private final SharedPreferences.OnSharedPreferenceChangeListener mPrefListener = new SharedPreferences.OnSharedPreferenceChangeListener() { 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if ((Preferences.PREF_BG_MGMT_ENABLED.equals(key) || Preferences.PREF_BG_MGMT_SHOW_VOICE.equals(key) || Preferences.PREF_BG_MGMT_SHOW_MUTE.equals(key) || Preferences.PREF_BG_MGMT_SHOW_PING.equals(key) || Preferences.PREF_BG_MGMT_SHOW_CHAT.equals(key) || Preferences.PREF_BG_MGMT_SHOW_CHANNELS.equals(key)) && TeamTalkService.this.mFloatingWindowManager != null) {
+            if ((Preferences.PREF_BG_MGMT_ENABLED.equals(key)
+                    || Preferences.PREF_BG_MGMT_CLOSE_ON_APP_OPEN.equals(key)
+                    || Preferences.PREF_BG_MGMT_DISPLAY_TYPE.equals(key)
+                    || Preferences.PREF_BG_MGMT_SHOW_SERVERS.equals(key)
+                    || Preferences.PREF_BG_MGMT_SHOW_VOICE.equals(key)
+                    || Preferences.PREF_BG_MGMT_SHOW_MUTE.equals(key)
+                    || Preferences.PREF_BG_MGMT_SHOW_PING.equals(key)
+                    || Preferences.PREF_BG_MGMT_SHOW_CHAT.equals(key)
+                    || Preferences.PREF_BG_MGMT_SHOW_CHANNELS.equals(key)) && TeamTalkService.this.mFloatingWindowManager != null) {
                 TeamTalkService.this.mFloatingWindowManager.checkAndShow();
             }
             if ("eq_mic_ns".equals(key) || "eq_mic_aec".equals(key) || "eq_mic_agc".equals(key) || key.startsWith(Preferences.PREF_EQ_MIC_BAND_PREFIX) || Preferences.PREF_SOUNDSYSTEM_VOICEPROCESSING.equals(key) || Preferences.PREF_SOUNDSYSTEM_SPEAKERPHONE.equals(key) || Preferences.PREF_SOUNDSYSTEM_MICROPHONEGAIN.equals(key) || Preferences.PREF_SOUNDSYSTEM_VOICEACTIVATION_LEVEL.equals(key)) {
@@ -405,6 +415,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     }
     private final List<AudioDuckingListener> audioDuckingListeners = new CopyOnWriteArrayList<>();
     private final Set<Integer> talkingPeerUserIds = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private volatile long lastPeerVoiceActivityTime = 0;
     private final Map<Integer, Integer> originalMediaFileVolumes = new java.util.concurrent.ConcurrentHashMap<>();
     private boolean isMyselfTalking = false;
     private boolean isAudioDucked = false;
@@ -640,16 +651,17 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.experimentalAudioCapture.setVoiceActivationListener(new ExperimentalAudioCapture.VoiceActivationListener() {
             @Override
             public void onVoiceActivation(TeamTalkBase client, boolean transmitting) {
-                if (voiceActivationRequested) {
-                    adjustMuteOnTx(transmitting);
-                    isMyselfTalking = transmitting;
-                    checkAudioDucking();
-                    updateFloatingWindow();
-                    if (onVoiceTransmissionToggleListener != null) {
-                        onVoiceTransmissionToggleListener.onVoiceActivationStateChanged(transmitting);
-                    }
-                    TeamTalkService.this.onVoiceActivation(transmitting);
+                adjustMuteOnTx(transmitting);
+                isMyselfTalking = transmitting;
+                checkAudioDucking();
+                updateFloatingWindow();
+                if (onVoiceTransmissionToggleListener != null) {
+                    onVoiceTransmissionToggleListener.onVoiceActivationStateChanged(transmitting);
                 }
+                if (transmitting) {
+                    checkAndTriggerAutoRecord();
+                }
+                TeamTalkService.this.onVoiceActivation(transmitting);
             }
         });
         this.telephonyManager = (TelephonyManager) getSystemService("phone");
@@ -684,6 +696,29 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.mEventHandler.registerOnVoiceActivation(this, true);
         this.mEventHandler.registerOnFileTransfer(this, true);
         this.mEventHandler.registerOnStreamMediaFile(this, true);
+        this.mEventHandler.registerOnUserFirstVoiceStreamPacket(new dk.bearware.events.ClientEventListener.OnUserFirstVoiceStreamPacketListener() {
+            @Override
+            public void onUserFirstVoiceStreamPacket(User user, int streamId) {
+                if (user != null && TeamTalkService.this.mychannel != null && user.nChannelID == TeamTalkService.this.mychannel.nChannelID) {
+                    TeamTalkService.this.lastPeerVoiceActivityTime = SystemClock.elapsedRealtime();
+                    if (TeamTalkService.this.ttclient != null && user.nUserID != TeamTalkService.this.ttclient.getMyUserID()) {
+                        TeamTalkService.this.talkingPeerUserIds.add(Integer.valueOf(user.nUserID));
+                    }
+                    onVoiceDetected();
+                }
+            }
+        }, true);
+        this.mEventHandler.registerOnUserAudioBlock(new dk.bearware.events.ClientEventListener.OnUserAudioBlockListener() {
+            @Override
+            public void onUserAudioBlock(int nUserID, int nStreamType) {
+                if (TeamTalkService.this.ttclient != null && nUserID != TeamTalkService.this.ttclient.getMyUserID() && nUserID != Constants.TT_MUXED_USERID) {
+                    TeamTalkService.this.lastPeerVoiceActivityTime = SystemClock.elapsedRealtime();
+                    if (TeamTalkService.this.isRecordingPausedDueToSilence) {
+                        onVoiceDetected();
+                    }
+                }
+            }
+        }, true);
         createEventTimer();
         this.bluetoothHeadsetHelper = new BluetoothHeadsetHelper(this);
         this.reconnectBluetoothScoAfterCall = new Runnable() { 
@@ -706,17 +741,6 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }, 3, 1);
         this.mediaSession.setActive(true);
         Log.d("bearware", "Created TeamTalk 5 service");
-        this.experimentalAudioCapture = new ExperimentalAudioCapture(this);
-        this.experimentalAudioCapture.setService(this);
-        this.experimentalAudioCapture.setVoiceActivationListener(new ExperimentalAudioCapture.VoiceActivationListener() {
-            @Override
-            public void onVoiceActivation(TeamTalkBase client, boolean active) {
-                adjustMuteOnTx(active);
-                if (active) {
-                    checkAndTriggerAutoRecord();
-                }
-            }
-        });
         this.screenShareManager = new ScreenShareManager(this, this.ttclient);
         this.mFloatingWindowManager = new FloatingWindowManager(this);
         this.mFloatingWindowManager.checkAndShow();
@@ -792,7 +816,7 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         prefs.unregisterOnSharedPreferenceChangeListener(this.mPrefListener);
         if (this.mFloatingWindowManager != null) {
-            this.mFloatingWindowManager.hide();
+            this.mFloatingWindowManager.destroy();
             this.mFloatingWindowManager = null;
         }
         AudioEffectsManager.getInstance(this).release();
@@ -1161,6 +1185,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         if (!this.isRecording || this.mychannel == null) {
             return;
         }
+        // Manual recording started by user must NEVER be paused automatically due to silence or mic state!
+        // It must record continuously until the user explicitly pauses or stops it.
+        if (this.isManualRecordingActive) {
+            return;
+        }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String silenceVal = prefs.getString(Preferences.PREF_RECORDING_SILENCE_PAUSE, "0");
         int timeoutSec = 0;
@@ -1172,7 +1201,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
 
         boolean someoneTalking = false;
-        if (isVoiceTransmissionEnabled()) {
+        if (isVoiceTransmissionEnabled() || isVoiceTransmitting()) {
+            someoneTalking = true;
+        } else if (SystemClock.elapsedRealtime() - this.lastPeerVoiceActivityTime < 3000L) {
+            someoneTalking = true;
+        } else if (!this.talkingPeerUserIds.isEmpty()) {
             someoneTalking = true;
         } else if (this.users != null) {
             for (User u : this.users.values()) {
@@ -1212,12 +1245,29 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
             showRecordingToast(R.string.recording_silence_resumed);
         } else if (this.pendingAutoRecord && !this.isRecording && this.mychannel != null) {
             this.pendingAutoRecord = false;
-            startRecording();
+            startAutoRecording();
         }
     }
 
     public void checkAndTriggerAutoRecord() {
         onVoiceDetected();
+    }
+
+    public void startAutoRecording() {
+        this.isManualRecordingActive = false;
+        this.pendingAutoRecord = false;
+        this.isManualRecordingPaused = false;
+        this.recordingStartTimeMs = SystemClock.elapsedRealtime();
+        this.recordingAccumulatedDurationMs = 0;
+        this.recordingSessionSegments.clear();
+        this.masterRecordingFile = null;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        this.isContinuousSessionActive = "continuous".equals(prefs.getString(Preferences.PREF_RECORDING_SESSION_MODE, "stop"));
+        this.lastVoiceActivityTime = SystemClock.elapsedRealtime();
+        this.isRecordingPausedDueToSilence = false;
+        startRecordingFileInternal(true);
+        this.recordingSilenceHandler.removeCallbacks(this.silenceCheckRunnable);
+        this.recordingSilenceHandler.postDelayed(this.silenceCheckRunnable, 2000);
     }
 
     public void startRecording() {
@@ -1234,7 +1284,6 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         this.isRecordingPausedDueToSilence = false;
         startRecordingFileInternal(true);
         this.recordingSilenceHandler.removeCallbacks(this.silenceCheckRunnable);
-        this.recordingSilenceHandler.postDelayed(this.silenceCheckRunnable, 2000);
     }
 
     private void startRecordingFileInternal(boolean isNewSession) {
@@ -1299,9 +1348,15 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
         }
 
         this.currentRecordingFile = targetFile;
-        this.isRecording = this.ttclient.startRecordingMuxedAudioFile(this.mychannel.audiocodec, targetFile.getAbsolutePath(), audioFileFormat);
+        this.isRecording = this.ttclient.startRecordingMuxedStreams(StreamType.STREAMTYPE_VOICE | StreamType.STREAMTYPE_MEDIAFILE_AUDIO, this.mychannel.audiocodec, targetFile.getAbsolutePath(), audioFileFormat);
 
         if (this.isRecording) {
+            if (!isVoiceTransmitting() && !isVoiceTransmissionEnabled()) {
+                try {
+                    this.ttclient.closeSoundInputDevice();
+                } catch (Throwable ignored) {
+                }
+            }
             Log.d("bearware", "Recording started: " + targetFile.getAbsolutePath() + " (isNew=" + isNewSession + ")");
             if (isNewSession) {
                 showRecordingToast(getString(R.string.recording_started, new Object[]{targetFile.getName()}));
@@ -1629,11 +1684,11 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
                 }
                 if (someoneTalking) {
                     this.pendingAutoRecord = false;
-                    startRecording();
+                    startAutoRecording();
                 } else {
                     this.pendingAutoRecord = true;
                 }
-            } else {
+            } else if (this.mychannel == null || this.mychannel.nChannelID != chan.nChannelID) {
                 this.isManualRecordingActive = false;
                 this.isContinuousSessionActive = false;
                 this.pendingAutoRecord = false;
@@ -1839,6 +1894,12 @@ public class TeamTalkService extends Service implements BluetoothHeadsetHelper.H
     public synchronized void stopExperimentalVoiceTransmission(boolean flushBlock) {
         if (this.experimentalAudioCapture != null) {
             this.experimentalAudioCapture.stop(this.ttclient, flushBlock);
+        }
+        if (this.ttclient != null) {
+            try {
+                this.ttclient.closeSoundInputDevice();
+            } catch (Throwable ignored) {
+            }
         }
     }
 

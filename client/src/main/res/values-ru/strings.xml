@@ -255,6 +255,7 @@
     <string name="err_play_media">Не удалось воспроизвести медиафайл</string>
     <string name="err_retrieve_public_server_list">Не удалось получить список публичных серверов</string>
     <string name="err_save_tt_file_failed">Не удалось сохранить .tt файл</string>
+    <string name="err_invalid_tt_file">Неверный или поврежденный .tt файл</string>
     <string name="err_send_text_message">Не удалось отослать текстовое сообщение</string>
     <string name="err_server_banned">Ваш IP-адрес заблокирован</string>
     <string name="err_service_not_available">Сервис недоступен</string>
@@ -1144,6 +1145,13 @@
     <string name="recordings_rename_hint">Введите новое имя файла</string>
     <string name="recordings_now_playing">Сейчас играет:</string>
     <string name="recordings_play_error">Не удалось воспроизвести аудиофайл</string>
+    <string name="recordings_playback_channel_name">Воспроизведение записей</string>
+    <string name="recordings_playback_channel_desc">Управление воспроизведением аудиозаписей</string>
+    <string name="recordings_playback_playing">Воспроизведение</string>
+    <string name="recordings_playback_paused">Пауза</string>
+    <string name="recordings_playback_rewind">-5 сек</string>
+    <string name="recordings_playback_forward">+5 сек</string>
+    <string name="recordings_playback_stop">Закрыть</string>
 
     <!-- Новые строки TeamTalk 5.23 -->
     <string name="action_resume">Возобновить трансляцию</string>

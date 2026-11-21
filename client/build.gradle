@@ -15,9 +15,9 @@ android {
         applicationId = 'org.nekit.ttproplus'
         minSdk = 21
         targetSdk = 36
-        versionCode = 448
+        versionCode = 449
         // Single source of truth: the value is also injected into TeamTalk client name.
-        versionName = '5.29.3'
+        versionName = '5.29.4'
 
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -106,7 +106,11 @@ tasks.register('syncNativeLibraryVersion') {
     doLast {
         def ver = android.defaultConfig.versionName
         println "Syncing native .so library version to: ${ver}"
-        def proc = ["python3", "${rootDir}/tools/update_native_version.py", ver].execute(null, rootDir)
+        def scriptFile = file("${projectDir}/tools/update_native_version.py")
+        if (!scriptFile.exists()) {
+            scriptFile = file("${rootDir}/tools/update_native_version.py")
+        }
+        def proc = ["python3", scriptFile.absolutePath, ver].execute(null, rootDir)
         proc.waitForProcessOutput(System.out, System.err)
         if (proc.exitValue() != 0) {
             throw new GradleException("Failed to update native library version to ${ver}")
