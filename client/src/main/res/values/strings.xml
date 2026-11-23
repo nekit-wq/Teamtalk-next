@@ -1025,6 +1025,7 @@ By: %3$s"</string>
     <string name="sound_event_user_left">User left</string>
     <string name="sound_event_logged_on">User logged in</string>
     <string name="sound_event_logged_off">User logged off</string>
+    <string name="sound_event_typing">User typing</string>
     <string name="sound_imported_for">Sound imported for %1$s</string>
 
     <!-- Crash Screen -->

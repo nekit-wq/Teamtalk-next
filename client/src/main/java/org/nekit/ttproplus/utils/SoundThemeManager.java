@@ -70,7 +70,7 @@ public class SoundThemeManager {
                     new String[]{"channel_msg_sent.wav", "channel_message_sent.ogg", "user_msg_sent.wav", "user_message_sent.wav", "user_message_sent.ogg"}),
             new EventInfo("broadcast_message", R.string.sound_event_broadcast_msg, R.string.sound_cat_messages, R.raw.broadcast_message,
                     new String[]{"broadcast_msg.wav", "broadcast_message.ogg", "broadcast_msg.ogg", "broadcast_message.wav"}),
-            new EventInfo("typing", R.string.pref_sound_typing, R.string.sound_cat_messages, R.raw.typing,
+            new EventInfo("typing", R.string.sound_event_typing, R.string.sound_cat_messages, R.raw.typing,
                     new String[]{"typing.wav", "typing.ogg"}),
 
             // Users and channels

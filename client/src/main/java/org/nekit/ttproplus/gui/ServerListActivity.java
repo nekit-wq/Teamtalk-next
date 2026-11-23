@@ -2051,7 +2051,7 @@ public class ServerListActivity extends AppCompatActivity
         if (profileValueBearware != null) {
             if (manager.hasAccounts()) {
                 BearWareAccount active = manager.getActiveAccount();
-                String name = active != null ? active.getUsername() : "";
+                String name = active != null ? active.getDisplayName() : "";
                 profileValueBearware.setText(getString(R.string.profile_bearware_active, name));
             } else {
                 profileValueBearware.setText(R.string.profile_bearware_none);

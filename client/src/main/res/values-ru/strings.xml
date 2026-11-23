@@ -1021,6 +1021,7 @@
     <string name="sound_event_user_left">Пользователь вышел из канала</string>
     <string name="sound_event_logged_on">Пользователь подключился</string>
     <string name="sound_event_logged_off">Пользователь отключился</string>
+    <string name="sound_event_typing">Печать текста</string>
     <string name="sound_imported_for">Звук импортирован для: %1$s</string>
 
     <!-- Crash Screen -->

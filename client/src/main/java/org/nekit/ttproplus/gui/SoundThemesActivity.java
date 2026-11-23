@@ -126,7 +126,7 @@ public class SoundThemesActivity extends AppCompatActivity {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.sound_theme_create_title)
                 .setView(container)
-                .setPositiveButton(R.string.action_create, (dialog, which) -> {
+                .setPositiveButton(R.string.sound_theme_create, (dialog, which) -> {
                     String name = nameInput.getText().toString().trim();
                     if (name.isEmpty()) {
                         name = getString(R.string.sound_theme_custom);
