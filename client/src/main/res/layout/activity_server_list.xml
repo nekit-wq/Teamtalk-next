@@ -568,7 +568,7 @@
             app:labelVisibilityMode="labeled"
             app:itemIconTint="@color/selector_nav_item"
             app:itemTextColor="@color/selector_nav_item"
-            app:itemActiveIndicatorEnabled="false"
+            app:itemActiveIndicatorStyle="@null"
             app:elevation="0dp" />
 
     </LinearLayout>

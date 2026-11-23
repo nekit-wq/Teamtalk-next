@@ -105,7 +105,7 @@
         <item name="android:background">@color/surfaceColor</item>
         <item name="android:minHeight">54dp</item>
         <item name="itemIconSize">20dp</item>
-        <item name="itemActiveIndicatorEnabled">false</item>
+        <item name="itemActiveIndicatorStyle">@null</item>
         <item name="itemPaddingTop">5dp</item>
         <item name="itemPaddingBottom">5dp</item>
         <item name="itemTextAppearanceActive">@style/TextAppearance.M3.BottomNav</item>
