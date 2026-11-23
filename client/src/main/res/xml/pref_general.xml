@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
-    <org.nekit.ttproplus.gui.MaterialEditTextPreference android:icon="@drawable/ic_pref_nickname" android:singleLine="true" android:selectAllOnFocus="true" android:title="@string/pref_title_nickname" android:key="nickname_text" />
-    <org.nekit.ttproplus.gui.MaterialEditTextPreference android:singleLine="true" android:selectAllOnFocus="true" android:title="@string/pref_title_statusmsg" android:key="statusmsg_text" />
-    <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_gender" android:key="gender_checkbox" android:summary="@string/pref_summary_gender" android:defaultValue="false" />
-    <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_bearwareid" android:key="bearwareid_checkbox" android:summary="@string/pref_summary_bearwareid" android:defaultValue="false" />
     <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_move_talking" android:key="movetalk_checkbox" android:summary="@string/pref_summary_move_talking" android:defaultValue="true" />
     <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_show_usernames" android:key="showusernames_checkbox" android:summary="@string/pref_summary_show_usernames" android:defaultValue="false" />
     <org.nekit.ttproplus.gui.MaterialSwitchPreference android:title="@string/pref_title_vibrate" android:key="vibrate_checkbox" android:defaultValue="true" />

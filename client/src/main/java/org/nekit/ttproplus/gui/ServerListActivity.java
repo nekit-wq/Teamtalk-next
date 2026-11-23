@@ -105,7 +105,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import dk.bearware.Constants;
 import dk.bearware.TeamTalkBase;
+import dk.bearware.User;
 import dk.bearware.UserAccount;
+import android.preference.PreferenceActivity;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import org.nekit.ttproplus.backend.TeamTalkConnection;
 import org.nekit.ttproplus.backend.TeamTalkConnectionListener;
 import org.nekit.ttproplus.backend.TeamTalkService;
@@ -144,7 +148,23 @@ public class ServerListActivity extends AppCompatActivity
     private static final int REQUEST_NEWSERVER = 2;
     private static final int REQUEST_IMPORT_SERVERLIST = 3;
     private static final int REQUEST_JOINCODE = 4;
+    private static final int REQUEST_BEARWARE = 6;
     private static final String POSITION_NAME = "pos";
+
+    private BottomNavigationView bottomNavigation;
+    private View tabLayoutServers;
+    private View tabLayoutSettings;
+    private View tabLayoutProfile;
+    private ExtendedFloatingActionButton fabAddServer;
+
+    private TextView profileHeroNickname;
+    private TextView profileHeroStatus;
+    private TextView profileValueNickname;
+    private TextView profileValueStatusmsg;
+    private TextView profileValueGender;
+    private MaterialSwitch switchProfileGender;
+    private TextView profileValueBearware;
+    private TextView profileValueClientname;
 
     private String appliedTheme;
     private String appliedAccent;
@@ -245,6 +265,10 @@ public class ServerListActivity extends AppCompatActivity
             mActionMode.finish();
             return;
         }
+        if (bottomNavigation != null && bottomNavigation.getSelectedItemId() != R.id.nav_tab_servers) {
+            bottomNavigation.setSelectedItemId(R.id.nav_tab_servers);
+            return;
+        }
         super.onBackPressed();
     }
 
@@ -286,7 +310,7 @@ public class ServerListActivity extends AppCompatActivity
         searchEditText = findViewById(R.id.search_edit_text);
         emptyView = findViewById(R.id.empty_view);
 
-        ExtendedFloatingActionButton fabAddServer = findViewById(R.id.fab_add_server);
+        fabAddServer = findViewById(R.id.fab_add_server);
         if (fabAddServer != null) {
             fabAddServer.setOnClickListener(v -> {
                 Intent edit = new Intent(this, ServerEntryActivity.class);
@@ -301,6 +325,15 @@ public class ServerListActivity extends AppCompatActivity
                 }
             });
         }
+
+        tabLayoutServers = findViewById(R.id.tab_layout_servers);
+        tabLayoutSettings = findViewById(R.id.tab_layout_settings);
+        tabLayoutProfile = findViewById(R.id.tab_layout_profile);
+        bottomNavigation = findViewById(R.id.bottom_navigation_server_list);
+
+        setupBottomNavigation();
+        setupSettingsTab();
+        setupProfileTab();
     }
 
     private void setupRecyclerView() {
@@ -385,6 +418,7 @@ public class ServerListActivity extends AppCompatActivity
         if (adapter != null) {
             adapter.updateServers();
         }
+        updateProfileUI();
 
         if (mConnection.isBound()) {
             if (getService() != null && getService().getEventHandler() != null) {
@@ -582,6 +616,9 @@ public class ServerListActivity extends AppCompatActivity
                 break;
             case REQUEST_JOINCODE:
                 enterJoinCode();
+                break;
+            case REQUEST_BEARWARE:
+                updateProfileUI();
                 break;
         }
     }
@@ -1809,6 +1846,318 @@ public class ServerListActivity extends AppCompatActivity
 
     private void performBulkServerDelete(final List<ServerEntry> selected) {
         performBulkServerDelete(selected, mActionMode);
+    }
+
+    private void setupBottomNavigation() {
+        if (bottomNavigation == null) return;
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_tab_servers) {
+                if (tabLayoutServers != null) tabLayoutServers.setVisibility(View.VISIBLE);
+                if (tabLayoutSettings != null) tabLayoutSettings.setVisibility(View.GONE);
+                if (tabLayoutProfile != null) tabLayoutProfile.setVisibility(View.GONE);
+                if (fabAddServer != null) fabAddServer.show();
+                setTitle(R.string.title_activity_server_list);
+                return true;
+            } else if (itemId == R.id.nav_tab_settings) {
+                if (tabLayoutServers != null) tabLayoutServers.setVisibility(View.GONE);
+                if (tabLayoutSettings != null) tabLayoutSettings.setVisibility(View.VISIBLE);
+                if (tabLayoutProfile != null) tabLayoutProfile.setVisibility(View.GONE);
+                if (fabAddServer != null) fabAddServer.hide();
+                setTitle(R.string.nav_tab_settings);
+                return true;
+            } else if (itemId == R.id.nav_tab_profile) {
+                if (tabLayoutServers != null) tabLayoutServers.setVisibility(View.GONE);
+                if (tabLayoutSettings != null) tabLayoutSettings.setVisibility(View.GONE);
+                if (tabLayoutProfile != null) tabLayoutProfile.setVisibility(View.VISIBLE);
+                if (fabAddServer != null) fabAddServer.hide();
+                setTitle(R.string.nav_tab_profile);
+                updateProfileUI();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private static class SettingsCategory {
+        final int iconRes;
+        final int titleRes;
+        final int descRes;
+        final Class<?> targetClass;
+        final String fragmentName;
+
+        SettingsCategory(int iconRes, int titleRes, int descRes, Class<?> targetClass, String fragmentName) {
+            this.iconRes = iconRes;
+            this.titleRes = titleRes;
+            this.descRes = descRes;
+            this.targetClass = targetClass;
+            this.fragmentName = fragmentName;
+        }
+    }
+
+    private void setupSettingsTab() {
+        RecyclerView recyclerSettings = findViewById(R.id.recycler_settings_categories);
+        if (recyclerSettings == null) return;
+        recyclerSettings.setLayoutManager(new LinearLayoutManager(this));
+
+        List<SettingsCategory> list = new ArrayList<>();
+        list.add(new SettingsCategory(R.drawable.ic_pref_general, R.string.settings_cat_general, R.string.settings_cat_general_desc, PreferencesActivity.class, PreferencesActivity.GeneralPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_background, R.string.settings_cat_background, R.string.settings_cat_background_desc, PreferencesActivity.class, PreferencesActivity.BackgroundMgmtPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_display, R.string.settings_cat_display, R.string.settings_cat_display_desc, PreferencesActivity.class, PreferencesActivity.DisplayPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_sound_pack, R.string.settings_cat_sound_themes, R.string.settings_cat_sound_themes_desc, SoundThemesActivity.class, null));
+        list.add(new SettingsCategory(R.drawable.ic_pref_sound_events, R.string.settings_cat_sound_events, R.string.settings_cat_sound_events_desc, PreferencesActivity.class, PreferencesActivity.SoundEventsPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_antispam, R.string.settings_cat_antispam, R.string.settings_cat_antispam_desc, PreferencesActivity.class, PreferencesActivity.AntiSpamPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_tts, R.string.settings_cat_tts, R.string.settings_cat_tts_desc, PreferencesActivity.class, PreferencesActivity.TtsPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_serverlist, R.string.settings_cat_serverlist, R.string.settings_cat_serverlist_desc, PreferencesActivity.class, PreferencesActivity.ServerListPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_connection, R.string.settings_cat_connection, R.string.settings_cat_connection_desc, PreferencesActivity.class, PreferencesActivity.ConnectionPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_soundsystem, R.string.settings_cat_soundsystem, R.string.settings_cat_soundsystem_desc, PreferencesActivity.class, PreferencesActivity.SoundSystemPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_recording, R.string.settings_cat_recording, R.string.settings_cat_recording_desc, PreferencesActivity.class, PreferencesActivity.RecordingPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_performance, R.string.settings_cat_performance, R.string.settings_cat_performance_desc, PreferencesActivity.class, PreferencesActivity.PerformancePreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_about, R.string.settings_cat_about, R.string.settings_cat_about_desc, PreferencesActivity.class, PreferencesActivity.AboutPreferenceFragment.class.getName()));
+        list.add(new SettingsCategory(R.drawable.ic_pref_debug, R.string.settings_cat_debug, R.string.settings_cat_debug_desc, PreferencesActivity.class, PreferencesActivity.DebugPreferenceFragment.class.getName()));
+
+        recyclerSettings.setAdapter(new SettingsCategoriesAdapter(list));
+    }
+
+    private class SettingsCategoriesAdapter extends RecyclerView.Adapter<SettingsCategoriesAdapter.ViewHolder> {
+        private final List<SettingsCategory> items;
+
+        SettingsCategoriesAdapter(List<SettingsCategory> items) {
+            this.items = items;
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_settings_category, parent, false);
+            return new ViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            SettingsCategory item = items.get(position);
+            holder.icon.setImageResource(item.iconRes);
+            holder.title.setText(item.titleRes);
+            holder.desc.setText(item.descRes);
+
+            holder.itemView.setOnClickListener(v -> {
+                if (item.targetClass == SoundThemesActivity.class) {
+                    startActivity(new Intent(ServerListActivity.this, SoundThemesActivity.class));
+                } else {
+                    Intent intent = new Intent(ServerListActivity.this, PreferencesActivity.class);
+                    if (item.fragmentName != null) {
+                        intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, item.fragmentName);
+                        intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
+                    }
+                    startActivity(intent);
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            ImageView icon;
+            TextView title;
+            TextView desc;
+
+            ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                icon = itemView.findViewById(R.id.settings_icon);
+                title = itemView.findViewById(R.id.settings_title);
+                desc = itemView.findViewById(R.id.settings_description);
+            }
+        }
+    }
+
+    private void setupProfileTab() {
+        profileHeroNickname = findViewById(R.id.profile_hero_nickname);
+        profileHeroStatus = findViewById(R.id.profile_hero_status);
+        profileValueNickname = findViewById(R.id.profile_value_nickname);
+        profileValueStatusmsg = findViewById(R.id.profile_value_statusmsg);
+        profileValueGender = findViewById(R.id.profile_value_gender);
+        switchProfileGender = findViewById(R.id.switch_profile_gender);
+        profileValueBearware = findViewById(R.id.profile_value_bearware);
+        profileValueClientname = findViewById(R.id.profile_value_clientname);
+
+        View cardNick = findViewById(R.id.card_profile_nickname);
+        if (cardNick != null) cardNick.setOnClickListener(v -> showEditNicknameDialog());
+
+        View cardStatus = findViewById(R.id.card_profile_statusmsg);
+        if (cardStatus != null) cardStatus.setOnClickListener(v -> showEditStatusMsgDialog());
+
+        if (switchProfileGender != null) {
+            switchProfileGender.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(Preferences.PREF_GENERAL_GENDER, isChecked).apply();
+                if (profileValueGender != null) {
+                    profileValueGender.setText(isChecked ? R.string.profile_gender_female : R.string.profile_gender_male);
+                }
+                updateServiceProfile();
+            });
+        }
+
+        View cardGender = findViewById(R.id.card_profile_gender);
+        if (cardGender != null) {
+            cardGender.setOnClickListener(v -> {
+                if (switchProfileGender != null) {
+                    switchProfileGender.setChecked(!switchProfileGender.isChecked());
+                }
+            });
+        }
+
+        View cardBearware = findViewById(R.id.card_profile_bearware);
+        if (cardBearware != null) {
+            cardBearware.setOnClickListener(v -> {
+                Intent edit = new Intent(this, WebLoginActivity.class);
+                startActivityForResult(edit, REQUEST_BEARWARE);
+            });
+        }
+
+        View cardClient = findViewById(R.id.card_profile_clientname);
+        if (cardClient != null) cardClient.setOnClickListener(v -> showEditClientNameDialog());
+
+        updateProfileUI();
+    }
+
+    private void updateProfileUI() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String nick = prefs.getString(Preferences.PREF_GENERAL_NICKNAME, "");
+        if (TextUtils.isEmpty(nick)) {
+            nick = getString(R.string.pref_default_nickname);
+        }
+        if (profileHeroNickname != null) profileHeroNickname.setText(nick);
+        if (profileValueNickname != null) profileValueNickname.setText(nick);
+
+        String status = prefs.getString(Preferences.PREF_GENERAL_STATUSMSG, "");
+        if (profileHeroStatus != null) {
+            profileHeroStatus.setText(TextUtils.isEmpty(status) ? getString(R.string.profile_status_empty) : status);
+        }
+        if (profileValueStatusmsg != null) {
+            profileValueStatusmsg.setText(TextUtils.isEmpty(status) ? getString(R.string.profile_status_empty) : status);
+        }
+
+        boolean isFemale = prefs.getBoolean(Preferences.PREF_GENERAL_GENDER, false);
+        if (switchProfileGender != null) {
+            switchProfileGender.setChecked(isFemale);
+        }
+        if (profileValueGender != null) {
+            profileValueGender.setText(isFemale ? R.string.profile_gender_female : R.string.profile_gender_male);
+        }
+
+        BearWareAccountManager manager = BearWareAccountManager.getInstance(this);
+        if (profileValueBearware != null) {
+            if (manager.hasAccounts()) {
+                BearWareAccount active = manager.getActiveAccount();
+                String name = active != null ? active.getUsername() : "";
+                profileValueBearware.setText(getString(R.string.profile_bearware_active, name));
+            } else {
+                profileValueBearware.setText(R.string.profile_bearware_none);
+            }
+        }
+
+        String clientName = prefs.getString(Preferences.PREF_GENERAL_CLIENTNAME, "");
+        if (profileValueClientname != null) {
+            profileValueClientname.setText(TextUtils.isEmpty(clientName) ? getString(R.string.profile_clientname_hint) : clientName);
+        }
+    }
+
+    private void showEditNicknameDialog() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setText(prefs.getString(Preferences.PREF_GENERAL_NICKNAME, ""));
+        input.setSelection(input.getText().length());
+
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        android.widget.FrameLayout layout = new android.widget.FrameLayout(this);
+        layout.setPadding(pad, pad / 2, pad, pad / 2);
+        layout.addView(input);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.profile_nickname_title)
+                .setView(layout)
+                .setPositiveButton(R.string.action_save, (dialog, which) -> {
+                    String val = input.getText().toString().trim();
+                    prefs.edit().putString(Preferences.PREF_GENERAL_NICKNAME, val).apply();
+                    updateProfileUI();
+                    updateServiceProfile();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void showEditStatusMsgDialog() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setText(prefs.getString(Preferences.PREF_GENERAL_STATUSMSG, ""));
+        input.setSelection(input.getText().length());
+
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        android.widget.FrameLayout layout = new android.widget.FrameLayout(this);
+        layout.setPadding(pad, pad / 2, pad, pad / 2);
+        layout.addView(input);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.profile_statusmsg_title)
+                .setView(layout)
+                .setPositiveButton(R.string.action_save, (dialog, which) -> {
+                    String val = input.getText().toString().trim();
+                    prefs.edit().putString(Preferences.PREF_GENERAL_STATUSMSG, val).apply();
+                    updateProfileUI();
+                    updateServiceProfile();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void showEditClientNameDialog() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setText(prefs.getString(Preferences.PREF_GENERAL_CLIENTNAME, ""));
+        input.setSelection(input.getText().length());
+
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        android.widget.FrameLayout layout = new android.widget.FrameLayout(this);
+        layout.setPadding(pad, pad / 2, pad, pad / 2);
+        layout.addView(input);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.profile_clientname_title)
+                .setView(layout)
+                .setPositiveButton(R.string.action_save, (dialog, which) -> {
+                    String val = input.getText().toString().trim();
+                    prefs.edit().putString(Preferences.PREF_GENERAL_CLIENTNAME, val).apply();
+                    updateProfileUI();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void updateServiceProfile() {
+        try {
+            if (getService() == null || getClient() == null || getService().getUsers() == null) {
+                return;
+            }
+            User myself = getService().getUsers().get(Integer.valueOf(getClient().getMyUserID()));
+            if (myself != null) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                String nickname = prefs.getString(Preferences.PREF_GENERAL_NICKNAME, "");
+                if (!TextUtils.isEmpty(nickname)) {
+                    getClient().doChangeNickname(nickname);
+                }
+                int statusmode = myself.nStatusMode & (-257);
+                String statusmsg = prefs.getString(Preferences.PREF_GENERAL_STATUSMSG, "");
+                if (prefs.getBoolean(Preferences.PREF_GENERAL_GENDER, false)) {
+                    statusmode |= 256;
+                }
+                getClient().doChangeStatus(statusmode, statusmsg);
+            }
+        } catch (Exception ignored) {}
     }
 
     private void performBulkServerDelete(final List<ServerEntry> selected, final ActionMode mode) {

@@ -245,6 +245,16 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
     }
 
     @Override
+    public void onHeaderClick(Header header, int position) {
+        if (header != null && (SoundPacksPreferenceFragment.class.getName().equals(header.fragment)
+                || header.titleRes == R.string.pref_title_sound_pack)) {
+            startActivity(new Intent(this, SoundThemesActivity.class));
+            return;
+        }
+        super.onHeaderClick(header, position);
+    }
+
+    @Override
     protected boolean isValidFragment(String fragmentName) {
         return GeneralPreferenceFragment.class.getName().equals(fragmentName) || BackgroundMgmtPreferenceFragment.class.getName().equals(fragmentName) || SoundEventsPreferenceFragment.class.getName().equals(fragmentName) || ConnectionPreferenceFragment.class.getName().equals(fragmentName) || ServerListPreferenceFragment.class.getName().equals(fragmentName) || TtsPreferenceFragment.class.getName().equals(fragmentName) || SoundSystemPreferenceFragment.class.getName().equals(fragmentName) || AntiSpamPreferenceFragment.class.getName().equals(fragmentName) || AboutPreferenceFragment.class.getName().equals(fragmentName) || SoundPacksPreferenceFragment.class.getName().equals(fragmentName) || RecordingPreferenceFragment.class.getName().equals(fragmentName) || DisplayPreferenceFragment.class.getName().equals(fragmentName) || PerformancePreferenceFragment.class.getName().equals(fragmentName) || DebugPreferenceFragment.class.getName().equals(fragmentName);
     }
@@ -449,128 +459,13 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         }
     }
 
-        public static class SoundPacksPreferenceFragment extends PreferenceFragment {
-        private static final int REQUEST_CUSTOM_FILE_PICKER = 101;
-        private static final int REQUEST_PICK_SOUND = 100;
-
+    public static class SoundPacksPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_soundpacks);
-            Preference packPref = findPreference("sound_pack_preference");
-            if (packPref instanceof ListPreference) {
-                PreferencesActivity.bindPreferenceSummaryToValue(packPref);
-            }
-            Preference importPref = findPreference("import_sound_pack");
-            if (importPref != null) {
-                importPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() { 
-                    @Override
-                    public final boolean onPreferenceClick(Preference preference) {
-                        boolean lambda$onCreate$0;
-                        lambda$onCreate$0 = PreferencesActivity.SoundPacksPreferenceFragment.this.lambda$onCreate$0(preference);
-                        return lambda$onCreate$0;
-                    }
-                });
-            }
-        }
-
-                public boolean lambda$onCreate$0(Preference pref) {
-            Utils.showFilePicker((Fragment) this, 100, 101, false, "audio/*");
-            return true;
-        }
-
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {
-            if (requestCode == 100) {
-                getActivity();
-                if (resultCode == -1 && data != null) {
-                    Uri uri = data.getData();
-                    if (uri != null) {
-                        importSoundFile(uri);
-                        return;
-                    }
-                    return;
-                }
-            }
-            if (requestCode == 101) {
-                getActivity();
-                if (resultCode == -1 && data != null) {
-                    String path = data.getStringExtra(CustomFilePickerActivity.EXTRA_FILE_PATH);
-                    if (path != null) {
-                        importSoundFile(Uri.fromFile(new File(path)));
-                        return;
-                    }
-                    return;
-                }
-            }
-            super.onActivityResult(requestCode, resultCode, data);
-        }
-
-        private void importSoundFile(final Uri uri) {
-            final Context context = getActivity();
-            if (context == null) {
-                return;
-            }
-            final String[] eventKeys = {"serverlost", "on", "off", "user_message", "channel_message", "channel_message_sent", "broadcast_message", "fileupdate", "voiceact_enable", "voiceact_disable", "voiceact_on", "voiceact_off", "intercept", "interceptend", "txqueue_start", "txqueue_stop", "user_join", "user_left", "logged_on", "logged_off"};
-            final int[] labelResIds = {
-                R.string.sound_event_serverlost, R.string.sound_event_tx_on, R.string.sound_event_tx_off,
-                R.string.sound_event_user_msg, R.string.sound_event_chan_msg, R.string.sound_event_chan_msg_sent,
-                R.string.sound_event_broadcast_msg, R.string.sound_event_fileupdate, R.string.sound_event_voiceact_enable,
-                R.string.sound_event_voiceact_disable, R.string.sound_event_voiceact_on, R.string.sound_event_voiceact_off,
-                R.string.sound_event_intercept, R.string.sound_event_interceptend, R.string.sound_event_txqueue_start,
-                R.string.sound_event_txqueue_stop, R.string.sound_event_user_join, R.string.sound_event_user_left,
-                R.string.sound_event_logged_on, R.string.sound_event_logged_off
-            };
-            final String[] eventLabels = new String[labelResIds.length];
-            for (int i = 0; i < labelResIds.length; i++) {
-                eventLabels[i] = context.getString(labelResIds[i]);
-            }
-            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
-            builder.setTitle(R.string.sound_assign_title);
-            builder.setItems(eventLabels, new DialogInterface.OnClickListener() { 
-                @Override
-                public final void onClick(DialogInterface dialogInterface, int i) {
-                    PreferencesActivity.SoundPacksPreferenceFragment.lambda$importSoundFile$1(eventKeys, context, uri, eventLabels, dialogInterface, i);
-                }
-            });
-            builder.setNegativeButton(android.R.string.cancel, (DialogInterface.OnClickListener) null);
-            builder.show();
-        }
-
-        public static void lambda$importSoundFile$1(String[] eventKeys, Context context, Uri uri, String[] eventLabels, DialogInterface dialog, int which) {
-            String fileName = eventKeys[which] + ".ogg";
-            File soundsDir = new File(context.getFilesDir(), "sounds");
-            soundsDir.mkdirs();
-            File destFile = new File(soundsDir, fileName);
-            try {
-                InputStream in = context.getContentResolver().openInputStream(uri);
-                try {
-                    FileOutputStream out = new FileOutputStream(destFile);
-                    try {
-                        byte[] buf = new byte[8192];
-                        while (true) {
-                            int len = in.read(buf);
-                            if (len <= 0) {
-                                break;
-                            } else {
-                                out.write(buf, 0, len);
-                            }
-                        }
-                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-                        editor.putString("sound_pack_preference", "custom");
-                        editor.putString("custom_sound_" + eventKeys[which], destFile.getAbsolutePath());
-                        editor.apply();
-                        Toast.makeText(context, context.getString(R.string.sound_imported_for, eventLabels[which]), Toast.LENGTH_SHORT).show();
-                        out.close();
-                        if (in != null) {
-                            in.close();
-                        }
-                    } finally {
-                    }
-                } finally {
-                }
-            } catch (IOException e) {
-                Toast.makeText(context, "Failed to import sound: " + e.getMessage(), 1).show();
+            startActivity(new Intent(getActivity(), SoundThemesActivity.class));
+            if (getActivity() != null) {
+                getActivity().onBackPressed();
             }
         }
     }

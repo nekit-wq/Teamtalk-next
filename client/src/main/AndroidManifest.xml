@@ -216,6 +216,18 @@
         </activity>
 
         <activity
+            android:name=".gui.SoundThemesActivity"
+            android:label="@string/sound_theme_title"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
+
+        <activity
+            android:name=".gui.SoundThemeEditActivity"
+            android:label="@string/sound_theme_title"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
+
+        <activity
             android:name=".gui.AudioCodecActivity"
             android:label="@string/title_activity_audio_codec"
             android:exported="false">

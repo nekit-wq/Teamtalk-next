@@ -1135,6 +1135,16 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
     }
 
     private int loadSound(PrefsHelper prefs, Context context, String soundPack, String key, int defaultResId) {
+        if ("silent".equals(soundPack)) {
+            return 0;
+        }
+        File customThemeSound = org.nekit.ttproplus.utils.SoundThemeManager.getSoundFileForEvent(context, soundPack, key);
+        if (customThemeSound != null && customThemeSound.exists() && customThemeSound.canRead()) {
+            int soundId = this.audioIcons.load(customThemeSound.getAbsolutePath(), 1);
+            if (soundId != 0) {
+                return soundId;
+            }
+        }
         if ("custom".equals(soundPack)) {
             String customPath = (String) prefs.get("custom_sound_" + key, "");
             if (!customPath.isEmpty()) {
@@ -1147,10 +1157,11 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                 }
             }
         } else if (soundPack != null && !soundPack.isEmpty() && !"default".equals(soundPack)) {
+            String basePack = org.nekit.ttproplus.utils.SoundThemeManager.getBasePack(context, soundPack);
             String[] candidates = SOUND_CANDIDATES.get(key);
             if (candidates != null) {
                 for (String candidate : candidates) {
-                    File cachedSound = getCachedAssetSound(context, soundPack, candidate);
+                    File cachedSound = getCachedAssetSound(context, basePack, candidate);
                     if (cachedSound != null && cachedSound.exists() && cachedSound.length() > 0) {
                         int soundId = this.audioIcons.load(cachedSound.getAbsolutePath(), 1);
                         if (soundId != 0) {
