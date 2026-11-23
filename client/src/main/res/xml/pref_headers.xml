@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<preference-headers
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <header android:icon="@drawable/ic_pref_general" android:title="@string/pref_header_general" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$GeneralPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_background" android:title="@string/pref_header_background_mgmt" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$BackgroundMgmtPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_display" android:title="@string/pref_header_display" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$DisplayPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_sound_pack" android:title="@string/pref_title_sound_pack" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$SoundPacksPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_sound_events" android:title="@string/pref_title_audio_icons" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$SoundEventsPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_antispam" android:title="@string/pref_header_antispam" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$AntiSpamPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_tts" android:title="@string/pref_header_tts" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$TtsPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_serverlist" android:title="@string/pref_header_serverlist" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$ServerListPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_connection" android:title="@string/pref_header_connection" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$ConnectionPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_soundsystem" android:title="@string/pref_header_soundsystem" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$SoundSystemPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_recording" android:title="@string/pref_header_recording" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$RecordingPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_performance" android:title="@string/pref_header_performance" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$PerformancePreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_about" android:title="@string/pref_cat_about" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$AboutPreferenceFragment" />
-    <header android:icon="@drawable/ic_pref_debug" android:title="@string/pref_header_debug" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$DebugPreferenceFragment" />
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+    <header android:icon="@drawable/ic_pref_general" android:title="@string/settings_cat_general" android:summary="@string/settings_cat_general_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$GeneralPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_background" android:title="@string/settings_cat_background" android:summary="@string/settings_cat_background_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$BackgroundMgmtPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_display" android:title="@string/settings_cat_display" android:summary="@string/settings_cat_display_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$DisplayPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_sound_pack" android:title="@string/settings_cat_sound_themes" android:summary="@string/settings_cat_sound_themes_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$SoundPacksPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_sound_events" android:title="@string/settings_cat_sound_events" android:summary="@string/settings_cat_sound_events_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$SoundEventsPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_antispam" android:title="@string/settings_cat_antispam" android:summary="@string/settings_cat_antispam_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$AntiSpamPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_tts" android:title="@string/settings_cat_tts" android:summary="@string/settings_cat_tts_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$TtsPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_serverlist" android:title="@string/settings_cat_serverlist" android:summary="@string/settings_cat_serverlist_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$ServerListPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_connection" android:title="@string/settings_cat_connection" android:summary="@string/settings_cat_connection_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$ConnectionPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_soundsystem" android:title="@string/settings_cat_soundsystem" android:summary="@string/settings_cat_soundsystem_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$SoundSystemPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_recording" android:title="@string/settings_cat_recording" android:summary="@string/settings_cat_recording_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$RecordingPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_performance" android:title="@string/settings_cat_performance" android:summary="@string/settings_cat_performance_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$PerformancePreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_about" android:title="@string/settings_cat_about" android:summary="@string/settings_cat_about_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$AboutPreferenceFragment" />
+    <header android:icon="@drawable/ic_pref_debug" android:title="@string/settings_cat_debug" android:summary="@string/settings_cat_debug_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$DebugPreferenceFragment" />
 </preference-headers>

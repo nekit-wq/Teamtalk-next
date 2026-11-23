@@ -93,7 +93,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:clipToPadding="false"
-                        android:paddingBottom="60dp"
+                        android:paddingBottom="72dp"
                         android:scrollbars="vertical" />
 
                     <TextView
@@ -562,13 +562,15 @@
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation_server_list"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:background="?attr/colorSurface"
             app:menu="@menu/bottom_nav_server_list"
             app:labelVisibilityMode="labeled"
             app:itemIconTint="@color/selector_nav_item"
             app:itemTextColor="@color/selector_nav_item"
             app:itemActiveIndicatorStyle="@null"
+            app:paddingBottomSystemWindowInsets="false"
+            app:paddingTopSystemWindowInsets="false"
             app:elevation="0dp" />
 
     </LinearLayout>
@@ -580,7 +582,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="64dp"
+        android:layout_marginBottom="76dp"
         android:text="@string/action_new_server"
         android:textColor="?attr/colorOnPrimary"
         app:icon="@drawable/ic_add"

@@ -39,10 +39,15 @@ import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -247,7 +252,8 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
     @Override
     public void onHeaderClick(Header header, int position) {
         if (header != null && (SoundPacksPreferenceFragment.class.getName().equals(header.fragment)
-                || header.titleRes == R.string.pref_title_sound_pack)) {
+                || header.titleRes == R.string.pref_title_sound_pack
+                || header.titleRes == R.string.settings_cat_sound_themes)) {
             startActivity(new Intent(this, SoundThemesActivity.class));
             return;
         }
@@ -287,9 +293,83 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         }
     }
 
+    private List<Header> mSavedHeaders;
+
     @Override
     public void onBuildHeaders(List<PreferenceActivity.Header> target) {
         loadHeadersFromResource(R.xml.pref_headers, target);
+        this.mSavedHeaders = target;
+    }
+
+    @Override
+    public void setListAdapter(ListAdapter adapter) {
+        if (mSavedHeaders != null && !mSavedHeaders.isEmpty()) {
+            super.setListAdapter(new ModernHeaderAdapter(this, mSavedHeaders));
+            try {
+                ListView lv = getListView();
+                if (lv != null) {
+                    lv.setDivider(null);
+                    lv.setDividerHeight(0);
+                    lv.setSelector(android.R.color.transparent);
+                    int padH = (int) (12 * getResources().getDisplayMetrics().density);
+                    int padV = (int) (8 * getResources().getDisplayMetrics().density);
+                    lv.setPadding(padH, padV, padH, padV);
+                    lv.setClipToPadding(false);
+                }
+            } catch (Exception ignored) {}
+            return;
+        }
+        super.setListAdapter(adapter);
+    }
+
+    private class ModernHeaderAdapter extends ArrayAdapter<Header> {
+        ModernHeaderAdapter(Context context, List<Header> headers) {
+            super(context, 0, headers);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view = convertView;
+            if (view == null) {
+                view = LayoutInflater.from(getContext()).inflate(R.layout.item_settings_category, parent, false);
+            }
+            Header header = getItem(position);
+            if (header != null) {
+                ImageView icon = view.findViewById(R.id.settings_icon);
+                TextView title = view.findViewById(R.id.settings_title);
+                TextView desc = view.findViewById(R.id.settings_description);
+
+                if (icon != null) {
+                    if (header.iconRes != 0) {
+                        icon.setImageResource(header.iconRes);
+                        icon.setVisibility(View.VISIBLE);
+                    } else {
+                        icon.setVisibility(View.GONE);
+                    }
+                }
+
+                CharSequence titleText = header.getTitle(getResources());
+                if (title != null) {
+                    title.setText(titleText);
+                }
+
+                CharSequence descText = header.getSummary(getResources());
+                if (desc != null) {
+                    if (!TextUtils.isEmpty(descText)) {
+                        desc.setText(descText);
+                        desc.setVisibility(View.VISIBLE);
+                    } else {
+                        desc.setVisibility(View.GONE);
+                    }
+                }
+
+                String a11y = (titleText != null ? titleText.toString() : "")
+                        + (TextUtils.isEmpty(descText) ? "" : ", " + descText);
+                view.setContentDescription(a11y);
+                view.setOnClickListener(v -> onHeaderClick(header, position));
+            }
+            return view;
+        }
     }
 
         public static boolean lambda$static$0(Preference preference, Object value) {
