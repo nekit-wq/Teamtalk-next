@@ -41,7 +41,7 @@
     <string name="action_new_server">Новый Сервер</string>
     <string name="action_open_channel">Открыть канал</string>
     <string name="action_pause">Пауза</string>
-    <string name="action_play">Пуск</string>
+    <string name="action_play">Воспроизвести</string>
     <string name="action_refresh">Обновить Список</string>
     <string name="action_removesrv">Удалить сервер</string>
     <string name="action_revoke_operator">Отозвать права Оператора</string>
@@ -1628,6 +1628,13 @@
     <string name="sound_theme_sound_default">По умолчанию</string>
     <string name="sound_theme_sound_custom">Пользовательский (%1$s)</string>
     <string name="sound_theme_reset_sound">Сбросить звук</string>
+    <string name="sound_theme_play_event">Воспроизвести: %1$s</string>
+    <string name="sound_theme_reset_event">Сбросить звук: %1$s</string>
+    <string name="sound_theme_card_hint">Нажмите для выбора звука</string>
+    <string name="sound_theme_state_active">выбрана</string>
+    <string name="sound_theme_state_inactive">не выбрана</string>
+    <string name="sound_theme_edit_theme_sounds">Настроить звуки темы %1$s</string>
+    <string name="sound_theme_menu_options">Параметры темы %1$s</string>
     <string name="sound_theme_sound_updated">Звук для «%1$s» обновлен</string>
     <string name="sound_theme_sound_reset">Звук для «%1$s» сброшен</string>
     <string name="sound_cat_transmission">Передача голоса</string>

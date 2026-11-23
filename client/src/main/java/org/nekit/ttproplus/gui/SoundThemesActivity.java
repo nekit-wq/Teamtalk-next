@@ -231,7 +231,9 @@ public class SoundThemesActivity extends AppCompatActivity {
                 }
                 holder.actionsLayout.setVisibility(View.VISIBLE);
                 holder.btnEditSounds.setVisibility(View.VISIBLE);
+                holder.btnEditSounds.setContentDescription(context.getString(R.string.sound_theme_edit_theme_sounds, theme.getName()));
                 holder.btnMenu.setVisibility(View.VISIBLE);
+                holder.btnMenu.setContentDescription(context.getString(R.string.sound_theme_menu_options, theme.getName()));
 
                 holder.btnEditSounds.setOnClickListener(v -> {
                     Intent intent = new Intent(context, SoundThemeEditActivity.class);
@@ -259,6 +261,7 @@ public class SoundThemesActivity extends AppCompatActivity {
                 holder.textDesc.setText(context.getString(R.string.sound_theme_builtin));
                 holder.actionsLayout.setVisibility(View.GONE);
                 holder.btnMenu.setVisibility(View.VISIBLE);
+                holder.btnMenu.setContentDescription(context.getString(R.string.sound_theme_menu_options, theme.getName()));
 
                 holder.btnMenu.setOnClickListener(v -> {
                     PopupMenu popup = new PopupMenu(context, holder.btnMenu);
@@ -273,6 +276,9 @@ public class SoundThemesActivity extends AppCompatActivity {
                     popup.show();
                 });
             }
+
+            String state = isActive ? context.getString(R.string.sound_theme_state_active) : context.getString(R.string.sound_theme_state_inactive);
+            holder.itemView.setContentDescription(theme.getName() + ", " + holder.textDesc.getText() + ", " + state);
 
             View.OnClickListener selectListener = v -> {
                 if (!theme.getId().equals(activeThemeId)) {

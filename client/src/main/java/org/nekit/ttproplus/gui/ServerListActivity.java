@@ -631,6 +631,22 @@ public class ServerListActivity extends AppCompatActivity
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean isServersTab = (bottomNavigation == null || bottomNavigation.getSelectedItemId() == R.id.nav_tab_servers);
+        MenuItem newServer = menu.findItem(R.id.action_newserverentry);
+        if (newServer != null) newServer.setVisible(isServersTab);
+        MenuItem refresh = menu.findItem(R.id.action_refreshserverlist);
+        if (refresh != null) refresh.setVisible(isServersTab);
+        MenuItem joinCode = menu.findItem(R.id.action_enter_joincode);
+        if (joinCode != null) joinCode.setVisible(isServersTab);
+        MenuItem importSrv = menu.findItem(R.id.action_import_serverlist);
+        if (importSrv != null) importSrv.setVisible(isServersTab);
+        MenuItem exportSrv = menu.findItem(R.id.action_export_serverlist);
+        if (exportSrv != null) exportSrv.setVisible(isServersTab);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
         if (itemId == R.id.action_newserverentry) {
@@ -1858,6 +1874,7 @@ public class ServerListActivity extends AppCompatActivity
                 if (tabLayoutProfile != null) tabLayoutProfile.setVisibility(View.GONE);
                 if (fabAddServer != null) fabAddServer.show();
                 setTitle(R.string.title_activity_server_list);
+                invalidateOptionsMenu();
                 return true;
             } else if (itemId == R.id.nav_tab_settings) {
                 if (tabLayoutServers != null) tabLayoutServers.setVisibility(View.GONE);
@@ -1865,6 +1882,7 @@ public class ServerListActivity extends AppCompatActivity
                 if (tabLayoutProfile != null) tabLayoutProfile.setVisibility(View.GONE);
                 if (fabAddServer != null) fabAddServer.hide();
                 setTitle(R.string.nav_tab_settings);
+                invalidateOptionsMenu();
                 return true;
             } else if (itemId == R.id.nav_tab_profile) {
                 if (tabLayoutServers != null) tabLayoutServers.setVisibility(View.GONE);
@@ -1873,6 +1891,7 @@ public class ServerListActivity extends AppCompatActivity
                 if (fabAddServer != null) fabAddServer.hide();
                 setTitle(R.string.nav_tab_profile);
                 updateProfileUI();
+                invalidateOptionsMenu();
                 return true;
             }
             return false;

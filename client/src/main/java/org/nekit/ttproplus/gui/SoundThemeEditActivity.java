@@ -152,10 +152,13 @@ public class SoundThemeEditActivity extends AppCompatActivity {
             holder.textCategory.setText(event.categoryResId);
             holder.textTitle.setText(event.titleResId);
 
+            String statusText;
             File customFile = SoundThemeManager.getSoundFileForEvent(context, themeId, event.key);
             if (customFile != null && customFile.exists()) {
-                holder.textStatus.setText(context.getString(R.string.sound_theme_sound_custom, customFile.getName()));
+                statusText = context.getString(R.string.sound_theme_sound_custom, customFile.getName());
+                holder.textStatus.setText(statusText);
                 holder.btnReset.setVisibility(View.VISIBLE);
+                holder.btnReset.setContentDescription(context.getString(R.string.sound_theme_reset_event, context.getString(event.titleResId)));
                 holder.btnReset.setOnClickListener(v -> {
                     SoundThemeManager.resetEventSound(context, themeId, event.key);
                     notifyItemChanged(position);
@@ -163,10 +166,12 @@ public class SoundThemeEditActivity extends AppCompatActivity {
                 });
             } else {
                 String base = SoundThemeManager.getBasePack(context, themeId);
-                holder.textStatus.setText(context.getString(R.string.sound_theme_sound_default) + " (" + base + ")");
+                statusText = context.getString(R.string.sound_theme_sound_default) + " (" + base + ")";
+                holder.textStatus.setText(statusText);
                 holder.btnReset.setVisibility(View.GONE);
             }
 
+            holder.btnPlay.setContentDescription(context.getString(R.string.sound_theme_play_event, context.getString(event.titleResId)));
             holder.btnPlay.setOnClickListener(v -> {
                 SoundThemeManager.playEventSoundPreview(context, themeId, event);
             });
@@ -175,7 +180,10 @@ public class SoundThemeEditActivity extends AppCompatActivity {
                 pickSoundForEvent(event.key);
             };
 
-            holder.btnEdit.setOnClickListener(pickListener);
+            String category = context.getString(event.categoryResId);
+            String eventName = context.getString(event.titleResId);
+            String cardDesc = category + ", " + eventName + ", " + statusText + ". " + context.getString(R.string.sound_theme_card_hint);
+            holder.itemView.setContentDescription(cardDesc);
             holder.itemView.setOnClickListener(pickListener);
         }
 
@@ -189,7 +197,6 @@ public class SoundThemeEditActivity extends AppCompatActivity {
             TextView textCategory;
             TextView textTitle;
             TextView textStatus;
-            ImageButton btnEdit;
             ImageButton btnReset;
 
             ViewHolder(@NonNull View itemView) {
@@ -198,7 +205,6 @@ public class SoundThemeEditActivity extends AppCompatActivity {
                 textCategory = itemView.findViewById(R.id.text_event_category);
                 textTitle = itemView.findViewById(R.id.text_event_title);
                 textStatus = itemView.findViewById(R.id.text_event_status);
-                btnEdit = itemView.findViewById(R.id.btn_edit_event_sound);
                 btnReset = itemView.findViewById(R.id.btn_reset_event_sound);
             }
         }

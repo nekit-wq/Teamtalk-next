@@ -1632,6 +1632,13 @@ By: %3$s"</string>
     <string name="sound_theme_sound_default">Default</string>
     <string name="sound_theme_sound_custom">Custom (%1$s)</string>
     <string name="sound_theme_reset_sound">Reset sound</string>
+    <string name="sound_theme_play_event">Play: %1$s</string>
+    <string name="sound_theme_reset_event">Reset sound: %1$s</string>
+    <string name="sound_theme_card_hint">Tap to change sound</string>
+    <string name="sound_theme_state_active">active</string>
+    <string name="sound_theme_state_inactive">not active</string>
+    <string name="sound_theme_edit_theme_sounds">Customize sounds for %1$s</string>
+    <string name="sound_theme_menu_options">Options for %1$s</string>
     <string name="sound_theme_sound_updated">Updated sound for \"%1$s\"</string>
     <string name="sound_theme_sound_reset">Reset sound for \"%1$s\"</string>
     <string name="sound_cat_transmission">Voice Transmission</string>

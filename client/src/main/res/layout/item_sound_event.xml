@@ -39,6 +39,7 @@
             android:layout_weight="1.0"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="8dp"
+            android:importantForAccessibility="no"
             android:orientation="vertical">
 
             <TextView
@@ -66,15 +67,6 @@
                 android:textSize="12sp"
                 android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
-
-        <ImageButton
-            android:id="@+id/btn_edit_event_sound"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?android:selectableItemBackgroundBorderless"
-            android:contentDescription="@string/sound_theme_edit_sounds"
-            android:src="@drawable/ic_edit"
-            app:tint="?attr/colorOnSurfaceVariant" />
 
         <ImageButton
             android:id="@+id/btn_reset_event_sound"

@@ -168,4 +168,31 @@
         <item name="android:splitTrack">false</item>
     </style>
 
+    <!-- Compact Material 3 Bottom Navigation -->
+    <style name="Widget.App.BottomNavigationView.Compact" parent="Widget.Material3.BottomNavigationView">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.BottomNavigationView</item>
+        <item name="itemIconSize">20dp</item>
+        <item name="itemPaddingTop">3dp</item>
+        <item name="itemPaddingBottom">3dp</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.App.BottomNav</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.App.BottomNav</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.App.BottomNavigationView.ActiveIndicator.Compact</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="ThemeOverlay.App.BottomNavigationView" parent="">
+        <item name="colorSurface">?attr/colorSurface</item>
+        <item name="colorSurfaceContainer">?attr/colorSurface</item>
+    </style>
+
+    <style name="Widget.App.BottomNavigationView.ActiveIndicator.Compact" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:width">44dp</item>
+        <item name="android:height">24dp</item>
+        <item name="android:color">?attr/colorSecondaryContainer</item>
+    </style>
+
+    <style name="TextAppearance.App.BottomNav" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">11sp</item>
+    </style>
+
 </resources>

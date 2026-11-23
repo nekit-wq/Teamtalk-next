@@ -32,6 +32,7 @@
                 android:layout_height="wrap_content"
                 android:clickable="false"
                 android:focusable="false"
+                android:importantForAccessibility="no"
                 android:contentDescription="@string/sound_theme_active" />
 
             <LinearLayout
@@ -39,6 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1.0"
                 android:layout_marginStart="8dp"
+                android:importantForAccessibility="no"
                 android:orientation="vertical">
 
                 <TextView
