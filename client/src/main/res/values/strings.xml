@@ -1666,6 +1666,11 @@ By: %3$s"</string>
     <string name="profile_bearware_manage">Manage accounts</string>
     <string name="profile_clientname_title">Client Name</string>
     <string name="profile_clientname_hint">Default client name</string>
+    <string name="profile_header_desc">Nickname, status, gender and account</string>
+    <string name="bulk_servers_selected_count">Selected servers: %1$d</string>
+    <string name="bulk_servers_deleted">Deleted %1$d server(s)</string>
+    <string name="about_client_version_title">Client Version</string>
+    <string name="about_dll_version_title">TeamTalk DLL Version</string>
     <string name="settings_all_button">Open All Settings</string>
     <string name="settings_cat_general">General</string>
     <string name="settings_cat_general_desc">Language, interface and file management</string>

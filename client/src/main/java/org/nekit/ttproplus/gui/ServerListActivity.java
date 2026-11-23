@@ -173,7 +173,7 @@ public class ServerListActivity extends AppCompatActivity
     private void updateActionModeTitle() {
         if (mActionMode != null && adapter != null) {
             int count = adapter.getSelectedCount();
-            mActionMode.setTitle(getString(R.string.bulk_users_selected_count, count));
+            mActionMode.setTitle(getString(R.string.bulk_servers_selected_count, count));
             mActionMode.invalidate();
         }
     }
@@ -1866,6 +1866,7 @@ public class ServerListActivity extends AppCompatActivity
 
     private void setupBottomNavigation() {
         if (bottomNavigation == null) return;
+        bottomNavigation.setItemActiveIndicatorEnabled(false);
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_tab_servers) {
@@ -1958,6 +1959,7 @@ public class ServerListActivity extends AppCompatActivity
             holder.icon.setImageResource(item.iconRes);
             holder.title.setText(item.titleRes);
             holder.desc.setText(item.descRes);
+            holder.itemView.setContentDescription(getString(item.titleRes) + ", " + getString(item.descRes));
 
             holder.itemView.setOnClickListener(v -> {
                 if (item.targetClass == SoundThemesActivity.class) {
@@ -2192,7 +2194,7 @@ public class ServerListActivity extends AppCompatActivity
                 }
                 saveServers();
                 refreshServerList();
-                Toast.makeText(ServerListActivity.this, getString(R.string.bulk_action_completed, selected.size()), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ServerListActivity.this, getString(R.string.bulk_servers_deleted, selected.size()), Toast.LENGTH_SHORT).show();
                 if (mode != null) {
                     mode.finish();
                 }

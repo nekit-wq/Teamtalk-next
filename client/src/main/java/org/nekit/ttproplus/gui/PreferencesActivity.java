@@ -1,5 +1,7 @@
 package org.nekit.ttproplus.gui;
 
+import dk.bearware.TeamTalkBase;
+import org.nekit.ttproplus.BuildConfig;
 import android.app.Activity;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -251,6 +253,11 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
 
     @Override
     public void onHeaderClick(Header header, int position) {
+        if (header != null && (header.id == R.id.pref_header_profile
+                || header.titleRes == R.string.profile_title)) {
+            startActivity(new Intent(this, ProfileActivity.class));
+            return;
+        }
         if (header != null && (SoundPacksPreferenceFragment.class.getName().equals(header.fragment)
                 || header.titleRes == R.string.pref_title_sound_pack
                 || header.titleRes == R.string.settings_cat_sound_themes)) {
@@ -861,6 +868,18 @@ public class PreferencesActivity extends PreferenceActivity implements TeamTalkC
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_about);
+            Preference prefVersion = findPreference("pref_about_client_version");
+            if (prefVersion != null) {
+                prefVersion.setSummary(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
+            }
+            Preference prefDll = findPreference("pref_about_dll_version");
+            if (prefDll != null) {
+                try {
+                    prefDll.setSummary(TeamTalkBase.getVersion());
+                } catch (Throwable t) {
+                    prefDll.setSummary(BuildConfig.VERSION_NAME);
+                }
+            }
         }
     }
 

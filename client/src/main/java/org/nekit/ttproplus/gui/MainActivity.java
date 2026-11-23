@@ -551,8 +551,8 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
             showScreenShareAudioModeDialog();
             return true;
         }
-        if (itemId == R.id.action_statusnick) {
-            showChangeNicknameStatusDialog();
+        if (itemId == R.id.action_profile || itemId == R.id.action_statusnick) {
+            startActivity(new Intent(this, ProfileActivity.class));
             return true;
         }
         if (itemId == R.id.action_pause) {

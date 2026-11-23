@@ -1662,6 +1662,11 @@
     <string name="profile_bearware_manage">Управление аккаунтами</string>
     <string name="profile_clientname_title">Имя клиента</string>
     <string name="profile_clientname_hint">По умолчанию имя клиента</string>
+    <string name="profile_header_desc">Псевдоним, статус, пол и учётная запись</string>
+    <string name="bulk_servers_selected_count">Выбрано серверов: %1$d</string>
+    <string name="bulk_servers_deleted">Удалено серверов: %1$d</string>
+    <string name="about_client_version_title">Версия клиента</string>
+    <string name="about_dll_version_title">Версия TeamTalk DLL</string>
     <string name="settings_all_button">Открыть все настройки</string>
     <string name="settings_cat_general">Основные настройки</string>
     <string name="settings_cat_general_desc">Язык интерфейса, отображение и работа с файлами</string>

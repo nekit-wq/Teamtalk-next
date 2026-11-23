@@ -216,6 +216,12 @@
         </activity>
 
         <activity
+            android:name=".gui.ProfileActivity"
+            android:label="@string/profile_title"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
+
+        <activity
             android:name=".gui.SoundThemesActivity"
             android:label="@string/sound_theme_title"
             android:theme="@style/AppTheme.NoActionBar"

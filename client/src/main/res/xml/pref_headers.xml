@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+    <header android:id="@+id/pref_header_profile" android:icon="@drawable/ic_pref_nickname" android:title="@string/profile_title" android:summary="@string/profile_header_desc" />
     <header android:icon="@drawable/ic_pref_general" android:title="@string/settings_cat_general" android:summary="@string/settings_cat_general_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$GeneralPreferenceFragment" />
     <header android:icon="@drawable/ic_pref_background" android:title="@string/settings_cat_background" android:summary="@string/settings_cat_background_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$BackgroundMgmtPreferenceFragment" />
     <header android:icon="@drawable/ic_pref_display" android:title="@string/settings_cat_display" android:summary="@string/settings_cat_display_desc" android:fragment="org.nekit.ttproplus.gui.PreferencesActivity$DisplayPreferenceFragment" />

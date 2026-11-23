@@ -29,6 +29,10 @@
         android:title="@string/menu_section_channel_media">
         <menu>
             <item
+                android:id="@+id/action_profile"
+                android:icon="@drawable/ic_pref_nickname"
+                android:title="@string/profile_title"/>
+            <item
                 android:id="@+id/action_statusnick"
                 android:title="@string/action_statusnick"/>
             <item
