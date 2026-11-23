@@ -1601,6 +1601,8 @@
 
     <!-- Sound Themes System -->
     <string name="sound_theme_title">Звуковые темы</string>
+    <string name="action_back">Назад</string>
+    <string name="action_more_options">Ещё</string>
     <string name="sound_theme_create">Создать тему</string>
     <string name="sound_theme_create_title">Новая звуковая тема</string>
     <string name="sound_theme_name_hint">Название темы</string>

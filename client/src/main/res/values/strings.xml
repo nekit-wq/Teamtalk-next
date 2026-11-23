@@ -1605,6 +1605,8 @@ By: %3$s"</string>
 
     <!-- Sound Themes System -->
     <string name="sound_theme_title">Sound Themes</string>
+    <string name="action_back">Back</string>
+    <string name="action_more_options">More options</string>
     <string name="sound_theme_create">Create theme</string>
     <string name="sound_theme_create_title">New Sound Theme</string>
     <string name="sound_theme_name_hint">Theme name</string>
