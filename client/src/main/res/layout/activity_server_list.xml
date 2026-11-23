@@ -561,14 +561,14 @@
         <!-- Material 3 Bottom Navigation Bar -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation_server_list"
-            style="@style/Widget.App.BottomNavigationView.Compact"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="wrap_content"
             android:background="?attr/colorSurface"
             app:menu="@menu/bottom_nav_server_list"
             app:labelVisibilityMode="labeled"
             app:itemIconTint="@color/selector_nav_item"
             app:itemTextColor="@color/selector_nav_item"
+            app:itemActiveIndicatorEnabled="false"
             app:elevation="0dp" />
 
     </LinearLayout>
