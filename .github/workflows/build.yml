@@ -77,15 +77,15 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          TAG_NAME="${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.4' }}"
+          TAG_NAME="${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.5' }}"
           git archive --format=zip --output=TeamTalkNext-${TAG_NAME}-source.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.4' }}
-          name: "TeamTalk Next ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.4' }}"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.5' }}
+          name: "TeamTalk Next ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v5.29.5' }}"
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
