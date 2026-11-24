@@ -15,7 +15,7 @@
             android:id="@+id/toolbar_profile"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@drawable/ic_back"
+            app:navigationIcon="?attr/homeAsUpIndicator"
             app:title="@string/profile_title"
             app:titleTextColor="?attr/colorOnSurface" />
 
@@ -73,7 +73,7 @@
                             android:layout_width="14dp"
                             android:layout_height="14dp"
                             android:layout_gravity="bottom|end"
-                            android:background="@drawable/circle_green" />
+                            android:background="@drawable/online_badge" />
                     </FrameLayout>
 
                     <LinearLayout

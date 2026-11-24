@@ -15,7 +15,7 @@ android {
         applicationId = 'org.nekit.ttproplus'
         minSdk = 21
         targetSdk = 36
-        versionCode = 450
+        versionCode = 451
         // Single source of truth: the value is also injected into TeamTalk client name.
         versionName = '5.29.5'
 

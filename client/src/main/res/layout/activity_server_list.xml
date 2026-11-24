@@ -93,7 +93,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:clipToPadding="false"
-                        android:paddingBottom="72dp"
+                        android:paddingBottom="160dp"
                         android:scrollbars="vertical" />
 
                     <TextView
@@ -583,8 +583,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="80dp"
+        android:layout_marginBottom="96dp"
         android:text="@string/action_new_server"
+        android:contentDescription="@string/action_new_server"
         android:textColor="?attr/colorOnPrimary"
         app:icon="@drawable/ic_add"
         app:iconTint="?attr/colorOnPrimary"

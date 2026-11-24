@@ -4420,7 +4420,10 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                         this.recBarDuration.setText(durationStr);
                     }
                     if (this.recIndicatorIcon != null) this.recIndicatorIcon.setImageResource(R.drawable.ic_rec_dot_paused);
-                    if (this.btnRecBarPause != null) this.btnRecBarPause.setImageResource(android.R.drawable.ic_media_play);
+                    if (this.btnRecBarPause != null) {
+                        this.btnRecBarPause.setImageResource(android.R.drawable.ic_media_play);
+                        this.btnRecBarPause.setContentDescription(getString(R.string.action_resume));
+                    }
                 } else {
                     if (this.recBarTitle != null && (this.recBarTitle.getText() == null || !getString(R.string.docked_recording_title).contentEquals(this.recBarTitle.getText()))) {
                         this.recBarTitle.setText(R.string.docked_recording_title);
@@ -4432,7 +4435,10 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
                         this.recDotBlinkState = !this.recDotBlinkState;
                         this.recIndicatorIcon.setImageResource(this.recDotBlinkState ? R.drawable.ic_rec_dot : R.drawable.ic_rec_dot_paused);
                     }
-                    if (this.btnRecBarPause != null) this.btnRecBarPause.setImageResource(android.R.drawable.ic_media_pause);
+                    if (this.btnRecBarPause != null) {
+                        this.btnRecBarPause.setImageResource(android.R.drawable.ic_media_pause);
+                        this.btnRecBarPause.setContentDescription(getString(R.string.action_pause));
+                    }
                 }
             } else {
                 if (this.panelRecordingBar.getVisibility() != View.GONE) {
@@ -4498,6 +4504,7 @@ public class MainActivity extends AppCompatActivity implements TeamTalkConnectio
 
                 if (this.btnStreamBarPause != null) {
                     this.btnStreamBarPause.setImageResource(isPaused ? android.R.drawable.ic_media_play : android.R.drawable.ic_media_pause);
+                    this.btnStreamBarPause.setContentDescription(getString(isPaused ? R.string.action_resume : R.string.action_pause));
                 }
             } else {
                 if (this.panelStreamingBar.getVisibility() != View.GONE) {

@@ -331,6 +331,21 @@ public class ServerListActivity extends AppCompatActivity
         tabLayoutProfile = findViewById(R.id.tab_layout_profile);
         bottomNavigation = findViewById(R.id.bottom_navigation_server_list);
 
+        if (bottomNavigation != null && fabAddServer != null) {
+            bottomNavigation.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                int barHeight = bottom - top;
+                if (barHeight > 0) {
+                    ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) fabAddServer.getLayoutParams();
+                    int marginAbove = (int) (16 * getResources().getDisplayMetrics().density);
+                    int desiredMargin = barHeight + marginAbove;
+                    if (lp.bottomMargin != desiredMargin) {
+                        lp.bottomMargin = desiredMargin;
+                        fabAddServer.setLayoutParams(lp);
+                    }
+                }
+            });
+        }
+
         setupBottomNavigation();
         setupSettingsTab();
         setupProfileTab();
